@@ -33,6 +33,37 @@ class SketchLineSerializer {
     };
   }
 
+  /// Serialize a shape element with a bound text label inlined.
+  String serializeWithLabel(
+    Element element,
+    String label, {
+    String? alias,
+    Map<String, String> aliasMap = const {},
+  }) {
+    final keyword = switch (element) {
+      RectangleElement() => 'rect',
+      EllipseElement() => 'ellipse',
+      DiamondElement() => 'diamond',
+      _ => element.type,
+    };
+    return _serializeShapeWithLabel(keyword, element, alias, label);
+  }
+
+  String _serializeShapeWithLabel(
+    String keyword,
+    Element element,
+    String? alias,
+    String label,
+  ) {
+    final parts = <String>[keyword];
+    parts.add('"$label"');
+    _addId(parts, alias);
+    _addPosition(parts, element.x, element.y);
+    _addSize(parts, element.width, element.height);
+    _addCommonProperties(parts, element);
+    return parts.join(' ');
+  }
+
   String _serializeShape(String keyword, Element element, String? alias) {
     final parts = <String>[keyword];
     _addId(parts, alias);
