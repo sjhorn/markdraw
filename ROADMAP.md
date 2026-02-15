@@ -1,0 +1,560 @@
+# ROADMAP — markdraw
+
+> An Excalidraw-inspired drawing tool built in Dart/Flutter with a human-readable markdown serialization format.
+> TDD · SOLID · Cross-platform (iOS, Android, Web, macOS, Windows, Linux)
+
+---
+
+## Excalidraw Architecture Analysis
+
+Before laying out the roadmap, here's what we learned from studying the Excalidraw codebase. This understanding informs every phase below.
+
+### Core Data Model
+
+Excalidraw's heart is a flat list of element objects, each sharing 26+ base properties (`id`, `type`, `x`, `y`, `width`, `height`, `angle`, `strokeColor`, `backgroundColor`, `fillStyle`, `strokeWidth`, `strokeStyle`, `roughness`, `opacity`, `roundness`, `seed`, `version`, `versionNonce`, `isDeleted`, `groupIds`, `frameId`, `boundElements`, `updated`, `link`, `locked`, `customData`, `index`). Specialized types extend this base:
+
+| Category | Types | Key Extra Properties |
+|---|---|---|
+| **Geometric** | `rectangle`, `ellipse`, `diamond` | `roundness` |
+| **Linear** | `line`, `arrow` (inc. elbow) | `points[]`, `startBinding`, `endBinding`, `startArrowhead`, `endArrowhead`, `elbowed` |
+| **Freedraw** | `freedraw` | `points[]`, `pressures[]`, `simulatePressure` |
+| **Text** | `text` | `text`, `originalText`, `fontSize`, `fontFamily`, `textAlign`, `verticalAlign`, `containerId`, `lineHeight`, `autoResize` |
+| **Media** | `image` | `fileId`, `status`, `scale`, `crop` |
+| **Containers** | `frame`, `magicFrame` | `name` |
+| **Embeds** | `iframe`, `embeddable` | URL via `link` |
+
+### Rendering Architecture
+
+Excalidraw uses a **dual-canvas** approach: a **static canvas** (rendered with Rough.js for the hand-drawn look, throttled to ~60fps, cached and only redrawn when elements change) and an **interactive canvas** (continuously animated for selection handles, cursors, snap lines, drag previews). A `Renderer` class filters elements by viewport bounds and memoizes results using a `sceneNonce` cache-invalidation token.
+
+### Serialization
+
+The `.excalidraw` JSON format wraps `{ type, version, source, elements[], appState{}, files{} }`. Elements are serialized verbatim. AppState is cleaned (transient UI state stripped). Files are stored as base64 data URLs keyed by `fileId`. Scene data can also be embedded in PNG metadata chunks and SVG comments for round-trip portability.
+
+### Key Architectural Patterns
+
+- **Immutable elements** — elements are never mutated; new versions are created with incremented `version` and fresh `versionNonce`.
+- **Soft deletion** — `isDeleted: true` rather than removing from the array, enabling undo and collaboration.
+- **Fractional indexing** — the `index` property uses fractional strings for ordering without renumbering.
+- **Binding system** — arrows maintain `startBinding`/`endBinding` references to other elements via `FixedPointBinding` objects (element ID + fixed point ratio).
+- **LinearElementEditor** — a state machine managing multi-point creation (click-to-add-point) and editing (drag-to-move-point) with shift-lock, grid snapping, and binding suggestions.
+- **Action system** — commands are first-class objects with `perform()`, `keyTest()`, and UI metadata, dispatched through an `ActionManager`.
+
+### Flutter Ecosystem Alignment
+
+- **`rough_flutter`** — a maintained Dart 3 port of Rough.js with null safety. Supports rectangle, circle, ellipse, line, polygon, arc, and path primitives with hachure, solid, cross-hatch, zigzag, dots, and dashed fills. This is our rendering foundation.
+- **Flutter `CustomPainter`** — maps directly to Excalidraw's canvas rendering model. We'll use two `CustomPainter` layers (static + interactive) on a `Stack`.
+- **`GestureDetector` / `Listener`** — Flutter's gesture system maps cleanly to Excalidraw's pointer event handling.
+
+---
+
+## The Markdown Extension: `.markdraw` Format
+
+The serialization format is the differentiating feature. It's a superset of markdown that embeds drawing instructions in fenced code blocks while allowing free-form prose around them.
+
+### Format Specification (Target)
+
+````markdown
+---
+markdraw: 1
+background: "#ffffff"
+grid: 20
+---
+
+# Architecture Overview
+
+Here's how the services connect:
+
+```sketch
+rect "Auth Service" id=auth at 100,200 size 160x80 fill=#e3f2fd rounded
+rect "API Gateway" id=gateway at 350,200 size 160x80 fill=#fff3e0 rounded
+arrow from auth to gateway label="JWT tokens" stroke=dashed
+ellipse "Database" id=db at 225,400 size 120x80 fill=#e8f5e9
+arrow from gateway to db label="queries"
+```
+
+The auth service handles OAuth2 flows. All inter-service
+communication uses mTLS.
+
+```sketch
+text "High Priority" at 100,50 size=24 color=#d32f2f bold
+freedraw points=[[0,0],[5,2],[10,8],...] pressure=[0.5,0.7,0.9,...] color=#1e1e1e
+line points=[[0,0],[100,0],[100,100]] closed stroke=dotted
+```
+````
+
+### Format Design Principles
+
+1. **Human-readable primitives** — named shapes use natural syntax: `rect "Label" at X,Y size WxH`
+2. **ID-based references** — elements get `id=name` for arrow binding: `arrow from auth to gateway`
+3. **Familiar styling** — CSS-like: `fill=#e3f2fd stroke=dashed color=#1e1e1e`
+4. **Lossless freehand** — point arrays and pressure data stored inline for round-trip fidelity (not expected to be hand-edited)
+5. **Mixed content** — prose markdown sections interleave freely with `sketch` blocks
+6. **YAML frontmatter** — canvas-level settings (background, grid, zoom)
+7. **Git-friendly** — text diffs show meaningful changes
+
+---
+
+## Project Structure
+
+```
+markdraw/
+├── lib/
+│   ├── core/                    # Domain layer (no Flutter imports)
+│   │   ├── elements/            # Element models & base types
+│   │   ├── scene/               # Scene graph, element collection
+│   │   ├── math/                # Geometry, vectors, bounds
+│   │   ├── history/             # Undo/redo stack
+│   │   └── serialization/       # .markdraw parser & serializer
+│   ├── rendering/               # Flutter rendering layer
+│   │   ├── painters/            # CustomPainters (static + interactive)
+│   │   ├── rough/               # Rough drawing adapter
+│   │   └── viewport/            # Pan, zoom, viewport culling
+│   ├── editor/                  # Editor logic & state
+│   │   ├── tools/               # Tool implementations (select, rect, arrow...)
+│   │   ├── actions/             # Action system (command pattern)
+│   │   └── bindings/            # Arrow binding logic
+│   ├── ui/                      # Flutter widgets & layout
+│   │   ├── canvas/              # Canvas widget stack
+│   │   ├── toolbar/             # Tool selection bar
+│   │   ├── properties/          # Property panel
+│   │   └── text_editor/         # Inline text editing
+│   └── app.dart                 # App entry point
+├── test/
+│   ├── core/                    # Unit tests (pure Dart, no Flutter)
+│   ├── rendering/               # Widget tests
+│   ├── editor/                  # Integration tests
+│   ├── serialization/           # Round-trip & parser tests
+│   └── golden/                  # Golden image tests for rendering
+├── integration_test/            # E2E tests per platform
+├── excalidraw/                  # Excalidraw source reference (read-only)
+└── pubspec.yaml
+```
+
+---
+
+## Phase 0 — Foundation (Weeks 1–2)
+
+> Goal: Project scaffold, CI, core abstractions, and the first passing test.
+
+### 0.1 Project Setup
+- [ ] Initialize Flutter project with multi-platform targets
+- [ ] Configure linting (`flutter_lints` strict mode + custom rules)
+- [ ] Set up CI (GitHub Actions: test, analyze, format on every PR)
+- [ ] Add dependencies: `rough_flutter`, `uuid`, `equatable`, `freezed`, `riverpod`
+- [ ] Configure code coverage reporting (target: 90%+)
+- [ ] Clone excalidraw repo into `./excalidraw/` for reference
+
+### 0.2 Core Element Model
+- [ ] `Element` base class with all 26 shared properties (immutable, `@freezed`)
+- [ ] `ElementId` value object (nanoid-style generation)
+- [ ] `Point`, `Size`, `Bounds` value objects in `core/math/`
+- [ ] `StrokeStyle` enum: `solid`, `dashed`, `dotted`
+- [ ] `FillStyle` enum: `solid`, `hachure`, `crossHatch`, `zigzag`
+- [ ] `Roundness` value object with `adaptive` and `proportional` variants
+- [ ] **Tests**: Element creation, equality, copyWith, serialization to/from Map
+
+### 0.3 Element Type Hierarchy
+- [ ] `RectangleElement` — base geometric, `roundness` property
+- [ ] `EllipseElement` — bounding-box defined
+- [ ] `DiamondElement` — midpoint vertices
+- [ ] `TextElement` — `text`, `fontSize`, `fontFamily`, `textAlign`, `containerId`
+- [ ] `LineElement` — `points[]`, `startArrowhead`, `endArrowhead`
+- [ ] `ArrowElement extends LineElement` — `startBinding`, `endBinding`
+- [ ] `FreedrawElement` — `points[]`, `pressures[]`, `simulatePressure`
+- [ ] **Tests**: Each type constructs correctly, validates constraints, copyWith works
+
+### 0.4 Scene Model
+- [ ] `Scene` class — ordered collection of elements, CRUD operations
+- [ ] Immutable element updates (new version, bumped `versionNonce`)
+- [ ] Soft deletion (`isDeleted` flag)
+- [ ] Fractional index ordering
+- [ ] `getElementAtPoint(Point)` — hit testing placeholder (bounds-only)
+- [ ] **Tests**: Add/remove/update elements, ordering, soft delete, version bumping
+
+> **TDD checkpoint**: All core model tests pass. Zero Flutter imports in `core/`.
+
+---
+
+## Phase 1 — Markdown Serialization (Weeks 3–5)
+
+> Goal: Parse and serialize the `.markdraw` format with full round-trip fidelity.
+> This is front-loaded because the format IS the product differentiator.
+
+### 1.1 Lexer & Parser
+- [ ] YAML frontmatter parser (canvas settings)
+- [ ] Markdown section splitter (prose blocks vs `sketch` fenced blocks)
+- [ ] Sketch block tokenizer: keywords (`rect`, `ellipse`, `diamond`, `arrow`, `line`, `text`, `freedraw`, `group`)
+- [ ] Property parser: `at X,Y`, `size WxH`, `fill=`, `stroke=`, `color=`, `id=`, `rounded`, `bold`, `italic`
+- [ ] Arrow reference resolver: `from <id> to <id>`
+- [ ] Point array parser: `points=[[x,y],[x,y],...]`
+- [ ] Pressure array parser: `pressure=[0.5,0.7,...]`
+- [ ] **Tests**: Tokenization of every element type, error recovery on malformed input
+
+### 1.2 Serializer
+- [ ] `Scene` → `.markdraw` string serialization
+- [ ] Human-readable output for geometric and text elements
+- [ ] Compact but parseable output for freedraw (point arrays)
+- [ ] Prose section preservation (round-trip fidelity)
+- [ ] YAML frontmatter emission
+- [ ] **Tests**: Serialize → parse → serialize produces identical output
+
+### 1.3 JSON Interop
+- [ ] Import from `.excalidraw` JSON format
+- [ ] Export to `.excalidraw` JSON format
+- [ ] Mapping between Excalidraw element types and markdraw types
+- [ ] **Tests**: Load sample `.excalidraw` files from `./excalidraw/`, convert, verify element count and properties
+
+### 1.4 File I/O
+- [ ] Platform-agnostic file read/write abstraction (Interface Segregation)
+- [ ] Desktop: native file picker & save dialog
+- [ ] Web: download blob / upload file input
+- [ ] Mobile: share sheet integration
+- [ ] **Tests**: Mock file system, verify read/write round-trip
+
+> **TDD checkpoint**: Can load an excalidraw file, convert to `.markdraw`, save, reload, and verify all elements match.
+
+---
+
+## Phase 2 — Rendering Engine (Weeks 6–9)
+
+> Goal: See elements on screen with the hand-drawn aesthetic.
+
+### 2.1 Rough Drawing Adapter
+- [ ] `RoughAdapter` interface — abstracts `rough_flutter` behind a clean API
+- [ ] `drawRectangle(Bounds, DrawStyle)` → rough rectangle
+- [ ] `drawEllipse(Bounds, DrawStyle)` → rough ellipse
+- [ ] `drawDiamond(Bounds, DrawStyle)` → rough polygon (4 midpoints)
+- [ ] `drawLine(List<Point>, DrawStyle)` → rough linear path
+- [ ] `drawArrow(List<Point>, ArrowheadStyle, DrawStyle)` → path + arrowhead
+- [ ] `drawFreedraw(List<Point>, List<double> pressures, DrawStyle)` → smooth path
+- [ ] `DrawStyle` value object mapping element properties → rough DrawConfig + FillerConfig
+- [ ] Seed-based deterministic rendering (same seed = same wobble)
+- [ ] **Tests**: Golden image tests comparing rendered output against reference PNGs
+
+### 2.2 Static Canvas Painter
+- [ ] `StaticCanvasPainter extends CustomPainter`
+- [ ] Iterates visible elements, delegates to `RoughAdapter`
+- [ ] Viewport transform (pan + zoom applied to canvas matrix)
+- [ ] Element ordering by fractional index
+- [ ] Skip `isDeleted` elements
+- [ ] Text rendering with Flutter `TextPainter`
+- [ ] **Tests**: Widget tests verifying paint calls, golden tests for element combinations
+
+### 2.3 Interactive Canvas Painter
+- [ ] `InteractiveCanvasPainter extends CustomPainter`
+- [ ] Selection rectangle (dashed blue outline)
+- [ ] Resize handles (corner + edge)
+- [ ] Rotation handle
+- [ ] Hover highlight
+- [ ] Snap lines (alignment guides)
+- [ ] Multi-point creation preview (line/arrow in progress)
+- [ ] **Tests**: Verify handle positions, snap line calculations
+
+### 2.4 Viewport Management
+- [ ] `ViewportController` — manages scroll offset + zoom level
+- [ ] Pan via two-finger drag / middle-mouse / Space+drag
+- [ ] Zoom via pinch / Ctrl+scroll / toolbar buttons
+- [ ] Fit-to-content
+- [ ] Viewport culling: only pass visible elements to painters
+- [ ] Scene-to-screen and screen-to-scene coordinate transforms
+- [ ] **Tests**: Coordinate transforms at various zoom levels, culling correctness
+
+> **TDD checkpoint**: Open a `.markdraw` file and see all elements rendered with hand-drawn styling. Pan and zoom work.
+
+---
+
+## Phase 3 — Interaction & Editing (Weeks 10–14)
+
+> Goal: Full drawing and editing interaction — the 80% core experience.
+
+### 3.1 Tool System
+- [ ] `Tool` abstract class — `onPointerDown`, `onPointerMove`, `onPointerUp`, `onKeyEvent`
+- [ ] `SelectTool` — click to select, drag to move, shift+click multi-select, marquee selection
+- [ ] `RectangleTool` — drag to create rectangle
+- [ ] `EllipseTool` — drag to create ellipse
+- [ ] `DiamondTool` — drag to create diamond
+- [ ] `LineTool` — click-to-add-point, double-click or Enter to finalize
+- [ ] `ArrowTool` — like LineTool but with binding detection on endpoints
+- [ ] `FreedrawTool` — continuous path recording with pressure
+- [ ] `TextTool` — click to place, opens inline text editor
+- [ ] `HandTool` (pan) — drag to scroll viewport
+- [ ] Tool switching via toolbar and keyboard shortcuts (R, E, D, L, A, P, T, H)
+- [ ] **Tests**: Each tool produces correct element type with expected properties from simulated gestures
+
+### 3.2 Selection & Transform
+- [ ] Single element selection — bounding box + handles
+- [ ] Multi-element selection — group bounding box
+- [ ] Move — drag selected elements, snap to grid
+- [ ] Resize — drag handles, maintain aspect ratio with Shift
+- [ ] Rotate — drag rotation handle, 15° snaps with Shift
+- [ ] Delete — Backspace/Delete key
+- [ ] Duplicate — Ctrl/Cmd+D
+- [ ] Copy/Paste — clipboard with `.markdraw` format for cross-instance paste
+- [ ] **Tests**: Transform operations produce correct element properties
+
+### 3.3 Arrow Binding
+- [ ] Binding detection — when arrow endpoint is near a bindable element, snap to it
+- [ ] `FixedPointBinding` — stores element ID + normalized position (0–1, 0–1)
+- [ ] Bound arrow updates when target element moves/resizes
+- [ ] Unbind on drag away from element
+- [ ] Visual indicator during binding (highlight target element)
+- [ ] **Tests**: Create bound arrow, move target, verify arrow endpoint updates; unbind, verify independence
+
+### 3.4 Undo/Redo
+- [ ] `HistoryManager` — stores snapshots of element changes (not full scene)
+- [ ] Ctrl/Cmd+Z undo, Ctrl/Cmd+Shift+Z redo
+- [ ] Coalesce rapid changes (e.g., many move events during drag → one undo step)
+- [ ] **Tests**: Sequence of operations → undo each → verify state matches
+
+### 3.5 Keyboard Shortcuts
+- [ ] Tool shortcuts (R, E, D, L, A, P, T, H, V for select)
+- [ ] Escape to deselect / cancel current tool
+- [ ] Ctrl/Cmd+A select all
+- [ ] Ctrl/Cmd+S save
+- [ ] Ctrl/Cmd+Z / Ctrl/Cmd+Shift+Z undo/redo
+- [ ] Delete/Backspace to remove
+- [ ] Arrow keys to nudge selection (1px, 10px with Shift)
+- [ ] **Tests**: Key event → expected action dispatched
+
+### 3.6 Property Panel
+- [ ] Stroke color picker
+- [ ] Background color picker
+- [ ] Stroke width (thin, medium, thick, extra-thick)
+- [ ] Stroke style (solid, dashed, dotted)
+- [ ] Fill style (solid, hachure, cross-hatch, zigzag)
+- [ ] Roughness slider (0 = clean, 2 = very rough)
+- [ ] Opacity slider
+- [ ] Font size, family, alignment (for text)
+- [ ] Roundness toggle (for rectangles)
+- [ ] **Tests**: Changing property updates selected element(s)
+
+> **TDD checkpoint**: Can create all basic shapes, connect them with arrows, type text, undo/redo, and save as `.markdraw`. This is the **80% milestone**.
+
+---
+
+## Phase 4 — Text Editing & Bound Text (Weeks 15–17)
+
+> Goal: Rich inline text editing and text-inside-shapes (the most complex UI feature).
+
+### 4.1 Inline Text Editor
+- [ ] Double-click text element → overlay `TextField` at element position
+- [ ] Match font size, family, color, alignment to element
+- [ ] Auto-resize element width as user types (when `autoResize: true`)
+- [ ] Commit on Enter (single line) or Ctrl+Enter (multi-line), blur, or Escape
+- [ ] **Tests**: Edit text, verify element `text` property updates
+
+### 4.2 Bound Text (Text-in-Shapes)
+- [ ] Double-click rectangle/ellipse/diamond → create bound text child
+- [ ] Text `containerId` references parent shape
+- [ ] Text auto-wraps within parent bounds
+- [ ] Text centered vertically and horizontally (configurable)
+- [ ] Text inherits rotation from parent
+- [ ] Deleting parent deletes bound text; deleting text doesn't delete parent
+- [ ] **Tests**: Create bound text, resize parent, verify text reflows
+
+### 4.3 Arrow Labels
+- [ ] Double-click arrow midpoint → create bound text
+- [ ] Label positioned at midpoint of arrow path
+- [ ] Label moves as arrow moves
+- [ ] **Tests**: Create arrow label, move arrow endpoints, verify label repositions
+
+---
+
+## Phase 5 — Export & Import (Weeks 18–20)
+
+> Goal: Get drawings out of the app in useful formats.
+
+### 5.1 PNG Export
+- [ ] Render scene to offscreen canvas → PNG bytes
+- [ ] Configurable scale factor (1x, 2x, 3x)
+- [ ] Optional background color or transparent
+- [ ] Embed `.markdraw` data in PNG metadata (like Excalidraw's tEXt chunk)
+- [ ] Export selection only or full scene
+- [ ] **Tests**: Export → verify PNG dimensions, re-import embedded data
+
+### 5.2 SVG Export
+- [ ] Render scene to SVG string
+- [ ] Rough.js style paths as SVG `<path>` elements
+- [ ] Embed `.markdraw` data in SVG comment
+- [ ] **Tests**: Valid SVG output, round-trip via embedded data
+
+### 5.3 Clipboard
+- [ ] Copy selected elements as `.markdraw` text to clipboard
+- [ ] Paste `.markdraw` text from clipboard → add elements to scene
+- [ ] Also copy as PNG for pasting into other apps
+- [ ] **Tests**: Copy → paste → verify elements duplicated with new IDs
+
+### 5.4 Excalidraw Interop
+- [ ] Import `.excalidraw` JSON files
+- [ ] Export to `.excalidraw` JSON (lossy for prose sections)
+- [ ] Drag-and-drop file support
+- [ ] **Tests**: Round-trip with sample Excalidraw files
+
+---
+
+## Phase 6 — Advanced Features (Weeks 21–26)
+
+> Goal: The remaining 20% — frames, images, grouping, advanced arrows.
+
+### 6.1 Grouping
+- [ ] Select multiple elements → Ctrl/Cmd+G to group
+- [ ] Groups behave as single selectable unit
+- [ ] Ctrl/Cmd+Shift+G to ungroup
+- [ ] Nested groups
+- [ ] `.markdraw` syntax: `group id=mygroup { ... }`
+- [ ] **Tests**: Group operations, nested selection, serialization
+
+### 6.2 Frames
+- [ ] Frame element — named container that clips children
+- [ ] Elements inside frame boundary become frame children (`frameId`)
+- [ ] Drag element into/out of frame
+- [ ] Frame label at top
+- [ ] `.markdraw` syntax: `frame "Section A" at X,Y size WxH { ... }`
+- [ ] **Tests**: Frame membership, clipping, serialization
+
+### 6.3 Image Elements
+- [ ] Import image → create image element
+- [ ] Image stored as base64 in `.markdraw` files block (like frontmatter)
+- [ ] Image cropping
+- [ ] Image scaling with aspect ratio lock
+- [ ] **Tests**: Image round-trip, crop, scale
+
+### 6.4 Elbow Arrows
+- [ ] Orthogonal routing — arrows that make 90° turns
+- [ ] Fixed segments that user can drag to reposition
+- [ ] Auto-routing around obstacles
+- [ ] `.markdraw` syntax: `arrow from A to B elbowed`
+- [ ] **Tests**: Elbow routing correctness, fixed segment persistence
+
+### 6.5 Libraries
+- [ ] Reusable element templates (shapes + groups)
+- [ ] Save to / load from library
+- [ ] Drag from library panel onto canvas
+- [ ] `.markdrawlib` format for library files
+- [ ] **Tests**: Library CRUD, instantiation
+
+### 6.6 Locking
+- [ ] Lock element to prevent editing
+- [ ] Visual indicator (lock icon)
+- [ ] `.markdraw` syntax: `rect "Fixed" ... locked`
+- [ ] **Tests**: Locked elements resist selection, move, delete
+
+---
+
+## Phase 7 — Platform Polish (Weeks 27–30)
+
+> Goal: Production quality on all platforms.
+
+### 7.1 Responsive Layout
+- [ ] Adaptive toolbar (horizontal on desktop, bottom sheet on mobile)
+- [ ] Property panel as side panel (desktop) or bottom sheet (mobile)
+- [ ] Touch-optimized handles (larger touch targets on mobile)
+- [ ] Keyboard shortcut hints (desktop only)
+
+### 7.2 Performance
+- [ ] Element render caching (only re-render changed elements)
+- [ ] Viewport culling optimization (spatial index / R-tree)
+- [ ] Lazy rough path generation (generate on first paint, cache by seed)
+- [ ] Profile and optimize for 1000+ elements
+- [ ] Web: CanvasKit renderer preferred over HTML renderer
+
+### 7.3 Accessibility
+- [ ] Semantic labels for all toolbar buttons
+- [ ] Keyboard-only navigation through elements (Tab to cycle, Enter to edit)
+- [ ] Screen reader announcements for tool changes and element creation
+- [ ] High contrast mode
+
+### 7.4 Platform Integration
+- [ ] **Web**: URL sharing, PWA support, browser file API
+- [ ] **Desktop**: Native menu bar, file associations (`.markdraw`), drag-and-drop
+- [ ] **Mobile**: Share sheet, haptic feedback on snaps, Apple Pencil / stylus pressure
+- [ ] Dark mode theming
+
+---
+
+## Phase 8 — Collaboration & Advanced (Weeks 31+)
+
+> Goal: Stretch features for post-launch iteration.
+
+### 8.1 Real-time Collaboration
+- [ ] CRDT-based element sync (investigate `y-crdt` Dart port or custom)
+- [ ] Presence awareness (show collaborator cursors)
+- [ ] Conflict resolution for concurrent edits
+- [ ] WebSocket server for session management
+
+### 8.2 AI Integration
+- [ ] Generate diagrams from text description (LLM → `.markdraw`)
+- [ ] Convert freehand sketches to clean shapes (shape recognition)
+- [ ] Auto-layout suggestions
+
+### 8.3 Plugin System
+- [ ] Custom element types via plugin API
+- [ ] Custom tools
+- [ ] Custom export formats
+- [ ] Custom markdown extensions within `sketch` blocks
+
+### 8.4 Version History
+- [ ] Git-native diffing (`.markdraw` is plain text)
+- [ ] In-app version timeline
+- [ ] Visual diff view
+
+---
+
+## Testing Strategy
+
+### Test Pyramid
+
+| Layer | Tool | What | Target |
+|---|---|---|---|
+| **Unit** | `dart test` | Element models, math, parser, serializer, history | 70% of tests |
+| **Widget** | `flutter_test` | Painters, tools, property panel, toolbar | 20% of tests |
+| **Golden** | `flutter_test` | Rendering fidelity (hand-drawn shapes match expected PNGs) | 5% of tests |
+| **Integration** | `integration_test` | Full user flows per platform (create, edit, save, load) | 5% of tests |
+
+### TDD Workflow
+
+For every feature:
+
+1. **Write failing test** — describe the expected behavior
+2. **Implement minimum code** — make the test pass
+3. **Refactor** — apply SOLID principles, extract abstractions
+4. **Golden test** (if visual) — capture approved rendering, fail on regression
+
+### Key Test Suites (mapped to Excalidraw tests for parity)
+
+| Excalidraw Test File | Our Equivalent | Phase |
+|---|---|---|
+| `dragCreate.test.tsx` | `test/editor/tools/drag_create_test.dart` | 3 |
+| `multiPointCreate.test.tsx` | `test/editor/tools/multi_point_create_test.dart` | 3 |
+| `binding.test.tsx` | `test/editor/bindings/arrow_binding_test.dart` | 3 |
+| `restore.test.tsx` | `test/serialization/markdraw_roundtrip_test.dart` | 1 |
+| `history.test.tsx` | `test/core/history/history_manager_test.dart` | 3 |
+
+---
+
+## SOLID Principles Application
+
+| Principle | Application |
+|---|---|
+| **S — Single Responsibility** | Each tool handles one element type. Parser, serializer, and scene are separate classes. Rendering is decoupled from domain logic. |
+| **O — Open/Closed** | New element types are added by extending `Element` and implementing `ElementRenderer` — no existing code changes. New tools extend `Tool`. |
+| **L — Liskov Substitution** | All elements are substitutable where `Element` is expected. All tools are substitutable where `Tool` is expected. |
+| **I — Interface Segregation** | `FileReader` / `FileWriter` are separate interfaces. `Renderable` is separate from `Editable`. `Serializable` is separate from `Drawable`. |
+| **D — Dependency Inversion** | Core layer depends on abstractions (interfaces), not Flutter. Rendering layer depends on `Element` interfaces, not concrete types. `RoughAdapter` interface allows swapping rendering backends. |
+
+---
+
+## Milestones Summary
+
+| Milestone | Phase | Deliverable | Metric |
+|---|---|---|---|
+| **M0: Scaffold** | 0 | CI green, core model tests pass | 50+ unit tests |
+| **M1: Format** | 1 | `.markdraw` round-trip works | Parse → serialize → parse = identical |
+| **M2: Render** | 2 | Visual canvas with pan/zoom | All element types render correctly |
+| **M3: Edit (80%)** | 3 | Full drawing interaction | Create, select, move, resize, connect, undo |
+| **M4: Text** | 4 | Inline text editing + bound text | Text in shapes, arrow labels |
+| **M5: Export** | 5 | PNG, SVG, clipboard, Excalidraw interop | Round-trip with Excalidraw files |
+| **M6: Advanced (100%)** | 6 | Groups, frames, images, elbow arrows | Feature parity with Excalidraw essentials |
+| **M7: Ship** | 7 | All platforms polished | App store ready |
+| **M8: Grow** | 8 | Collaboration, AI, plugins | Post-launch iteration |

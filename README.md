@@ -1,39 +1,81 @@
-<!--
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# markdraw
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/tools/pub/writing-package-pages).
+An Excalidraw-inspired drawing widget for Flutter with a human-readable markdown serialization format.
 
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/to/develop-packages).
--->
+Cross-platform: iOS, Android, Web, macOS, Windows, Linux.
 
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
+## The `.markdraw` Format
 
-## Features
+Drawings are saved as markdown files with embedded sketch blocks — human-readable, git-friendly, and diffable:
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
+````markdown
+---
+markdraw: 1
+background: "#ffffff"
+grid: 20
+---
 
-## Getting started
+# Architecture Overview
 
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
+Here's how the services connect:
 
-## Usage
-
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder.
-
-```dart
-const like = 'sample';
+```sketch
+rect "Auth Service" id=auth at 100,200 size 160x80 fill=#e3f2fd rounded
+rect "API Gateway" id=gateway at 350,200 size 160x80 fill=#fff3e0 rounded
+arrow from auth to gateway label="JWT tokens" stroke=dashed
+ellipse "Database" id=db at 225,400 size 120x80 fill=#e8f5e9
+arrow from gateway to db label="queries"
 ```
 
-## Additional information
+The auth service handles OAuth2 flows.
+````
 
-TODO: Tell users more about the package: where to find more information, how to
-contribute to the package, how to file issues, what response they can expect
-from the package authors, and more.
+## Installation
+
+Add to your `pubspec.yaml`:
+
+```yaml
+dependencies:
+  markdraw: ^0.0.1
+```
+
+Then run:
+
+```bash
+flutter pub get
+```
+
+## Development
+
+```bash
+# Run all tests
+flutter test
+
+# Run tests and check output
+flutter test 2>&1 > /tmp/test.txt
+
+# Static analysis
+flutter analyze
+
+# Generate coverage report
+flutter test --coverage
+genhtml coverage/lcov.info -o coverage/html
+```
+
+## Roadmap
+
+See [ROADMAP.md](ROADMAP.md) for the full development plan.
+
+- **Phase 0** — Foundation: core math types, element model, scene graph
+- **Phase 1** — Markdown serialization: `.markdraw` parser and serializer
+- **Phase 2** — Rendering: hand-drawn aesthetic via `rough_flutter`
+- **Phase 3** — Interaction: tools, selection, undo/redo
+- **Phase 4** — Text editing and bound text
+- **Phase 5** — Export (PNG, SVG, clipboard, Excalidraw interop)
+- **Phase 6** — Advanced features (groups, frames, images)
+- **Phase 7** — Platform polish
+- **Phase 8** — Collaboration and plugins
+
+## License
+
+MIT — see [LICENSE](LICENSE).
