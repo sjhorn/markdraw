@@ -12,7 +12,7 @@ class MarkdrawDocument {
     CanvasSettings? settings,
     List<DocumentSection> sections = const [],
     Map<String, String> aliases = const {},
-  })  : settings = settings ?? CanvasSettings(),
+  })  : settings = settings ?? const CanvasSettings(),
         sections = List.unmodifiable(sections),
         aliases = Map.unmodifiable(aliases);
 

@@ -182,22 +182,24 @@ markdraw/
 > This is front-loaded because the format IS the product differentiator.
 
 ### 1.1 Lexer & Parser
-- [ ] YAML frontmatter parser (canvas settings)
-- [ ] Markdown section splitter (prose blocks vs `sketch` fenced blocks)
-- [ ] Sketch block tokenizer: keywords (`rect`, `ellipse`, `diamond`, `arrow`, `line`, `text`, `freedraw`, `group`)
-- [ ] Property parser: `at X,Y`, `size WxH`, `fill=`, `stroke=`, `color=`, `id=`, `rounded`, `bold`, `italic`
-- [ ] Arrow reference resolver: `from <id> to <id>`
-- [ ] Point array parser: `points=[[x,y],[x,y],...]`
-- [ ] Pressure array parser: `pressure=[0.5,0.7,...]`
-- [ ] **Tests**: Tokenization of every element type, error recovery on malformed input
+- [x] YAML frontmatter parser (canvas settings)
+- [x] Markdown section splitter (prose blocks vs `sketch` fenced blocks)
+- [x] Sketch block tokenizer: keywords (`rect`, `ellipse`, `diamond`, `arrow`, `line`, `text`, `freedraw`)
+- [x] Property parser: `at X,Y`, `size WxH`, `fill=`, `stroke=`, `color=`, `id=`, `rounded`
+- [x] Arrow reference resolver: `from <id> to <id>`
+- [x] Point array parser: `points=[[x,y],[x,y],...]`
+- [x] Pressure array parser: `pressure=[0.5,0.7,...]`
+- [x] **Tests**: Tokenization of every element type, error recovery on malformed input
 
 ### 1.2 Serializer
-- [ ] `Scene` → `.markdraw` string serialization
-- [ ] Human-readable output for geometric and text elements
-- [ ] Compact but parseable output for freedraw (point arrays)
-- [ ] Prose section preservation (round-trip fidelity)
-- [ ] YAML frontmatter emission
-- [ ] **Tests**: Serialize → parse → serialize produces identical output
+- [x] `Scene` → `.markdraw` string serialization
+- [x] Human-readable output for geometric and text elements
+- [x] Compact but parseable output for freedraw (point arrays)
+- [x] Prose section preservation (round-trip fidelity)
+- [x] YAML frontmatter emission
+- [x] **Tests**: Serialize → parse → serialize produces identical output
+
+> **TDD checkpoint**: Parser & serializer complete with round-trip fidelity. 281 tests passing. Zero analyzer issues. ✅
 
 ### 1.3 JSON Interop
 - [ ] Import from `.excalidraw` JSON format

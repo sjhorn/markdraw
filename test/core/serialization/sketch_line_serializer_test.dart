@@ -24,7 +24,7 @@ void main() {
   group('RectangleElement', () {
     test('basic rectangle', () {
       final rect = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 100,
         y: 200,
         width: 160,
@@ -39,13 +39,13 @@ void main() {
 
     test('rectangle with fill and rounded', () {
       final rect = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 100,
         y: 200,
         width: 160,
         height: 80,
         backgroundColor: '#e3f2fd',
-        roundness: Roundness.adaptive(value: 8),
+        roundness: const Roundness.adaptive(value: 8),
         seed: 42,
         versionNonce: 1,
         updated: 0,
@@ -59,12 +59,12 @@ void main() {
 
     test('rectangle with label emits bound text info', () {
       final rect = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 100,
         y: 200,
         width: 160,
         height: 80,
-        boundElements: [BoundElement(id: 't1', type: 'text')],
+        boundElements: [const BoundElement(id: 't1', type: 'text')],
         seed: 42,
         versionNonce: 1,
         updated: 0,
@@ -79,7 +79,7 @@ void main() {
 
     test('rectangle with non-default stroke properties', () {
       final rect = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 0,
         y: 0,
         width: 100,
@@ -99,7 +99,7 @@ void main() {
 
     test('rectangle with all non-default properties', () {
       final rect = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 10,
         y: 20,
         width: 50,
@@ -135,7 +135,7 @@ void main() {
 
     test('crossHatch fillStyle serializes as cross-hatch', () {
       final rect = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 0,
         y: 0,
         width: 100,
@@ -153,7 +153,7 @@ void main() {
   group('EllipseElement', () {
     test('basic ellipse', () {
       final ellipse = EllipseElement(
-        id: ElementId('e1'),
+        id: const ElementId('e1'),
         x: 225,
         y: 400,
         width: 120,
@@ -168,7 +168,7 @@ void main() {
 
     test('ellipse with fill', () {
       final ellipse = EllipseElement(
-        id: ElementId('e1'),
+        id: const ElementId('e1'),
         x: 225,
         y: 400,
         width: 120,
@@ -189,7 +189,7 @@ void main() {
   group('DiamondElement', () {
     test('basic diamond', () {
       final diamond = DiamondElement(
-        id: ElementId('d1'),
+        id: const ElementId('d1'),
         x: 50,
         y: 50,
         width: 100,
@@ -208,7 +208,7 @@ void main() {
   group('TextElement', () {
     test('basic text', () {
       final text = TextElement(
-        id: ElementId('t1'),
+        id: const ElementId('t1'),
         x: 100,
         y: 50,
         width: 200,
@@ -225,7 +225,7 @@ void main() {
 
     test('text with non-default font size', () {
       final text = TextElement(
-        id: ElementId('t1'),
+        id: const ElementId('t1'),
         x: 0,
         y: 0,
         width: 100,
@@ -242,7 +242,7 @@ void main() {
 
     test('text does not emit size= when fontSize is default', () {
       final text = TextElement(
-        id: ElementId('t1'),
+        id: const ElementId('t1'),
         x: 0,
         y: 0,
         width: 100,
@@ -258,7 +258,7 @@ void main() {
 
     test('text with non-default font', () {
       final text = TextElement(
-        id: ElementId('t1'),
+        id: const ElementId('t1'),
         x: 0,
         y: 0,
         width: 100,
@@ -275,7 +275,7 @@ void main() {
 
     test('text with non-default alignment', () {
       final text = TextElement(
-        id: ElementId('t1'),
+        id: const ElementId('t1'),
         x: 0,
         y: 0,
         width: 100,
@@ -292,7 +292,7 @@ void main() {
 
     test('text with non-default color', () {
       final text = TextElement(
-        id: ElementId('t1'),
+        id: const ElementId('t1'),
         x: 0,
         y: 0,
         width: 100,
@@ -309,7 +309,7 @@ void main() {
 
     test('text with containerId is emitted', () {
       final text = TextElement(
-        id: ElementId('t1'),
+        id: const ElementId('t1'),
         x: 0,
         y: 0,
         width: 100,
@@ -329,12 +329,12 @@ void main() {
   group('LineElement', () {
     test('basic line', () {
       final line_ = LineElement(
-        id: ElementId('l1'),
+        id: const ElementId('l1'),
         x: 0,
         y: 0,
         width: 100,
         height: 100,
-        points: [Point(0, 0), Point(100, 0), Point(100, 100)],
+        points: [const Point(0, 0), const Point(100, 0), const Point(100, 100)],
         seed: 10,
         versionNonce: 1,
         updated: 0,
@@ -346,12 +346,12 @@ void main() {
 
     test('line with arrowheads', () {
       final line_ = LineElement(
-        id: ElementId('l1'),
+        id: const ElementId('l1'),
         x: 0,
         y: 0,
         width: 100,
         height: 0,
-        points: [Point(0, 0), Point(100, 0)],
+        points: [const Point(0, 0), const Point(100, 0)],
         startArrowhead: Arrowhead.dot,
         endArrowhead: Arrowhead.triangle,
         seed: 10,
@@ -365,12 +365,12 @@ void main() {
 
     test('line with stroke style', () {
       final line_ = LineElement(
-        id: ElementId('l1'),
+        id: const ElementId('l1'),
         x: 0,
         y: 0,
         width: 100,
         height: 100,
-        points: [Point(0, 0), Point(100, 100)],
+        points: [const Point(0, 0), const Point(100, 100)],
         strokeStyle: StrokeStyle.dotted,
         seed: 10,
         versionNonce: 1,
@@ -384,17 +384,17 @@ void main() {
   group('ArrowElement', () {
     test('arrow with bindings', () {
       final arrow = ArrowElement(
-        id: ElementId('a1'),
+        id: const ElementId('a1'),
         x: 0,
         y: 0,
         width: 200,
         height: 0,
-        points: [Point(0, 0), Point(200, 0)],
-        startBinding: PointBinding(
+        points: [const Point(0, 0), const Point(200, 0)],
+        startBinding: const PointBinding(
           elementId: 'r1',
           fixedPoint: Point(1, 0.5),
         ),
-        endBinding: PointBinding(
+        endBinding: const PointBinding(
           elementId: 'r2',
           fixedPoint: Point(0, 0.5),
         ),
@@ -413,17 +413,17 @@ void main() {
 
     test('arrow with label binding uses alias map', () {
       final arrow = ArrowElement(
-        id: ElementId('a1'),
+        id: const ElementId('a1'),
         x: 0,
         y: 0,
         width: 200,
         height: 0,
-        points: [Point(0, 0), Point(200, 0)],
-        startBinding: PointBinding(
+        points: [const Point(0, 0), const Point(200, 0)],
+        startBinding: const PointBinding(
           elementId: 'r1',
           fixedPoint: Point(1, 0.5),
         ),
-        endBinding: PointBinding(
+        endBinding: const PointBinding(
           elementId: 'r2',
           fixedPoint: Point(0, 0.5),
         ),
@@ -443,12 +443,12 @@ void main() {
 
     test('arrow without bindings uses points', () {
       final arrow = ArrowElement(
-        id: ElementId('a1'),
+        id: const ElementId('a1'),
         x: 0,
         y: 0,
         width: 200,
         height: 0,
-        points: [Point(0, 0), Point(200, 0)],
+        points: [const Point(0, 0), const Point(200, 0)],
         seed: 20,
         versionNonce: 1,
         updated: 0,
@@ -462,12 +462,12 @@ void main() {
 
     test('arrow with non-default arrowheads', () {
       final arrow = ArrowElement(
-        id: ElementId('a1'),
+        id: const ElementId('a1'),
         x: 0,
         y: 0,
         width: 200,
         height: 0,
-        points: [Point(0, 0), Point(200, 0)],
+        points: [const Point(0, 0), const Point(200, 0)],
         startArrowhead: Arrowhead.bar,
         endArrowhead: Arrowhead.dot,
         seed: 20,
@@ -481,12 +481,12 @@ void main() {
 
     test('arrow default endArrowhead (arrow) is not emitted', () {
       final arrow = ArrowElement(
-        id: ElementId('a1'),
+        id: const ElementId('a1'),
         x: 0,
         y: 0,
         width: 200,
         height: 0,
-        points: [Point(0, 0), Point(200, 0)],
+        points: [const Point(0, 0), const Point(200, 0)],
         seed: 20,
         versionNonce: 1,
         updated: 0,
@@ -499,12 +499,12 @@ void main() {
   group('FreedrawElement', () {
     test('basic freedraw', () {
       final freedraw = FreedrawElement(
-        id: ElementId('f1'),
+        id: const ElementId('f1'),
         x: 0,
         y: 0,
         width: 10,
         height: 8,
-        points: [Point(0, 0), Point(5, 2), Point(10, 8)],
+        points: [const Point(0, 0), const Point(5, 2), const Point(10, 8)],
         seed: 30,
         versionNonce: 1,
         updated: 0,
@@ -516,12 +516,12 @@ void main() {
 
     test('freedraw with pressure', () {
       final freedraw = FreedrawElement(
-        id: ElementId('f1'),
+        id: const ElementId('f1'),
         x: 0,
         y: 0,
         width: 10,
         height: 8,
-        points: [Point(0, 0), Point(5, 2), Point(10, 8)],
+        points: [const Point(0, 0), const Point(5, 2), const Point(10, 8)],
         pressures: [0.5, 0.7, 0.9],
         seed: 30,
         versionNonce: 1,
@@ -533,12 +533,12 @@ void main() {
 
     test('freedraw with simulate-pressure', () {
       final freedraw = FreedrawElement(
-        id: ElementId('f1'),
+        id: const ElementId('f1'),
         x: 0,
         y: 0,
         width: 10,
         height: 8,
-        points: [Point(0, 0)],
+        points: [const Point(0, 0)],
         simulatePressure: true,
         seed: 30,
         versionNonce: 1,
@@ -550,12 +550,12 @@ void main() {
 
     test('freedraw with non-default color', () {
       final freedraw = FreedrawElement(
-        id: ElementId('f1'),
+        id: const ElementId('f1'),
         x: 0,
         y: 0,
         width: 10,
         height: 8,
-        points: [Point(0, 0)],
+        points: [const Point(0, 0)],
         strokeColor: '#1e1e1e',
         seed: 30,
         versionNonce: 1,
@@ -569,7 +569,7 @@ void main() {
   group('Number formatting', () {
     test('integers without decimal point', () {
       final rect = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 100,
         y: 200,
         width: 160,
@@ -585,7 +585,7 @@ void main() {
 
     test('decimals preserved when needed', () {
       final rect = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 100.5,
         y: 200.25,
         width: 160,
@@ -602,7 +602,7 @@ void main() {
   group('Default omission', () {
     test('default strokeColor (#000000) is not emitted', () {
       final rect = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 0,
         y: 0,
         width: 100,
@@ -617,7 +617,7 @@ void main() {
 
     test('default backgroundColor (transparent) is not emitted', () {
       final rect = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 0,
         y: 0,
         width: 100,
@@ -632,7 +632,7 @@ void main() {
 
     test('default strokeWidth (2) is not emitted', () {
       final rect = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 0,
         y: 0,
         width: 100,
@@ -647,7 +647,7 @@ void main() {
 
     test('default roughness (1) is not emitted', () {
       final rect = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 0,
         y: 0,
         width: 100,
@@ -662,7 +662,7 @@ void main() {
 
     test('default opacity (1) is not emitted', () {
       final rect = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 0,
         y: 0,
         width: 100,
@@ -677,7 +677,7 @@ void main() {
 
     test('default angle (0) is not emitted', () {
       final rect = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 0,
         y: 0,
         width: 100,
@@ -692,7 +692,7 @@ void main() {
 
     test('locked=false is not emitted', () {
       final rect = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 0,
         y: 0,
         width: 100,

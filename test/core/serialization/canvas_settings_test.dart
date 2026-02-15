@@ -4,14 +4,14 @@ import 'package:markdraw/src/core/serialization/canvas_settings.dart';
 void main() {
   group('CanvasSettings', () {
     test('default values', () {
-      final settings = CanvasSettings();
+      const settings = CanvasSettings();
       expect(settings.formatVersion, 1);
       expect(settings.background, '#ffffff');
       expect(settings.grid, isNull);
     });
 
     test('custom values', () {
-      final settings = CanvasSettings(
+      const settings = CanvasSettings(
         formatVersion: 2,
         background: '#000000',
         grid: 20,
@@ -22,7 +22,7 @@ void main() {
     });
 
     test('copyWith replaces fields', () {
-      final original = CanvasSettings();
+      const original = CanvasSettings();
       final modified = original.copyWith(background: '#f0f0f0', grid: 10);
       expect(modified.formatVersion, 1);
       expect(modified.background, '#f0f0f0');
@@ -30,34 +30,34 @@ void main() {
     });
 
     test('copyWith preserves unspecified fields', () {
-      final original = CanvasSettings(grid: 20);
+      const original = CanvasSettings(grid: 20);
       final modified = original.copyWith(background: '#aaa');
       expect(modified.grid, 20);
     });
 
     test('copyWith can clear grid', () {
-      final original = CanvasSettings(grid: 20);
+      const original = CanvasSettings(grid: 20);
       final modified = original.copyWith(clearGrid: true);
       expect(modified.grid, isNull);
     });
 
     test('equality based on all fields', () {
-      final a = CanvasSettings(background: '#fff', grid: 10);
-      final b = CanvasSettings(background: '#fff', grid: 10);
-      final c = CanvasSettings(background: '#000', grid: 10);
+      const a = CanvasSettings(background: '#fff', grid: 10);
+      const b = CanvasSettings(background: '#fff', grid: 10);
+      const c = CanvasSettings(background: '#000', grid: 10);
       expect(a, equals(b));
       expect(a, isNot(equals(c)));
       expect(a.hashCode, b.hashCode);
     });
 
     test('isDefault returns true for default settings', () {
-      expect(CanvasSettings().isDefault, isTrue);
+      expect(const CanvasSettings().isDefault, isTrue);
     });
 
     test('isDefault returns false for non-default settings', () {
-      expect(CanvasSettings(grid: 20).isDefault, isFalse);
-      expect(CanvasSettings(background: '#000').isDefault, isFalse);
-      expect(CanvasSettings(formatVersion: 2).isDefault, isFalse);
+      expect(const CanvasSettings(grid: 20).isDefault, isFalse);
+      expect(const CanvasSettings(background: '#000').isDefault, isFalse);
+      expect(const CanvasSettings(formatVersion: 2).isDefault, isFalse);
     });
   });
 }

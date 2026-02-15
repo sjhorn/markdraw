@@ -1,4 +1,3 @@
-import '../elements/element.dart';
 import '../elements/text_element.dart';
 import 'document_section.dart';
 import 'markdraw_document.dart';

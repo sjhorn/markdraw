@@ -15,7 +15,7 @@ void main() {
 
     setUp(() {
       rect = RectangleElement(
-        id: ElementId('rect-uuid'),
+        id: const ElementId('rect-uuid'),
         x: 100,
         y: 200,
         width: 160,
@@ -25,7 +25,7 @@ void main() {
         updated: 0,
       );
       ellipse = EllipseElement(
-        id: ElementId('ellipse-uuid'),
+        id: const ElementId('ellipse-uuid'),
         x: 225,
         y: 400,
         width: 120,
@@ -35,7 +35,7 @@ void main() {
         updated: 0,
       );
       text = TextElement(
-        id: ElementId('text-uuid'),
+        id: const ElementId('text-uuid'),
         x: 100,
         y: 50,
         width: 200,
@@ -49,16 +49,16 @@ void main() {
 
     test('default settings and empty sections', () {
       final doc = MarkdrawDocument();
-      expect(doc.settings, equals(CanvasSettings()));
+      expect(doc.settings, equals(const CanvasSettings()));
       expect(doc.sections, isEmpty);
       expect(doc.aliases, isEmpty);
     });
 
     test('stores settings, sections, and aliases', () {
-      final settings = CanvasSettings(grid: 20);
+      const settings = CanvasSettings(grid: 20);
       final aliases = {'auth': 'rect-uuid', 'db': 'ellipse-uuid'};
       final sections = <DocumentSection>[
-        ProseSection('# Title'),
+        const ProseSection('# Title'),
         SketchSection([rect, ellipse]),
       ];
 
@@ -76,9 +76,9 @@ void main() {
     test('allElements collects elements from all sketch sections', () {
       final doc = MarkdrawDocument(
         sections: [
-          ProseSection('intro'),
+          const ProseSection('intro'),
           SketchSection([rect]),
-          ProseSection('middle'),
+          const ProseSection('middle'),
           SketchSection([ellipse, text]),
         ],
       );
@@ -91,7 +91,7 @@ void main() {
 
     test('allElements returns empty for prose-only document', () {
       final doc = MarkdrawDocument(
-        sections: [ProseSection('just text')],
+        sections: [const ProseSection('just text')],
       );
       expect(doc.allElements, isEmpty);
     });
@@ -105,22 +105,22 @@ void main() {
     });
 
     test('sections list is unmodifiable', () {
-      final doc = MarkdrawDocument(sections: [ProseSection('x')]);
+      final doc = MarkdrawDocument(sections: [const ProseSection('x')]);
       expect(
-        () => doc.sections.add(ProseSection('y')),
+        () => doc.sections.add(const ProseSection('y')),
         throwsA(isA<UnsupportedError>()),
       );
     });
 
     test('copyWith replaces fields', () {
       final doc = MarkdrawDocument(
-        settings: CanvasSettings(grid: 20),
-        sections: [ProseSection('old')],
+        settings: const CanvasSettings(grid: 20),
+        sections: [const ProseSection('old')],
         aliases: {'a': 'b'},
       );
 
       final modified = doc.copyWith(
-        settings: CanvasSettings(grid: 40),
+        settings: const CanvasSettings(grid: 40),
         sections: [SketchSection([rect])],
       );
 
@@ -131,10 +131,10 @@ void main() {
 
     test('copyWith preserves unspecified fields', () {
       final doc = MarkdrawDocument(
-        settings: CanvasSettings(grid: 20),
+        settings: const CanvasSettings(grid: 20),
         aliases: {'x': 'y'},
       );
-      final modified = doc.copyWith(sections: [ProseSection('new')]);
+      final modified = doc.copyWith(sections: [const ProseSection('new')]);
       expect(modified.settings.grid, 20);
       expect(modified.aliases['x'], 'y');
     });

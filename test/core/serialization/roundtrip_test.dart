@@ -17,7 +17,6 @@ import 'package:markdraw/src/core/serialization/document_parser.dart';
 import 'package:markdraw/src/core/serialization/document_section.dart';
 import 'package:markdraw/src/core/serialization/document_serializer.dart';
 import 'package:markdraw/src/core/serialization/markdraw_document.dart';
-import 'package:markdraw/src/core/serialization/parse_result.dart';
 import 'package:markdraw/src/core/serialization/sketch_line_parser.dart';
 import 'package:markdraw/src/core/serialization/sketch_line_serializer.dart';
 
@@ -33,7 +32,7 @@ void main() {
 
     test('rectangle round-trips', () {
       final original = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 100,
         y: 200,
         width: 160,
@@ -54,7 +53,7 @@ void main() {
 
     test('rectangle with non-default properties round-trips', () {
       final original = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 10,
         y: 20,
         width: 50,
@@ -66,7 +65,7 @@ void main() {
         strokeStyle: StrokeStyle.dotted,
         roughness: 2,
         opacity: 0.5,
-        roundness: Roundness.adaptive(value: 8),
+        roundness: const Roundness.adaptive(value: 8),
         angle: 1.5,
         locked: true,
         seed: 99,
@@ -91,7 +90,7 @@ void main() {
 
     test('ellipse round-trips', () {
       final original = EllipseElement(
-        id: ElementId('e1'),
+        id: const ElementId('e1'),
         x: 225,
         y: 400,
         width: 120,
@@ -111,7 +110,7 @@ void main() {
 
     test('diamond round-trips', () {
       final original = DiamondElement(
-        id: ElementId('d1'),
+        id: const ElementId('d1'),
         x: 50,
         y: 50,
         width: 100,
@@ -130,7 +129,7 @@ void main() {
 
     test('text round-trips', () {
       final original = TextElement(
-        id: ElementId('t1'),
+        id: const ElementId('t1'),
         x: 100,
         y: 50,
         width: 200,
@@ -156,12 +155,12 @@ void main() {
 
     test('line round-trips', () {
       final original = LineElement(
-        id: ElementId('l1'),
+        id: const ElementId('l1'),
         x: 0,
         y: 0,
         width: 100,
         height: 100,
-        points: [Point(0, 0), Point(100, 0), Point(100, 100)],
+        points: [const Point(0, 0), const Point(100, 0), const Point(100, 100)],
         startArrowhead: Arrowhead.dot,
         endArrowhead: Arrowhead.triangle,
         strokeStyle: StrokeStyle.dashed,
@@ -173,9 +172,9 @@ void main() {
       final result = parser.parseLine(line, 1);
       final parsed = result.value! as LineElement;
       expect(parsed.points, hasLength(3));
-      expect(parsed.points[0], Point(0, 0));
-      expect(parsed.points[1], Point(100, 0));
-      expect(parsed.points[2], Point(100, 100));
+      expect(parsed.points[0], const Point(0, 0));
+      expect(parsed.points[1], const Point(100, 0));
+      expect(parsed.points[2], const Point(100, 100));
       expect(parsed.startArrowhead, Arrowhead.dot);
       expect(parsed.endArrowhead, Arrowhead.triangle);
       expect(parsed.strokeStyle, StrokeStyle.dashed);
@@ -183,12 +182,12 @@ void main() {
 
     test('arrow without bindings round-trips', () {
       final original = ArrowElement(
-        id: ElementId('a1'),
+        id: const ElementId('a1'),
         x: 0,
         y: 0,
         width: 200,
         height: 0,
-        points: [Point(0, 0), Point(200, 0)],
+        points: [const Point(0, 0), const Point(200, 0)],
         startArrowhead: Arrowhead.bar,
         endArrowhead: Arrowhead.dot,
         seed: 20,
@@ -198,20 +197,20 @@ void main() {
       final line = serializer.serialize(original);
       final result = parser.parseLine(line, 1);
       final parsed = result.value! as ArrowElement;
-      expect(parsed.points[0], Point(0, 0));
-      expect(parsed.points[1], Point(200, 0));
+      expect(parsed.points[0], const Point(0, 0));
+      expect(parsed.points[1], const Point(200, 0));
       expect(parsed.startArrowhead, Arrowhead.bar);
       expect(parsed.endArrowhead, Arrowhead.dot);
     });
 
     test('freedraw round-trips', () {
       final original = FreedrawElement(
-        id: ElementId('f1'),
+        id: const ElementId('f1'),
         x: 0,
         y: 0,
         width: 10,
         height: 8,
-        points: [Point(0, 0), Point(5, 2), Point(10, 8)],
+        points: [const Point(0, 0), const Point(5, 2), const Point(10, 8)],
         pressures: [0.5, 0.7, 0.9],
         simulatePressure: true,
         strokeColor: '#1e1e1e',
@@ -223,7 +222,7 @@ void main() {
       final result = parser.parseLine(line, 1);
       final parsed = result.value! as FreedrawElement;
       expect(parsed.points, hasLength(3));
-      expect(parsed.points[0], Point(0, 0));
+      expect(parsed.points[0], const Point(0, 0));
       expect(parsed.pressures, [0.5, 0.7, 0.9]);
       expect(parsed.simulatePressure, isTrue);
       expect(parsed.strokeColor, '#1e1e1e');
@@ -231,7 +230,7 @@ void main() {
 
     test('fill-style cross-hatch round-trips', () {
       final original = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 0,
         y: 0,
         width: 100,
@@ -248,7 +247,7 @@ void main() {
 
     test('fill-style zigzag round-trips', () {
       final original = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 0,
         y: 0,
         width: 100,
@@ -288,7 +287,7 @@ rect id=r at 10,20 size 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-styl
   group('Document-level round-trips', () {
     test('frontmatter settings round-trip', () {
       final doc = MarkdrawDocument(
-        settings: CanvasSettings(
+        settings: const CanvasSettings(
           background: '#e0e0e0',
           grid: 20,
         ),
@@ -301,7 +300,7 @@ rect id=r at 10,20 size 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-styl
 
     test('prose sections round-trip', () {
       final doc = MarkdrawDocument(
-        sections: [ProseSection('# Hello World\n\nSome content here.')],
+        sections: [const ProseSection('# Hello World\n\nSome content here.')],
       );
       final output = DocumentSerializer.serialize(doc);
       final parsed = DocumentParser.parse(output);
@@ -314,7 +313,7 @@ rect id=r at 10,20 size 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-styl
 
     test('interleaved prose and sketch round-trip', () {
       final rect = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 100,
         y: 200,
         width: 160,
@@ -325,9 +324,9 @@ rect id=r at 10,20 size 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-styl
       );
       final doc = MarkdrawDocument(
         sections: [
-          ProseSection('# Title'),
+          const ProseSection('# Title'),
           SketchSection([rect]),
-          ProseSection('More text'),
+          const ProseSection('More text'),
         ],
         aliases: {'auth': 'r1'},
       );
@@ -347,7 +346,7 @@ rect id=r at 10,20 size 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-styl
 
     test('arrow bindings round-trip', () {
       final rect1 = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 100,
         y: 200,
         width: 160,
@@ -357,7 +356,7 @@ rect id=r at 10,20 size 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-styl
         updated: 0,
       );
       final rect2 = RectangleElement(
-        id: ElementId('r2'),
+        id: const ElementId('r2'),
         x: 350,
         y: 200,
         width: 160,
@@ -367,17 +366,17 @@ rect id=r at 10,20 size 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-styl
         updated: 0,
       );
       final arrow = ArrowElement(
-        id: ElementId('a1'),
+        id: const ElementId('a1'),
         x: 260,
         y: 240,
         width: 90,
         height: 0,
-        points: [Point(0, 0), Point(90, 0)],
-        startBinding: PointBinding(
+        points: [const Point(0, 0), const Point(90, 0)],
+        startBinding: const PointBinding(
           elementId: 'r1',
           fixedPoint: Point(1, 0.5),
         ),
-        endBinding: PointBinding(
+        endBinding: const PointBinding(
           elementId: 'r2',
           fixedPoint: Point(0, 0.5),
         ),
@@ -404,7 +403,7 @@ rect id=r at 10,20 size 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-styl
 
     test('bound text labels round-trip', () {
       final rect = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 100,
         y: 200,
         width: 160,
@@ -414,7 +413,7 @@ rect id=r at 10,20 size 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-styl
         updated: 0,
       );
       final label = TextElement(
-        id: ElementId('t1'),
+        id: const ElementId('t1'),
         x: 110,
         y: 210,
         width: 140,
@@ -450,7 +449,7 @@ rect id=r at 10,20 size 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-styl
     test('every element type round-trips through document', () {
       final elements = <Element>[
         RectangleElement(
-          id: ElementId('r1'),
+          id: const ElementId('r1'),
           x: 0,
           y: 0,
           width: 100,
@@ -460,7 +459,7 @@ rect id=r at 10,20 size 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-styl
           updated: 0,
         ),
         EllipseElement(
-          id: ElementId('e1'),
+          id: const ElementId('e1'),
           x: 200,
           y: 0,
           width: 80,
@@ -470,7 +469,7 @@ rect id=r at 10,20 size 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-styl
           updated: 0,
         ),
         DiamondElement(
-          id: ElementId('d1'),
+          id: const ElementId('d1'),
           x: 400,
           y: 0,
           width: 60,
@@ -480,7 +479,7 @@ rect id=r at 10,20 size 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-styl
           updated: 0,
         ),
         TextElement(
-          id: ElementId('t1'),
+          id: const ElementId('t1'),
           x: 0,
           y: 100,
           width: 200,
@@ -491,34 +490,34 @@ rect id=r at 10,20 size 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-styl
           updated: 0,
         ),
         LineElement(
-          id: ElementId('l1'),
+          id: const ElementId('l1'),
           x: 0,
           y: 200,
           width: 100,
           height: 100,
-          points: [Point(0, 0), Point(100, 100)],
+          points: [const Point(0, 0), const Point(100, 100)],
           seed: 5,
           versionNonce: 1,
           updated: 0,
         ),
         ArrowElement(
-          id: ElementId('a1'),
+          id: const ElementId('a1'),
           x: 0,
           y: 300,
           width: 200,
           height: 0,
-          points: [Point(0, 0), Point(200, 0)],
+          points: [const Point(0, 0), const Point(200, 0)],
           seed: 6,
           versionNonce: 1,
           updated: 0,
         ),
         FreedrawElement(
-          id: ElementId('f1'),
+          id: const ElementId('f1'),
           x: 0,
           y: 400,
           width: 50,
           height: 50,
-          points: [Point(0, 0), Point(25, 25), Point(50, 50)],
+          points: [const Point(0, 0), const Point(25, 25), const Point(50, 50)],
           seed: 7,
           versionNonce: 1,
           updated: 0,

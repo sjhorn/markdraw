@@ -1,7 +1,6 @@
 import '../elements/element.dart';
 import '../elements/element_id.dart';
 import '../elements/text_element.dart';
-import 'canvas_settings.dart';
 import 'document_section.dart';
 import 'frontmatter_parser.dart';
 import 'markdraw_document.dart';

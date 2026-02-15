@@ -105,7 +105,7 @@ class SketchLineParser {
         if (fromId != null) {
           startBinding = PointBinding(
             elementId: fromId,
-            fixedPoint: Point(1, 0.5),
+            fixedPoint: const Point(1, 0.5),
           );
         } else {
           warnings.add(ParseWarning(
@@ -120,7 +120,7 @@ class SketchLineParser {
         if (toId != null) {
           endBinding = PointBinding(
             elementId: toId,
-            fixedPoint: Point(0, 0.5),
+            fixedPoint: const Point(0, 0.5),
           );
         } else {
           warnings.add(ParseWarning(
@@ -321,7 +321,7 @@ class SketchLineParser {
     List<Point> points;
     if (hasBindings) {
       // Placeholder points — will be computed when bindings resolve
-      points = [Point(0, 0), Point(0, 0)];
+      points = [const Point(0, 0), const Point(0, 0)];
     } else {
       points = props.points;
     }

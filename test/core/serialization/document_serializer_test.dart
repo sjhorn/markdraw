@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:markdraw/src/core/elements/arrow_element.dart';
 import 'package:markdraw/src/core/elements/element_id.dart';
-import 'package:markdraw/src/core/elements/ellipse_element.dart';
 import 'package:markdraw/src/core/elements/rectangle_element.dart';
 import 'package:markdraw/src/core/elements/text_element.dart';
 import 'package:markdraw/src/core/math/point.dart';
@@ -20,7 +19,7 @@ void main() {
 
     test('document with only frontmatter', () {
       final doc = MarkdrawDocument(
-        settings: CanvasSettings(grid: 20),
+        settings: const CanvasSettings(grid: 20),
       );
       final output = DocumentSerializer.serialize(doc);
       expect(output, contains('---'));
@@ -30,7 +29,7 @@ void main() {
 
     test('document with prose section', () {
       final doc = MarkdrawDocument(
-        sections: [ProseSection('# Title\n\nSome text')],
+        sections: [const ProseSection('# Title\n\nSome text')],
       );
       final output = DocumentSerializer.serialize(doc);
       expect(output, contains('# Title'));
@@ -39,7 +38,7 @@ void main() {
 
     test('document with sketch section', () {
       final rect = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 100,
         y: 200,
         width: 160,
@@ -60,7 +59,7 @@ void main() {
 
     test('document with interleaved prose and sketch', () {
       final rect = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 100,
         y: 200,
         width: 160,
@@ -71,9 +70,9 @@ void main() {
       );
       final doc = MarkdrawDocument(
         sections: [
-          ProseSection('# Architecture'),
+          const ProseSection('# Architecture'),
           SketchSection([rect]),
-          ProseSection('More details here.'),
+          const ProseSection('More details here.'),
         ],
         aliases: {'auth': 'r1'},
       );
@@ -96,8 +95,8 @@ void main() {
 
     test('frontmatter emitted before sections', () {
       final doc = MarkdrawDocument(
-        settings: CanvasSettings(grid: 20),
-        sections: [ProseSection('content')],
+        settings: const CanvasSettings(grid: 20),
+        sections: [const ProseSection('content')],
       );
       final output = DocumentSerializer.serialize(doc);
       final fmEnd = output.indexOf('---\n', 4);
@@ -107,7 +106,7 @@ void main() {
 
     test('document with bound text labels', () {
       final rect = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 100,
         y: 200,
         width: 160,
@@ -117,7 +116,7 @@ void main() {
         updated: 0,
       );
       final label = TextElement(
-        id: ElementId('t1'),
+        id: const ElementId('t1'),
         x: 110,
         y: 210,
         width: 140,
@@ -145,7 +144,7 @@ void main() {
 
     test('unbound text appears as separate text line', () {
       final text = TextElement(
-        id: ElementId('t1'),
+        id: const ElementId('t1'),
         x: 100,
         y: 50,
         width: 200,
@@ -164,7 +163,7 @@ void main() {
 
     test('arrow with bindings uses from/to', () {
       final rect1 = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 100,
         y: 200,
         width: 160,
@@ -174,7 +173,7 @@ void main() {
         updated: 0,
       );
       final rect2 = RectangleElement(
-        id: ElementId('r2'),
+        id: const ElementId('r2'),
         x: 350,
         y: 200,
         width: 160,
@@ -184,17 +183,17 @@ void main() {
         updated: 0,
       );
       final arrow = ArrowElement(
-        id: ElementId('a1'),
+        id: const ElementId('a1'),
         x: 260,
         y: 240,
         width: 90,
         height: 0,
-        points: [Point(0, 0), Point(90, 0)],
-        startBinding: PointBinding(
+        points: [const Point(0, 0), const Point(90, 0)],
+        startBinding: const PointBinding(
           elementId: 'r1',
           fixedPoint: Point(1, 0.5),
         ),
-        endBinding: PointBinding(
+        endBinding: const PointBinding(
           elementId: 'r2',
           fixedPoint: Point(0, 0.5),
         ),
@@ -213,7 +212,7 @@ void main() {
 
     test('non-default frontmatter background uses quotes', () {
       final doc = MarkdrawDocument(
-        settings: CanvasSettings(background: '#e0e0e0'),
+        settings: const CanvasSettings(background: '#e0e0e0'),
       );
       final output = DocumentSerializer.serialize(doc);
       expect(output, contains('background: "#e0e0e0"'));
@@ -227,7 +226,7 @@ void main() {
 
     test('frontmatter always emitted when non-default', () {
       final doc = MarkdrawDocument(
-        settings: CanvasSettings(background: '#000'),
+        settings: const CanvasSettings(background: '#000'),
       );
       final output = DocumentSerializer.serialize(doc);
       expect(output, contains('---'));

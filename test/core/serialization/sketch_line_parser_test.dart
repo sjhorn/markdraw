@@ -172,9 +172,9 @@ void main() {
       expect(result.value, isA<LineElement>());
       final line = result.value! as LineElement;
       expect(line.points, hasLength(3));
-      expect(line.points[0], Point(0, 0));
-      expect(line.points[1], Point(100, 0));
-      expect(line.points[2], Point(100, 100));
+      expect(line.points[0], const Point(0, 0));
+      expect(line.points[1], const Point(100, 0));
+      expect(line.points[2], const Point(100, 100));
     });
 
     test('line with arrowheads', () {
@@ -203,7 +203,6 @@ void main() {
         1,
       );
       expect(result.value, isA<ArrowElement>());
-      final arrow = result.value! as ArrowElement;
       // Bindings are stored as deferred references
       expect(result.warnings, isEmpty);
     });
@@ -215,8 +214,8 @@ void main() {
       );
       final arrow = result.value! as ArrowElement;
       expect(arrow.points, hasLength(2));
-      expect(arrow.points[0], Point(0, 0));
-      expect(arrow.points[1], Point(200, 0));
+      expect(arrow.points[0], const Point(0, 0));
+      expect(arrow.points[1], const Point(200, 0));
     });
 
     test('arrow with non-default arrowheads', () {
@@ -247,7 +246,7 @@ void main() {
     });
 
     test('arrow from/to stored as binding aliases', () {
-      final result = parser.parseLine(
+      parser.parseLine(
         'arrow from auth to gateway seed=20',
         1,
       );
@@ -264,9 +263,9 @@ void main() {
       expect(result.value, isA<FreedrawElement>());
       final fd = result.value! as FreedrawElement;
       expect(fd.points, hasLength(3));
-      expect(fd.points[0], Point(0, 0));
-      expect(fd.points[1], Point(5, 2));
-      expect(fd.points[2], Point(10, 8));
+      expect(fd.points[0], const Point(0, 0));
+      expect(fd.points[1], const Point(5, 2));
+      expect(fd.points[2], const Point(10, 8));
     });
 
     test('freedraw with pressure', () {

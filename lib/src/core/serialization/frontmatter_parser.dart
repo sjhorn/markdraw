@@ -15,7 +15,7 @@ class FrontmatterParser {
     if (input.isEmpty) {
       return ParseResult(
         value: FrontmatterResult(
-          settings: CanvasSettings(),
+          settings: const CanvasSettings(),
           remaining: '',
         ),
       );
@@ -27,7 +27,7 @@ class FrontmatterParser {
     if (lines.isEmpty || lines.first.trim() != '---') {
       return ParseResult(
         value: FrontmatterResult(
-          settings: CanvasSettings(),
+          settings: const CanvasSettings(),
           remaining: input,
         ),
       );
@@ -46,11 +46,11 @@ class FrontmatterParser {
       // Unclosed frontmatter
       return ParseResult(
         value: FrontmatterResult(
-          settings: CanvasSettings(),
+          settings: const CanvasSettings(),
           remaining: input,
         ),
         warnings: [
-          ParseWarning(
+          const ParseWarning(
             line: 1,
             message: 'Frontmatter unclosed (missing closing ---)',
           ),

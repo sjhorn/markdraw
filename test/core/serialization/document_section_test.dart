@@ -1,27 +1,26 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:markdraw/src/core/elements/element_id.dart';
 import 'package:markdraw/src/core/elements/rectangle_element.dart';
-import 'package:markdraw/src/core/elements/text_element.dart';
 import 'package:markdraw/src/core/serialization/document_section.dart';
 
 void main() {
   group('ProseSection', () {
     test('stores content', () {
-      final section = ProseSection('Hello world');
+      const section = ProseSection('Hello world');
       expect(section.content, 'Hello world');
     });
 
     test('equality based on content', () {
-      final a = ProseSection('abc');
-      final b = ProseSection('abc');
-      final c = ProseSection('xyz');
+      const a = ProseSection('abc');
+      const b = ProseSection('abc');
+      const c = ProseSection('xyz');
       expect(a, equals(b));
       expect(a, isNot(equals(c)));
       expect(a.hashCode, b.hashCode);
     });
 
     test('is a DocumentSection', () {
-      final section = ProseSection('text');
+      const section = ProseSection('text');
       expect(section, isA<DocumentSection>());
     });
   });
@@ -29,7 +28,7 @@ void main() {
   group('SketchSection', () {
     test('stores elements', () {
       final rect = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 0,
         y: 0,
         width: 100,
@@ -48,7 +47,7 @@ void main() {
       expect(
         () => section.elements.add(
           RectangleElement(
-            id: ElementId('r1'),
+            id: const ElementId('r1'),
             x: 0,
             y: 0,
             width: 100,
@@ -64,7 +63,7 @@ void main() {
 
     test('equality based on elements', () {
       final rect = RectangleElement(
-        id: ElementId('r1'),
+        id: const ElementId('r1'),
         x: 0,
         y: 0,
         width: 100,
@@ -88,7 +87,7 @@ void main() {
   group('DocumentSection pattern matching', () {
     test('switch exhaustive on sealed class', () {
       final sections = <DocumentSection>[
-        ProseSection('intro'),
+        const ProseSection('intro'),
         SketchSection([]),
       ];
 

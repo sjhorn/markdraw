@@ -34,13 +34,13 @@ Content''';
     test('handles no frontmatter', () {
       const input = '# Just markdown\n\nSome content';
       final result = FrontmatterParser.parse(input);
-      expect(result.value.settings, equals(CanvasSettings()));
+      expect(result.value.settings, equals(const CanvasSettings()));
       expect(result.value.remaining, input);
     });
 
     test('handles empty input', () {
       final result = FrontmatterParser.parse('');
-      expect(result.value.settings, equals(CanvasSettings()));
+      expect(result.value.settings, equals(const CanvasSettings()));
       expect(result.value.remaining, '');
     });
 
@@ -105,7 +105,7 @@ background: "#fff"
 no closing delimiter''';
       final result = FrontmatterParser.parse(input);
       // Treat entire input as content (no valid frontmatter)
-      expect(result.value.settings, equals(CanvasSettings()));
+      expect(result.value.settings, equals(const CanvasSettings()));
       expect(result.warnings, hasLength(1));
       expect(result.warnings.first.message, contains('unclosed'));
     });

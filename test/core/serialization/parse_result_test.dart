@@ -4,7 +4,7 @@ import 'package:markdraw/src/core/serialization/parse_result.dart';
 void main() {
   group('ParseWarning', () {
     test('stores line, message, and context', () {
-      final warning = ParseWarning(
+      const warning = ParseWarning(
         line: 5,
         message: 'Unknown keyword',
         context: 'foo at 10,20',
@@ -15,20 +15,20 @@ void main() {
     });
 
     test('context defaults to null', () {
-      final warning = ParseWarning(line: 1, message: 'error');
+      const warning = ParseWarning(line: 1, message: 'error');
       expect(warning.context, isNull);
     });
 
     test('toString includes line and message', () {
-      final warning = ParseWarning(line: 3, message: 'bad input');
+      const warning = ParseWarning(line: 3, message: 'bad input');
       expect(warning.toString(), contains('3'));
       expect(warning.toString(), contains('bad input'));
     });
 
     test('equality based on line, message, context', () {
-      final a = ParseWarning(line: 1, message: 'x', context: 'c');
-      final b = ParseWarning(line: 1, message: 'x', context: 'c');
-      final c = ParseWarning(line: 2, message: 'x', context: 'c');
+      const a = ParseWarning(line: 1, message: 'x', context: 'c');
+      const b = ParseWarning(line: 1, message: 'x', context: 'c');
+      const c = ParseWarning(line: 2, message: 'x', context: 'c');
       expect(a, equals(b));
       expect(a, isNot(equals(c)));
       expect(a.hashCode, b.hashCode);
@@ -43,7 +43,7 @@ void main() {
     });
 
     test('stores value and warnings', () {
-      final warnings = [ParseWarning(line: 1, message: 'warn')];
+      final warnings = [const ParseWarning(line: 1, message: 'warn')];
       final result = ParseResult(value: 'hello', warnings: warnings);
       expect(result.value, 'hello');
       expect(result.warnings, hasLength(1));
@@ -58,7 +58,7 @@ void main() {
     test('hasWarnings returns true when warnings present', () {
       final result = ParseResult(
         value: true,
-        warnings: [ParseWarning(line: 1, message: 'w')],
+        warnings: [const ParseWarning(line: 1, message: 'w')],
       );
       expect(result.hasWarnings, isTrue);
     });
@@ -66,10 +66,10 @@ void main() {
     test('warnings list is unmodifiable', () {
       final result = ParseResult(
         value: 0,
-        warnings: [ParseWarning(line: 1, message: 'w')],
+        warnings: [const ParseWarning(line: 1, message: 'w')],
       );
       expect(
-        () => result.warnings.add(ParseWarning(line: 2, message: 'x')),
+        () => result.warnings.add(const ParseWarning(line: 2, message: 'x')),
         throwsA(isA<UnsupportedError>()),
       );
     });
