@@ -8,6 +8,9 @@ import 'markdraw_document.dart';
 import 'parse_result.dart';
 import 'sketch_line_parser.dart';
 
+/// Keywords that can have inline labels (e.g., rect "Label" ...).
+const _labelableKeywords = {'rect', 'ellipse', 'diamond'};
+
 /// Parses a .markdraw format string into a MarkdrawDocument.
 class DocumentParser {
   static ParseResult<MarkdrawDocument> parse(String input) {
@@ -133,12 +136,14 @@ class DocumentParser {
       final line = lines[i].trim();
       if (line.isEmpty || line.startsWith('#')) continue;
 
-      // Check for inline label: keyword "Label" ...
+      // Check for inline label on shapes: keyword "Label" ...
+      // Only applies to shape types (not text, which naturally has quotes)
       final labelMatch = RegExp(
         r'^(\w+)\s+"([^"]+)"\s+(.*)',
       ).firstMatch(line);
 
-      if (labelMatch != null) {
+      if (labelMatch != null &&
+          _labelableKeywords.contains(labelMatch.group(1)!.toLowerCase())) {
         final keyword = labelMatch.group(1)!;
         final label = labelMatch.group(2)!;
         final rest = labelMatch.group(3)!;
