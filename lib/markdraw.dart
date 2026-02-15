@@ -4,3 +4,4 @@ library;
 
 export 'src/core/elements/elements.dart';
 export 'src/core/math/math.dart';
+export 'src/core/scene/scene_exports.dart';
