@@ -138,41 +138,41 @@ markdraw/
 > Goal: Project scaffold, CI, core abstractions, and the first passing test.
 
 ### 0.1 Project Setup
-- [ ] Initialize Flutter project with multi-platform targets
-- [ ] Configure linting (`flutter_lints` strict mode + custom rules)
+- [x] Initialize Flutter project with multi-platform targets
+- [x] Configure linting (`flutter_lints` strict mode + custom rules)
 - [ ] Set up CI (GitHub Actions: test, analyze, format on every PR)
-- [ ] Add dependencies: `rough_flutter`, `uuid`, `equatable`, `freezed`, `riverpod`
+- [x] Add dependencies: `uuid`, `equatable`, `freezed`
 - [ ] Configure code coverage reporting (target: 90%+)
 - [ ] Clone excalidraw repo into `./excalidraw/` for reference
 
 ### 0.2 Core Element Model
-- [ ] `Element` base class with all 26 shared properties (immutable, `@freezed`)
-- [ ] `ElementId` value object (nanoid-style generation)
-- [ ] `Point`, `Size`, `Bounds` value objects in `core/math/`
-- [ ] `StrokeStyle` enum: `solid`, `dashed`, `dotted`
-- [ ] `FillStyle` enum: `solid`, `hachure`, `crossHatch`, `zigzag`
-- [ ] `Roundness` value object with `adaptive` and `proportional` variants
-- [ ] **Tests**: Element creation, equality, copyWith, serialization to/from Map
+- [x] `Element` base class with all 26 shared properties (immutable, manual `copyWith`)
+- [x] `ElementId` value object (UUID-based generation)
+- [x] `Point`, `Size`, `Bounds` value objects in `core/math/`
+- [x] `StrokeStyle` enum: `solid`, `dashed`, `dotted`
+- [x] `FillStyle` enum: `solid`, `hachure`, `crossHatch`, `zigzag`
+- [x] `Roundness` value object with `adaptive` and `proportional` variants
+- [x] **Tests**: Element creation, equality, copyWith, version bumping, soft deletion
 
 ### 0.3 Element Type Hierarchy
-- [ ] `RectangleElement` — base geometric, `roundness` property
-- [ ] `EllipseElement` — bounding-box defined
-- [ ] `DiamondElement` — midpoint vertices
-- [ ] `TextElement` — `text`, `fontSize`, `fontFamily`, `textAlign`, `containerId`
-- [ ] `LineElement` — `points[]`, `startArrowhead`, `endArrowhead`
-- [ ] `ArrowElement extends LineElement` — `startBinding`, `endBinding`
-- [ ] `FreedrawElement` — `points[]`, `pressures[]`, `simulatePressure`
-- [ ] **Tests**: Each type constructs correctly, validates constraints, copyWith works
+- [x] `RectangleElement` — base geometric, `roundness` property
+- [x] `EllipseElement` — bounding-box defined
+- [x] `DiamondElement` — midpoint vertices
+- [x] `TextElement` — `text`, `fontSize`, `fontFamily`, `textAlign`, `containerId`
+- [x] `LineElement` — `points[]`, `startArrowhead`, `endArrowhead`
+- [x] `ArrowElement extends LineElement` — `startBinding`, `endBinding`
+- [x] `FreedrawElement` — `points[]`, `pressures[]`, `simulatePressure`
+- [x] **Tests**: Each type constructs correctly, copyWith works, type-specific methods
 
 ### 0.4 Scene Model
-- [ ] `Scene` class — ordered collection of elements, CRUD operations
-- [ ] Immutable element updates (new version, bumped `versionNonce`)
-- [ ] Soft deletion (`isDeleted` flag)
-- [ ] Fractional index ordering
-- [ ] `getElementAtPoint(Point)` — hit testing placeholder (bounds-only)
-- [ ] **Tests**: Add/remove/update elements, ordering, soft delete, version bumping
+- [x] `Scene` class — ordered collection of elements, CRUD operations
+- [x] Immutable element updates (new version, bumped `versionNonce`)
+- [x] Soft deletion (`isDeleted` flag)
+- [x] Fractional index ordering
+- [x] `getElementAtPoint(Point)` — hit testing placeholder (bounds-only)
+- [x] **Tests**: Add/remove/update elements, ordering, soft delete, version bumping
 
-> **TDD checkpoint**: All core model tests pass. Zero Flutter imports in `core/`.
+> **TDD checkpoint**: All core model tests pass (120 tests). Zero Flutter imports in `core/`. ✅
 
 ---
 
