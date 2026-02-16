@@ -1,13 +1,18 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:markdraw/src/core/elements/arrow_element.dart';
 import 'package:markdraw/src/core/elements/diamond_element.dart';
 import 'package:markdraw/src/core/elements/element.dart';
 import 'package:markdraw/src/core/elements/ellipse_element.dart';
 import 'package:markdraw/src/core/elements/fill_style.dart';
+import 'package:markdraw/src/core/elements/freedraw_element.dart';
+import 'package:markdraw/src/core/elements/line_element.dart';
 import 'package:markdraw/src/core/elements/rectangle_element.dart';
 import 'package:markdraw/src/core/elements/roundness.dart';
 import 'package:markdraw/src/core/elements/stroke_style.dart';
+import 'package:markdraw/src/core/elements/text_element.dart';
+import 'package:markdraw/src/core/math/point.dart';
 import 'package:markdraw/src/core/serialization/document_section.dart';
 import 'package:markdraw/src/core/serialization/excalidraw_json_codec.dart';
 
@@ -376,6 +381,501 @@ void main() {
         ]);
         final el = ExcalidrawJsonCodec.parse(json).value.allElements.first;
         expect(el.isDeleted, isTrue);
+      });
+    });
+
+    group('text', () {
+      test('parses text element with all properties', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'txt1', type: 'text', x: 10, y: 20),
+            'text': 'Hello World',
+            'fontSize': 24,
+            'fontFamily': 1,
+            'textAlign': 'center',
+            'containerId': 'rect1',
+            'lineHeight': 1.5,
+            'autoResize': false,
+            'originalText': 'Hello World',
+            'verticalAlign': 'middle',
+          },
+        ]);
+        final result = ExcalidrawJsonCodec.parse(json);
+        expect(result.value.allElements, hasLength(1));
+        final el = result.value.allElements.first;
+        expect(el, isA<TextElement>());
+        final text = el as TextElement;
+        expect(text.text, 'Hello World');
+        expect(text.fontSize, 24.0);
+        expect(text.fontFamily, 'Virgil'); // fontFamily 1 → Virgil
+        expect(text.textAlign, TextAlign.center);
+        expect(text.containerId, 'rect1');
+        expect(text.lineHeight, 1.5);
+        expect(text.autoResize, false);
+      });
+
+      test('fontFamily number 2 maps to Helvetica', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'txt1', type: 'text'),
+            'text': 'Hi',
+            'fontFamily': 2,
+          },
+        ]);
+        final el =
+            ExcalidrawJsonCodec.parse(json).value.allElements.first
+                as TextElement;
+        expect(el.fontFamily, 'Helvetica');
+      });
+
+      test('fontFamily number 3 maps to Cascadia', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'txt1', type: 'text'),
+            'text': 'Hi',
+            'fontFamily': 3,
+          },
+        ]);
+        final el =
+            ExcalidrawJsonCodec.parse(json).value.allElements.first
+                as TextElement;
+        expect(el.fontFamily, 'Cascadia');
+      });
+
+      test('unknown fontFamily number uses default with warning', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'txt1', type: 'text'),
+            'text': 'Hi',
+            'fontFamily': 99,
+          },
+        ]);
+        final result = ExcalidrawJsonCodec.parse(json);
+        final el = result.value.allElements.first as TextElement;
+        expect(el.fontFamily, 'Virgil');
+        expect(result.hasWarnings, isTrue);
+        expect(result.warnings.first.message, contains('font family'));
+      });
+
+      test('textAlign left is default', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'txt1', type: 'text'),
+            'text': 'Hi',
+          },
+        ]);
+        final el =
+            ExcalidrawJsonCodec.parse(json).value.allElements.first
+                as TextElement;
+        expect(el.textAlign, TextAlign.left);
+      });
+
+      test('textAlign right maps correctly', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'txt1', type: 'text'),
+            'text': 'Hi',
+            'textAlign': 'right',
+          },
+        ]);
+        final el =
+            ExcalidrawJsonCodec.parse(json).value.allElements.first
+                as TextElement;
+        expect(el.textAlign, TextAlign.right);
+      });
+
+      test('null containerId stays null', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'txt1', type: 'text'),
+            'text': 'Hi',
+            'containerId': null,
+          },
+        ]);
+        final el =
+            ExcalidrawJsonCodec.parse(json).value.allElements.first
+                as TextElement;
+        expect(el.containerId, isNull);
+      });
+    });
+
+    group('line', () {
+      test('parses line element with points', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'line1', type: 'line'),
+            'points': [
+              [0, 0],
+              [100, 50],
+              [200, 0],
+            ],
+          },
+        ]);
+        final result = ExcalidrawJsonCodec.parse(json);
+        expect(result.value.allElements, hasLength(1));
+        final el = result.value.allElements.first;
+        expect(el, isA<LineElement>());
+        final line = el as LineElement;
+        expect(line.points, hasLength(3));
+        expect(line.points[0], const Point(0, 0));
+        expect(line.points[1], const Point(100, 50));
+        expect(line.points[2], const Point(200, 0));
+      });
+
+      test('parses line with arrowheads', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'line1', type: 'line'),
+            'points': [
+              [0, 0],
+              [100, 0],
+            ],
+            'startArrowhead': 'arrow',
+            'endArrowhead': 'triangle',
+          },
+        ]);
+        final el =
+            ExcalidrawJsonCodec.parse(json).value.allElements.first
+                as LineElement;
+        expect(el.startArrowhead, Arrowhead.arrow);
+        expect(el.endArrowhead, Arrowhead.triangle);
+      });
+
+      test('null arrowheads stay null', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'line1', type: 'line'),
+            'points': [
+              [0, 0],
+              [100, 0],
+            ],
+            'startArrowhead': null,
+            'endArrowhead': null,
+          },
+        ]);
+        final el =
+            ExcalidrawJsonCodec.parse(json).value.allElements.first
+                as LineElement;
+        expect(el.startArrowhead, isNull);
+        expect(el.endArrowhead, isNull);
+      });
+
+      test('empty points list handled', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'line1', type: 'line'),
+            'points': <List<num>>[],
+          },
+        ]);
+        final el =
+            ExcalidrawJsonCodec.parse(json).value.allElements.first
+                as LineElement;
+        expect(el.points, isEmpty);
+      });
+    });
+
+    group('arrow', () {
+      test('parses arrow element with points and bindings', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'arr1', type: 'arrow'),
+            'points': [
+              [0, 0],
+              [150, 75],
+            ],
+            'startArrowhead': null,
+            'endArrowhead': 'arrow',
+            'startBinding': {
+              'elementId': 'rect1',
+              'fixedPoint': [0.5, 1.0],
+              'focus': 0,
+              'gap': 1,
+            },
+            'endBinding': {
+              'elementId': 'rect2',
+              'fixedPoint': [0.5, 0.0],
+              'focus': 0,
+              'gap': 1,
+            },
+          },
+        ]);
+        final result = ExcalidrawJsonCodec.parse(json);
+        expect(result.value.allElements, hasLength(1));
+        final el = result.value.allElements.first;
+        expect(el, isA<ArrowElement>());
+        final arrow = el as ArrowElement;
+        expect(arrow.points, hasLength(2));
+        expect(arrow.points[0], const Point(0, 0));
+        expect(arrow.points[1], const Point(150, 75));
+        expect(arrow.startArrowhead, isNull);
+        expect(arrow.endArrowhead, Arrowhead.arrow);
+        expect(arrow.startBinding, isNotNull);
+        expect(arrow.startBinding!.elementId, 'rect1');
+        expect(arrow.startBinding!.fixedPoint, const Point(0.5, 1.0));
+        expect(arrow.endBinding, isNotNull);
+        expect(arrow.endBinding!.elementId, 'rect2');
+        expect(arrow.endBinding!.fixedPoint, const Point(0.5, 0.0));
+      });
+
+      test('null bindings stay null', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'arr1', type: 'arrow'),
+            'points': [
+              [0, 0],
+              [100, 0],
+            ],
+            'startBinding': null,
+            'endBinding': null,
+          },
+        ]);
+        final arrow =
+            ExcalidrawJsonCodec.parse(json).value.allElements.first
+                as ArrowElement;
+        expect(arrow.startBinding, isNull);
+        expect(arrow.endBinding, isNull);
+      });
+
+      test('elbowed arrow treated as normal arrow', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'arr1', type: 'arrow'),
+            'points': [
+              [0, 0],
+              [50, 0],
+              [50, 100],
+              [100, 100],
+            ],
+            'elbowed': true,
+          },
+        ]);
+        final arrow =
+            ExcalidrawJsonCodec.parse(json).value.allElements.first
+                as ArrowElement;
+        expect(arrow.points, hasLength(4));
+      });
+    });
+
+    group('arrowhead mapping', () {
+      test('arrow maps to arrow', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'a1', type: 'arrow'),
+            'points': [
+              [0, 0],
+              [100, 0],
+            ],
+            'endArrowhead': 'arrow',
+          },
+        ]);
+        final el =
+            ExcalidrawJsonCodec.parse(json).value.allElements.first
+                as ArrowElement;
+        expect(el.endArrowhead, Arrowhead.arrow);
+      });
+
+      test('bar maps to bar', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'a1', type: 'arrow'),
+            'points': [
+              [0, 0],
+              [100, 0],
+            ],
+            'endArrowhead': 'bar',
+          },
+        ]);
+        final el =
+            ExcalidrawJsonCodec.parse(json).value.allElements.first
+                as ArrowElement;
+        expect(el.endArrowhead, Arrowhead.bar);
+      });
+
+      test('dot maps to dot', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'a1', type: 'arrow'),
+            'points': [
+              [0, 0],
+              [100, 0],
+            ],
+            'endArrowhead': 'dot',
+          },
+        ]);
+        final el =
+            ExcalidrawJsonCodec.parse(json).value.allElements.first
+                as ArrowElement;
+        expect(el.endArrowhead, Arrowhead.dot);
+      });
+
+      test('triangle maps to triangle', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'a1', type: 'arrow'),
+            'points': [
+              [0, 0],
+              [100, 0],
+            ],
+            'endArrowhead': 'triangle',
+          },
+        ]);
+        final el =
+            ExcalidrawJsonCodec.parse(json).value.allElements.first
+                as ArrowElement;
+        expect(el.endArrowhead, Arrowhead.triangle);
+      });
+
+      test('circle maps to dot with warning', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'a1', type: 'arrow'),
+            'points': [
+              [0, 0],
+              [100, 0],
+            ],
+            'endArrowhead': 'circle',
+          },
+        ]);
+        final result = ExcalidrawJsonCodec.parse(json);
+        final el = result.value.allElements.first as ArrowElement;
+        expect(el.endArrowhead, Arrowhead.dot);
+        expect(result.hasWarnings, isTrue);
+        expect(result.warnings.first.message, contains('circle'));
+      });
+
+      test('circle_outline maps to dot with warning', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'a1', type: 'arrow'),
+            'points': [
+              [0, 0],
+              [100, 0],
+            ],
+            'endArrowhead': 'circle_outline',
+          },
+        ]);
+        final result = ExcalidrawJsonCodec.parse(json);
+        final el = result.value.allElements.first as ArrowElement;
+        expect(el.endArrowhead, Arrowhead.dot);
+      });
+
+      test('triangle_outline maps to triangle with warning', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'a1', type: 'arrow'),
+            'points': [
+              [0, 0],
+              [100, 0],
+            ],
+            'endArrowhead': 'triangle_outline',
+          },
+        ]);
+        final result = ExcalidrawJsonCodec.parse(json);
+        final el = result.value.allElements.first as ArrowElement;
+        expect(el.endArrowhead, Arrowhead.triangle);
+      });
+
+      test('diamond maps to triangle with warning', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'a1', type: 'arrow'),
+            'points': [
+              [0, 0],
+              [100, 0],
+            ],
+            'endArrowhead': 'diamond',
+          },
+        ]);
+        final result = ExcalidrawJsonCodec.parse(json);
+        final el = result.value.allElements.first as ArrowElement;
+        expect(el.endArrowhead, Arrowhead.triangle);
+        expect(
+          result.warnings.first.message,
+          contains('diamond'),
+        );
+      });
+
+      test('diamond_outline maps to triangle with warning', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'a1', type: 'arrow'),
+            'points': [
+              [0, 0],
+              [100, 0],
+            ],
+            'endArrowhead': 'diamond_outline',
+          },
+        ]);
+        final result = ExcalidrawJsonCodec.parse(json);
+        final el = result.value.allElements.first as ArrowElement;
+        expect(el.endArrowhead, Arrowhead.triangle);
+      });
+
+      test('crowfoot_one maps to arrow with warning', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'a1', type: 'arrow'),
+            'points': [
+              [0, 0],
+              [100, 0],
+            ],
+            'endArrowhead': 'crowfoot_one',
+          },
+        ]);
+        final result = ExcalidrawJsonCodec.parse(json);
+        final el = result.value.allElements.first as ArrowElement;
+        expect(el.endArrowhead, Arrowhead.arrow);
+        expect(
+          result.warnings.first.message,
+          contains('crowfoot_one'),
+        );
+      });
+    });
+
+    group('freedraw', () {
+      test('parses freedraw element with points and pressures', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'fd1', type: 'freedraw'),
+            'points': [
+              [0, 0],
+              [10, 5],
+              [20, 3],
+            ],
+            'pressures': [0.5, 0.7, 0.3],
+            'simulatePressure': false,
+          },
+        ]);
+        final result = ExcalidrawJsonCodec.parse(json);
+        expect(result.value.allElements, hasLength(1));
+        final el = result.value.allElements.first;
+        expect(el, isA<FreedrawElement>());
+        final fd = el as FreedrawElement;
+        expect(fd.points, hasLength(3));
+        expect(fd.points[0], const Point(0, 0));
+        expect(fd.points[1], const Point(10, 5));
+        expect(fd.points[2], const Point(20, 3));
+        expect(fd.pressures, [0.5, 0.7, 0.3]);
+        expect(fd.simulatePressure, false);
+      });
+
+      test('simulatePressure true with empty pressures', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'fd1', type: 'freedraw'),
+            'points': [
+              [0, 0],
+              [10, 5],
+            ],
+            'pressures': <double>[],
+            'simulatePressure': true,
+          },
+        ]);
+        final fd =
+            ExcalidrawJsonCodec.parse(json).value.allElements.first
+                as FreedrawElement;
+        expect(fd.simulatePressure, true);
+        expect(fd.pressures, isEmpty);
       });
     });
   });

@@ -1,13 +1,18 @@
 import 'dart:convert';
 
+import '../elements/arrow_element.dart';
 import '../elements/diamond_element.dart';
 import '../elements/element.dart';
 import '../elements/element_id.dart';
 import '../elements/ellipse_element.dart';
 import '../elements/fill_style.dart';
+import '../elements/freedraw_element.dart';
+import '../elements/line_element.dart';
 import '../elements/rectangle_element.dart';
 import '../elements/roundness.dart';
 import '../elements/stroke_style.dart';
+import '../elements/text_element.dart';
+import '../math/point.dart';
 import 'document_section.dart';
 import 'markdraw_document.dart';
 import 'parse_result.dart';
@@ -156,6 +161,14 @@ class ExcalidrawJsonCodec {
         return _parseEllipse(raw);
       case 'diamond':
         return _parseDiamond(raw);
+      case 'text':
+        return _parseText(raw, index, warnings);
+      case 'line':
+        return _parseLine(raw, index, warnings);
+      case 'arrow':
+        return _parseArrow(raw, index, warnings);
+      case 'freedraw':
+        return _parseFreedraw(raw);
       default:
         warnings.add(
           ParseWarning(
@@ -224,6 +237,119 @@ class ExcalidrawJsonCodec {
     final list = raw['groupIds'];
     if (list == null || list is! List) return const [];
     return list.cast<String>();
+  }
+
+  static List<Point> _points(Map<String, dynamic> raw) {
+    final list = raw['points'];
+    if (list == null || list is! List) return const [];
+    return list
+        .whereType<List>()
+        .map((p) => Point(
+              (p[0] as num).toDouble(),
+              (p[1] as num).toDouble(),
+            ))
+        .toList();
+  }
+
+  static List<double> _pressures(Map<String, dynamic> raw) {
+    final list = raw['pressures'];
+    if (list == null || list is! List) return const [];
+    return list.map((p) => (p as num).toDouble()).toList();
+  }
+
+  static TextAlign _textAlign(Map<String, dynamic> raw) {
+    switch (raw['textAlign'] as String? ?? 'left') {
+      case 'center':
+        return TextAlign.center;
+      case 'right':
+        return TextAlign.right;
+      default:
+        return TextAlign.left;
+    }
+  }
+
+  static String _fontFamily(
+    Map<String, dynamic> raw,
+    int index,
+    List<ParseWarning> warnings,
+  ) {
+    final num? familyNum = raw['fontFamily'] as num?;
+    if (familyNum == null) return 'Virgil';
+    final name = fontFamilyFromNumber[familyNum.toInt()];
+    if (name != null) return name;
+    warnings.add(
+      ParseWarning(
+        line: index,
+        message: 'Unknown font family ${familyNum.toInt()}, using Virgil',
+      ),
+    );
+    return 'Virgil';
+  }
+
+  /// Maps an Excalidraw arrowhead string to our [Arrowhead] enum.
+  ///
+  /// Produces a warning for lossy mappings.
+  static Arrowhead? _arrowhead(
+    String? value,
+    int index,
+    List<ParseWarning> warnings,
+  ) {
+    if (value == null) return null;
+    switch (value) {
+      case 'arrow':
+        return Arrowhead.arrow;
+      case 'bar':
+        return Arrowhead.bar;
+      case 'dot':
+        return Arrowhead.dot;
+      case 'triangle':
+        return Arrowhead.triangle;
+      case 'circle':
+      case 'circle_outline':
+        warnings.add(ParseWarning(
+          line: index,
+          message: 'Arrowhead "$value" mapped to "dot" (closest match)',
+        ));
+        return Arrowhead.dot;
+      case 'triangle_outline':
+        warnings.add(ParseWarning(
+          line: index,
+          message: 'Arrowhead "$value" mapped to "triangle" (closest match)',
+        ));
+        return Arrowhead.triangle;
+      case 'diamond':
+      case 'diamond_outline':
+        warnings.add(ParseWarning(
+          line: index,
+          message: 'Arrowhead "$value" mapped to "triangle" (closest match)',
+        ));
+        return Arrowhead.triangle;
+      default:
+        if (value.startsWith('crowfoot_')) {
+          warnings.add(ParseWarning(
+            line: index,
+            message: 'Arrowhead "$value" mapped to "arrow" (closest match)',
+          ));
+          return Arrowhead.arrow;
+        }
+        warnings.add(ParseWarning(
+          line: index,
+          message: 'Unknown arrowhead "$value", using "arrow"',
+        ));
+        return Arrowhead.arrow;
+    }
+  }
+
+  static PointBinding? _binding(Map<String, dynamic> raw, String key) {
+    final b = raw[key];
+    if (b == null || b is! Map<String, dynamic>) return null;
+    final elementId = b['elementId'] as String?;
+    if (elementId == null) return null;
+    final fp = b['fixedPoint'];
+    final fixedPoint = (fp is List && fp.length >= 2)
+        ? Point((fp[0] as num).toDouble(), (fp[1] as num).toDouble())
+        : Point.zero;
+    return PointBinding(elementId: elementId, fixedPoint: fixedPoint);
   }
 
   // -- Shape parsers --
@@ -295,6 +421,162 @@ class ExcalidrawJsonCodec {
       y: _double(raw, 'y'),
       width: _double(raw, 'width'),
       height: _double(raw, 'height'),
+      angle: _double(raw, 'angle'),
+      strokeColor: raw['strokeColor'] as String? ?? '#000000',
+      backgroundColor: raw['backgroundColor'] as String? ?? 'transparent',
+      fillStyle: _fillStyle(raw),
+      strokeWidth: _double(raw, 'strokeWidth', 2.0),
+      strokeStyle: _strokeStyle(raw),
+      roughness: _double(raw, 'roughness', 1.0),
+      opacity: _opacity(raw),
+      roundness: _roundness(raw),
+      seed: _int(raw, 'seed'),
+      version: _int(raw, 'version', 1),
+      versionNonce: _int(raw, 'versionNonce'),
+      isDeleted: raw['isDeleted'] as bool? ?? false,
+      groupIds: _groupIds(raw),
+      frameId: raw['frameId'] as String?,
+      boundElements: _boundElements(raw),
+      updated: _int(raw, 'updated'),
+      link: raw['link'] as String?,
+      locked: raw['locked'] as bool? ?? false,
+      index: raw['index'] as String?,
+    );
+  }
+
+  // -- Text, Line, Arrow, Freedraw parsers --
+
+  static TextElement _parseText(
+    Map<String, dynamic> raw,
+    int index,
+    List<ParseWarning> warnings,
+  ) {
+    return TextElement(
+      id: _id(raw),
+      x: _double(raw, 'x'),
+      y: _double(raw, 'y'),
+      width: _double(raw, 'width'),
+      height: _double(raw, 'height'),
+      text: raw['text'] as String? ?? '',
+      fontSize: _double(raw, 'fontSize', 20.0),
+      fontFamily: _fontFamily(raw, index, warnings),
+      textAlign: _textAlign(raw),
+      containerId: raw['containerId'] as String?,
+      lineHeight: _double(raw, 'lineHeight', 1.25),
+      autoResize: raw['autoResize'] as bool? ?? true,
+      angle: _double(raw, 'angle'),
+      strokeColor: raw['strokeColor'] as String? ?? '#000000',
+      backgroundColor: raw['backgroundColor'] as String? ?? 'transparent',
+      fillStyle: _fillStyle(raw),
+      strokeWidth: _double(raw, 'strokeWidth', 2.0),
+      strokeStyle: _strokeStyle(raw),
+      roughness: _double(raw, 'roughness', 1.0),
+      opacity: _opacity(raw),
+      roundness: _roundness(raw),
+      seed: _int(raw, 'seed'),
+      version: _int(raw, 'version', 1),
+      versionNonce: _int(raw, 'versionNonce'),
+      isDeleted: raw['isDeleted'] as bool? ?? false,
+      groupIds: _groupIds(raw),
+      frameId: raw['frameId'] as String?,
+      boundElements: _boundElements(raw),
+      updated: _int(raw, 'updated'),
+      link: raw['link'] as String?,
+      locked: raw['locked'] as bool? ?? false,
+      index: raw['index'] as String?,
+    );
+  }
+
+  static LineElement _parseLine(
+    Map<String, dynamic> raw,
+    int index,
+    List<ParseWarning> warnings,
+  ) {
+    return LineElement(
+      id: _id(raw),
+      x: _double(raw, 'x'),
+      y: _double(raw, 'y'),
+      width: _double(raw, 'width'),
+      height: _double(raw, 'height'),
+      points: _points(raw),
+      startArrowhead:
+          _arrowhead(raw['startArrowhead'] as String?, index, warnings),
+      endArrowhead:
+          _arrowhead(raw['endArrowhead'] as String?, index, warnings),
+      angle: _double(raw, 'angle'),
+      strokeColor: raw['strokeColor'] as String? ?? '#000000',
+      backgroundColor: raw['backgroundColor'] as String? ?? 'transparent',
+      fillStyle: _fillStyle(raw),
+      strokeWidth: _double(raw, 'strokeWidth', 2.0),
+      strokeStyle: _strokeStyle(raw),
+      roughness: _double(raw, 'roughness', 1.0),
+      opacity: _opacity(raw),
+      roundness: _roundness(raw),
+      seed: _int(raw, 'seed'),
+      version: _int(raw, 'version', 1),
+      versionNonce: _int(raw, 'versionNonce'),
+      isDeleted: raw['isDeleted'] as bool? ?? false,
+      groupIds: _groupIds(raw),
+      frameId: raw['frameId'] as String?,
+      boundElements: _boundElements(raw),
+      updated: _int(raw, 'updated'),
+      link: raw['link'] as String?,
+      locked: raw['locked'] as bool? ?? false,
+      index: raw['index'] as String?,
+    );
+  }
+
+  static ArrowElement _parseArrow(
+    Map<String, dynamic> raw,
+    int index,
+    List<ParseWarning> warnings,
+  ) {
+    return ArrowElement(
+      id: _id(raw),
+      x: _double(raw, 'x'),
+      y: _double(raw, 'y'),
+      width: _double(raw, 'width'),
+      height: _double(raw, 'height'),
+      points: _points(raw),
+      startArrowhead:
+          _arrowhead(raw['startArrowhead'] as String?, index, warnings),
+      endArrowhead:
+          _arrowhead(raw['endArrowhead'] as String?, index, warnings),
+      startBinding: _binding(raw, 'startBinding'),
+      endBinding: _binding(raw, 'endBinding'),
+      angle: _double(raw, 'angle'),
+      strokeColor: raw['strokeColor'] as String? ?? '#000000',
+      backgroundColor: raw['backgroundColor'] as String? ?? 'transparent',
+      fillStyle: _fillStyle(raw),
+      strokeWidth: _double(raw, 'strokeWidth', 2.0),
+      strokeStyle: _strokeStyle(raw),
+      roughness: _double(raw, 'roughness', 1.0),
+      opacity: _opacity(raw),
+      roundness: _roundness(raw),
+      seed: _int(raw, 'seed'),
+      version: _int(raw, 'version', 1),
+      versionNonce: _int(raw, 'versionNonce'),
+      isDeleted: raw['isDeleted'] as bool? ?? false,
+      groupIds: _groupIds(raw),
+      frameId: raw['frameId'] as String?,
+      boundElements: _boundElements(raw),
+      updated: _int(raw, 'updated'),
+      link: raw['link'] as String?,
+      locked: raw['locked'] as bool? ?? false,
+      index: raw['index'] as String?,
+    );
+  }
+
+  static FreedrawElement _parseFreedraw(Map<String, dynamic> raw) {
+    return FreedrawElement(
+      id: _id(raw),
+      x: _double(raw, 'x'),
+      y: _double(raw, 'y'),
+      width: _double(raw, 'width'),
+      height: _double(raw, 'height'),
+      points: _points(raw),
+      pressures: _pressures(raw),
+      simulatePressure: raw['simulatePressure'] as bool? ?? false,
       angle: _double(raw, 'angle'),
       strokeColor: raw['strokeColor'] as String? ?? '#000000',
       backgroundColor: raw['backgroundColor'] as String? ?? 'transparent',
