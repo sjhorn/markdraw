@@ -1330,4 +1330,363 @@ void main() {
       expect((elements[1] as Map)['type'], 'diamond');
     });
   });
+
+  group('round-trip', () {
+    test('rectangle round-trips through JSON', () {
+      final json = _wrapElements([
+        {
+          ..._baseElement(
+            id: 'r1',
+            type: 'rectangle',
+            x: 10,
+            y: 20,
+            width: 100,
+            height: 50,
+            opacity: 75,
+            fillStyle: 'cross-hatch',
+            strokeStyle: 'dotted',
+          ),
+          'roundness': {'type': 3, 'value': 12.0},
+          'boundElements': [
+            {'id': 'a1', 'type': 'arrow'},
+          ],
+        },
+      ]);
+
+      // Import → Export → Import
+      final doc1 = ExcalidrawJsonCodec.parse(json).value;
+      final exported = ExcalidrawJsonCodec.serialize(doc1);
+      final doc2 = ExcalidrawJsonCodec.parse(exported).value;
+
+      final el1 = doc1.allElements.first;
+      final el2 = doc2.allElements.first;
+
+      expect(el2.id.value, el1.id.value);
+      expect(el2.x, el1.x);
+      expect(el2.y, el1.y);
+      expect(el2.width, el1.width);
+      expect(el2.height, el1.height);
+      expect(el2.opacity, el1.opacity);
+      expect(el2.fillStyle, el1.fillStyle);
+      expect(el2.strokeStyle, el1.strokeStyle);
+      expect(el2.roundness, el1.roundness);
+      expect(el2.boundElements.length, el1.boundElements.length);
+      expect(el2.boundElements[0].id, el1.boundElements[0].id);
+    });
+
+    test('opacity 50 round-trips: 50 → 0.5 → 50', () {
+      final json = _wrapElements([
+        _baseElement(id: 'r1', type: 'rectangle', opacity: 50),
+      ]);
+      final doc = ExcalidrawJsonCodec.parse(json).value;
+      expect(doc.allElements.first.opacity, 0.5);
+      final exported = ExcalidrawJsonCodec.serialize(doc);
+      final decoded = jsonDecode(exported);
+      expect((decoded['elements'] as List)[0]['opacity'], 50);
+    });
+
+    test('roundness round-trips: {type:3, value:10}', () {
+      final json = _wrapElements([
+        {
+          ..._baseElement(id: 'r1', type: 'rectangle'),
+          'roundness': {'type': 3, 'value': 10.0},
+        },
+      ]);
+      final doc = ExcalidrawJsonCodec.parse(json).value;
+      final exported = ExcalidrawJsonCodec.serialize(doc);
+      final decoded = jsonDecode(exported);
+      final r = (decoded['elements'] as List)[0]['roundness'];
+      expect(r['type'], 3);
+      expect(r['value'], 10.0);
+    });
+
+    test('text element round-trips through JSON', () {
+      final json = _wrapElements([
+        {
+          ..._baseElement(id: 'txt1', type: 'text'),
+          'text': 'Round trip test',
+          'fontSize': 18,
+          'fontFamily': 2,
+          'textAlign': 'right',
+          'containerId': 'r1',
+          'lineHeight': 1.3,
+          'autoResize': false,
+        },
+      ]);
+      final doc1 = ExcalidrawJsonCodec.parse(json).value;
+      final exported = ExcalidrawJsonCodec.serialize(doc1);
+      final doc2 = ExcalidrawJsonCodec.parse(exported).value;
+
+      final t1 = doc1.allElements.first as TextElement;
+      final t2 = doc2.allElements.first as TextElement;
+      expect(t2.text, t1.text);
+      expect(t2.fontSize, t1.fontSize);
+      expect(t2.fontFamily, t1.fontFamily);
+      expect(t2.textAlign, t1.textAlign);
+      expect(t2.containerId, t1.containerId);
+      expect(t2.lineHeight, t1.lineHeight);
+      expect(t2.autoResize, t1.autoResize);
+    });
+
+    test('line element round-trips through JSON', () {
+      final json = _wrapElements([
+        {
+          ..._baseElement(id: 'l1', type: 'line'),
+          'points': [
+            [0, 0],
+            [50, 25],
+            [100, 0],
+          ],
+          'startArrowhead': 'bar',
+          'endArrowhead': 'dot',
+        },
+      ]);
+      final doc1 = ExcalidrawJsonCodec.parse(json).value;
+      final exported = ExcalidrawJsonCodec.serialize(doc1);
+      final doc2 = ExcalidrawJsonCodec.parse(exported).value;
+
+      final l1 = doc1.allElements.first as LineElement;
+      final l2 = doc2.allElements.first as LineElement;
+      expect(l2.points.length, l1.points.length);
+      for (var i = 0; i < l1.points.length; i++) {
+        expect(l2.points[i], l1.points[i]);
+      }
+      expect(l2.startArrowhead, l1.startArrowhead);
+      expect(l2.endArrowhead, l1.endArrowhead);
+    });
+
+    test('arrow element with bindings round-trips', () {
+      final json = _wrapElements([
+        {
+          ..._baseElement(id: 'a1', type: 'arrow'),
+          'points': [
+            [0, 0],
+            [100, 50],
+          ],
+          'startArrowhead': null,
+          'endArrowhead': 'arrow',
+          'startBinding': {
+            'elementId': 'r1',
+            'fixedPoint': [0.5, 1.0],
+            'focus': 0,
+            'gap': 1,
+          },
+          'endBinding': {
+            'elementId': 'r2',
+            'fixedPoint': [0.5, 0.0],
+            'focus': 0,
+            'gap': 1,
+          },
+        },
+      ]);
+      final doc1 = ExcalidrawJsonCodec.parse(json).value;
+      final exported = ExcalidrawJsonCodec.serialize(doc1);
+      final doc2 = ExcalidrawJsonCodec.parse(exported).value;
+
+      final a1 = doc1.allElements.first as ArrowElement;
+      final a2 = doc2.allElements.first as ArrowElement;
+      expect(a2.startBinding!.elementId, a1.startBinding!.elementId);
+      expect(a2.startBinding!.fixedPoint, a1.startBinding!.fixedPoint);
+      expect(a2.endBinding!.elementId, a1.endBinding!.elementId);
+      expect(a2.endBinding!.fixedPoint, a1.endBinding!.fixedPoint);
+      expect(a2.endArrowhead, a1.endArrowhead);
+    });
+
+    test('freedraw round-trips through JSON', () {
+      final json = _wrapElements([
+        {
+          ..._baseElement(id: 'fd1', type: 'freedraw'),
+          'points': [
+            [0, 0],
+            [5, 3],
+            [10, 1],
+          ],
+          'pressures': [0.4, 0.8, 0.2],
+          'simulatePressure': false,
+        },
+      ]);
+      final doc1 = ExcalidrawJsonCodec.parse(json).value;
+      final exported = ExcalidrawJsonCodec.serialize(doc1);
+      final doc2 = ExcalidrawJsonCodec.parse(exported).value;
+
+      final f1 = doc1.allElements.first as FreedrawElement;
+      final f2 = doc2.allElements.first as FreedrawElement;
+      expect(f2.points.length, f1.points.length);
+      for (var i = 0; i < f1.points.length; i++) {
+        expect(f2.points[i], f1.points[i]);
+      }
+      expect(f2.pressures, f1.pressures);
+      expect(f2.simulatePressure, f1.simulatePressure);
+    });
+
+    test('ellipse and diamond round-trip', () {
+      final json = _wrapElements([
+        _baseElement(
+          id: 'e1',
+          type: 'ellipse',
+          fillStyle: 'hachure',
+          opacity: 80,
+        ),
+        _baseElement(
+          id: 'd1',
+          type: 'diamond',
+          fillStyle: 'zigzag',
+          opacity: 60,
+        ),
+      ]);
+      final doc1 = ExcalidrawJsonCodec.parse(json).value;
+      final exported = ExcalidrawJsonCodec.serialize(doc1);
+      final doc2 = ExcalidrawJsonCodec.parse(exported).value;
+
+      expect(doc2.allElements, hasLength(2));
+      expect(doc2.allElements[0], isA<EllipseElement>());
+      expect(doc2.allElements[0].fillStyle, FillStyle.hachure);
+      expect(doc2.allElements[0].opacity, closeTo(0.8, 0.01));
+      expect(doc2.allElements[1], isA<DiamondElement>());
+      expect(doc2.allElements[1].fillStyle, FillStyle.zigzag);
+      expect(doc2.allElements[1].opacity, closeTo(0.6, 0.01));
+    });
+
+    test('deleted elements preserved in round-trip', () {
+      final json = _wrapElements([
+        _baseElement(id: 'r1', type: 'rectangle', isDeleted: true),
+      ]);
+      final doc1 = ExcalidrawJsonCodec.parse(json).value;
+      final exported = ExcalidrawJsonCodec.serialize(doc1);
+      final doc2 = ExcalidrawJsonCodec.parse(exported).value;
+      expect(doc2.allElements.first.isDeleted, isTrue);
+    });
+
+    test('groupIds preserved in round-trip', () {
+      final json = _wrapElements([
+        _baseElement(
+          id: 'r1',
+          type: 'rectangle',
+          groupIds: ['g1', 'g2', 'g3'],
+        ),
+      ]);
+      final doc1 = ExcalidrawJsonCodec.parse(json).value;
+      final exported = ExcalidrawJsonCodec.serialize(doc1);
+      final doc2 = ExcalidrawJsonCodec.parse(exported).value;
+      expect(doc2.allElements.first.groupIds, ['g1', 'g2', 'g3']);
+    });
+
+    test('default values for missing optional fields', () {
+      // Minimal element with just required fields
+      final json = jsonEncode({
+        'type': 'excalidraw',
+        'version': 2,
+        'source': 'test',
+        'elements': [
+          {'id': 'r1', 'type': 'rectangle'},
+        ],
+        'appState': {},
+        'files': {},
+      });
+      final result = ExcalidrawJsonCodec.parse(json);
+      final el = result.value.allElements.first;
+      expect(el.x, 0.0);
+      expect(el.y, 0.0);
+      expect(el.width, 0.0);
+      expect(el.height, 0.0);
+      expect(el.opacity, 1.0);
+      expect(el.strokeColor, '#000000');
+      expect(el.backgroundColor, 'transparent');
+      expect(el.fillStyle, FillStyle.solid);
+      expect(el.strokeStyle, StrokeStyle.solid);
+      expect(el.roundness, isNull);
+      expect(el.isDeleted, false);
+      expect(el.locked, false);
+    });
+
+    test('large file: 100+ elements parse without error', () {
+      final elements = List.generate(
+        150,
+        (i) => _baseElement(
+          id: 'el$i',
+          type: ['rectangle', 'ellipse', 'diamond'][i % 3],
+          x: i * 10.0,
+          y: i * 5.0,
+        ),
+      );
+      final json = _wrapElements(elements);
+      final result = ExcalidrawJsonCodec.parse(json);
+      expect(result.value.allElements, hasLength(150));
+      expect(result.warnings, isEmpty);
+    });
+
+    test('all 7 element types round-trip', () {
+      final json = _wrapElements([
+        _baseElement(id: 'r1', type: 'rectangle'),
+        _baseElement(id: 'e1', type: 'ellipse'),
+        _baseElement(id: 'd1', type: 'diamond'),
+        {
+          ..._baseElement(id: 't1', type: 'text'),
+          'text': 'Hi',
+          'fontFamily': 1,
+        },
+        {
+          ..._baseElement(id: 'l1', type: 'line'),
+          'points': [
+            [0, 0],
+            [100, 0],
+          ],
+        },
+        {
+          ..._baseElement(id: 'a1', type: 'arrow'),
+          'points': [
+            [0, 0],
+            [100, 0],
+          ],
+          'endArrowhead': 'arrow',
+        },
+        {
+          ..._baseElement(id: 'f1', type: 'freedraw'),
+          'points': [
+            [0, 0],
+            [10, 5],
+          ],
+          'pressures': [0.5, 0.5],
+          'simulatePressure': false,
+        },
+      ]);
+
+      final doc1 = ExcalidrawJsonCodec.parse(json).value;
+      expect(doc1.allElements, hasLength(7));
+
+      final exported = ExcalidrawJsonCodec.serialize(doc1);
+      final doc2 = ExcalidrawJsonCodec.parse(exported).value;
+      expect(doc2.allElements, hasLength(7));
+
+      expect(doc2.allElements[0], isA<RectangleElement>());
+      expect(doc2.allElements[1], isA<EllipseElement>());
+      expect(doc2.allElements[2], isA<DiamondElement>());
+      expect(doc2.allElements[3], isA<TextElement>());
+      expect(doc2.allElements[4], isA<LineElement>());
+      expect(doc2.allElements[5], isA<ArrowElement>());
+      expect(doc2.allElements[6], isA<FreedrawElement>());
+    });
+
+    test('boundElements round-trip', () {
+      final json = _wrapElements([
+        {
+          ..._baseElement(id: 'r1', type: 'rectangle'),
+          'boundElements': [
+            {'id': 'a1', 'type': 'arrow'},
+            {'id': 't1', 'type': 'text'},
+          ],
+        },
+      ]);
+
+      final doc1 = ExcalidrawJsonCodec.parse(json).value;
+      final exported = ExcalidrawJsonCodec.serialize(doc1);
+      final doc2 = ExcalidrawJsonCodec.parse(exported).value;
+
+      expect(doc2.allElements.first.boundElements, hasLength(2));
+      expect(doc2.allElements.first.boundElements[0].id, 'a1');
+      expect(doc2.allElements.first.boundElements[0].type, 'arrow');
+      expect(doc2.allElements.first.boundElements[1].id, 't1');
+      expect(doc2.allElements.first.boundElements[1].type, 'text');
+    });
+  });
 }
