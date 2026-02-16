@@ -66,6 +66,132 @@ class ExcalidrawJsonCodec {
     'dotted': StrokeStyle.dotted,
   };
 
+  /// FillStyle enum → string mapping (reverse).
+  static const _fillStyleToString = <FillStyle, String>{
+    FillStyle.solid: 'solid',
+    FillStyle.hachure: 'hachure',
+    FillStyle.crossHatch: 'cross-hatch',
+    FillStyle.zigzag: 'zigzag',
+  };
+
+  /// StrokeStyle enum → string mapping (reverse).
+  static const _strokeStyleToString = <StrokeStyle, String>{
+    StrokeStyle.solid: 'solid',
+    StrokeStyle.dashed: 'dashed',
+    StrokeStyle.dotted: 'dotted',
+  };
+
+  /// Serializes a [MarkdrawDocument] to Excalidraw JSON format.
+  static String serialize(MarkdrawDocument doc) {
+    final elements = doc.allElements.map(_elementToJson).toList();
+    final result = {
+      'type': 'excalidraw',
+      'version': 2,
+      'source': 'markdraw',
+      'elements': elements,
+      'appState': <String, dynamic>{},
+      'files': <String, dynamic>{},
+    };
+    return jsonEncode(result);
+  }
+
+  static Map<String, dynamic> _elementToJson(Element el) {
+    final base = _baseToJson(el);
+    if (el is TextElement) {
+      return {
+        ...base,
+        'text': el.text,
+        'fontSize': el.fontSize,
+        'fontFamily': fontFamilyToNumber[el.fontFamily] ?? 1,
+        'textAlign': el.textAlign.name,
+        'containerId': el.containerId,
+        'lineHeight': el.lineHeight,
+        'autoResize': el.autoResize,
+        'originalText': el.text,
+        'verticalAlign': 'top',
+      };
+    } else if (el is ArrowElement) {
+      return {
+        ...base,
+        'points': el.points.map((p) => [p.x, p.y]).toList(),
+        'startArrowhead': el.startArrowhead?.name,
+        'endArrowhead': el.endArrowhead?.name,
+        'startBinding': _bindingToJson(el.startBinding),
+        'endBinding': _bindingToJson(el.endBinding),
+      };
+    } else if (el is LineElement) {
+      return {
+        ...base,
+        'points': el.points.map((p) => [p.x, p.y]).toList(),
+        'startArrowhead': el.startArrowhead?.name,
+        'endArrowhead': el.endArrowhead?.name,
+      };
+    } else if (el is FreedrawElement) {
+      return {
+        ...base,
+        'points': el.points.map((p) => [p.x, p.y]).toList(),
+        'pressures': el.pressures,
+        'simulatePressure': el.simulatePressure,
+      };
+    }
+    return base;
+  }
+
+  static Map<String, dynamic> _baseToJson(Element el) {
+    return {
+      'id': el.id.value,
+      'type': el.type,
+      'x': el.x,
+      'y': el.y,
+      'width': el.width,
+      'height': el.height,
+      'angle': el.angle,
+      'strokeColor': el.strokeColor,
+      'backgroundColor': el.backgroundColor,
+      'fillStyle': _fillStyleToString[el.fillStyle] ?? 'solid',
+      'strokeWidth': el.strokeWidth,
+      'strokeStyle': _strokeStyleToString[el.strokeStyle] ?? 'solid',
+      'roughness': el.roughness,
+      'opacity': (el.opacity * 100).round(),
+      'roundness': _roundnessToJson(el.roundness),
+      'seed': el.seed,
+      'version': el.version,
+      'versionNonce': el.versionNonce,
+      'isDeleted': el.isDeleted,
+      'groupIds': el.groupIds,
+      'frameId': el.frameId,
+      'boundElements':
+          el.boundElements.isEmpty ? null : _boundElementsToJson(el),
+      'updated': el.updated,
+      'link': el.link,
+      'locked': el.locked,
+      if (el.index != null) 'index': el.index,
+    };
+  }
+
+  static Map<String, dynamic>? _roundnessToJson(Roundness? roundness) {
+    if (roundness == null) return null;
+    return {
+      'type': roundness.type == RoundnessType.proportional ? 2 : 3,
+      'value': roundness.value,
+    };
+  }
+
+  static List<Map<String, dynamic>> _boundElementsToJson(Element el) {
+    return el.boundElements
+        .map((b) => {'id': b.id, 'type': b.type})
+        .toList();
+  }
+
+  static Map<String, dynamic>? _bindingToJson(PointBinding? binding) {
+    if (binding == null) return null;
+    return {
+      'elementId': binding.elementId,
+      'fixedPoint': [binding.fixedPoint.x, binding.fixedPoint.y],
+      'mode': 'inside',
+    };
+  }
+
   /// Parses an Excalidraw JSON string into a [MarkdrawDocument].
   ///
   /// Returns a [ParseResult] with warnings for unsupported elements or

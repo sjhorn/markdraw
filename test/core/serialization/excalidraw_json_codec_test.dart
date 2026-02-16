@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:markdraw/src/core/elements/arrow_element.dart';
 import 'package:markdraw/src/core/elements/diamond_element.dart';
 import 'package:markdraw/src/core/elements/element.dart';
+import 'package:markdraw/src/core/elements/element_id.dart';
 import 'package:markdraw/src/core/elements/ellipse_element.dart';
 import 'package:markdraw/src/core/elements/fill_style.dart';
 import 'package:markdraw/src/core/elements/freedraw_element.dart';
@@ -15,6 +16,7 @@ import 'package:markdraw/src/core/elements/text_element.dart';
 import 'package:markdraw/src/core/math/point.dart';
 import 'package:markdraw/src/core/serialization/document_section.dart';
 import 'package:markdraw/src/core/serialization/excalidraw_json_codec.dart';
+import 'package:markdraw/src/core/serialization/markdraw_document.dart';
 
 String _wrapElements(List<Map<String, dynamic>> elements) {
   return jsonEncode({
@@ -877,6 +879,455 @@ void main() {
         expect(fd.simulatePressure, true);
         expect(fd.pressures, isEmpty);
       });
+    });
+  });
+
+  group('ExcalidrawJsonCodec.serialize', () {
+    test('empty document produces valid JSON structure', () {
+      final doc = MarkdrawDocument(sections: [SketchSection(const [])]);
+      final jsonStr = ExcalidrawJsonCodec.serialize(doc);
+      final decoded = jsonDecode(jsonStr) as Map<String, dynamic>;
+      expect(decoded['type'], 'excalidraw');
+      expect(decoded['version'], 2);
+      expect(decoded['source'], 'markdraw');
+      expect(decoded['elements'], isEmpty);
+      expect(decoded['appState'], isA<Map>());
+      expect(decoded['files'], isA<Map>());
+    });
+
+    test('rectangle export with all properties', () {
+      final doc = MarkdrawDocument(
+        sections: [
+          SketchSection([
+            RectangleElement(
+              id: const ElementId('rect1'),
+              x: 100,
+              y: 200,
+              width: 160,
+              height: 80,
+              angle: 0.5,
+              strokeColor: '#ff0000',
+              backgroundColor: '#00ff00',
+              fillStyle: FillStyle.crossHatch,
+              strokeWidth: 4,
+              strokeStyle: StrokeStyle.dashed,
+              roughness: 2,
+              opacity: 0.5,
+              roundness: const Roundness.adaptive(value: 10),
+              seed: 42,
+              version: 3,
+              versionNonce: 456,
+              isDeleted: false,
+              groupIds: const ['g1', 'g2'],
+              locked: true,
+              updated: 999,
+            ),
+          ]),
+        ],
+      );
+      final jsonStr = ExcalidrawJsonCodec.serialize(doc);
+      final decoded = jsonDecode(jsonStr) as Map<String, dynamic>;
+      final elements = decoded['elements'] as List;
+      expect(elements, hasLength(1));
+      final el = elements[0] as Map<String, dynamic>;
+      expect(el['id'], 'rect1');
+      expect(el['type'], 'rectangle');
+      expect(el['x'], 100.0);
+      expect(el['y'], 200.0);
+      expect(el['width'], 160.0);
+      expect(el['height'], 80.0);
+      expect(el['angle'], 0.5);
+      expect(el['strokeColor'], '#ff0000');
+      expect(el['backgroundColor'], '#00ff00');
+      expect(el['fillStyle'], 'cross-hatch');
+      expect(el['strokeWidth'], 4.0);
+      expect(el['strokeStyle'], 'dashed');
+      expect(el['roughness'], 2.0);
+      expect(el['opacity'], 50); // 0.5 × 100
+      expect(el['roundness']['type'], 3);
+      expect(el['roundness']['value'], 10.0);
+      expect(el['seed'], 42);
+      expect(el['version'], 3);
+      expect(el['versionNonce'], 456);
+      expect(el['isDeleted'], false);
+      expect(el['groupIds'], ['g1', 'g2']);
+      expect(el['locked'], true);
+      expect(el['updated'], 999);
+    });
+
+    test('text export with fontFamily and verticalAlign', () {
+      final doc = MarkdrawDocument(
+        sections: [
+          SketchSection([
+            TextElement(
+              id: const ElementId('txt1'),
+              x: 10,
+              y: 20,
+              width: 200,
+              height: 30,
+              text: 'Hello World',
+              fontSize: 24,
+              fontFamily: 'Helvetica',
+              textAlign: TextAlign.center,
+              containerId: 'rect1',
+              lineHeight: 1.5,
+              autoResize: false,
+              seed: 1,
+              version: 1,
+              versionNonce: 2,
+              updated: 100,
+            ),
+          ]),
+        ],
+      );
+      final jsonStr = ExcalidrawJsonCodec.serialize(doc);
+      final el =
+          (jsonDecode(jsonStr)['elements'] as List)[0] as Map<String, dynamic>;
+      expect(el['type'], 'text');
+      expect(el['text'], 'Hello World');
+      expect(el['fontSize'], 24.0);
+      expect(el['fontFamily'], 2); // Helvetica → 2
+      expect(el['textAlign'], 'center');
+      expect(el['containerId'], 'rect1');
+      expect(el['lineHeight'], 1.5);
+      expect(el['autoResize'], false);
+      expect(el['originalText'], 'Hello World');
+      expect(el['verticalAlign'], 'top');
+    });
+
+    test('line export with points and arrowheads', () {
+      final doc = MarkdrawDocument(
+        sections: [
+          SketchSection([
+            LineElement(
+              id: const ElementId('line1'),
+              x: 0,
+              y: 0,
+              width: 200,
+              height: 50,
+              points: const [Point(0, 0), Point(100, 50), Point(200, 0)],
+              startArrowhead: Arrowhead.bar,
+              endArrowhead: Arrowhead.triangle,
+              seed: 1,
+              version: 1,
+              versionNonce: 2,
+              updated: 100,
+            ),
+          ]),
+        ],
+      );
+      final jsonStr = ExcalidrawJsonCodec.serialize(doc);
+      final el =
+          (jsonDecode(jsonStr)['elements'] as List)[0] as Map<String, dynamic>;
+      expect(el['type'], 'line');
+      expect(el['points'], [
+        [0.0, 0.0],
+        [100.0, 50.0],
+        [200.0, 0.0],
+      ]);
+      expect(el['startArrowhead'], 'bar');
+      expect(el['endArrowhead'], 'triangle');
+    });
+
+    test('arrow export with bindings', () {
+      final doc = MarkdrawDocument(
+        sections: [
+          SketchSection([
+            ArrowElement(
+              id: const ElementId('arr1'),
+              x: 0,
+              y: 0,
+              width: 150,
+              height: 75,
+              points: const [Point(0, 0), Point(150, 75)],
+              endArrowhead: Arrowhead.arrow,
+              startBinding: const PointBinding(
+                elementId: 'rect1',
+                fixedPoint: Point(0.5, 1.0),
+              ),
+              endBinding: const PointBinding(
+                elementId: 'rect2',
+                fixedPoint: Point(0.5, 0.0),
+              ),
+              seed: 1,
+              version: 1,
+              versionNonce: 2,
+              updated: 100,
+            ),
+          ]),
+        ],
+      );
+      final jsonStr = ExcalidrawJsonCodec.serialize(doc);
+      final el =
+          (jsonDecode(jsonStr)['elements'] as List)[0] as Map<String, dynamic>;
+      expect(el['type'], 'arrow');
+      expect(el['startBinding']['elementId'], 'rect1');
+      expect(el['startBinding']['fixedPoint'], [0.5, 1.0]);
+      expect(el['startBinding']['mode'], 'inside');
+      expect(el['endBinding']['elementId'], 'rect2');
+      expect(el['endBinding']['fixedPoint'], [0.5, 0.0]);
+      expect(el['endBinding']['mode'], 'inside');
+    });
+
+    test('freedraw export with points and pressures', () {
+      final doc = MarkdrawDocument(
+        sections: [
+          SketchSection([
+            FreedrawElement(
+              id: const ElementId('fd1'),
+              x: 0,
+              y: 0,
+              width: 20,
+              height: 5,
+              points: const [Point(0, 0), Point(10, 5), Point(20, 3)],
+              pressures: const [0.5, 0.7, 0.3],
+              simulatePressure: false,
+              seed: 1,
+              version: 1,
+              versionNonce: 2,
+              updated: 100,
+            ),
+          ]),
+        ],
+      );
+      final jsonStr = ExcalidrawJsonCodec.serialize(doc);
+      final el =
+          (jsonDecode(jsonStr)['elements'] as List)[0] as Map<String, dynamic>;
+      expect(el['type'], 'freedraw');
+      expect(el['points'], [
+        [0.0, 0.0],
+        [10.0, 5.0],
+        [20.0, 3.0],
+      ]);
+      expect(el['pressures'], [0.5, 0.7, 0.3]);
+      expect(el['simulatePressure'], false);
+    });
+
+    test('boundElements empty list exports as null', () {
+      final doc = MarkdrawDocument(
+        sections: [
+          SketchSection([
+            RectangleElement(
+              id: const ElementId('r1'),
+              x: 0,
+              y: 0,
+              width: 100,
+              height: 50,
+              seed: 1,
+              version: 1,
+              versionNonce: 2,
+              updated: 100,
+            ),
+          ]),
+        ],
+      );
+      final jsonStr = ExcalidrawJsonCodec.serialize(doc);
+      final el =
+          (jsonDecode(jsonStr)['elements'] as List)[0] as Map<String, dynamic>;
+      expect(el['boundElements'], isNull);
+    });
+
+    test('boundElements non-empty exports as array', () {
+      final doc = MarkdrawDocument(
+        sections: [
+          SketchSection([
+            RectangleElement(
+              id: const ElementId('r1'),
+              x: 0,
+              y: 0,
+              width: 100,
+              height: 50,
+              boundElements: const [
+                BoundElement(id: 'a1', type: 'arrow'),
+              ],
+              seed: 1,
+              version: 1,
+              versionNonce: 2,
+              updated: 100,
+            ),
+          ]),
+        ],
+      );
+      final jsonStr = ExcalidrawJsonCodec.serialize(doc);
+      final el =
+          (jsonDecode(jsonStr)['elements'] as List)[0] as Map<String, dynamic>;
+      expect(el['boundElements'], [
+        {'id': 'a1', 'type': 'arrow'},
+      ]);
+    });
+
+    test('multiple sections flatten all elements', () {
+      final doc = MarkdrawDocument(
+        sections: [
+          SketchSection([
+            RectangleElement(
+              id: const ElementId('r1'),
+              x: 0,
+              y: 0,
+              width: 100,
+              height: 50,
+              seed: 1,
+              version: 1,
+              versionNonce: 2,
+              updated: 100,
+            ),
+          ]),
+          SketchSection([
+            EllipseElement(
+              id: const ElementId('e1'),
+              x: 200,
+              y: 200,
+              width: 80,
+              height: 80,
+              seed: 3,
+              version: 1,
+              versionNonce: 4,
+              updated: 100,
+            ),
+          ]),
+        ],
+      );
+      final jsonStr = ExcalidrawJsonCodec.serialize(doc);
+      final elements =
+          (jsonDecode(jsonStr)['elements'] as List);
+      expect(elements, hasLength(2));
+    });
+
+    test('roundness adaptive exports as type 3', () {
+      final doc = MarkdrawDocument(
+        sections: [
+          SketchSection([
+            RectangleElement(
+              id: const ElementId('r1'),
+              x: 0,
+              y: 0,
+              width: 100,
+              height: 50,
+              roundness: const Roundness.adaptive(value: 10),
+              seed: 1,
+              version: 1,
+              versionNonce: 2,
+              updated: 100,
+            ),
+          ]),
+        ],
+      );
+      final jsonStr = ExcalidrawJsonCodec.serialize(doc);
+      final el =
+          (jsonDecode(jsonStr)['elements'] as List)[0] as Map<String, dynamic>;
+      expect(el['roundness']['type'], 3);
+      expect(el['roundness']['value'], 10.0);
+    });
+
+    test('roundness proportional exports as type 2', () {
+      final doc = MarkdrawDocument(
+        sections: [
+          SketchSection([
+            RectangleElement(
+              id: const ElementId('r1'),
+              x: 0,
+              y: 0,
+              width: 100,
+              height: 50,
+              roundness: const Roundness.proportional(value: 5),
+              seed: 1,
+              version: 1,
+              versionNonce: 2,
+              updated: 100,
+            ),
+          ]),
+        ],
+      );
+      final jsonStr = ExcalidrawJsonCodec.serialize(doc);
+      final el =
+          (jsonDecode(jsonStr)['elements'] as List)[0] as Map<String, dynamic>;
+      expect(el['roundness']['type'], 2);
+      expect(el['roundness']['value'], 5.0);
+    });
+
+    test('null roundness exports as null', () {
+      final doc = MarkdrawDocument(
+        sections: [
+          SketchSection([
+            RectangleElement(
+              id: const ElementId('r1'),
+              x: 0,
+              y: 0,
+              width: 100,
+              height: 50,
+              seed: 1,
+              version: 1,
+              versionNonce: 2,
+              updated: 100,
+            ),
+          ]),
+        ],
+      );
+      final jsonStr = ExcalidrawJsonCodec.serialize(doc);
+      final el =
+          (jsonDecode(jsonStr)['elements'] as List)[0] as Map<String, dynamic>;
+      expect(el['roundness'], isNull);
+    });
+
+    test('null arrowhead bindings export as null', () {
+      final doc = MarkdrawDocument(
+        sections: [
+          SketchSection([
+            ArrowElement(
+              id: const ElementId('arr1'),
+              x: 0,
+              y: 0,
+              width: 100,
+              height: 0,
+              points: const [Point(0, 0), Point(100, 0)],
+              seed: 1,
+              version: 1,
+              versionNonce: 2,
+              updated: 100,
+            ),
+          ]),
+        ],
+      );
+      final jsonStr = ExcalidrawJsonCodec.serialize(doc);
+      final el =
+          (jsonDecode(jsonStr)['elements'] as List)[0] as Map<String, dynamic>;
+      expect(el['startBinding'], isNull);
+      expect(el['endBinding'], isNull);
+    });
+
+    test('ellipse and diamond export correct types', () {
+      final doc = MarkdrawDocument(
+        sections: [
+          SketchSection([
+            EllipseElement(
+              id: const ElementId('e1'),
+              x: 0,
+              y: 0,
+              width: 100,
+              height: 80,
+              seed: 1,
+              version: 1,
+              versionNonce: 2,
+              updated: 100,
+            ),
+            DiamondElement(
+              id: const ElementId('d1'),
+              x: 200,
+              y: 200,
+              width: 100,
+              height: 100,
+              seed: 3,
+              version: 1,
+              versionNonce: 4,
+              updated: 100,
+            ),
+          ]),
+        ],
+      );
+      final jsonStr = ExcalidrawJsonCodec.serialize(doc);
+      final elements = jsonDecode(jsonStr)['elements'] as List;
+      expect((elements[0] as Map)['type'], 'ellipse');
+      expect((elements[1] as Map)['type'], 'diamond');
     });
   });
 }
