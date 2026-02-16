@@ -215,7 +215,7 @@ class ExcalidrawJsonCodec {
 
     if (decoded is! Map<String, dynamic>) {
       warnings.add(
-        ParseWarning(line: 0, message: 'Expected JSON object at root'),
+        const ParseWarning(line: 0, message: 'Expected JSON object at root'),
       );
       return ParseResult(
         value: MarkdrawDocument(sections: [SketchSection(const [])]),
@@ -226,7 +226,7 @@ class ExcalidrawJsonCodec {
     final elementsJson = decoded['elements'];
     if (elementsJson is! List) {
       warnings.add(
-        ParseWarning(line: 0, message: 'Missing or invalid "elements" array'),
+        const ParseWarning(line: 0, message: 'Missing or invalid "elements" array'),
       );
       return ParseResult(
         value: MarkdrawDocument(sections: [SketchSection(const [])]),
@@ -369,7 +369,7 @@ class ExcalidrawJsonCodec {
     final list = raw['points'];
     if (list == null || list is! List) return const [];
     return list
-        .whereType<List>()
+        .whereType<List<dynamic>>()
         .map((p) => Point(
               (p[0] as num).toDouble(),
               (p[1] as num).toDouble(),

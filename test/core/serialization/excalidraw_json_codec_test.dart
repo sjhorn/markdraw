@@ -24,8 +24,8 @@ String _wrapElements(List<Map<String, dynamic>> elements) {
     'version': 2,
     'source': 'https://excalidraw.com',
     'elements': elements,
-    'appState': {},
-    'files': {},
+    'appState': <String, dynamic>{},
+    'files': <String, dynamic>{},
   });
 }
 
@@ -72,18 +72,18 @@ Map<String, dynamic> _baseElement({
     'strokeStyle': strokeStyle,
     'roughness': roughness,
     'opacity': opacity,
-    if (roundness != null) 'roundness': roundness,
+    'roundness': ?roundness,
     'seed': seed,
     'version': version,
     'versionNonce': versionNonce,
     'isDeleted': isDeleted,
     'groupIds': groupIds ?? [],
-    if (frameId != null) 'frameId': frameId,
+    'frameId': ?frameId,
     'boundElements': boundElements,
     'updated': updated,
-    if (link != null) 'link': link,
+    'link': ?link,
     'locked': locked,
-    if (index != null) 'index': index,
+    'index': ?index,
   };
 }
 
@@ -891,8 +891,8 @@ void main() {
       expect(decoded['version'], 2);
       expect(decoded['source'], 'markdraw');
       expect(decoded['elements'], isEmpty);
-      expect(decoded['appState'], isA<Map>());
-      expect(decoded['files'], isA<Map>());
+      expect(decoded['appState'], isA<Map<String, dynamic>>());
+      expect(decoded['files'], isA<Map<String, dynamic>>());
     });
 
     test('rectangle export with all properties', () {
@@ -1580,8 +1580,8 @@ void main() {
         'elements': [
           {'id': 'r1', 'type': 'rectangle'},
         ],
-        'appState': {},
-        'files': {},
+        'appState': <String, dynamic>{},
+        'files': <String, dynamic>{},
       });
       final result = ExcalidrawJsonCodec.parse(json);
       final el = result.value.allElements.first;

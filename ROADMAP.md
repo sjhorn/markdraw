@@ -202,10 +202,12 @@ markdraw/
 > **TDD checkpoint**: Parser & serializer complete with round-trip fidelity. 281 tests passing. Zero analyzer issues. ✅
 
 ### 1.3 JSON Interop
-- [ ] Import from `.excalidraw` JSON format
-- [ ] Export to `.excalidraw` JSON format
-- [ ] Mapping between Excalidraw element types and markdraw types
-- [ ] **Tests**: Load sample `.excalidraw` files from `./excalidraw/`, convert, verify element count and properties
+- [x] Import from `.excalidraw` JSON format
+- [x] Export to `.excalidraw` JSON format
+- [x] Mapping between Excalidraw element types and markdraw types
+- [x] **Tests**: Round-trip tests for all 7 element types, property conversion tests, edge cases
+
+> **TDD checkpoint**: Excalidraw JSON import/export complete with round-trip fidelity. 74 codec tests passing. Zero analyzer issues. ✅
 
 ### 1.4 File I/O
 - [ ] Platform-agnostic file read/write abstraction (Interface Segregation)

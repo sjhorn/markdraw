@@ -2,6 +2,7 @@ export 'canvas_settings.dart';
 export 'document_parser.dart';
 export 'document_section.dart';
 export 'document_serializer.dart';
+export 'excalidraw_json_codec.dart';
 export 'frontmatter_parser.dart';
 export 'markdraw_document.dart';
 export 'parse_result.dart';
