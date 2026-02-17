@@ -1,8 +1,6 @@
 import 'dart:ui';
 
-import 'package:flutter/material.dart' hide Element;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rough_flutter/rough_flutter.dart' hide FillStyle;
 
 import 'package:markdraw/src/core/elements/element.dart';
 import 'package:markdraw/src/core/elements/element_id.dart';

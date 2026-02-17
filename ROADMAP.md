@@ -225,16 +225,18 @@ markdraw/
 > Goal: See elements on screen with the hand-drawn aesthetic.
 
 ### 2.1 Rough Drawing Adapter
-- [ ] `RoughAdapter` interface — abstracts `rough_flutter` behind a clean API
-- [ ] `drawRectangle(Bounds, DrawStyle)` → rough rectangle
-- [ ] `drawEllipse(Bounds, DrawStyle)` → rough ellipse
-- [ ] `drawDiamond(Bounds, DrawStyle)` → rough polygon (4 midpoints)
-- [ ] `drawLine(List<Point>, DrawStyle)` → rough linear path
-- [ ] `drawArrow(List<Point>, ArrowheadStyle, DrawStyle)` → path + arrowhead
-- [ ] `drawFreedraw(List<Point>, List<double> pressures, DrawStyle)` → smooth path
-- [ ] `DrawStyle` value object mapping element properties → rough DrawConfig + FillerConfig
-- [ ] Seed-based deterministic rendering (same seed = same wobble)
-- [ ] **Tests**: Golden image tests comparing rendered output against reference PNGs
+- [x] `RoughAdapter` interface — abstracts `rough_flutter` behind a clean API
+- [x] `drawRectangle(Bounds, DrawStyle)` → rough rectangle
+- [x] `drawEllipse(Bounds, DrawStyle)` → rough ellipse
+- [x] `drawDiamond(Bounds, DrawStyle)` → rough polygon (4 midpoints)
+- [x] `drawLine(List<Point>, DrawStyle)` → rough linear path
+- [x] `drawArrow(List<Point>, ArrowheadStyle, DrawStyle)` → path + arrowhead
+- [x] `drawFreedraw(List<Point>, List<double> pressures, DrawStyle)` → smooth path
+- [x] `DrawStyle` value object mapping element properties → rough DrawConfig + FillerConfig
+- [x] Seed-based deterministic rendering (same seed = same wobble)
+- [ ] **Tests**: Golden image tests comparing rendered output against reference PNGs (deferred to Phase 2.2)
+
+> **TDD checkpoint**: RoughCanvasAdapter draws all 7 element types via rough_flutter. Dashed/dotted strokes, all 4 arrowhead types, and Bezier freedraw interpolation. ~86 new tests. Zero analyzer issues. ✅
 
 ### 2.2 Static Canvas Painter
 - [ ] `StaticCanvasPainter extends CustomPainter`

@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 
@@ -61,7 +60,7 @@ void main() {
   });
 
   group('ArrowheadRenderer.buildPath', () {
-    final tip = const Point(100, 50);
+    const tip = Point(100, 50);
     const strokeWidth = 2.0;
 
     test('arrow type produces an open path (two line segments)', () {
