@@ -1,9 +1,12 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:markdraw/src/core/elements/element_id.dart';
 import 'package:markdraw/src/core/elements/rectangle_element.dart';
 import 'package:markdraw/src/core/io/document_format.dart';
 import 'package:markdraw/src/core/io/document_service.dart';
+import 'package:markdraw/src/core/serialization/document_section.dart';
+import 'package:markdraw/src/core/serialization/markdraw_document.dart';
 
 /// In-memory file system for testing.
 Map<String, String> _createFileSystem([Map<String, String>? initial]) {
@@ -218,6 +221,75 @@ void main() {
         () => service.load('/docs/missing.markdraw'),
         throwsA(isA<Exception>()),
       );
+    });
+  });
+
+  group('DocumentService.save', () {
+    late Map<String, String> fs;
+    late DocumentService service;
+    late MarkdrawDocument doc;
+
+    setUp(() {
+      fs = _createFileSystem();
+      service = _createService(fs);
+      doc = MarkdrawDocument(
+        sections: [
+          SketchSection([
+            RectangleElement(
+              id: ElementId('r1'),
+              x: 10,
+              y: 20,
+              width: 100,
+              height: 50,
+            ),
+          ]),
+        ],
+      );
+    });
+
+    test('saves as .markdraw format', () async {
+      await service.save(doc, '/docs/output.markdraw');
+
+      expect(fs.containsKey('/docs/output.markdraw'), isTrue);
+      final content = fs['/docs/output.markdraw']!;
+      expect(content, contains('rect'));
+      expect(content, contains('sketch'));
+    });
+
+    test('saves as .excalidraw format', () async {
+      await service.save(doc, '/docs/output.excalidraw');
+
+      expect(fs.containsKey('/docs/output.excalidraw'), isTrue);
+      final content = fs['/docs/output.excalidraw']!;
+      final decoded = jsonDecode(content) as Map<String, dynamic>;
+      expect(decoded['type'], 'excalidraw');
+      expect(decoded['elements'], hasLength(1));
+      expect(decoded['elements'][0]['type'], 'rectangle');
+    });
+
+    test('format override saves markdraw doc as excalidraw', () async {
+      await service.save(
+        doc,
+        '/docs/output.markdraw',
+        format: DocumentFormat.excalidraw,
+      );
+
+      final content = fs['/docs/output.markdraw']!;
+      final decoded = jsonDecode(content) as Map<String, dynamic>;
+      expect(decoded['type'], 'excalidraw');
+    });
+
+    test('save then load round-trip preserves elements', () async {
+      await service.save(doc, '/docs/rt.markdraw');
+      final result = await service.load('/docs/rt.markdraw');
+      final loaded = result.value.allElements;
+
+      expect(loaded, hasLength(1));
+      expect(loaded.first, isA<RectangleElement>());
+      expect(loaded.first.x, 10);
+      expect(loaded.first.y, 20);
+      expect(loaded.first.width, 100);
+      expect(loaded.first.height, 50);
     });
   });
 }

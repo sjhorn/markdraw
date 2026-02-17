@@ -1,4 +1,5 @@
 import '../serialization/document_parser.dart';
+import '../serialization/document_serializer.dart';
 import '../serialization/excalidraw_json_codec.dart';
 import '../serialization/markdraw_document.dart';
 import '../serialization/parse_result.dart';
@@ -51,5 +52,24 @@ class DocumentService {
       case DocumentFormat.excalidraw:
         return ExcalidrawJsonCodec.parse(content);
     }
+  }
+
+  /// Serializes a document and writes it to a file.
+  ///
+  /// Format is detected from the file extension unless [format] is provided.
+  Future<void> save(
+    MarkdrawDocument doc,
+    String path, {
+    DocumentFormat? format,
+  }) async {
+    final fmt = format ?? detectFormat(path);
+    final String content;
+    switch (fmt) {
+      case DocumentFormat.markdraw:
+        content = DocumentSerializer.serialize(doc);
+      case DocumentFormat.excalidraw:
+        content = ExcalidrawJsonCodec.serialize(doc);
+    }
+    await writeFile(path, content);
   }
 }
