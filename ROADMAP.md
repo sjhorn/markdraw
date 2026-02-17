@@ -210,13 +210,13 @@ markdraw/
 > **TDD checkpoint**: Excalidraw JSON import/export complete with round-trip fidelity. 74 codec tests passing. Zero analyzer issues. ✅
 
 ### 1.4 File I/O
-- [ ] Platform-agnostic file read/write abstraction (Interface Segregation)
+- [x] Platform-agnostic file read/write abstraction (Interface Segregation)
 - [ ] Desktop: native file picker & save dialog
 - [ ] Web: download blob / upload file input
 - [ ] Mobile: share sheet integration
-- [ ] **Tests**: Mock file system, verify read/write round-trip
+- [x] **Tests**: Mock file system, verify read/write round-trip
 
-> **TDD checkpoint**: Can load an excalidraw file, convert to `.markdraw`, save, reload, and verify all elements match.
+> **TDD checkpoint**: Can load an excalidraw file, convert to `.markdraw`, save, reload, and verify all elements match. ✅
 
 ---
 

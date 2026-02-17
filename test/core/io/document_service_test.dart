@@ -7,12 +7,10 @@ import 'package:markdraw/src/core/elements/element.dart';
 import 'package:markdraw/src/core/elements/element_id.dart';
 import 'package:markdraw/src/core/elements/ellipse_element.dart';
 import 'package:markdraw/src/core/elements/freedraw_element.dart';
-import 'package:markdraw/src/core/elements/line_element.dart';
 import 'package:markdraw/src/core/elements/rectangle_element.dart';
 import 'package:markdraw/src/core/elements/text_element.dart';
 import 'package:markdraw/src/core/io/document_format.dart';
 import 'package:markdraw/src/core/io/document_service.dart';
-import 'package:markdraw/src/core/math/point.dart';
 import 'package:markdraw/src/core/serialization/document_section.dart';
 import 'package:markdraw/src/core/serialization/markdraw_document.dart';
 
@@ -244,7 +242,7 @@ void main() {
         sections: [
           SketchSection([
             RectangleElement(
-              id: ElementId('r1'),
+              id: const ElementId('r1'),
               x: 10,
               y: 20,
               width: 100,
