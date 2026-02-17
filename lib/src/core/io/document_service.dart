@@ -72,4 +72,18 @@ class DocumentService {
     }
     await writeFile(path, content);
   }
+
+  /// Converts a document from one format to another.
+  ///
+  /// Loads from [inputPath], saves to [outputPath]. Formats are detected
+  /// from file extensions. Returns the [ParseResult] from loading, which
+  /// may contain warnings from the import step.
+  Future<ParseResult<MarkdrawDocument>> convert(
+    String inputPath,
+    String outputPath,
+  ) async {
+    final result = await load(inputPath);
+    await save(result.value, outputPath);
+    return result;
+  }
 }

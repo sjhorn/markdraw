@@ -1,10 +1,18 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:markdraw/src/core/elements/arrow_element.dart';
+import 'package:markdraw/src/core/elements/diamond_element.dart';
+import 'package:markdraw/src/core/elements/element.dart';
 import 'package:markdraw/src/core/elements/element_id.dart';
+import 'package:markdraw/src/core/elements/ellipse_element.dart';
+import 'package:markdraw/src/core/elements/freedraw_element.dart';
+import 'package:markdraw/src/core/elements/line_element.dart';
 import 'package:markdraw/src/core/elements/rectangle_element.dart';
+import 'package:markdraw/src/core/elements/text_element.dart';
 import 'package:markdraw/src/core/io/document_format.dart';
 import 'package:markdraw/src/core/io/document_service.dart';
+import 'package:markdraw/src/core/math/point.dart';
 import 'package:markdraw/src/core/serialization/document_section.dart';
 import 'package:markdraw/src/core/serialization/markdraw_document.dart';
 
@@ -292,4 +300,268 @@ void main() {
       expect(loaded.first.height, 50);
     });
   });
+
+  group('DocumentService.convert', () {
+    late Map<String, String> fs;
+    late DocumentService service;
+
+    setUp(() {
+      fs = _createFileSystem();
+      service = _createService(fs);
+    });
+
+    test('converts .excalidraw to .markdraw', () async {
+      fs['/input.excalidraw'] = _excalidrawContent();
+
+      final result = await service.convert(
+        '/input.excalidraw',
+        '/output.markdraw',
+      );
+
+      expect(result.value.allElements, hasLength(1));
+      expect(fs.containsKey('/output.markdraw'), isTrue);
+
+      // Verify output is valid .markdraw
+      final reloaded = await service.load('/output.markdraw');
+      expect(reloaded.value.allElements, hasLength(1));
+      expect(reloaded.value.allElements.first, isA<RectangleElement>());
+    });
+
+    test('converts .markdraw to .excalidraw', () async {
+      fs['/input.markdraw'] = _markdrawContent;
+
+      final result = await service.convert(
+        '/input.markdraw',
+        '/output.excalidraw',
+      );
+
+      expect(result.value.allElements, hasLength(1));
+      expect(fs.containsKey('/output.excalidraw'), isTrue);
+
+      // Verify output is valid .excalidraw JSON
+      final reloaded = await service.load('/output.excalidraw');
+      expect(reloaded.value.allElements, hasLength(1));
+      expect(reloaded.value.allElements.first, isA<RectangleElement>());
+    });
+
+    test('convert returns ParseResult with import warnings', () async {
+      final json = jsonEncode({
+        'type': 'excalidraw',
+        'version': 2,
+        'source': 'test',
+        'elements': [
+          {
+            'id': 'img1',
+            'type': 'image',
+            'x': 0,
+            'y': 0,
+            'width': 100,
+            'height': 100,
+          },
+          {
+            'id': 'rect1',
+            'type': 'rectangle',
+            'x': 10,
+            'y': 20,
+            'width': 50,
+            'height': 50,
+            'angle': 0,
+            'strokeColor': '#000000',
+            'backgroundColor': 'transparent',
+            'fillStyle': 'solid',
+            'strokeWidth': 2,
+            'strokeStyle': 'solid',
+            'roughness': 1,
+            'opacity': 100,
+            'seed': 42,
+            'version': 1,
+            'versionNonce': 0,
+            'isDeleted': false,
+            'groupIds': <String>[],
+            'boundElements': null,
+            'updated': 0,
+            'locked': false,
+          },
+        ],
+        'appState': <String, dynamic>{},
+        'files': <String, dynamic>{},
+      });
+      fs['/input.excalidraw'] = json;
+
+      final result = await service.convert(
+        '/input.excalidraw',
+        '/output.markdraw',
+      );
+
+      expect(result.hasWarnings, isTrue);
+      expect(result.warnings.first.message, contains('image'));
+      // The supported rect should still be converted
+      expect(result.value.allElements, hasLength(1));
+    });
+
+    test('converts all 7 element types from excalidraw to markdraw', () async {
+      fs['/input.excalidraw'] = _allElementsExcalidraw();
+
+      final result = await service.convert(
+        '/input.excalidraw',
+        '/output.markdraw',
+      );
+
+      final elements = result.value.allElements;
+      expect(elements, hasLength(7));
+
+      // Verify each type is present (ArrowElement extends LineElement,
+      // so we check exact type for Line)
+      expect(elements.whereType<RectangleElement>(), hasLength(1));
+      expect(elements.whereType<EllipseElement>(), hasLength(1));
+      expect(elements.whereType<DiamondElement>(), hasLength(1));
+      expect(elements.whereType<TextElement>(), hasLength(1));
+      expect(elements.where((e) => e.type == 'line'), hasLength(1));
+      expect(elements.whereType<ArrowElement>(), hasLength(1));
+      expect(elements.whereType<FreedrawElement>(), hasLength(1));
+
+      // Reload the .markdraw output and verify
+      final reloaded = await service.load('/output.markdraw');
+      final reloadedElements = reloaded.value.allElements;
+      expect(reloadedElements, hasLength(7));
+
+      _expectElementsMatch(elements, reloadedElements);
+    });
+
+    test('converts all 7 element types from markdraw to excalidraw', () async {
+      fs['/input.markdraw'] = _allElementsMarkdraw();
+
+      final result = await service.convert(
+        '/input.markdraw',
+        '/output.excalidraw',
+      );
+
+      final elements = result.value.allElements;
+      expect(elements, hasLength(7));
+
+      // Reload the .excalidraw output and verify
+      final reloaded = await service.load('/output.excalidraw');
+      final reloadedElements = reloaded.value.allElements;
+      expect(reloadedElements, hasLength(7));
+
+      _expectElementsMatch(elements, reloadedElements);
+    });
+  });
+}
+
+/// Excalidraw JSON with all 7 element types.
+String _allElementsExcalidraw() {
+  Map<String, dynamic> base(String id, String type) => {
+        'id': id,
+        'type': type,
+        'x': 10,
+        'y': 20,
+        'width': 100,
+        'height': 50,
+        'angle': 0,
+        'strokeColor': '#000000',
+        'backgroundColor': 'transparent',
+        'fillStyle': 'solid',
+        'strokeWidth': 2,
+        'strokeStyle': 'solid',
+        'roughness': 1,
+        'opacity': 100,
+        'seed': 42,
+        'version': 1,
+        'versionNonce': 0,
+        'isDeleted': false,
+        'groupIds': <String>[],
+        'boundElements': null,
+        'updated': 0,
+        'locked': false,
+      };
+
+  return jsonEncode({
+    'type': 'excalidraw',
+    'version': 2,
+    'source': 'test',
+    'elements': [
+      base('r1', 'rectangle'),
+      base('e1', 'ellipse'),
+      base('d1', 'diamond'),
+      {
+        ...base('t1', 'text'),
+        'text': 'Hello',
+        'fontSize': 20,
+        'fontFamily': 1,
+        'textAlign': 'left',
+        'lineHeight': 1.25,
+        'autoResize': true,
+        'originalText': 'Hello',
+        'verticalAlign': 'top',
+      },
+      {
+        ...base('l1', 'line'),
+        'points': [
+          [0, 0],
+          [100, 50],
+        ],
+      },
+      {
+        ...base('a1', 'arrow'),
+        'points': [
+          [0, 0],
+          [200, 100],
+        ],
+        'startArrowhead': null,
+        'endArrowhead': 'arrow',
+      },
+      {
+        ...base('f1', 'freedraw'),
+        'points': [
+          [0, 0],
+          [5, 2],
+          [10, 8],
+        ],
+        'pressures': [0.5, 0.7, 0.9],
+        'simulatePressure': false,
+      },
+    ],
+    'appState': <String, dynamic>{},
+    'files': <String, dynamic>{},
+  });
+}
+
+/// Markdraw format with all 7 element types.
+String _allElementsMarkdraw() {
+  return '''```sketch
+rect id=r1 at 10,20 size 100x50 seed=42
+ellipse id=e1 at 10,20 size 100x50 seed=43
+diamond id=d1 at 10,20 size 100x50 seed=44
+text "Hello" at 10,20 size 100x50 seed=45
+line points=[[0,0],[100,50]] at 10,20 size 100x50 seed=46
+arrow points=[[0,0],[200,100]] at 10,20 size 100x50 seed=47 endArrowhead=arrow
+freedraw points=[[0,0],[5,2],[10,8]] pressure=[0.5,0.7,0.9] at 10,20 size 100x50 seed=48
+```''';
+}
+
+/// Verifies that two element lists have matching types and geometry.
+///
+/// Only geometric shapes (rect, ellipse, diamond) and text serialize
+/// position through the .markdraw format. Line, arrow, and freedraw
+/// only serialize their point arrays, not x/y/width/height.
+void _expectElementsMatch(List<Element> original, List<Element> reloaded) {
+  const positionedTypes = {'rectangle', 'ellipse', 'diamond', 'text'};
+  const sizedTypes = {'rectangle', 'ellipse', 'diamond'};
+  for (var i = 0; i < original.length; i++) {
+    expect(reloaded[i].runtimeType, original[i].runtimeType,
+        reason: 'Element $i type mismatch');
+    if (positionedTypes.contains(original[i].type)) {
+      expect(reloaded[i].x, original[i].x,
+          reason: 'Element $i x mismatch');
+      expect(reloaded[i].y, original[i].y,
+          reason: 'Element $i y mismatch');
+    }
+    if (sizedTypes.contains(original[i].type)) {
+      expect(reloaded[i].width, original[i].width,
+          reason: 'Element $i width mismatch');
+      expect(reloaded[i].height, original[i].height,
+          reason: 'Element $i height mismatch');
+    }
+  }
 }
