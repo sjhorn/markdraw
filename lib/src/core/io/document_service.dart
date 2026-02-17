@@ -1,3 +1,5 @@
+import '../serialization/document_parser.dart';
+import '../serialization/excalidraw_json_codec.dart';
 import '../serialization/markdraw_document.dart';
 import '../serialization/parse_result.dart';
 import 'document_format.dart';
@@ -33,6 +35,21 @@ class DocumentService {
         return DocumentFormat.excalidraw;
       default:
         throw ArgumentError('Unsupported file extension: .$ext');
+    }
+  }
+
+  /// Reads a file, detects its format, and parses it into a [MarkdrawDocument].
+  ///
+  /// Format is detected from the file extension. Throws if the file cannot
+  /// be read or has an unsupported extension.
+  Future<ParseResult<MarkdrawDocument>> load(String path) async {
+    final format = detectFormat(path);
+    final content = await readFile(path);
+    switch (format) {
+      case DocumentFormat.markdraw:
+        return DocumentParser.parse(content);
+      case DocumentFormat.excalidraw:
+        return ExcalidrawJsonCodec.parse(content);
     }
   }
 }
