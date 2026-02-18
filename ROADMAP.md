@@ -239,13 +239,15 @@ markdraw/
 > **TDD checkpoint**: RoughCanvasAdapter draws all 7 element types via rough_flutter. Dashed/dotted strokes, all 4 arrowhead types, and Bezier freedraw interpolation. ~86 new tests. Zero analyzer issues. ✅
 
 ### 2.2 Static Canvas Painter
-- [ ] `StaticCanvasPainter extends CustomPainter`
-- [ ] Iterates visible elements, delegates to `RoughAdapter`
-- [ ] Viewport transform (pan + zoom applied to canvas matrix)
-- [ ] Element ordering by fractional index
-- [ ] Skip `isDeleted` elements
-- [ ] Text rendering with Flutter `TextPainter`
-- [ ] **Tests**: Widget tests verifying paint calls, golden tests for element combinations
+- [x] `StaticCanvasPainter extends CustomPainter`
+- [x] Iterates visible elements, delegates to `RoughAdapter`
+- [x] Viewport transform (pan + zoom applied to canvas matrix)
+- [x] Element ordering by fractional index
+- [x] Skip `isDeleted` elements
+- [x] Text rendering with Flutter `TextPainter`
+- [x] **Tests**: Widget tests verifying paint calls, golden tests for element combinations
+
+> **TDD checkpoint**: StaticCanvasPainter renders all 7 element types with viewport pan/zoom. ViewportState, TextRenderer, ElementRenderer dispatch. ~44 new tests. Zero analyzer issues. ✅
 
 ### 2.3 Interactive Canvas Painter
 - [ ] `InteractiveCanvasPainter extends CustomPainter`

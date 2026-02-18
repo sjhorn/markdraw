@@ -7,4 +7,8 @@ export 'src/core/io/io.dart';
 export 'src/core/math/math.dart';
 export 'src/core/scene/scene_exports.dart';
 export 'src/core/serialization/serialization.dart';
+export 'src/rendering/element_renderer.dart';
 export 'src/rendering/rough/rough.dart';
+export 'src/rendering/static_canvas_painter.dart';
+export 'src/rendering/text_renderer.dart';
+export 'src/rendering/viewport_state.dart';
