@@ -1,0 +1,168 @@
+import 'dart:ui';
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:markdraw/src/core/math/bounds.dart';
+import 'package:markdraw/src/core/math/point.dart';
+import 'package:markdraw/src/rendering/interactive/handle.dart';
+import 'package:markdraw/src/rendering/interactive/selection_overlay.dart';
+import 'package:markdraw/src/rendering/interactive/selection_renderer.dart';
+import 'package:markdraw/src/rendering/interactive/snap_line.dart';
+
+(PictureRecorder, Canvas) _makeCanvas() {
+  final recorder = PictureRecorder();
+  final canvas = Canvas(recorder);
+  return (recorder, canvas);
+}
+
+void main() {
+  group('SelectionRenderer', () {
+    test('drawSelectionBox does not throw', () {
+      final (recorder, canvas) = _makeCanvas();
+      final bounds = Bounds.fromLTWH(100, 100, 200, 150);
+
+      expect(
+        () {
+          SelectionRenderer.drawSelectionBox(canvas, bounds);
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
+    test('drawSelectionBox with angle does not throw', () {
+      final (recorder, canvas) = _makeCanvas();
+      final bounds = Bounds.fromLTWH(100, 100, 200, 150);
+
+      expect(
+        () {
+          SelectionRenderer.drawSelectionBox(canvas, bounds, angle: 0.5);
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
+    test('drawHandles does not throw with 9 handles', () {
+      final (recorder, canvas) = _makeCanvas();
+      final bounds = Bounds.fromLTWH(100, 100, 200, 150);
+      final handles = SelectionOverlay.computeHandles(bounds);
+
+      expect(
+        () {
+          SelectionRenderer.drawHandles(canvas, handles);
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
+    test('drawRotationHandle draws line and circle', () {
+      final (recorder, canvas) = _makeCanvas();
+      final bounds = Bounds.fromLTWH(100, 100, 200, 150);
+      final handles = SelectionOverlay.computeHandles(bounds);
+      final topCenter = handles
+          .firstWhere((h) => h.type == HandleType.topCenter)
+          .position;
+      final rotation = handles
+          .firstWhere((h) => h.type == HandleType.rotation)
+          .position;
+
+      expect(
+        () {
+          SelectionRenderer.drawRotationHandle(
+              canvas, rotation, topCenter);
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
+    test('drawHoverHighlight does not throw', () {
+      final (recorder, canvas) = _makeCanvas();
+      final bounds = Bounds.fromLTWH(50, 50, 300, 200);
+
+      expect(
+        () {
+          SelectionRenderer.drawHoverHighlight(canvas, bounds);
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
+    test('drawMarquee draws rectangle', () {
+      final (recorder, canvas) = _makeCanvas();
+      final rect = const Rect.fromLTWH(10, 20, 300, 200);
+
+      expect(
+        () {
+          SelectionRenderer.drawMarquee(canvas, rect);
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
+    test('drawSnapLine draws horizontal line', () {
+      final (recorder, canvas) = _makeCanvas();
+      const snapLine = SnapLine(
+        orientation: SnapLineOrientation.horizontal,
+        position: 150,
+        start: 0,
+        end: 800,
+      );
+
+      expect(
+        () {
+          SelectionRenderer.drawSnapLine(canvas, snapLine);
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
+    test('drawSnapLine draws vertical line', () {
+      final (recorder, canvas) = _makeCanvas();
+      const snapLine = SnapLine(
+        orientation: SnapLineOrientation.vertical,
+        position: 250,
+        start: 0,
+        end: 600,
+      );
+
+      expect(
+        () {
+          SelectionRenderer.drawSnapLine(canvas, snapLine);
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
+    test('drawCreationPreviewLine does not throw', () {
+      final (recorder, canvas) = _makeCanvas();
+      final points = [const Point(10, 20), const Point(100, 200)];
+
+      expect(
+        () {
+          SelectionRenderer.drawCreationPreviewLine(canvas, points);
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
+    test('drawCreationPreviewShape does not throw', () {
+      final (recorder, canvas) = _makeCanvas();
+      final bounds = Bounds.fromLTWH(50, 50, 200, 150);
+
+      expect(
+        () {
+          SelectionRenderer.drawCreationPreviewShape(canvas, bounds);
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+  });
+}
