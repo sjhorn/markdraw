@@ -250,14 +250,14 @@ markdraw/
 > **TDD checkpoint**: StaticCanvasPainter renders all 7 element types with viewport pan/zoom. ViewportState, TextRenderer, ElementRenderer dispatch. ~44 new tests. Zero analyzer issues. ✅
 
 ### 2.3 Interactive Canvas Painter
-- [ ] `InteractiveCanvasPainter extends CustomPainter`
-- [ ] Selection rectangle (dashed blue outline)
-- [ ] Resize handles (corner + edge)
-- [ ] Rotation handle
-- [ ] Hover highlight
-- [ ] Snap lines (alignment guides)
-- [ ] Multi-point creation preview (line/arrow in progress)
-- [ ] **Tests**: Verify handle positions, snap line calculations
+- [x] `InteractiveCanvasPainter extends CustomPainter`
+- [x] Selection rectangle (dashed blue outline)
+- [x] Resize handles (corner + edge)
+- [x] Rotation handle
+- [x] Hover highlight
+- [x] Snap lines (alignment guides)
+- [x] Multi-point creation preview (line/arrow in progress)
+- [x] **Tests**: Verify handle positions, snap line calculations
 
 ### 2.4 Viewport Management
 - [ ] `ViewportController` — manages scroll offset + zoom level

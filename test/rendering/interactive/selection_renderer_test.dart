@@ -92,7 +92,7 @@ void main() {
 
     test('drawMarquee draws rectangle', () {
       final (recorder, canvas) = _makeCanvas();
-      final rect = const Rect.fromLTWH(10, 20, 300, 200);
+      const rect = Rect.fromLTWH(10, 20, 300, 200);
 
       expect(
         () {

@@ -1,6 +1,5 @@
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:markdraw/src/core/elements/element_id.dart';
 import 'package:markdraw/src/core/elements/rectangle_element.dart';
@@ -22,8 +21,8 @@ void main() {
     test('paints nothing when all inputs are null/empty', () {
       final (recorder, canvas) = _makeCanvas();
 
-      final painter = InteractiveCanvasPainter(
-        viewport: const ViewportState(),
+      const painter = InteractiveCanvasPainter(
+        viewport: ViewportState(),
       );
 
       expect(
@@ -77,9 +76,9 @@ void main() {
     test('draws marquee rectangle when marqueeRect is provided', () {
       final (recorder, canvas) = _makeCanvas();
 
-      final painter = InteractiveCanvasPainter(
-        viewport: const ViewportState(),
-        marqueeRect: const Rect.fromLTWH(10, 20, 300, 200),
+      const painter = InteractiveCanvasPainter(
+        viewport: ViewportState(),
+        marqueeRect: Rect.fromLTWH(10, 20, 300, 200),
       );
 
       expect(
@@ -94,9 +93,9 @@ void main() {
     test('draws snap lines when provided', () {
       final (recorder, canvas) = _makeCanvas();
 
-      final painter = InteractiveCanvasPainter(
-        viewport: const ViewportState(),
-        snapLines: const [
+      const painter = InteractiveCanvasPainter(
+        viewport: ViewportState(),
+        snapLines: [
           SnapLine(
             orientation: SnapLineOrientation.horizontal,
             position: 100,
@@ -124,9 +123,9 @@ void main() {
     test('draws creation preview line when creationPoints provided', () {
       final (recorder, canvas) = _makeCanvas();
 
-      final painter = InteractiveCanvasPainter(
-        viewport: const ViewportState(),
-        creationPoints: const [Point(10, 20), Point(200, 300)],
+      const painter = InteractiveCanvasPainter(
+        viewport: ViewportState(),
+        creationPoints: [Point(10, 20), Point(200, 300)],
       );
 
       expect(
@@ -213,11 +212,11 @@ void main() {
     });
 
     test('shouldRepaint returns true when viewport changes', () {
-      final p1 = InteractiveCanvasPainter(
-        viewport: const ViewportState(),
+      const p1 = InteractiveCanvasPainter(
+        viewport: ViewportState(),
       );
-      final p2 = InteractiveCanvasPainter(
-        viewport: const ViewportState(zoom: 2.0),
+      const p2 = InteractiveCanvasPainter(
+        viewport: ViewportState(zoom: 2.0),
       );
 
       expect(p2.shouldRepaint(p1), isTrue);
@@ -237,12 +236,12 @@ void main() {
     });
 
     test('shouldRepaint returns true when snapLines change', () {
-      final p1 = InteractiveCanvasPainter(
-        viewport: const ViewportState(),
+      const p1 = InteractiveCanvasPainter(
+        viewport: ViewportState(),
       );
-      final p2 = InteractiveCanvasPainter(
-        viewport: const ViewportState(),
-        snapLines: const [
+      const p2 = InteractiveCanvasPainter(
+        viewport: ViewportState(),
+        snapLines: [
           SnapLine(
             orientation: SnapLineOrientation.horizontal,
             position: 100,
