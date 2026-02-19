@@ -71,6 +71,18 @@ class Scene {
     return Scene._(updated);
   }
 
+  /// Returns the bounding box that encloses all active (non-deleted) elements,
+  /// or null if there are no active elements.
+  Bounds? sceneBounds() {
+    Bounds? result;
+    for (final e in _elements) {
+      if (e.isDeleted) continue;
+      final b = Bounds.fromLTWH(e.x, e.y, e.width, e.height);
+      result = result == null ? b : result.union(b);
+    }
+    return result;
+  }
+
   /// Returns the topmost active element whose bounding box contains [point],
   /// or null if no element is hit.
   Element? getElementAtPoint(Point point) {
