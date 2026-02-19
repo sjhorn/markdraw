@@ -1,4 +1,3 @@
-import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
@@ -27,6 +26,7 @@ class InteractiveCanvasPainter extends CustomPainter {
   final Rect? marqueeRect;
   final List<Point>? creationPoints;
   final Bounds? creationBounds;
+  final List<Point>? pointHandles;
 
   const InteractiveCanvasPainter({
     required this.viewport,
@@ -36,6 +36,7 @@ class InteractiveCanvasPainter extends CustomPainter {
     this.marqueeRect,
     this.creationPoints,
     this.creationBounds,
+    this.pointHandles,
   });
 
   @override
@@ -77,6 +78,11 @@ class InteractiveCanvasPainter extends CustomPainter {
       }
     }
 
+    // Point handles (for line/arrow vertex editing)
+    if (pointHandles != null && pointHandles!.isNotEmpty) {
+      SelectionRenderer.drawPointHandles(canvas, pointHandles!);
+    }
+
     // Snap lines
     for (final snapLine in snapLines) {
       SelectionRenderer.drawSnapLine(canvas, snapLine);
@@ -108,6 +114,7 @@ class InteractiveCanvasPainter extends CustomPainter {
         marqueeRect != oldDelegate.marqueeRect ||
         creationBounds != oldDelegate.creationBounds ||
         !listEquals(snapLines, oldDelegate.snapLines) ||
-        !listEquals(creationPoints, oldDelegate.creationPoints);
+        !listEquals(creationPoints, oldDelegate.creationPoints) ||
+        !listEquals(pointHandles, oldDelegate.pointHandles);
   }
 }

@@ -1,8 +1,9 @@
 /// Example demonstrating InteractiveCanvasPainter on top of StaticCanvasPainter.
 ///
 /// Click an element to select it (shows selection box + handles). Drag handles
-/// to resize. Drag a selected element to move it. Drag on empty space for
-/// marquee selection. Scroll to zoom. Toolbar buttons for zoom in/out/reset.
+/// to resize shapes or drag point handles to edit line/arrow vertices. Drag the
+/// rotation handle to rotate shapes. Drag a selected element to move it. Drag
+/// on empty space for marquee selection. Scroll to zoom.
 ///
 /// Usage:
 ///   cd example && flutter run interactive_canvas_example.dart
@@ -49,7 +50,7 @@ class InteractiveCanvasExampleApp extends StatelessWidget {
 }
 
 /// What the current drag gesture is doing.
-enum _DragMode { none, resizeHandle, moveElement, marquee }
+enum _DragMode { none, resizeHandle, moveElement, marquee, dragPoint, rotate }
 
 class _CanvasPage extends StatefulWidget {
   const _CanvasPage();
@@ -72,8 +73,11 @@ class _CanvasPageState extends State<_CanvasPage> {
   // Drag state
   _DragMode _dragMode = _DragMode.none;
   HandleType? _activeHandle;
+  int? _activePointIndex;
   Point? _dragStartScene;
   Bounds? _elementStartBounds;
+  double _elementStartAngle = 0;
+  List<Point>? _elementStartPoints;
 
   // Marquee state
   Rect? _marqueeRect;
@@ -81,6 +85,8 @@ class _CanvasPageState extends State<_CanvasPage> {
 
   /// Hit-test radius for handles (in scene units).
   double get _handleHitRadius => 8 / _viewport.zoom;
+
+  bool get _isLinear => _selectedElement is LineElement;
 
   Scene _buildDemoScene() {
     var scene = Scene();
@@ -135,6 +141,15 @@ class _CanvasPageState extends State<_CanvasPage> {
       index: 'a4',
     ));
 
+    scene = scene.addElement(LineElement(
+      id: const ElementId('line1'),
+      x: 350, y: 250, width: 200, height: 80,
+      points: [const Point(350, 250), const Point(450, 330), const Point(550, 270)],
+      strokeColor: '#e03131',
+      seed: 7,
+      index: 'a5',
+    ));
+
     return scene;
   }
 
@@ -153,6 +168,13 @@ class _CanvasPageState extends State<_CanvasPage> {
     final elements = _scene.orderedElements.reversed;
     for (final element in elements) {
       if (element.isDeleted) continue;
+      // For lines/arrows, hit test along the path segments
+      if (element is LineElement) {
+        if (_hitTestLine(element.points, scenePoint, _handleHitRadius)) {
+          return element;
+        }
+        continue;
+      }
       final bounds = Bounds.fromLTWH(
         element.x, element.y, element.width, element.height,
       );
@@ -161,10 +183,44 @@ class _CanvasPageState extends State<_CanvasPage> {
     return null;
   }
 
-  /// Returns the handle type if [scenePoint] is near a handle of the
-  /// currently selected element, or null.
+  /// Hit-test a polyline: check distance from point to each segment.
+  bool _hitTestLine(List<Point> points, Point target, double threshold) {
+    for (var i = 0; i < points.length - 1; i++) {
+      if (_distToSegment(target, points[i], points[i + 1]) <= threshold) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// Distance from point P to line segment AB.
+  double _distToSegment(Point p, Point a, Point b) {
+    final dx = b.x - a.x;
+    final dy = b.y - a.y;
+    final lenSq = dx * dx + dy * dy;
+    if (lenSq == 0) return p.distanceTo(a);
+    var t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / lenSq;
+    t = t.clamp(0.0, 1.0);
+    return p.distanceTo(Point(a.x + t * dx, a.y + t * dy));
+  }
+
+  /// Returns the index of the closest point handle on the selected line/arrow,
+  /// or null if none is close enough.
+  int? _hitTestPointHandle(Point scenePoint) {
+    if (_selectedElement is! LineElement) return null;
+    final line = _selectedElement! as LineElement;
+    for (var i = 0; i < line.points.length; i++) {
+      if (line.points[i].distanceTo(scenePoint) <= _handleHitRadius) {
+        return i;
+      }
+    }
+    return null;
+  }
+
+  /// Returns the handle type if [scenePoint] is near a resize/rotation handle
+  /// of the currently selected shape (non-linear) element, or null.
   HandleType? _hitTestHandle(Point scenePoint) {
-    if (_selectedElement == null) return null;
+    if (_selectedElement == null || _isLinear) return null;
     final overlay = SelectionOverlay.fromElements([_selectedElement!]);
     if (overlay == null) return null;
 
@@ -203,9 +259,32 @@ class _CanvasPageState extends State<_CanvasPage> {
   void _onPointerDown(PointerDownEvent event) {
     final scenePoint = _screenToScene(event.localPosition);
 
-    // Priority 1: handle on selected element
+    // Priority 1: point handle on selected line/arrow
+    final pointIdx = _hitTestPointHandle(scenePoint);
+    if (pointIdx != null) {
+      final line = _selectedElement! as LineElement;
+      _dragMode = _DragMode.dragPoint;
+      _activePointIndex = pointIdx;
+      _dragStartScene = scenePoint;
+      _elementStartPoints = List.of(line.points);
+      return;
+    }
+
+    // Priority 2: resize/rotation handle on selected shape
     final handleType = _hitTestHandle(scenePoint);
     if (handleType != null) {
+      if (handleType == HandleType.rotation) {
+        _dragMode = _DragMode.rotate;
+        _dragStartScene = scenePoint;
+        _elementStartAngle = _selectedElement!.angle;
+        _elementStartBounds = Bounds.fromLTWH(
+          _selectedElement!.x,
+          _selectedElement!.y,
+          _selectedElement!.width,
+          _selectedElement!.height,
+        );
+        return;
+      }
       _dragMode = _DragMode.resizeHandle;
       _activeHandle = handleType;
       _dragStartScene = scenePoint;
@@ -218,7 +297,7 @@ class _CanvasPageState extends State<_CanvasPage> {
       return;
     }
 
-    // Priority 2: element body
+    // Priority 3: element body
     final hit = _hitTestElement(scenePoint);
     if (hit != null) {
       setState(() => _selectedElement = hit);
@@ -227,10 +306,13 @@ class _CanvasPageState extends State<_CanvasPage> {
       _elementStartBounds = Bounds.fromLTWH(
         hit.x, hit.y, hit.width, hit.height,
       );
+      if (hit is LineElement) {
+        _elementStartPoints = List.of(hit.points);
+      }
       return;
     }
 
-    // Priority 3: empty space → marquee
+    // Priority 4: empty space → marquee
     _dragMode = _DragMode.marquee;
     _marqueeStartScreen = event.localPosition;
     setState(() => _selectedElement = null);
@@ -254,6 +336,10 @@ class _CanvasPageState extends State<_CanvasPage> {
         _applyMove(scenePoint);
       case _DragMode.marquee:
         _applyMarquee(event.localPosition);
+      case _DragMode.dragPoint:
+        _applyDragPoint(scenePoint);
+      case _DragMode.rotate:
+        _applyRotation(scenePoint);
       case _DragMode.none:
         break;
     }
@@ -262,8 +348,10 @@ class _CanvasPageState extends State<_CanvasPage> {
   void _onPointerUp(PointerUpEvent event) {
     _dragMode = _DragMode.none;
     _activeHandle = null;
+    _activePointIndex = null;
     _dragStartScene = null;
     _elementStartBounds = null;
+    _elementStartPoints = null;
     _marqueeStartScreen = null;
     setState(() => _marqueeRect = null);
   }
@@ -279,14 +367,27 @@ class _CanvasPageState extends State<_CanvasPage> {
 
     final dx = currentScene.x - _dragStartScene!.x;
     final dy = currentScene.y - _dragStartScene!.y;
-    final updated = _selectedElement!.copyWith(
-      x: _elementStartBounds!.left + dx,
-      y: _elementStartBounds!.top + dy,
-    );
+
+    Element updated;
+    if (_selectedElement is LineElement && _elementStartPoints != null) {
+      // Move all points for linear elements
+      final movedPoints = _elementStartPoints!
+          .map((p) => Point(p.x + dx, p.y + dy))
+          .toList();
+      final line = _selectedElement! as LineElement;
+      updated = line.copyWithLine(points: movedPoints).copyWith(
+            x: _elementStartBounds!.left + dx,
+            y: _elementStartBounds!.top + dy,
+          );
+    } else {
+      updated = _selectedElement!.copyWith(
+        x: _elementStartBounds!.left + dx,
+        y: _elementStartBounds!.top + dy,
+      );
+    }
 
     setState(() {
       _scene = _scene.updateElement(updated);
-      // Re-fetch updated element from scene (version bumped)
       _selectedElement = _scene.getElementById(_selectedElement!.id);
     });
   }
@@ -310,7 +411,6 @@ class _CanvasPageState extends State<_CanvasPage> {
     var newRight = b.right;
     var newBottom = b.bottom;
 
-    // Adjust edges based on which handle is being dragged
     switch (_activeHandle!) {
       case HandleType.topLeft:
         newLeft += dx;
@@ -333,11 +433,9 @@ class _CanvasPageState extends State<_CanvasPage> {
         newRight += dx;
         newBottom += dy;
       case HandleType.rotation:
-        // Rotation not implemented in this example
         return;
     }
 
-    // Enforce minimum size
     const minSize = 10.0;
     final width = math.max(minSize, newRight - newLeft);
     final height = math.max(minSize, newBottom - newTop);
@@ -347,6 +445,58 @@ class _CanvasPageState extends State<_CanvasPage> {
       y: newTop,
       width: width,
       height: height,
+    );
+
+    setState(() {
+      _scene = _scene.updateElement(updated);
+      _selectedElement = _scene.getElementById(_selectedElement!.id);
+    });
+  }
+
+  // -- Drag point (line/arrow vertex) --
+
+  void _applyDragPoint(Point currentScene) {
+    if (_selectedElement is! LineElement ||
+        _activePointIndex == null ||
+        _elementStartPoints == null) {
+      return;
+    }
+
+    final dx = currentScene.x - _dragStartScene!.x;
+    final dy = currentScene.y - _dragStartScene!.y;
+    final oldPt = _elementStartPoints![_activePointIndex!];
+    final newPoints = List<Point>.of(_elementStartPoints!);
+    newPoints[_activePointIndex!] = Point(oldPt.x + dx, oldPt.y + dy);
+
+    final line = _selectedElement! as LineElement;
+    final updated = line.copyWithLine(points: newPoints);
+
+    setState(() {
+      _scene = _scene.updateElement(updated);
+      _selectedElement = _scene.getElementById(_selectedElement!.id);
+    });
+  }
+
+  // -- Rotation --
+
+  void _applyRotation(Point currentScene) {
+    if (_selectedElement == null || _elementStartBounds == null) {
+      return;
+    }
+
+    final center = _elementStartBounds!.center;
+    final startAngle = math.atan2(
+      _dragStartScene!.y - center.y,
+      _dragStartScene!.x - center.x,
+    );
+    final currentAngle = math.atan2(
+      currentScene.y - center.y,
+      currentScene.x - center.x,
+    );
+    final delta = currentAngle - startAngle;
+
+    final updated = _selectedElement!.copyWith(
+      angle: _elementStartAngle + delta,
     );
 
     setState(() {
@@ -371,9 +521,34 @@ class _CanvasPageState extends State<_CanvasPage> {
 
   @override
   Widget build(BuildContext context) {
-    final selectionOverlay = _selectedElement != null
-        ? SelectionOverlay.fromElements([_selectedElement!])
-        : null;
+    // For shapes: bounding-box overlay with resize + rotation handles
+    // For lines/arrows: bounding-box overlay (no resize handles) + point handles
+    SelectionOverlay? selectionOverlay;
+    List<Point>? pointHandles;
+
+    if (_selectedElement != null) {
+      if (_isLinear) {
+        final line = _selectedElement! as LineElement;
+        pointHandles = line.points;
+        // Compute bounds from actual points for a tighter selection box
+        var minX = double.infinity, minY = double.infinity;
+        var maxX = double.negativeInfinity, maxY = double.negativeInfinity;
+        for (final p in line.points) {
+          minX = math.min(minX, p.x);
+          minY = math.min(minY, p.y);
+          maxX = math.max(maxX, p.x);
+          maxY = math.max(maxY, p.y);
+        }
+        final bounds = Bounds.fromLTWH(minX, minY, maxX - minX, maxY - minY);
+        // Only show the bounding box outline, no resize handles
+        selectionOverlay = SelectionOverlay(
+          bounds: bounds,
+          handles: const [],
+        );
+      } else {
+        selectionOverlay = SelectionOverlay.fromElements([_selectedElement!]);
+      }
+    }
 
     final hoveredBounds =
         _hoveredElement != null && _hoveredElement != _selectedElement
@@ -431,6 +606,7 @@ class _CanvasPageState extends State<_CanvasPage> {
               selection: selectionOverlay,
               hoveredBounds: hoveredBounds,
               marqueeRect: _marqueeRect,
+              pointHandles: pointHandles,
             ),
             size: Size.infinite,
           ),

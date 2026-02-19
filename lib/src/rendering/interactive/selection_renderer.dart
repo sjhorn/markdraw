@@ -181,6 +181,26 @@ class SelectionRenderer {
     _drawDashedLine(canvas, start, end, paint);
   }
 
+  /// Draws circular point handles at each position in [points].
+  ///
+  /// Used for line/arrow endpoint editing — each point is a draggable vertex.
+  static void drawPointHandles(Canvas canvas, List<Point> points) {
+    final fillPaint = Paint()
+      ..color = const Color(0xFFFFFFFF)
+      ..style = PaintingStyle.fill;
+
+    final strokePaint = Paint()
+      ..color = _selectionColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = _handleStrokeWidth;
+
+    for (final point in points) {
+      final center = Offset(point.x, point.y);
+      canvas.drawCircle(center, _handleSize / 2, fillPaint);
+      canvas.drawCircle(center, _handleSize / 2, strokePaint);
+    }
+  }
+
   /// Draws a creation preview line/arrow from a list of points.
   static void drawCreationPreviewLine(Canvas canvas, List<Point> points) {
     if (points.length < 2) return;

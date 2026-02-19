@@ -139,6 +139,31 @@ void main() {
       );
     });
 
+    test('drawPointHandles does not throw', () {
+      final (recorder, canvas) = _makeCanvas();
+      final points = [const Point(10, 20), const Point(100, 200), const Point(300, 50)];
+
+      expect(
+        () {
+          SelectionRenderer.drawPointHandles(canvas, points);
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
+    test('drawPointHandles with empty list does not throw', () {
+      final (recorder, canvas) = _makeCanvas();
+
+      expect(
+        () {
+          SelectionRenderer.drawPointHandles(canvas, []);
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
     test('drawCreationPreviewLine does not throw', () {
       final (recorder, canvas) = _makeCanvas();
       final points = [const Point(10, 20), const Point(100, 200)];

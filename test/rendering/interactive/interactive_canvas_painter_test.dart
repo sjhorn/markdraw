@@ -185,6 +185,36 @@ void main() {
       );
     });
 
+    test('draws point handles when pointHandles provided', () {
+      final (recorder, canvas) = _makeCanvas();
+
+      const painter = InteractiveCanvasPainter(
+        viewport: ViewportState(),
+        pointHandles: [Point(10, 20), Point(200, 300)],
+      );
+
+      expect(
+        () {
+          painter.paint(canvas, const Size(800, 600));
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
+    test('shouldRepaint returns true when pointHandles change', () {
+      const p1 = InteractiveCanvasPainter(
+        viewport: ViewportState(),
+        pointHandles: [Point(0, 0), Point(100, 100)],
+      );
+      const p2 = InteractiveCanvasPainter(
+        viewport: ViewportState(),
+        pointHandles: [Point(0, 0), Point(200, 200)],
+      );
+
+      expect(p2.shouldRepaint(p1), isTrue);
+    });
+
     test('shouldRepaint returns true when selection changes', () {
       final overlay1 = SelectionOverlay.fromElements([
         RectangleElement(
