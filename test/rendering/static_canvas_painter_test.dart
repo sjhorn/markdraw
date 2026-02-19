@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:markdraw/src/core/elements/arrow_element.dart';
 import 'package:markdraw/src/core/elements/diamond_element.dart';
-import 'package:markdraw/src/core/elements/element.dart' as core;
 import 'package:markdraw/src/core/elements/element_id.dart';
 import 'package:markdraw/src/core/elements/ellipse_element.dart';
 import 'package:markdraw/src/core/elements/freedraw_element.dart';
@@ -459,6 +458,95 @@ void main() {
       );
 
       expect(painter2.shouldRepaint(painter1), isTrue);
+    });
+
+    test('off-screen elements not painted (viewport culling)', () {
+      final (recorder, canvas) = _makeCanvas();
+
+      var scene = Scene();
+      // On-screen element
+      scene = scene.addElement(RectangleElement(
+        id: const ElementId('visible'),
+        x: 100, y: 100, width: 200, height: 100,
+      ));
+      // Far off-screen element
+      scene = scene.addElement(EllipseElement(
+        id: const ElementId('offscreen'),
+        x: 5000, y: 5000, width: 100, height: 100,
+      ));
+
+      final painter = StaticCanvasPainter(
+        scene: scene,
+        adapter: adapter,
+        viewport: const ViewportState(),
+      );
+
+      painter.paint(canvas, const Size(800, 600));
+      recorder.endRecording();
+
+      // Only the visible element should be painted
+      expect(adapter.calls, ['rectangle']);
+    });
+
+    test('only visible elements painted when some are off-screen', () {
+      final (recorder, canvas) = _makeCanvas();
+
+      var scene = Scene();
+      scene = scene.addElement(RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+        index: 'a0',
+      ));
+      scene = scene.addElement(EllipseElement(
+        id: const ElementId('e1'),
+        x: -2000, y: -2000, width: 50, height: 50,
+        index: 'a1',
+      ));
+      scene = scene.addElement(DiamondElement(
+        id: const ElementId('d1'),
+        x: 300, y: 200, width: 80, height: 80,
+        index: 'a2',
+      ));
+
+      final painter = StaticCanvasPainter(
+        scene: scene,
+        adapter: adapter,
+        viewport: const ViewportState(),
+      );
+
+      painter.paint(canvas, const Size(800, 600));
+      recorder.endRecording();
+
+      // Ellipse is off-screen, should be culled
+      expect(adapter.calls, ['rectangle', 'diamond']);
+    });
+
+    test('panned viewport culls elements no longer visible', () {
+      final (recorder, canvas) = _makeCanvas();
+
+      var scene = Scene();
+      scene = scene.addElement(RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+      ));
+      scene = scene.addElement(EllipseElement(
+        id: const ElementId('e1'),
+        x: 2000, y: 2000, width: 100, height: 100,
+      ));
+
+      // Pan to show the ellipse area, not the rectangle
+      final painter = StaticCanvasPainter(
+        scene: scene,
+        adapter: adapter,
+        viewport: const ViewportState(offset: Offset(1800, 1800)),
+      );
+
+      painter.paint(canvas, const Size(800, 600));
+      recorder.endRecording();
+
+      // Rectangle at (0,0) is off-screen when viewport offset is (1800,1800)
+      // Ellipse at (2000,2000) is visible
+      expect(adapter.calls, ['ellipse']);
     });
   });
 }
