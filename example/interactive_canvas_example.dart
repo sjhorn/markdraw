@@ -156,10 +156,8 @@ class _CanvasPageState extends State<_CanvasPage> {
   // -- Coordinate conversion --
 
   Point _screenToScene(Offset screenPos) {
-    return Point(
-      screenPos.dx / _viewport.zoom + _viewport.offset.dx,
-      screenPos.dy / _viewport.zoom + _viewport.offset.dy,
-    );
+    final scene = _viewport.screenToScene(screenPos);
+    return Point(scene.dx, scene.dy);
   }
 
   // -- Hit testing --
@@ -260,20 +258,24 @@ class _CanvasPageState extends State<_CanvasPage> {
   void _zoomAtCenter(double factor) {
     final size = (context.findRenderObject() as RenderBox?)?.size;
     if (size == null) return;
-    _zoomAt(factor, Offset(size.width / 2, size.height / 2));
+    setState(() {
+      _viewport = _viewport.zoomAt(
+        factor,
+        Offset(size.width / 2, size.height / 2),
+      );
+    });
   }
 
-  void _zoomAt(double factor, Offset screenPoint) {
-    final oldZoom = _viewport.zoom;
-    final newZoom = (oldZoom * factor).clamp(0.1, 10.0);
-    final sceneX = screenPoint.dx / oldZoom + _viewport.offset.dx;
-    final sceneY = screenPoint.dy / oldZoom + _viewport.offset.dy;
+  void _fitToContent() {
+    final size = (context.findRenderObject() as RenderBox?)?.size;
+    if (size == null) return;
     setState(() {
-      _viewport = ViewportState(
-        offset: Offset(sceneX - screenPoint.dx / newZoom,
-            sceneY - screenPoint.dy / newZoom),
-        zoom: newZoom,
+      _viewport = _viewport.fitToBounds(
+        _scene.sceneBounds(),
+        size,
+        padding: 40,
       );
+      _selectedElement = null;
     });
   }
 
@@ -599,11 +601,8 @@ class _CanvasPageState extends State<_CanvasPage> {
           ),
           IconButton(
             icon: const Icon(Icons.fit_screen),
-            tooltip: 'Reset View',
-            onPressed: () => setState(() {
-              _viewport = const ViewportState();
-              _selectedElement = null;
-            }),
+            tooltip: 'Fit to Content',
+            onPressed: _fitToContent,
           ),
         ],
       ),
@@ -614,7 +613,9 @@ class _CanvasPageState extends State<_CanvasPage> {
         onPointerSignal: (event) {
           if (event is PointerScrollEvent) {
             final factor = event.scrollDelta.dy > 0 ? 1 / 1.15 : 1.15;
-            _zoomAt(factor, event.localPosition);
+            setState(() {
+              _viewport = _viewport.zoomAt(factor, event.localPosition);
+            });
           }
         },
         child: ClipRect(

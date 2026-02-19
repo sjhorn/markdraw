@@ -264,15 +264,15 @@ markdraw/
 > **TDD checkpoint**: InteractiveCanvasPainter renders selection boxes, handles (resize + rotation + point), hover highlights, marquee, snap lines, creation previews. Handles follow rotation. Interactive example with move, resize, rotate, point drag. ~50 new tests, 557 total. Zero analyzer issues. ✅
 
 ### 2.4 Viewport Management
-- [ ] `ViewportController` — manages scroll offset + zoom level
-- [ ] Pan via two-finger drag / middle-mouse / Space+drag
-- [ ] Zoom via pinch / Ctrl+scroll / toolbar buttons
-- [ ] Fit-to-content
-- [ ] Viewport culling: only pass visible elements to painters
-- [ ] Scene-to-screen and screen-to-scene coordinate transforms
-- [ ] **Tests**: Coordinate transforms at various zoom levels, culling correctness
+- [x] `ViewportState` functional methods — `screenToScene`, `sceneToScreen`, `pan`, `zoomAt`, `fitToBounds`
+- [x] Pan via drag gesture using `ViewportState.pan()`
+- [x] Zoom via scroll / toolbar using `ViewportState.zoomAt()` with anchor point
+- [x] Fit-to-content via `ViewportState.fitToBounds()` + `Scene.sceneBounds()`
+- [x] Viewport culling: `cullElements()` filters off-screen elements before painting
+- [x] Scene-to-screen and screen-to-scene coordinate transforms on `ViewportState`
+- [x] **Tests**: Coordinate transforms at various zoom levels, culling correctness
 
-> **TDD checkpoint**: Open a `.markdraw` file and see all elements rendered with hand-drawn styling. Pan and zoom work.
+> **TDD checkpoint**: ViewportState has coordinate transforms, pan, zoomAt, fitToBounds. Scene.sceneBounds() computes union of active element bounds. cullElements() filters by viewport visibility with margin. StaticCanvasPainter uses culling. Examples use the new API. ~47 new tests, 604 total. Zero analyzer issues. ✅
 
 ---
 

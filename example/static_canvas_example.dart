@@ -55,7 +55,7 @@ class _CanvasPageState extends State<_CanvasPage> {
   final _adapter = RoughCanvasAdapter();
   var _viewport = const ViewportState();
   Offset? _panStart;
-  Offset? _viewportStart;
+  ViewportState? _viewportAtPanStart;
 
   late final Scene _scene = _buildDemoScene();
 
@@ -137,31 +137,23 @@ class _CanvasPageState extends State<_CanvasPage> {
     return scene;
   }
 
-  /// Zoom centered on the middle of the canvas.
   void _zoomAtCenter(double factor) {
     final size = (context.findRenderObject() as RenderBox?)?.size;
     if (size == null) return;
     final center = Offset(size.width / 2, size.height / 2);
-    _zoomAt(factor, center);
+    setState(() {
+      _viewport = _viewport.zoomAt(factor, center);
+    });
   }
 
-  /// Zoom anchored at a specific screen point so that point stays fixed.
-  void _zoomAt(double factor, Offset screenPoint) {
-    final oldZoom = _viewport.zoom;
-    final newZoom = (oldZoom * factor).clamp(0.1, 10.0);
-
-    // Scene point under the cursor before zoom
-    final sceneX = screenPoint.dx / oldZoom + _viewport.offset.dx;
-    final sceneY = screenPoint.dy / oldZoom + _viewport.offset.dy;
-
-    // Adjust offset so the same scene point stays under the cursor
-    final newOffsetX = sceneX - screenPoint.dx / newZoom;
-    final newOffsetY = sceneY - screenPoint.dy / newZoom;
-
+  void _fitToContent() {
+    final size = (context.findRenderObject() as RenderBox?)?.size;
+    if (size == null) return;
     setState(() {
-      _viewport = ViewportState(
-        offset: Offset(newOffsetX, newOffsetY),
-        zoom: newZoom,
+      _viewport = _viewport.fitToBounds(
+        _scene.sceneBounds(),
+        size,
+        padding: 40,
       );
     });
   }
@@ -184,10 +176,8 @@ class _CanvasPageState extends State<_CanvasPage> {
           ),
           IconButton(
             icon: const Icon(Icons.fit_screen),
-            tooltip: 'Reset View',
-            onPressed: () => setState(() {
-              _viewport = const ViewportState();
-            }),
+            tooltip: 'Fit to Content',
+            onPressed: _fitToContent,
           ),
         ],
       ),
@@ -195,22 +185,21 @@ class _CanvasPageState extends State<_CanvasPage> {
         onPointerSignal: (event) {
           if (event is PointerScrollEvent) {
             final factor = event.scrollDelta.dy > 0 ? 1 / 1.15 : 1.15;
-            _zoomAt(factor, event.localPosition);
+            setState(() {
+              _viewport = _viewport.zoomAt(factor, event.localPosition);
+            });
           }
         },
         child: GestureDetector(
           onPanStart: (details) {
             _panStart = details.localPosition;
-            _viewportStart = _viewport.offset;
+            _viewportAtPanStart = _viewport;
           },
           onPanUpdate: (details) {
-            if (_panStart == null || _viewportStart == null) return;
+            if (_panStart == null || _viewportAtPanStart == null) return;
             final delta = details.localPosition - _panStart!;
             setState(() {
-              _viewport = ViewportState(
-                offset: _viewportStart! - delta / _viewport.zoom,
-                zoom: _viewport.zoom,
-              );
+              _viewport = _viewportAtPanStart!.pan(delta);
             });
           },
           child: ClipRect(
