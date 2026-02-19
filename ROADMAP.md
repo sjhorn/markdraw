@@ -258,6 +258,10 @@ markdraw/
 - [x] Snap lines (alignment guides)
 - [x] Multi-point creation preview (line/arrow in progress)
 - [x] **Tests**: Verify handle positions, snap line calculations
+- [x] Point handles for line/arrow vertex editing
+- [x] ArrowElement.copyWithLine preserves arrow type
+
+> **TDD checkpoint**: InteractiveCanvasPainter renders selection boxes, handles (resize + rotation + point), hover highlights, marquee, snap lines, creation previews. Handles follow rotation. Interactive example with move, resize, rotate, point drag. ~50 new tests, 557 total. Zero analyzer issues. ✅
 
 ### 2.4 Viewport Management
 - [ ] `ViewportController` — manages scroll offset + zoom level
