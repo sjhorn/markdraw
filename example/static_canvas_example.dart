@@ -1,12 +1,13 @@
 /// Example demonstrating StaticCanvasPainter with interactive pan/zoom.
 ///
 /// Renders a scene with all 7 element types using the rough drawing adapter.
-/// Drag to pan, scroll/pinch to zoom.
+/// Drag to pan, scroll/pinch to zoom, use toolbar buttons to zoom in/out/fit.
 ///
 /// Usage:
 ///   cd example && flutter run static_canvas_example.dart
 library;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' hide Element;
 
 import 'package:markdraw/src/core/elements/arrow_element.dart';
@@ -61,13 +62,9 @@ class _CanvasPageState extends State<_CanvasPage> {
   Scene _buildDemoScene() {
     var scene = Scene();
 
-    // Rectangle (solid fill)
     scene = scene.addElement(RectangleElement(
       id: const ElementId('rect1'),
-      x: 50,
-      y: 50,
-      width: 160,
-      height: 100,
+      x: 50, y: 50, width: 160, height: 100,
       strokeColor: '#1e1e1e',
       backgroundColor: '#a5d8ff',
       fillStyle: FillStyle.solid,
@@ -75,13 +72,9 @@ class _CanvasPageState extends State<_CanvasPage> {
       index: 'a0',
     ));
 
-    // Ellipse (hachure fill)
     scene = scene.addElement(EllipseElement(
       id: const ElementId('ell1'),
-      x: 280,
-      y: 50,
-      width: 140,
-      height: 100,
+      x: 280, y: 50, width: 140, height: 100,
       strokeColor: '#1e1e1e',
       backgroundColor: '#b2f2bb',
       fillStyle: FillStyle.hachure,
@@ -89,13 +82,9 @@ class _CanvasPageState extends State<_CanvasPage> {
       index: 'a1',
     ));
 
-    // Diamond (cross-hatch fill)
     scene = scene.addElement(DiamondElement(
       id: const ElementId('dia1'),
-      x: 500,
-      y: 40,
-      width: 120,
-      height: 120,
+      x: 500, y: 40, width: 120, height: 120,
       strokeColor: '#1e1e1e',
       backgroundColor: '#ffec99',
       fillStyle: FillStyle.crossHatch,
@@ -103,13 +92,9 @@ class _CanvasPageState extends State<_CanvasPage> {
       index: 'a2',
     ));
 
-    // Line (dashed)
     scene = scene.addElement(LineElement(
       id: const ElementId('line1'),
-      x: 50,
-      y: 220,
-      width: 200,
-      height: 50,
+      x: 50, y: 220, width: 200, height: 50,
       points: [const Point(50, 220), const Point(150, 270), const Point(250, 220)],
       strokeColor: '#e03131',
       strokeStyle: StrokeStyle.dashed,
@@ -117,13 +102,9 @@ class _CanvasPageState extends State<_CanvasPage> {
       index: 'a3',
     ));
 
-    // Arrow
     scene = scene.addElement(ArrowElement(
       id: const ElementId('arr1'),
-      x: 300,
-      y: 240,
-      width: 200,
-      height: 0,
+      x: 300, y: 240, width: 200, height: 0,
       points: [const Point(300, 240), const Point(500, 240)],
       endArrowhead: Arrowhead.arrow,
       strokeColor: '#1971c2',
@@ -131,36 +112,22 @@ class _CanvasPageState extends State<_CanvasPage> {
       index: 'a4',
     ));
 
-    // Freedraw
     scene = scene.addElement(FreedrawElement(
       id: const ElementId('free1'),
-      x: 50,
-      y: 330,
-      width: 230,
-      height: 60,
+      x: 50, y: 330, width: 230, height: 60,
       points: [
-        const Point(50, 370),
-        const Point(80, 340),
-        const Point(110, 380),
-        const Point(140, 340),
-        const Point(170, 370),
-        const Point(200, 330),
-        const Point(230, 360),
-        const Point(260, 350),
-        const Point(280, 370),
+        const Point(50, 370), const Point(80, 340), const Point(110, 380),
+        const Point(140, 340), const Point(170, 370), const Point(200, 330),
+        const Point(230, 360), const Point(260, 350), const Point(280, 370),
       ],
       strokeColor: '#862e9c',
       seed: 7,
       index: 'a5',
     ));
 
-    // Text
     scene = scene.addElement(core.TextElement(
       id: const ElementId('txt1'),
-      x: 350,
-      y: 330,
-      width: 200,
-      height: 40,
+      x: 350, y: 330, width: 200, height: 40,
       text: 'Markdraw Canvas',
       fontSize: 24,
       strokeColor: '#1e1e1e',
@@ -168,6 +135,35 @@ class _CanvasPageState extends State<_CanvasPage> {
     ));
 
     return scene;
+  }
+
+  /// Zoom centered on the middle of the canvas.
+  void _zoomAtCenter(double factor) {
+    final size = (context.findRenderObject() as RenderBox?)?.size;
+    if (size == null) return;
+    final center = Offset(size.width / 2, size.height / 2);
+    _zoomAt(factor, center);
+  }
+
+  /// Zoom anchored at a specific screen point so that point stays fixed.
+  void _zoomAt(double factor, Offset screenPoint) {
+    final oldZoom = _viewport.zoom;
+    final newZoom = (oldZoom * factor).clamp(0.1, 10.0);
+
+    // Scene point under the cursor before zoom
+    final sceneX = screenPoint.dx / oldZoom + _viewport.offset.dx;
+    final sceneY = screenPoint.dy / oldZoom + _viewport.offset.dy;
+
+    // Adjust offset so the same scene point stays under the cursor
+    final newOffsetX = sceneX - screenPoint.dx / newZoom;
+    final newOffsetY = sceneY - screenPoint.dy / newZoom;
+
+    setState(() {
+      _viewport = ViewportState(
+        offset: Offset(newOffsetX, newOffsetY),
+        zoom: newZoom,
+      );
+    });
   }
 
   @override
@@ -178,53 +174,54 @@ class _CanvasPageState extends State<_CanvasPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.zoom_in),
-            onPressed: () => setState(() {
-              _viewport = ViewportState(
-                offset: _viewport.offset,
-                zoom: (_viewport.zoom * 1.2).clamp(0.1, 10.0),
-              );
-            }),
+            tooltip: 'Zoom In',
+            onPressed: () => _zoomAtCenter(1.3),
           ),
           IconButton(
             icon: const Icon(Icons.zoom_out),
-            onPressed: () => setState(() {
-              _viewport = ViewportState(
-                offset: _viewport.offset,
-                zoom: (_viewport.zoom / 1.2).clamp(0.1, 10.0),
-              );
-            }),
+            tooltip: 'Zoom Out',
+            onPressed: () => _zoomAtCenter(1 / 1.3),
           ),
           IconButton(
             icon: const Icon(Icons.fit_screen),
+            tooltip: 'Reset View',
             onPressed: () => setState(() {
               _viewport = const ViewportState();
             }),
           ),
         ],
       ),
-      body: GestureDetector(
-        onPanStart: (details) {
-          _panStart = details.localPosition;
-          _viewportStart = _viewport.offset;
+      body: Listener(
+        onPointerSignal: (event) {
+          if (event is PointerScrollEvent) {
+            final factor = event.scrollDelta.dy > 0 ? 1 / 1.15 : 1.15;
+            _zoomAt(factor, event.localPosition);
+          }
         },
-        onPanUpdate: (details) {
-          if (_panStart == null || _viewportStart == null) return;
-          final delta = details.localPosition - _panStart!;
-          setState(() {
-            _viewport = ViewportState(
-              offset: _viewportStart! - delta / _viewport.zoom,
-              zoom: _viewport.zoom,
-            );
-          });
-        },
-        child: ClipRect(
-          child: CustomPaint(
-            painter: StaticCanvasPainter(
-              scene: _scene,
-              adapter: _adapter,
-              viewport: _viewport,
+        child: GestureDetector(
+          onPanStart: (details) {
+            _panStart = details.localPosition;
+            _viewportStart = _viewport.offset;
+          },
+          onPanUpdate: (details) {
+            if (_panStart == null || _viewportStart == null) return;
+            final delta = details.localPosition - _panStart!;
+            setState(() {
+              _viewport = ViewportState(
+                offset: _viewportStart! - delta / _viewport.zoom,
+                zoom: _viewport.zoom,
+              );
+            });
+          },
+          child: ClipRect(
+            child: CustomPaint(
+              painter: StaticCanvasPainter(
+                scene: _scene,
+                adapter: _adapter,
+                viewport: _viewport,
+              ),
+              size: Size.infinite,
             ),
-            size: Size.infinite,
           ),
         ),
       ),
