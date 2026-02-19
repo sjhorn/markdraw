@@ -3,6 +3,7 @@
 library;
 
 export 'src/core/elements/elements.dart';
+export 'src/editor/editor.dart';
 export 'src/core/io/io.dart';
 export 'src/core/math/math.dart';
 export 'src/core/scene/scene_exports.dart';
