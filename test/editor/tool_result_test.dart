@@ -1,7 +1,5 @@
-import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/elements/element.dart';
 import 'package:markdraw/src/core/elements/element_id.dart';
 import 'package:markdraw/src/core/elements/rectangle_element.dart';
 import 'package:markdraw/src/core/math/bounds.dart';
@@ -88,6 +86,17 @@ void main() {
       expect(result.toolType, ToolType.select);
     });
 
+    test('SetClipboardResult holds elements', () {
+      final result = SetClipboardResult([element]);
+      expect(result.elements, hasLength(1));
+      expect(result.elements.first, element);
+    });
+
+    test('SetClipboardResult with empty list', () {
+      final result = SetClipboardResult([]);
+      expect(result.elements, isEmpty);
+    });
+
     test('ToolResult is sealed — all subtypes covered in switch', () {
       final ToolResult result = AddElementResult(element);
       // This switch must compile — exhaustiveness check for sealed class
@@ -99,6 +108,7 @@ void main() {
         UpdateViewportResult() => 'viewport',
         CompoundResult() => 'compound',
         SwitchToolResult() => 'switch',
+        SetClipboardResult() => 'clipboard',
       };
       expect(description, 'add');
     });
@@ -117,6 +127,32 @@ void main() {
       expect(context.scene, scene);
       expect(context.viewport, viewport);
       expect(context.selectedIds, selectedIds);
+    });
+
+    test('clipboard defaults to empty list', () {
+      final context = ToolContext(
+        scene: Scene(),
+        viewport: const ViewportState(),
+        selectedIds: {},
+      );
+      expect(context.clipboard, isEmpty);
+    });
+
+    test('clipboard holds provided elements', () {
+      final elem = RectangleElement(
+        id: const ElementId('r1'),
+        x: 10,
+        y: 20,
+        width: 100,
+        height: 50,
+      );
+      final context = ToolContext(
+        scene: Scene(),
+        viewport: const ViewportState(),
+        selectedIds: {},
+        clipboard: [elem],
+      );
+      expect(context.clipboard, hasLength(1));
     });
 
     test('selectedIds is an unmodifiable view', () {
@@ -144,8 +180,8 @@ void main() {
     });
 
     test('creationPoints holds points during line creation', () {
-      final overlay = ToolOverlay(
-        creationPoints: [const Point(0, 0), const Point(100, 100)],
+      const overlay = ToolOverlay(
+        creationPoints: [Point(0, 0), Point(100, 100)],
       );
       expect(overlay.creationPoints, hasLength(2));
       expect(overlay.creationBounds, isNull);

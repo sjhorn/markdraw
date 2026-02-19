@@ -1,3 +1,4 @@
+import '../core/elements/element.dart';
 import '../core/elements/element_id.dart';
 import '../core/scene/scene.dart';
 import '../rendering/viewport_state.dart';
@@ -6,19 +7,21 @@ import 'tool_type.dart';
 
 /// An immutable value object representing the editor's state.
 ///
-/// Holds the scene, viewport, selection, and active tool type.
+/// Holds the scene, viewport, selection, active tool type, and clipboard.
 /// Use [applyResult] to produce a new state from a [ToolResult].
 class EditorState {
   final Scene scene;
   final ViewportState viewport;
   final Set<ElementId> selectedIds;
   final ToolType activeToolType;
+  final List<Element> clipboard;
 
   EditorState({
     required this.scene,
     required this.viewport,
     required this.selectedIds,
     required this.activeToolType,
+    this.clipboard = const [],
   });
 
   /// Applies a [ToolResult] to produce a new [EditorState].
@@ -45,6 +48,9 @@ class EditorState {
       SwitchToolResult(:final toolType) => copyWith(
           activeToolType: toolType,
         ),
+      SetClipboardResult(:final elements) => copyWith(
+          clipboard: elements,
+        ),
       CompoundResult(:final results) => results.fold(this,
           (state, r) => state.applyResult(r)),
     };
@@ -56,12 +62,14 @@ class EditorState {
     ViewportState? viewport,
     Set<ElementId>? selectedIds,
     ToolType? activeToolType,
+    List<Element>? clipboard,
   }) {
     return EditorState(
       scene: scene ?? this.scene,
       viewport: viewport ?? this.viewport,
       selectedIds: selectedIds ?? this.selectedIds,
       activeToolType: activeToolType ?? this.activeToolType,
+      clipboard: clipboard ?? this.clipboard,
     );
   }
 }

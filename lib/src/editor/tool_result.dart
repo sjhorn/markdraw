@@ -53,17 +53,25 @@ class SwitchToolResult extends ToolResult {
   SwitchToolResult(this.toolType);
 }
 
+/// Set the clipboard contents for copy/paste.
+class SetClipboardResult extends ToolResult {
+  final List<Element> elements;
+  SetClipboardResult(this.elements);
+}
+
 /// A read-only snapshot of the editor state, provided to tools for
 /// decision-making.
 class ToolContext {
   final Scene scene;
   final ViewportState viewport;
   final Set<ElementId> selectedIds;
+  final List<Element> clipboard;
 
   ToolContext({
     required this.scene,
     required this.viewport,
     required Set<ElementId> selectedIds,
+    this.clipboard = const [],
   }) : selectedIds = Set.unmodifiable(selectedIds);
 }
 

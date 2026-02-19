@@ -1,6 +1,6 @@
-import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:markdraw/src/core/elements/element.dart';
 import 'package:markdraw/src/core/elements/element_id.dart';
 import 'package:markdraw/src/core/elements/ellipse_element.dart';
 import 'package:markdraw/src/core/elements/rectangle_element.dart';
@@ -171,6 +171,97 @@ void main() {
       final newState = state.copyWith(activeToolType: ToolType.hand);
       expect(newState.activeToolType, ToolType.hand);
       expect(newState.scene, state.scene);
+    });
+
+    test('clipboard defaults to empty list', () {
+      expect(state.clipboard, isEmpty);
+    });
+
+    test('applyResult with SetClipboardResult updates clipboard', () {
+      final element = RectangleElement(
+        id: const ElementId('r1'),
+        x: 10,
+        y: 20,
+        width: 100,
+        height: 50,
+      );
+      final newState =
+          state.applyResult(SetClipboardResult([element]));
+      expect(newState.clipboard, hasLength(1));
+      expect(newState.clipboard.first.id, const ElementId('r1'));
+    });
+
+    test('SetClipboardResult preserves other state fields', () {
+      final element = RectangleElement(
+        id: const ElementId('r1'),
+        x: 10,
+        y: 20,
+        width: 100,
+        height: 50,
+      );
+      state = EditorState(
+        scene: Scene().addElement(element),
+        viewport: const ViewportState(offset: Offset(5, 5), zoom: 1.5),
+        selectedIds: {const ElementId('r1')},
+        activeToolType: ToolType.rectangle,
+      );
+      final newState =
+          state.applyResult(SetClipboardResult([element]));
+      expect(newState.scene.elements.length, 1);
+      expect(newState.viewport.zoom, 1.5);
+      expect(newState.selectedIds, {const ElementId('r1')});
+      expect(newState.activeToolType, ToolType.rectangle);
+    });
+
+    test('other applyResult branches preserve clipboard', () {
+      final element = RectangleElement(
+        id: const ElementId('r1'),
+        x: 10,
+        y: 20,
+        width: 100,
+        height: 50,
+      );
+      state = state.applyResult(SetClipboardResult([element]));
+      expect(state.clipboard, hasLength(1));
+
+      // AddElement should preserve clipboard
+      final newState = state.applyResult(AddElementResult(element));
+      expect(newState.clipboard, hasLength(1));
+    });
+
+    test('clipboard survives through compound result', () {
+      final element = RectangleElement(
+        id: const ElementId('r1'),
+        x: 10,
+        y: 20,
+        width: 100,
+        height: 50,
+      );
+      state = state.applyResult(SetClipboardResult([element]));
+
+      final compound = CompoundResult([
+        AddElementResult(element),
+        SetSelectionResult({element.id}),
+      ]);
+      final newState = state.applyResult(compound);
+      expect(newState.clipboard, hasLength(1));
+    });
+
+    test('SetClipboardResult in compound updates clipboard', () {
+      final element = RectangleElement(
+        id: const ElementId('r1'),
+        x: 10,
+        y: 20,
+        width: 100,
+        height: 50,
+      );
+      final compound = CompoundResult([
+        SetClipboardResult([element]),
+        AddElementResult(element),
+      ]);
+      final newState = state.applyResult(compound);
+      expect(newState.clipboard, hasLength(1));
+      expect(newState.scene.elements.length, 1);
     });
   });
 }
