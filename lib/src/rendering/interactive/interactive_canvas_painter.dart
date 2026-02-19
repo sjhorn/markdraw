@@ -52,14 +52,19 @@ class InteractiveCanvasPainter extends CustomPainter {
       SelectionRenderer.drawHoverHighlight(canvas, hoveredBounds!);
     }
 
-    // Selection box + handles
+    // Selection box + handles (all drawn in the same rotated space)
     if (selection != null) {
-      SelectionRenderer.drawSelectionBox(
-        canvas,
-        selection!.bounds,
-        angle: selection!.angle,
-      );
+      final hasAngle = selection!.angle != 0.0;
 
+      if (hasAngle) {
+        canvas.save();
+        final center = selection!.bounds.center;
+        canvas.translate(center.x, center.y);
+        canvas.rotate(selection!.angle);
+        canvas.translate(-center.x, -center.y);
+      }
+
+      SelectionRenderer.drawSelectionBox(canvas, selection!.bounds);
       SelectionRenderer.drawHandles(canvas, selection!.handles);
 
       // Draw rotation handle
@@ -75,6 +80,10 @@ class InteractiveCanvasPainter extends CustomPainter {
           rotationHandle.position,
           topCenterHandle.position,
         );
+      }
+
+      if (hasAngle) {
+        canvas.restore();
       }
     }
 

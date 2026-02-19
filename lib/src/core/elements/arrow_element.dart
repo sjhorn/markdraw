@@ -108,6 +108,51 @@ class ArrowElement extends LineElement {
   }
 
   @override
+  ArrowElement copyWithLine({
+    List<Point>? points,
+    Arrowhead? startArrowhead,
+    bool clearStartArrowhead = false,
+    Arrowhead? endArrowhead,
+    bool clearEndArrowhead = false,
+  }) {
+    return ArrowElement(
+      id: id,
+      x: x,
+      y: y,
+      width: width,
+      height: height,
+      points: points ?? this.points,
+      startArrowhead: clearStartArrowhead
+          ? null
+          : (startArrowhead ?? this.startArrowhead),
+      endArrowhead:
+          clearEndArrowhead ? null : (endArrowhead ?? this.endArrowhead),
+      startBinding: startBinding,
+      endBinding: endBinding,
+      angle: angle,
+      strokeColor: strokeColor,
+      backgroundColor: backgroundColor,
+      fillStyle: fillStyle,
+      strokeWidth: strokeWidth,
+      strokeStyle: strokeStyle,
+      roughness: roughness,
+      opacity: opacity,
+      roundness: roundness,
+      seed: seed,
+      version: version,
+      versionNonce: versionNonce,
+      isDeleted: isDeleted,
+      groupIds: groupIds,
+      frameId: frameId,
+      boundElements: boundElements,
+      updated: updated,
+      link: link,
+      locked: locked,
+      index: index,
+    );
+  }
+
+  @override
   ArrowElement copyWith({
     ElementId? id,
     String? type,

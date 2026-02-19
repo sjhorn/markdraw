@@ -30,9 +30,9 @@ class SelectionRenderer {
 
   /// Draws a dashed selection bounding box around [bounds].
   ///
-  /// If [angle] is non-zero, the box is rotated around its center.
-  static void drawSelectionBox(Canvas canvas, Bounds bounds,
-      {double angle = 0.0}) {
+  /// The caller is responsible for applying any rotation transform to the
+  /// canvas before calling this method.
+  static void drawSelectionBox(Canvas canvas, Bounds bounds) {
     final paint = Paint()
       ..color = _selectionColor
       ..style = PaintingStyle.stroke
@@ -45,20 +45,7 @@ class SelectionRenderer {
       bounds.size.height,
     );
 
-    if (angle != 0.0) {
-      canvas.save();
-      final center = bounds.center;
-      canvas.translate(center.x, center.y);
-      canvas.rotate(angle);
-      canvas.translate(-center.x, -center.y);
-    }
-
-    // Draw dashed rectangle
     _drawDashedRect(canvas, rect, paint);
-
-    if (angle != 0.0) {
-      canvas.restore();
-    }
   }
 
   /// Draws resize handles at each handle position.

@@ -29,13 +29,16 @@ void main() {
       );
     });
 
-    test('drawSelectionBox with angle does not throw', () {
+    test('drawSelectionBox with rotated canvas does not throw', () {
       final (recorder, canvas) = _makeCanvas();
       final bounds = Bounds.fromLTWH(100, 100, 200, 150);
 
       expect(
         () {
-          SelectionRenderer.drawSelectionBox(canvas, bounds, angle: 0.5);
+          canvas.save();
+          canvas.rotate(0.5);
+          SelectionRenderer.drawSelectionBox(canvas, bounds);
+          canvas.restore();
           recorder.endRecording();
         },
         returnsNormally,

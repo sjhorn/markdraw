@@ -83,6 +83,25 @@ void main() {
       expect(modified.startBinding!.elementId, 'ell-1');
     });
 
+    test('copyWithLine returns ArrowElement preserving bindings', () {
+      final a = createArrow(
+        startBinding: const PointBinding(
+          elementId: 'rect-1',
+          fixedPoint: Point(0.5, 0.5),
+        ),
+      );
+      final modified = a.copyWithLine(
+        points: [const Point(10, 20), const Point(200, 300)],
+      );
+      expect(modified, isA<ArrowElement>());
+      expect(modified.type, 'arrow');
+      expect(modified.points, [const Point(10, 20), const Point(200, 300)]);
+      expect(
+        (modified).startBinding!.elementId,
+        'rect-1',
+      );
+    });
+
     test('bumpVersion returns ArrowElement', () {
       final a = createArrow();
       expect(a.bumpVersion(), isA<ArrowElement>());

@@ -219,17 +219,40 @@ class _CanvasPageState extends State<_CanvasPage> {
 
   /// Returns the handle type if [scenePoint] is near a resize/rotation handle
   /// of the currently selected shape (non-linear) element, or null.
+  ///
+  /// Accounts for element rotation by transforming [scenePoint] into the
+  /// element's local (unrotated) coordinate space before testing.
   HandleType? _hitTestHandle(Point scenePoint) {
     if (_selectedElement == null || _isLinear) return null;
     final overlay = SelectionOverlay.fromElements([_selectedElement!]);
     if (overlay == null) return null;
 
+    // Transform scene point into the element's local space (undo rotation)
+    final localPoint = _unrotatePoint(
+      scenePoint,
+      overlay.bounds.center,
+      overlay.angle,
+    );
+
     for (final handle in overlay.handles) {
-      if (handle.position.distanceTo(scenePoint) <= _handleHitRadius) {
+      if (handle.position.distanceTo(localPoint) <= _handleHitRadius) {
         return handle.type;
       }
     }
     return null;
+  }
+
+  /// Rotates [point] around [center] by -[angle] (inverse rotation).
+  Point _unrotatePoint(Point point, Point center, double angle) {
+    if (angle == 0) return point;
+    final cos = math.cos(-angle);
+    final sin = math.sin(-angle);
+    final dx = point.x - center.x;
+    final dy = point.y - center.y;
+    return Point(
+      center.x + dx * cos - dy * sin,
+      center.y + dx * sin + dy * cos,
+    );
   }
 
   // -- Zoom --
