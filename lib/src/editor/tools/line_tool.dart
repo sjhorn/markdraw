@@ -32,6 +32,7 @@ class LineTool implements Tool {
   }
 
   /// Extended onPointerUp with double-click detection.
+  @override
   ToolResult? onPointerUp(Point point, ToolContext context,
       {bool isDoubleClick = false}) {
     _points.add(point);

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:markdraw/src/core/elements/element.dart';
 import 'package:markdraw/src/core/elements/element_id.dart';
 import 'package:markdraw/src/core/elements/line_element.dart';
 import 'package:markdraw/src/core/elements/rectangle_element.dart';
@@ -42,12 +43,12 @@ void main() {
   });
 
   ToolContext contextWith({
-    List<dynamic> elements = const [],
+    List<Element> elements = const [],
     Set<ElementId> selectedIds = const {},
   }) {
     var scene = Scene();
     for (final e in elements) {
-      scene = scene.addElement(e as dynamic);
+      scene = scene.addElement(e);
     }
     return ToolContext(
       scene: scene,

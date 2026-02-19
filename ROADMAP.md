@@ -281,18 +281,24 @@ markdraw/
 > Goal: Full drawing and editing interaction — the 80% core experience.
 
 ### 3.1 Tool System
-- [ ] `Tool` abstract class — `onPointerDown`, `onPointerMove`, `onPointerUp`, `onKeyEvent`
-- [ ] `SelectTool` — click to select, drag to move, shift+click multi-select, marquee selection
-- [ ] `RectangleTool` — drag to create rectangle
-- [ ] `EllipseTool` — drag to create ellipse
-- [ ] `DiamondTool` — drag to create diamond
-- [ ] `LineTool` — click-to-add-point, double-click or Enter to finalize
-- [ ] `ArrowTool` — like LineTool but with binding detection on endpoints
-- [ ] `FreedrawTool` — continuous path recording with pressure
-- [ ] `TextTool` — click to place, opens inline text editor
-- [ ] `HandTool` (pan) — drag to scroll viewport
+- [x] `Tool` abstract class — `onPointerDown`, `onPointerMove`, `onPointerUp`, `onKeyEvent`
+- [x] `ToolResult` sealed class — mutation descriptions decoupled from state (AddElement, UpdateElement, RemoveElement, SetSelection, UpdateViewport, Compound, SwitchTool)
+- [x] `EditorState` immutable value object — applies `ToolResult` to produce new state
+- [x] `ToolContext` read-only snapshot + `ToolOverlay` transient UI data
+- [x] `SelectTool` — click to select, drag to move, shift+click multi-select, marquee selection
+- [x] `RectangleTool` — drag to create rectangle
+- [x] `EllipseTool` — drag to create ellipse
+- [x] `DiamondTool` — drag to create diamond
+- [x] `LineTool` — click-to-add-point, double-click or Enter to finalize
+- [x] `ArrowTool` — like LineTool but creates ArrowElement with endArrowhead
+- [x] `FreedrawTool` — continuous path recording with simulatePressure
+- [x] `TextTool` — click to place text element
+- [x] `HandTool` (pan) — drag to scroll viewport via screen-space delta
+- [x] `createTool` factory function for ToolType → Tool mapping
 - [ ] Tool switching via toolbar and keyboard shortcuts (R, E, D, L, A, P, T, H)
-- [ ] **Tests**: Each tool produces correct element type with expected properties from simulated gestures
+- [x] **Tests**: Each tool produces correct element type with expected properties from simulated gestures
+
+> **TDD checkpoint**: Tool abstract class with 9 implementations. EditorState applies ToolResult mutations. Each tool produces correct element type from simulated pointer events. ~114 new tests, 718 total. Zero analyzer issues. ✅
 
 ### 3.2 Selection & Transform
 - [ ] Single element selection — bounding box + handles

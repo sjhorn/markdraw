@@ -25,6 +25,7 @@ class SelectTool implements Tool {
   ToolType get type => ToolType.select;
 
   /// Extended onPointerDown that accepts shift modifier.
+  @override
   ToolResult? onPointerDown(Point point, ToolContext context,
       {bool shift = false}) {
     _downPoint = point;
