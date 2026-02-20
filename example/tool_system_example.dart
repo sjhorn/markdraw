@@ -75,6 +75,9 @@ class _CanvasPageState extends State<_CanvasPage> {
   // Double-click detection for line/arrow finalization
   DateTime? _lastPointerUpTime;
 
+  // Focus management
+  final _keyboardFocusNode = FocusNode();
+
   // Inline text editing
   ElementId? _editingTextElementId;
   final _textEditingController = TextEditingController();
@@ -90,12 +93,14 @@ class _CanvasPageState extends State<_CanvasPage> {
       activeToolType: ToolType.select,
     );
     _activeTool = createTool(ToolType.select);
+    _keyboardFocusNode.requestFocus();
 
     _textFocusNode.addListener(_onTextFocusChanged);
   }
 
   @override
   void dispose() {
+    _keyboardFocusNode.dispose();
     _textEditingController.dispose();
     _textFocusNode.removeListener(_onTextFocusChanged);
     _textFocusNode.dispose();
@@ -174,6 +179,8 @@ class _CanvasPageState extends State<_CanvasPage> {
       _editingTextElementId = null;
       _textEditingController.clear();
     });
+    // Restore keyboard focus after text editing
+    _keyboardFocusNode.requestFocus();
   }
 
   void _cancelTextEditing() {
@@ -234,7 +241,7 @@ class _CanvasPageState extends State<_CanvasPage> {
         ],
       ),
       body: KeyboardListener(
-        focusNode: FocusNode()..requestFocus(),
+        focusNode: _keyboardFocusNode,
         autofocus: true,
         onKeyEvent: _handleKeyEvent,
         child: MouseRegion(
