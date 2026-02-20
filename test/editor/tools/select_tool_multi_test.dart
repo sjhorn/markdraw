@@ -8,7 +8,6 @@ import 'package:markdraw/src/core/elements/rectangle_element.dart';
 import 'package:markdraw/src/core/math/point.dart';
 import 'package:markdraw/src/core/scene/scene.dart';
 import 'package:markdraw/src/editor/tool_result.dart';
-import 'package:markdraw/src/editor/tool_type.dart';
 import 'package:markdraw/src/editor/tools/select_tool.dart';
 import 'package:markdraw/src/rendering/viewport_state.dart';
 
@@ -127,13 +126,7 @@ void main() {
     });
 
     test('drag unselected with existing multi-select re-selects single', () {
-      final ctx = contextWith(
-        elements: [rect1, rect2],
-        selectedIds: {rect1.id, rect2.id},
-      );
-      // Click on empty then drag to rect2 area — actually click on rect2
-      // but it is already selected, so multi-move happens.
-      // We need to test: click on an element NOT in selectedIds
+      // Test: click on an element NOT in selectedIds
       final rect3Local = RectangleElement(
         id: const ElementId('r3'),
         x: 500,
@@ -322,7 +315,7 @@ void main() {
 
       for (final r in compound.results) {
         final updated = (r as UpdateElementResult).element;
-        final snapUnit = math.pi / 12;
+        const snapUnit = math.pi / 12;
         final remainder = (updated.angle % snapUnit).abs();
         expect(remainder < 0.01 || (snapUnit - remainder) < 0.01, isTrue);
       }

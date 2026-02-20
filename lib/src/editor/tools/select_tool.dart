@@ -211,7 +211,7 @@ class SelectTool implements Tool {
     if (isSelected && selectedElements.length > 1) {
       final updates = <ToolResult>[];
       for (final elem in _startElements ?? selectedElements) {
-        var moved = elem.copyWith(x: elem.x + dx, y: elem.y + dy);
+        final moved = elem.copyWith(x: elem.x + dx, y: elem.y + dy);
         if (elem is LineElement) {
           // Line points are relative, no need to offset them.
           // But x/y position is updated via copyWith above.
@@ -552,7 +552,7 @@ class SelectTool implements Tool {
     final updated = line.copyWithLine(points: newPoints).copyWith(
       width: maxX - minX,
       height: maxY - minY,
-    ) as LineElement;
+    );
 
     return UpdateElementResult(updated);
   }

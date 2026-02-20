@@ -8,7 +8,6 @@ import 'package:markdraw/src/core/elements/rectangle_element.dart';
 import 'package:markdraw/src/core/math/point.dart';
 import 'package:markdraw/src/core/scene/scene.dart';
 import 'package:markdraw/src/editor/tool_result.dart';
-import 'package:markdraw/src/editor/tool_type.dart';
 import 'package:markdraw/src/editor/tools/select_tool.dart';
 import 'package:markdraw/src/rendering/viewport_state.dart';
 
@@ -406,7 +405,7 @@ void main() {
       expect(result, isA<UpdateElementResult>());
       final updated = (result! as UpdateElementResult).element;
       // Angle should be a multiple of π/12 (15°)
-      final snapUnit = math.pi / 12;
+      const snapUnit = math.pi / 12;
       final remainder = (updated.angle % snapUnit).abs();
       expect(remainder < 0.001 || (snapUnit - remainder) < 0.001, isTrue);
     });
