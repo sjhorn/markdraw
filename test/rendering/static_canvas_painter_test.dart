@@ -460,6 +460,36 @@ void main() {
       expect(painter2.shouldRepaint(painter1), isTrue);
     });
 
+    test('shouldRepaint returns true when previewElement bounds differ', () {
+      // Element == compares by ID only, so two preview elements with the
+      // same ID but different bounds must still trigger repaint.
+      final scene = Scene();
+      final preview1 = RectangleElement(
+        id: const ElementId('preview'),
+        x: 0, y: 0, width: 50, height: 50,
+      );
+      final preview2 = RectangleElement(
+        id: const ElementId('preview'),
+        x: 10, y: 10, width: 100, height: 100,
+      );
+
+      final painter1 = StaticCanvasPainter(
+        scene: scene,
+        adapter: adapter,
+        viewport: const ViewportState(),
+        previewElement: preview1,
+      );
+      final painter2 = StaticCanvasPainter(
+        scene: scene,
+        adapter: adapter,
+        viewport: const ViewportState(),
+        previewElement: preview2,
+      );
+
+      // Must be true even though preview1.id == preview2.id
+      expect(painter2.shouldRepaint(painter1), isTrue);
+    });
+
     test('off-screen elements not painted (viewport culling)', () {
       final (recorder, canvas) = _makeCanvas();
 

@@ -55,6 +55,6 @@ class StaticCanvasPainter extends CustomPainter {
     return !identical(scene, oldDelegate.scene) ||
         !identical(adapter, oldDelegate.adapter) ||
         viewport != oldDelegate.viewport ||
-        previewElement != oldDelegate.previewElement;
+        !identical(previewElement, oldDelegate.previewElement);
   }
 }
