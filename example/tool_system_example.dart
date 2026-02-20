@@ -18,6 +18,7 @@ import 'package:flutter/services.dart';
 
 import 'dart:math' as math;
 
+import 'package:markdraw/src/core/elements/arrow_element.dart';
 import 'package:markdraw/src/core/elements/diamond_element.dart';
 import 'package:markdraw/src/core/elements/element.dart';
 import 'package:markdraw/src/core/elements/element_id.dart';
@@ -249,6 +250,13 @@ class _CanvasPageState extends State<_CanvasPage> {
           child: Stack(
             children: [
               Listener(
+                onPointerHover: (event) {
+                  // Fires when pointer moves without button pressed.
+                  // Needed for line/arrow tools to show preview between clicks.
+                  final point = _toScene(event.localPosition);
+                  _activeTool.onPointerMove(point, _toolContext);
+                  setState(() {}); // Refresh overlay
+                },
                 onPointerDown: (event) {
                   // If editing text, commit before handling new pointer events
                   if (_editingTextElementId != null) {
@@ -310,6 +318,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                     viewport: _editorState.viewport,
                     selection: _buildSelectionOverlay(),
                     marqueeRect: marqueeRect,
+                    bindTargetBounds: toolOverlay?.bindTargetBounds,
                   ),
                   child: const SizedBox.expand(),
                 ),
@@ -330,6 +339,10 @@ class _CanvasPageState extends State<_CanvasPage> {
     if (overlay == null) return null;
     final toolType = _editorState.activeToolType;
     const previewId = ElementId('__preview__');
+    // Use a fixed seed so the rough strokes don't flicker on each frame.
+    // (Without this, each new Element gets a random seed, causing the
+    // hand-drawn jitter pattern to change every pointer-move.)
+    const previewSeed = 42;
 
     // Shape tools: preview from creationBounds
     if (overlay.creationBounds != null) {
@@ -338,14 +351,17 @@ class _CanvasPageState extends State<_CanvasPage> {
         ToolType.rectangle => RectangleElement(
             id: previewId, x: b.left, y: b.top,
             width: b.size.width, height: b.size.height,
+            seed: previewSeed,
           ),
         ToolType.ellipse => EllipseElement(
             id: previewId, x: b.left, y: b.top,
             width: b.size.width, height: b.size.height,
+            seed: previewSeed,
           ),
         ToolType.diamond => DiamondElement(
             id: previewId, x: b.left, y: b.top,
             width: b.size.width, height: b.size.height,
+            seed: previewSeed,
           ),
         _ => null,
       };
@@ -364,17 +380,18 @@ class _CanvasPageState extends State<_CanvasPage> {
         ToolType.line => LineElement(
             id: previewId, x: minX, y: minY,
             width: maxX - minX, height: maxY - minY,
-            points: relPts,
+            points: relPts, seed: previewSeed,
           ),
-        ToolType.arrow => LineElement(
+        ToolType.arrow => ArrowElement(
             id: previewId, x: minX, y: minY,
             width: maxX - minX, height: maxY - minY,
-            points: relPts,
+            points: relPts, seed: previewSeed,
+            endArrowhead: Arrowhead.arrow,
           ),
         ToolType.freedraw => FreedrawElement(
             id: previewId, x: minX, y: minY,
             width: maxX - minX, height: maxY - minY,
-            points: relPts,
+            points: relPts, seed: previewSeed,
           ),
         _ => null,
       };

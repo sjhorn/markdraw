@@ -205,6 +205,27 @@ class SelectionRenderer {
     canvas.drawPath(path, paint);
   }
 
+  /// Draws a green-tinted binding indicator around a target shape.
+  static void drawBindingIndicator(Canvas canvas, Bounds bounds) {
+    final fillPaint = Paint()
+      ..color = const Color(0x2200CC66)
+      ..style = PaintingStyle.fill;
+
+    final strokePaint = Paint()
+      ..color = const Color(0xFF00CC66)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+
+    final rect = Rect.fromLTWH(
+      bounds.left,
+      bounds.top,
+      bounds.size.width,
+      bounds.size.height,
+    );
+    canvas.drawRect(rect, fillPaint);
+    canvas.drawRect(rect, strokePaint);
+  }
+
   /// Draws a creation preview shape (rectangle outline) from [bounds].
   static void drawCreationPreviewShape(Canvas canvas, Bounds bounds) {
     final paint = Paint()

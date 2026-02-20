@@ -27,6 +27,7 @@ class InteractiveCanvasPainter extends CustomPainter {
   final List<Point>? creationPoints;
   final Bounds? creationBounds;
   final List<Point>? pointHandles;
+  final Bounds? bindTargetBounds;
 
   const InteractiveCanvasPainter({
     required this.viewport,
@@ -37,6 +38,7 @@ class InteractiveCanvasPainter extends CustomPainter {
     this.creationPoints,
     this.creationBounds,
     this.pointHandles,
+    this.bindTargetBounds,
   });
 
   @override
@@ -112,6 +114,11 @@ class InteractiveCanvasPainter extends CustomPainter {
       SelectionRenderer.drawCreationPreviewShape(canvas, creationBounds!);
     }
 
+    // Binding indicator
+    if (bindTargetBounds != null) {
+      SelectionRenderer.drawBindingIndicator(canvas, bindTargetBounds!);
+    }
+
     canvas.restore();
   }
 
@@ -122,6 +129,7 @@ class InteractiveCanvasPainter extends CustomPainter {
         hoveredBounds != oldDelegate.hoveredBounds ||
         marqueeRect != oldDelegate.marqueeRect ||
         creationBounds != oldDelegate.creationBounds ||
+        bindTargetBounds != oldDelegate.bindTargetBounds ||
         !listEquals(snapLines, oldDelegate.snapLines) ||
         !listEquals(creationPoints, oldDelegate.creationPoints) ||
         !listEquals(pointHandles, oldDelegate.pointHandles);

@@ -192,5 +192,18 @@ void main() {
         returnsNormally,
       );
     });
+
+    test('drawBindingIndicator does not throw', () {
+      final (recorder, canvas) = _makeCanvas();
+      final bounds = Bounds.fromLTWH(100, 100, 200, 150);
+
+      expect(
+        () {
+          SelectionRenderer.drawBindingIndicator(canvas, bounds);
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
   });
 }

@@ -317,6 +317,52 @@ void main() {
       expect(p2.shouldRepaint(p1), isFalse);
     });
 
+    test('draws binding indicator when bindTargetBounds provided', () {
+      final (recorder, canvas) = _makeCanvas();
+
+      final painter = InteractiveCanvasPainter(
+        viewport: const ViewportState(),
+        bindTargetBounds: Bounds.fromLTWH(100, 100, 200, 150),
+      );
+
+      expect(
+        () {
+          painter.paint(canvas, const Size(800, 600));
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
+    test('does not render binding indicator when null', () {
+      final (recorder, canvas) = _makeCanvas();
+
+      const painter = InteractiveCanvasPainter(
+        viewport: ViewportState(),
+      );
+
+      expect(
+        () {
+          painter.paint(canvas, const Size(800, 600));
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
+    test('shouldRepaint returns true when bindTargetBounds changes', () {
+      final p1 = InteractiveCanvasPainter(
+        viewport: const ViewportState(),
+        bindTargetBounds: Bounds.fromLTWH(0, 0, 100, 100),
+      );
+      final p2 = InteractiveCanvasPainter(
+        viewport: const ViewportState(),
+        bindTargetBounds: Bounds.fromLTWH(50, 50, 100, 100),
+      );
+
+      expect(p2.shouldRepaint(p1), isTrue);
+    });
+
     test('paints all overlay types simultaneously', () {
       final (recorder, canvas) = _makeCanvas();
       final element = RectangleElement(
