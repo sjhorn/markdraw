@@ -1,13 +1,17 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
+import '../../core/elements/arrow_element.dart';
 import '../../core/elements/element.dart';
 import '../../core/elements/element_id.dart';
+import '../../core/elements/freedraw_element.dart';
 import '../../core/elements/line_element.dart';
 import '../../core/math/bounds.dart';
 import '../../core/math/point.dart';
+import '../../core/scene/scene.dart';
 import '../../rendering/interactive/handle.dart';
 import '../../rendering/interactive/selection_overlay.dart';
+import '../bindings/binding_utils.dart';
 import '../tool_result.dart';
 import '../tool_type.dart';
 import 'tool.dart';
@@ -210,14 +214,14 @@ class SelectTool implements Tool {
     // Multi-element move
     if (isSelected && selectedElements.length > 1) {
       final updates = <ToolResult>[];
+      final movedElements = <Element>[];
       for (final elem in _startElements ?? selectedElements) {
         final moved = elem.copyWith(x: elem.x + dx, y: elem.y + dy);
-        if (elem is LineElement) {
-          // Line points are relative, no need to offset them.
-          // But x/y position is updated via copyWith above.
-        }
         updates.add(UpdateElementResult(moved));
+        movedElements.add(moved);
       }
+      updates.addAll(_buildBoundArrowUpdates(
+          context.scene, movedElements, context.selectedIds));
       return CompoundResult(updates);
     }
 
@@ -227,12 +231,20 @@ class SelectTool implements Tool {
     final moved = startElem.copyWith(x: startElem.x + dx, y: startElem.y + dy);
 
     if (isSelected) {
-      return UpdateElementResult(moved);
+      final arrowUpdates = _buildBoundArrowUpdates(
+          context.scene, [moved], context.selectedIds);
+      if (arrowUpdates.isEmpty) {
+        return UpdateElementResult(moved);
+      }
+      return CompoundResult([UpdateElementResult(moved), ...arrowUpdates]);
     }
     // Dragging an unselected element: select then move
+    final arrowUpdates = _buildBoundArrowUpdates(
+        context.scene, [moved], {hit.id});
     return CompoundResult([
       SetSelectionResult({hit.id}),
       UpdateElementResult(moved),
+      ...arrowUpdates,
     ]);
   }
 
@@ -456,7 +468,7 @@ class SelectTool implements Tool {
 
     // Multi-element resize: scale proportionally
     if (_startElements != null && _startElements!.length > 1) {
-      return _applyMultiResize(newBounds);
+      return _applyMultiResize(newBounds, context);
     }
 
     // Single element resize
@@ -466,12 +478,45 @@ class SelectTool implements Tool {
     final startElem = _startElements?.firstWhere((e) => e.id == elem.id,
         orElse: () => elem) ?? elem;
 
-    return UpdateElementResult(startElem.copyWith(
-      x: newLeft,
-      y: newTop,
-      width: newW,
-      height: newH,
-    ));
+    Element resized;
+    // For point-based elements, scale points proportionally to new bounds
+    if (startElem is LineElement || startElem is FreedrawElement) {
+      final oldW = _startBounds!.right - _startBounds!.left;
+      final oldH = _startBounds!.bottom - _startBounds!.top;
+      final scaleX = oldW > 0 ? newW / oldW : 1.0;
+      final scaleY = oldH > 0 ? newH / oldH : 1.0;
+
+      if (startElem is LineElement) {
+        final scaledPoints = startElem.points
+            .map((p) => Point(p.x * scaleX, p.y * scaleY))
+            .toList();
+        resized = startElem.copyWithLine(points: scaledPoints).copyWith(
+            x: newLeft, y: newTop, width: newW, height: newH,
+          );
+      } else {
+        final fd = startElem as FreedrawElement;
+        final scaledPoints = fd.points
+            .map((p) => Point(p.x * scaleX, p.y * scaleY))
+            .toList();
+        resized = fd.copyWithFreedraw(points: scaledPoints).copyWith(
+            x: newLeft, y: newTop, width: newW, height: newH,
+          );
+      }
+    } else {
+      resized = startElem.copyWith(
+        x: newLeft,
+        y: newTop,
+        width: newW,
+        height: newH,
+      );
+    }
+
+    final arrowUpdates = _buildBoundArrowUpdates(
+        context.scene, [resized], context.selectedIds);
+    if (arrowUpdates.isEmpty) {
+      return UpdateElementResult(resized);
+    }
+    return CompoundResult([UpdateElementResult(resized), ...arrowUpdates]);
   }
 
   /// Returns the anchor point's offset from center as fractions of half-size.
@@ -490,7 +535,7 @@ class SelectTool implements Tool {
     };
   }
 
-  ToolResult _applyMultiResize(Bounds newBounds) {
+  ToolResult _applyMultiResize(Bounds newBounds, ToolContext context) {
     final oldBounds = _startUnionBounds ?? _startBounds!;
     final scaleX = oldBounds.size.width > 0
         ? newBounds.size.width / oldBounds.size.width
@@ -500,18 +545,44 @@ class SelectTool implements Tool {
         : 1.0;
 
     final updates = <ToolResult>[];
+    final movedElements = <Element>[];
     for (final elem in _startElements!) {
       final newX = newBounds.left + (elem.x - oldBounds.left) * scaleX;
       final newY = newBounds.top + (elem.y - oldBounds.top) * scaleY;
       final newW = elem.width * scaleX;
       final newH = elem.height * scaleY;
-      updates.add(UpdateElementResult(elem.copyWith(
-        x: newX,
-        y: newY,
-        width: newW,
-        height: newH,
-      )));
+      Element resized;
+      if (elem is LineElement) {
+        final elemScaleX = elem.width > 0 ? newW / elem.width : 1.0;
+        final elemScaleY = elem.height > 0 ? newH / elem.height : 1.0;
+        final scaledPoints = elem.points
+            .map((p) => Point(p.x * elemScaleX, p.y * elemScaleY))
+            .toList();
+        resized = elem.copyWithLine(points: scaledPoints).copyWith(
+            x: newX, y: newY, width: newW, height: newH,
+          );
+      } else if (elem is FreedrawElement) {
+        final elemScaleX = elem.width > 0 ? newW / elem.width : 1.0;
+        final elemScaleY = elem.height > 0 ? newH / elem.height : 1.0;
+        final scaledPoints = elem.points
+            .map((p) => Point(p.x * elemScaleX, p.y * elemScaleY))
+            .toList();
+        resized = elem.copyWithFreedraw(points: scaledPoints).copyWith(
+            x: newX, y: newY, width: newW, height: newH,
+          );
+      } else {
+        resized = elem.copyWith(
+          x: newX,
+          y: newY,
+          width: newW,
+          height: newH,
+        );
+      }
+      updates.add(UpdateElementResult(resized));
+      movedElements.add(resized);
     }
+    updates.addAll(_buildBoundArrowUpdates(
+        context.scene, movedElements, context.selectedIds));
     return CompoundResult(updates);
   }
 
@@ -536,7 +607,7 @@ class SelectTool implements Tool {
 
     // Multi-element rotate
     if (_startElements != null && _startElements!.length > 1) {
-      return _applyMultiRotation(delta);
+      return _applyMultiRotation(delta, context);
     }
 
     // Single element rotate
@@ -546,14 +617,19 @@ class SelectTool implements Tool {
     final startElem = _startElements?.firstWhere((e) => e.id == elem.id,
         orElse: () => elem) ?? elem;
 
-    return UpdateElementResult(startElem.copyWith(
-      angle: _startAngle + delta,
-    ));
+    final rotated = startElem.copyWith(angle: _startAngle + delta);
+    final arrowUpdates = _buildBoundArrowUpdates(
+        context.scene, [rotated], context.selectedIds);
+    if (arrowUpdates.isEmpty) {
+      return UpdateElementResult(rotated);
+    }
+    return CompoundResult([UpdateElementResult(rotated), ...arrowUpdates]);
   }
 
-  ToolResult _applyMultiRotation(double angleDelta) {
+  ToolResult _applyMultiRotation(double angleDelta, ToolContext context) {
     final unionCenter = _startUnionBounds!.center;
     final updates = <ToolResult>[];
+    final movedElements = <Element>[];
 
     for (final elem in _startElements!) {
       final elemCenter = Point(
@@ -564,12 +640,16 @@ class SelectTool implements Tool {
       final newX = rotated.x - elem.width / 2;
       final newY = rotated.y - elem.height / 2;
 
-      updates.add(UpdateElementResult(elem.copyWith(
+      final moved = elem.copyWith(
         x: newX,
         y: newY,
         angle: elem.angle + angleDelta,
-      )));
+      );
+      updates.add(UpdateElementResult(moved));
+      movedElements.add(moved);
     }
+    updates.addAll(_buildBoundArrowUpdates(
+        context.scene, movedElements, context.selectedIds));
     return CompoundResult(updates);
   }
 
@@ -676,7 +756,7 @@ class SelectTool implements Tool {
       if (selectedElements.isEmpty) return null;
       final dx = key == 'ArrowLeft' ? -nudge : key == 'ArrowRight' ? nudge : 0.0;
       final dy = key == 'ArrowUp' ? -nudge : key == 'ArrowDown' ? nudge : 0.0;
-      return _nudgeElements(selectedElements, dx, dy);
+      return _nudgeElements(selectedElements, dx, dy, context);
     }
 
     return null;
@@ -714,20 +794,18 @@ class SelectTool implements Tool {
     return CompoundResult(results);
   }
 
-  ToolResult _nudgeElements(List<Element> elements, double dx, double dy) {
-    if (elements.length == 1) {
-      return UpdateElementResult(elements.first.copyWith(
-        x: elements.first.x + dx,
-        y: elements.first.y + dy,
-      ));
-    }
+  ToolResult _nudgeElements(
+      List<Element> elements, double dx, double dy, ToolContext context) {
+    final movedElements = <Element>[];
     final results = <ToolResult>[];
     for (final e in elements) {
-      results.add(UpdateElementResult(e.copyWith(
-        x: e.x + dx,
-        y: e.y + dy,
-      )));
+      final moved = e.copyWith(x: e.x + dx, y: e.y + dy);
+      results.add(UpdateElementResult(moved));
+      movedElements.add(moved);
     }
+    results.addAll(_buildBoundArrowUpdates(
+        context.scene, movedElements, context.selectedIds));
+    if (results.length == 1) return results.first;
     return CompoundResult(results);
   }
 
@@ -805,5 +883,38 @@ class SelectTool implements Tool {
     } else {
       _startElements = [hit];
     }
+  }
+
+  /// Build UpdateElementResults for arrows bound to any of [movedElements],
+  /// excluding arrows already in [selectedIds] (to avoid double-move).
+  List<ToolResult> _buildBoundArrowUpdates(
+    Scene scene,
+    List<Element> movedElements,
+    Set<ElementId> selectedIds,
+  ) {
+    // Build a temporary scene with the moved elements applied
+    var tempScene = scene;
+    for (final elem in movedElements) {
+      tempScene = tempScene.updateElement(elem);
+    }
+
+    // Collect all bound arrows, deduplicated
+    final seen = <ElementId>{};
+    final results = <ToolResult>[];
+
+    for (final elem in movedElements) {
+      final arrows = BindingUtils.findBoundArrows(scene, elem.id);
+      for (final arrow in arrows) {
+        if (selectedIds.contains(arrow.id)) continue;
+        if (seen.contains(arrow.id)) continue;
+        seen.add(arrow.id);
+        final updated =
+            BindingUtils.updateBoundArrowEndpoints(arrow, tempScene);
+        if (!identical(updated, arrow)) {
+          results.add(UpdateElementResult(updated));
+        }
+      }
+    }
+    return results;
   }
 }
