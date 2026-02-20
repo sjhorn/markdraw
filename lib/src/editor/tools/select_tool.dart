@@ -419,9 +419,40 @@ class SelectTool implements Tool {
       }
     }
 
-    final newBounds = Bounds.fromLTWH(
-      newLeft, newTop, newRight - newLeft, newBottom - newTop,
-    );
+    var newW = newRight - newLeft;
+    var newH = newBottom - newTop;
+
+    // For rotated elements, adjust x/y to keep the anchor point (opposite
+    // the dragged handle) fixed in world space. Changing width/height shifts
+    // the center of rotation, so we must compensate.
+    if (angle != 0.0) {
+      final oldW = b.right - b.left;
+      final oldH = b.bottom - b.top;
+      final (fx, fy) = _anchorFraction(_activeHandle!);
+      final cosA = math.cos(angle);
+      final sinA = math.sin(angle);
+
+      // Anchor offset from center in old bounds
+      final oldAX = fx * oldW / 2;
+      final oldAY = fy * oldH / 2;
+      // Anchor world position = old center + rotated old offset
+      final oldCx = b.left + oldW / 2;
+      final oldCy = b.top + oldH / 2;
+      final anchorWx = oldCx + oldAX * cosA - oldAY * sinA;
+      final anchorWy = oldCy + oldAX * sinA + oldAY * cosA;
+
+      // Anchor offset from center in new bounds
+      final newAX = fx * newW / 2;
+      final newAY = fy * newH / 2;
+      // new center = anchor world - rotated new offset
+      final newCx = anchorWx - (newAX * cosA - newAY * sinA);
+      final newCy = anchorWy - (newAX * sinA + newAY * cosA);
+
+      newLeft = newCx - newW / 2;
+      newTop = newCy - newH / 2;
+    }
+
+    final newBounds = Bounds.fromLTWH(newLeft, newTop, newW, newH);
 
     // Multi-element resize: scale proportionally
     if (_startElements != null && _startElements!.length > 1) {
@@ -438,9 +469,25 @@ class SelectTool implements Tool {
     return UpdateElementResult(startElem.copyWith(
       x: newLeft,
       y: newTop,
-      width: newRight - newLeft,
-      height: newBottom - newTop,
+      width: newW,
+      height: newH,
     ));
+  }
+
+  /// Returns the anchor point's offset from center as fractions of half-size.
+  /// The anchor is the fixed point opposite the handle being dragged.
+  static (double, double) _anchorFraction(HandleType handle) {
+    return switch (handle) {
+      HandleType.topLeft => (1.0, 1.0),
+      HandleType.topCenter => (0.0, 1.0),
+      HandleType.topRight => (-1.0, 1.0),
+      HandleType.middleLeft => (1.0, 0.0),
+      HandleType.middleRight => (-1.0, 0.0),
+      HandleType.bottomLeft => (1.0, -1.0),
+      HandleType.bottomCenter => (0.0, -1.0),
+      HandleType.bottomRight => (-1.0, -1.0),
+      HandleType.rotation => (0.0, 0.0),
+    };
   }
 
   ToolResult _applyMultiResize(Bounds newBounds) {

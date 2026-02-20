@@ -213,55 +213,68 @@ void main() {
   });
 
   group('Rotated element resize', () {
-    test('resize rotated element via bottomRight changes size without moving', () {
-      // 45° rotated rectangle
+    /// Computes the world-space position of a corner relative to element bounds.
+    /// [fx, fy] are fractions: (-1,-1) = topLeft, (1,1) = bottomRight, etc.
+    Point worldCorner(Element elem, double fx, double fy) {
+      final cx = elem.x + elem.width / 2;
+      final cy = elem.y + elem.height / 2;
+      final localX = fx * elem.width / 2;
+      final localY = fy * elem.height / 2;
+      final cosA = math.cos(elem.angle);
+      final sinA = math.sin(elem.angle);
+      return Point(
+        cx + localX * cosA - localY * sinA,
+        cy + localX * sinA + localY * cosA,
+      );
+    }
+
+    test('resize rotated element via bottomRight preserves topLeft anchor', () {
       final ctx = contextWith(
         elements: [rotatedRect],
         selectedIds: {rotatedRect.id},
       );
-      // Click at the visual position of the bottomRight handle.
-      // bottomRight handle is at (300, 200) in unrotated space, relative to center (200, 150).
-      // Rotated by 45°: offset (100, 50) → (100*cos45 - 50*sin45, 100*sin45 + 50*cos45)
+      // Record the world-space position of the topLeft corner before resize
+      final anchorBefore = worldCorner(rotatedRect, -1, -1);
+
+      // Click at the visual position of the bottomRight handle (rotated)
       final cos45 = math.cos(math.pi / 4);
       final sin45 = math.sin(math.pi / 4);
       final handleX = 200 + 100 * cos45 - 50 * sin45;
       final handleY = 150 + 100 * sin45 + 50 * cos45;
       tool.onPointerDown(Point(handleX, handleY), ctx);
 
-      // Drag outward along the element's local bottomRight direction.
-      // In rotated space, "right+down" in local is rotated 45° in world.
-      // Drag 20px in the rotated-right direction (cos45, sin45) * 20
+      // Drag outward along the element's local-right direction (rotated 45°)
       final dragX = handleX + 20 * cos45;
       final dragY = handleY + 20 * sin45;
       final result = tool.onPointerMove(Point(dragX, dragY), ctx);
       expect(result, isA<UpdateElementResult>());
       final updated = (result! as UpdateElementResult).element;
-      // Width should increase, position should stay near original
+
+      // Width should increase
       expect(updated.width, greaterThan(rotatedRect.width));
-      expect(updated.x, closeTo(rotatedRect.x, 1.0));
-      expect(updated.y, closeTo(rotatedRect.y, 1.0));
+
+      // The topLeft anchor should remain at the same world position
+      final anchorAfter = worldCorner(updated, -1, -1);
+      expect(anchorAfter.x, closeTo(anchorBefore.x, 1.0));
+      expect(anchorAfter.y, closeTo(anchorBefore.y, 1.0));
     });
 
-    test('resize rotated element via topCenter only changes height and y', () {
+    test('resize rotated element via topCenter preserves bottomCenter anchor', () {
       final ctx = contextWith(
         elements: [rotatedRect],
         selectedIds: {rotatedRect.id},
       );
-      // topCenter handle is at (200, 100) in unrotated space, relative to center (200, 150).
-      // offset (0, -50), rotated by 45°: (0*cos45 - (-50)*sin45, 0*sin45 + (-50)*cos45)
-      // = (50*sin45, -50*cos45) + center = (200 + 35.36, 150 - 35.36)
+      // Record the world-space position of the bottomCenter before resize
+      final anchorBefore = worldCorner(rotatedRect, 0, 1);
+
+      // topCenter handle at (200, 100) in unrotated space
       final cos45 = math.cos(math.pi / 4);
       final sin45 = math.sin(math.pi / 4);
       final handleX = 200 + 50 * sin45;
       final handleY = 150 - 50 * cos45;
       tool.onPointerDown(Point(handleX, handleY), ctx);
 
-      // Drag in the element's local "up" direction (which is rotated 45°).
-      // Local up = (sin45, -cos45) rotated by 45° from world up.
-      // Actually, local "up" direction when element is rotated 45° is:
-      // (-sin45, -cos45) in world... Let me just drag the handle further in
-      // the same direction from center: direction from center to handle is
-      // (handleX - 200, handleY - 150), extend it by 20 units.
+      // Drag outward from center (extending the top edge)
       final dirX = handleX - 200;
       final dirY = handleY - 150;
       final dirLen = math.sqrt(dirX * dirX + dirY * dirY);
@@ -270,9 +283,31 @@ void main() {
       final result = tool.onPointerMove(Point(dragX, dragY), ctx);
       expect(result, isA<UpdateElementResult>());
       final updated = (result! as UpdateElementResult).element;
-      // Width should stay the same, height should increase
-      expect(updated.width, closeTo(rotatedRect.width, 1.0));
+
+      // Height should increase
       expect(updated.height, greaterThan(rotatedRect.height));
+
+      // The bottomCenter anchor should remain at the same world position
+      final anchorAfter = worldCorner(updated, 0, 1);
+      expect(anchorAfter.x, closeTo(anchorBefore.x, 1.0));
+      expect(anchorAfter.y, closeTo(anchorBefore.y, 1.0));
+    });
+
+    test('resize non-rotated element via bottomRight preserves topLeft position', () {
+      // Sanity check: non-rotated case should also preserve anchor
+      final ctx = contextWith(
+        elements: [rect1],
+        selectedIds: {rect1.id},
+      );
+      tool.onPointerDown(const Point(300, 200), ctx);
+      final result = tool.onPointerMove(const Point(350, 250), ctx);
+      expect(result, isA<UpdateElementResult>());
+      final updated = (result! as UpdateElementResult).element;
+      // For non-rotated, x/y should stay unchanged (topLeft is the anchor)
+      expect(updated.x, 100);
+      expect(updated.y, 100);
+      expect(updated.width, 250);
+      expect(updated.height, 150);
     });
   });
 
