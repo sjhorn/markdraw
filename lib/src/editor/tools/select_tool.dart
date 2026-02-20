@@ -3,8 +3,11 @@ import 'dart:ui';
 
 import '../../core/elements/element.dart';
 import '../../core/elements/element_id.dart';
+import '../../core/elements/line_element.dart';
 import '../../core/math/bounds.dart';
 import '../../core/math/point.dart';
+import '../../rendering/interactive/handle.dart';
+import '../../rendering/interactive/selection_overlay.dart';
 import '../tool_result.dart';
 import '../tool_type.dart';
 import 'tool.dart';
@@ -12,14 +15,41 @@ import 'tool.dart';
 /// Minimum drag distance to distinguish a drag from a click.
 const double _clickThreshold = 3.0;
 
-/// Tool for selecting, moving, and marquee-selecting elements.
+/// Hit-test radius for handles (in scene units).
+const double _handleHitRadius = 8.0;
+
+/// Minimum element size enforced during resize.
+const double _minSize = 10.0;
+
+/// Drag mode for the select tool.
+enum _DragMode {
+  none,
+  move,
+  resize,
+  rotate,
+  dragPoint,
+  marquee,
+}
+
+/// Tool for selecting, moving, resizing, rotating, and point-editing elements.
 class SelectTool implements Tool {
   Point? _downPoint;
   Point? _current;
   Element? _hitElement;
   bool _isDragging = false;
-  bool _isMarquee = false;
   bool _shiftDown = false;
+  _DragMode _dragMode = _DragMode.none;
+
+  // Starting state for transforms
+  Bounds? _startBounds;
+  double _startAngle = 0.0;
+  List<Point>? _startPoints;
+  HandleType? _activeHandle;
+  int? _activePointIndex;
+
+  // For multi-element transforms
+  List<Element>? _startElements;
+  Bounds? _startUnionBounds;
 
   @override
   ToolType get type => ToolType.select;
@@ -31,8 +61,44 @@ class SelectTool implements Tool {
     _downPoint = point;
     _current = point;
     _isDragging = false;
-    _isMarquee = false;
     _shiftDown = shift;
+    _dragMode = _DragMode.none;
+
+    final selectedElements = _getSelectedElements(context);
+
+    // 1. Point handle hit-test (line/arrow only, single selection)
+    if (selectedElements.length == 1) {
+      final pointIndex = _hitTestPointHandle(point, selectedElements.first);
+      if (pointIndex != null) {
+        _dragMode = _DragMode.dragPoint;
+        _activePointIndex = pointIndex;
+        _hitElement = selectedElements.first;
+        final elem = selectedElements.first;
+        _startBounds = Bounds.fromLTWH(elem.x, elem.y, elem.width, elem.height);
+        if (elem is LineElement) {
+          _startPoints = List.of(elem.points);
+        }
+        return null;
+      }
+    }
+
+    // 2. Resize/rotation handle hit-test
+    if (selectedElements.isNotEmpty) {
+      final handleType = _hitTestHandle(point, selectedElements);
+      if (handleType != null) {
+        if (handleType == HandleType.rotation) {
+          _dragMode = _DragMode.rotate;
+        } else {
+          _dragMode = _DragMode.resize;
+        }
+        _activeHandle = handleType;
+        _hitElement = selectedElements.length == 1 ? selectedElements.first : null;
+        _captureStartState(selectedElements);
+        return null;
+      }
+    }
+
+    // 3. Element body hit-test
     _hitElement = context.scene.getElementAtPoint(point);
     return null;
   }
@@ -45,13 +111,33 @@ class SelectTool implements Tool {
 
     _current = point;
     final distance = down.distanceTo(point);
-    if (distance >= _clickThreshold) {
+
+    // Check if we've started dragging
+    if (!_isDragging && distance >= _clickThreshold) {
       _isDragging = true;
-      if (_hitElement == null) {
-        _isMarquee = true;
+
+      // If we haven't committed to a mode yet, determine it now
+      if (_dragMode == _DragMode.none) {
+        if (_hitElement == null) {
+          _dragMode = _DragMode.marquee;
+        } else {
+          _dragMode = _DragMode.move;
+          _captureStartStateForMove(context);
+        }
       }
     }
-    return null;
+
+    if (!_isDragging) return null;
+
+    // Dispatch based on mode
+    return switch (_dragMode) {
+      _DragMode.resize => _applyResize(point, context),
+      _DragMode.rotate => _applyRotation(point, context),
+      _DragMode.dragPoint => _applyPointDrag(point),
+      _DragMode.move => _applyMove(point, context),
+      _DragMode.marquee => null, // Marquee is overlay-only during drag
+      _DragMode.none => null,
+    };
   }
 
   @override
@@ -62,18 +148,30 @@ class SelectTool implements Tool {
     _current = point;
 
     try {
+      // If we were in a transform mode and dragging, the final update
+      // was already emitted by onPointerMove. Just reset.
+      if (_isDragging && _dragMode == _DragMode.resize) {
+        return _applyResize(point, context);
+      }
+      if (_isDragging && _dragMode == _DragMode.rotate) {
+        return _applyRotation(point, context);
+      }
+      if (_isDragging && _dragMode == _DragMode.dragPoint) {
+        return _applyPointDrag(point);
+      }
+      if (_isDragging && _dragMode == _DragMode.move) {
+        return _applyMove(point, context);
+      }
+
       // Marquee selection
-      if (_isMarquee) {
+      if (_dragMode == _DragMode.marquee) {
         return _handleMarquee(down, point, context);
       }
 
-      // Click or drag on element
+      // Click on element
       final hit = _hitElement;
       if (hit != null) {
-        if (!_isDragging) {
-          return _handleClick(hit, context);
-        }
-        return _handleDrag(hit, down, point, context);
+        return _handleClick(hit, context);
       }
 
       // Click on empty
@@ -97,14 +195,38 @@ class SelectTool implements Tool {
     return SetSelectionResult({hit.id});
   }
 
-  ToolResult _handleDrag(
-      Element hit, Point down, Point up, ToolContext context) {
-    final dx = up.x - down.x;
-    final dy = up.y - down.y;
+  ToolResult? _applyMove(Point current, ToolContext context) {
+    final down = _downPoint;
+    if (down == null) return null;
+    final hit = _hitElement;
+    if (hit == null) return null;
 
-    final moved = hit.copyWith(x: hit.x + dx, y: hit.y + dy);
+    final dx = current.x - down.x;
+    final dy = current.y - down.y;
 
-    if (context.selectedIds.contains(hit.id)) {
+    final selectedElements = _getSelectedElements(context);
+    final isSelected = context.selectedIds.contains(hit.id);
+
+    // Multi-element move
+    if (isSelected && selectedElements.length > 1) {
+      final updates = <ToolResult>[];
+      for (final elem in _startElements ?? selectedElements) {
+        var moved = elem.copyWith(x: elem.x + dx, y: elem.y + dy);
+        if (elem is LineElement) {
+          // Line points are relative, no need to offset them.
+          // But x/y position is updated via copyWith above.
+        }
+        updates.add(UpdateElementResult(moved));
+      }
+      return CompoundResult(updates);
+    }
+
+    // Single element move
+    final startElem = _startElements?.firstWhere((e) => e.id == hit.id,
+        orElse: () => hit) ?? hit;
+    final moved = startElem.copyWith(x: startElem.x + dx, y: startElem.y + dy);
+
+    if (isSelected) {
       return UpdateElementResult(moved);
     }
     // Dragging an unselected element: select then move
@@ -133,18 +255,432 @@ class SelectTool implements Tool {
     return SetSelectionResult(selected);
   }
 
-  @override
-  ToolResult? onKeyEvent(String key, {bool shift = false, bool ctrl = false}) {
-    if (key == 'Escape') {
-      reset();
-      return SetSelectionResult({});
+  // --- Handle hit-testing ---
+
+  /// Hit-test for point handles on a line/arrow element.
+  int? _hitTestPointHandle(Point scenePoint, Element element) {
+    if (element is! LineElement) return null;
+    for (var i = 0; i < element.points.length; i++) {
+      final absPoint = Point(
+        element.x + element.points[i].x,
+        element.y + element.points[i].y,
+      );
+      if (absPoint.distanceTo(scenePoint) <= _handleHitRadius) {
+        return i;
+      }
     }
     return null;
   }
 
+  /// Hit-test for resize/rotation handles on selected elements.
+  HandleType? _hitTestHandle(Point scenePoint, List<Element> elements) {
+    final overlay = SelectionOverlay.fromElements(elements);
+    if (overlay == null) return null;
+
+    // Transform scene point into the selection's local space (undo rotation)
+    final localPoint = _unrotatePoint(
+      scenePoint,
+      overlay.bounds.center,
+      overlay.angle,
+    );
+
+    for (final handle in overlay.handles) {
+      if (handle.position.distanceTo(localPoint) <= _handleHitRadius) {
+        return handle.type;
+      }
+    }
+    return null;
+  }
+
+  /// Rotates [point] around [center] by -[angle] (inverse rotation).
+  static Point _unrotatePoint(Point point, Point center, double angle) {
+    if (angle == 0) return point;
+    final cos = math.cos(-angle);
+    final sin = math.sin(-angle);
+    final dx = point.x - center.x;
+    final dy = point.y - center.y;
+    return Point(
+      center.x + dx * cos - dy * sin,
+      center.y + dx * sin + dy * cos,
+    );
+  }
+
+  /// Rotates [point] around [center] by [angle].
+  static Point _rotatePoint(Point point, Point center, double angle) {
+    if (angle == 0) return point;
+    final cos = math.cos(angle);
+    final sin = math.sin(angle);
+    final dx = point.x - center.x;
+    final dy = point.y - center.y;
+    return Point(
+      center.x + dx * cos - dy * sin,
+      center.y + dx * sin + dy * cos,
+    );
+  }
+
+  // --- Resize ---
+
+  ToolResult? _applyResize(Point current, ToolContext context) {
+    final down = _downPoint;
+    if (down == null || _startBounds == null || _activeHandle == null) {
+      return null;
+    }
+
+    final dx = current.x - down.x;
+    final dy = current.y - down.y;
+    final b = _startBounds!;
+
+    var newLeft = b.left;
+    var newTop = b.top;
+    var newRight = b.right;
+    var newBottom = b.bottom;
+
+    switch (_activeHandle!) {
+      case HandleType.topLeft:
+        newLeft += dx;
+        newTop += dy;
+      case HandleType.topCenter:
+        newTop += dy;
+      case HandleType.topRight:
+        newRight += dx;
+        newTop += dy;
+      case HandleType.middleLeft:
+        newLeft += dx;
+      case HandleType.middleRight:
+        newRight += dx;
+      case HandleType.bottomLeft:
+        newLeft += dx;
+        newBottom += dy;
+      case HandleType.bottomCenter:
+        newBottom += dy;
+      case HandleType.bottomRight:
+        newRight += dx;
+        newBottom += dy;
+      case HandleType.rotation:
+        return null;
+    }
+
+    // Enforce minimum size
+    if (newRight - newLeft < _minSize) {
+      if (_activeHandle == HandleType.topLeft ||
+          _activeHandle == HandleType.middleLeft ||
+          _activeHandle == HandleType.bottomLeft) {
+        newLeft = newRight - _minSize;
+      } else {
+        newRight = newLeft + _minSize;
+      }
+    }
+    if (newBottom - newTop < _minSize) {
+      if (_activeHandle == HandleType.topLeft ||
+          _activeHandle == HandleType.topCenter ||
+          _activeHandle == HandleType.topRight) {
+        newTop = newBottom - _minSize;
+      } else {
+        newBottom = newTop + _minSize;
+      }
+    }
+
+    // Shift for aspect ratio lock
+    if (_shiftDown) {
+      final origW = b.right - b.left;
+      final origH = b.bottom - b.top;
+      if (origW > 0 && origH > 0) {
+        final aspect = origW / origH;
+        final newW = newRight - newLeft;
+        final newH = newBottom - newTop;
+        final currentAspect = newW / newH;
+        if (currentAspect > aspect) {
+          // Width is too big, adjust width
+          final adjustedW = newH * aspect;
+          if (_activeHandle == HandleType.topLeft ||
+              _activeHandle == HandleType.middleLeft ||
+              _activeHandle == HandleType.bottomLeft) {
+            newLeft = newRight - adjustedW;
+          } else {
+            newRight = newLeft + adjustedW;
+          }
+        } else {
+          // Height is too big, adjust height
+          final adjustedH = newW / aspect;
+          if (_activeHandle == HandleType.topLeft ||
+              _activeHandle == HandleType.topCenter ||
+              _activeHandle == HandleType.topRight) {
+            newTop = newBottom - adjustedH;
+          } else {
+            newBottom = newTop + adjustedH;
+          }
+        }
+      }
+    }
+
+    final newBounds = Bounds.fromLTWH(
+      newLeft, newTop, newRight - newLeft, newBottom - newTop,
+    );
+
+    // Multi-element resize: scale proportionally
+    if (_startElements != null && _startElements!.length > 1) {
+      return _applyMultiResize(newBounds);
+    }
+
+    // Single element resize
+    final elem = _hitElement ?? _startElements?.first;
+    if (elem == null) return null;
+
+    final startElem = _startElements?.firstWhere((e) => e.id == elem.id,
+        orElse: () => elem) ?? elem;
+
+    return UpdateElementResult(startElem.copyWith(
+      x: newLeft,
+      y: newTop,
+      width: newRight - newLeft,
+      height: newBottom - newTop,
+    ));
+  }
+
+  ToolResult _applyMultiResize(Bounds newBounds) {
+    final oldBounds = _startUnionBounds ?? _startBounds!;
+    final scaleX = oldBounds.size.width > 0
+        ? newBounds.size.width / oldBounds.size.width
+        : 1.0;
+    final scaleY = oldBounds.size.height > 0
+        ? newBounds.size.height / oldBounds.size.height
+        : 1.0;
+
+    final updates = <ToolResult>[];
+    for (final elem in _startElements!) {
+      final newX = newBounds.left + (elem.x - oldBounds.left) * scaleX;
+      final newY = newBounds.top + (elem.y - oldBounds.top) * scaleY;
+      final newW = elem.width * scaleX;
+      final newH = elem.height * scaleY;
+      updates.add(UpdateElementResult(elem.copyWith(
+        x: newX,
+        y: newY,
+        width: newW,
+        height: newH,
+      )));
+    }
+    return CompoundResult(updates);
+  }
+
+  // --- Rotation ---
+
+  ToolResult? _applyRotation(Point current, ToolContext context) {
+    final down = _downPoint;
+    if (down == null || _startBounds == null) return null;
+
+    final center = _startBounds!.center;
+    final startAngle = math.atan2(down.y - center.y, down.x - center.x);
+    final currentAngle = math.atan2(
+      current.y - center.y, current.x - center.x,
+    );
+    var delta = currentAngle - startAngle;
+
+    // Shift snaps to 15° increments
+    if (_shiftDown) {
+      const snap = math.pi / 12; // 15°
+      delta = (delta / snap).roundToDouble() * snap;
+    }
+
+    // Multi-element rotate
+    if (_startElements != null && _startElements!.length > 1) {
+      return _applyMultiRotation(delta);
+    }
+
+    // Single element rotate
+    final elem = _hitElement ?? _startElements?.first;
+    if (elem == null) return null;
+
+    final startElem = _startElements?.firstWhere((e) => e.id == elem.id,
+        orElse: () => elem) ?? elem;
+
+    return UpdateElementResult(startElem.copyWith(
+      angle: _startAngle + delta,
+    ));
+  }
+
+  ToolResult _applyMultiRotation(double angleDelta) {
+    final unionCenter = _startUnionBounds!.center;
+    final updates = <ToolResult>[];
+
+    for (final elem in _startElements!) {
+      final elemCenter = Point(
+        elem.x + elem.width / 2,
+        elem.y + elem.height / 2,
+      );
+      final rotated = _rotatePoint(elemCenter, unionCenter, angleDelta);
+      final newX = rotated.x - elem.width / 2;
+      final newY = rotated.y - elem.height / 2;
+
+      updates.add(UpdateElementResult(elem.copyWith(
+        x: newX,
+        y: newY,
+        angle: elem.angle + angleDelta,
+      )));
+    }
+    return CompoundResult(updates);
+  }
+
+  // --- Point drag ---
+
+  ToolResult? _applyPointDrag(Point current) {
+    final down = _downPoint;
+    if (down == null || _hitElement is! LineElement || _activePointIndex == null) {
+      return null;
+    }
+
+    final dx = current.x - down.x;
+    final dy = current.y - down.y;
+
+    final startPts = _startPoints!;
+    final oldPt = startPts[_activePointIndex!];
+    final newPoints = List<Point>.from(startPts);
+    newPoints[_activePointIndex!] = Point(oldPt.x + dx, oldPt.y + dy);
+
+    // Recalculate bounding box from points
+    double minX = newPoints.first.x;
+    double minY = newPoints.first.y;
+    double maxX = newPoints.first.x;
+    double maxY = newPoints.first.y;
+    for (final pt in newPoints) {
+      minX = math.min(minX, pt.x);
+      minY = math.min(minY, pt.y);
+      maxX = math.max(maxX, pt.x);
+      maxY = math.max(maxY, pt.y);
+    }
+
+    final line = _hitElement! as LineElement;
+    final updated = line.copyWithLine(points: newPoints).copyWith(
+      width: maxX - minX,
+      height: maxY - minY,
+    ) as LineElement;
+
+    return UpdateElementResult(updated);
+  }
+
+  // --- Keyboard ---
+
+  @override
+  ToolResult? onKeyEvent(String key,
+      {bool shift = false, bool ctrl = false, ToolContext? context}) {
+    if (key == 'Escape') {
+      reset();
+      return SetSelectionResult({});
+    }
+
+    if (context == null) return null;
+
+    final selectedElements = _getSelectedElements(context);
+
+    // Delete/Backspace
+    if (key == 'Delete' || key == 'Backspace') {
+      if (selectedElements.isEmpty) return null;
+      final results = <ToolResult>[
+        for (final e in selectedElements) RemoveElementResult(e.id),
+        SetSelectionResult({}),
+      ];
+      return CompoundResult(results);
+    }
+
+    // Ctrl+D: Duplicate
+    if (ctrl && (key == 'd' || key == 'D')) {
+      if (selectedElements.isEmpty) return null;
+      return _duplicateElements(selectedElements);
+    }
+
+    // Ctrl+A: Select all
+    if (ctrl && (key == 'a' || key == 'A')) {
+      final allIds = context.scene.activeElements.map((e) => e.id).toSet();
+      return SetSelectionResult(allIds);
+    }
+
+    // Ctrl+C: Copy
+    if (ctrl && (key == 'c' || key == 'C')) {
+      if (selectedElements.isEmpty) return null;
+      return SetClipboardResult(List.of(selectedElements));
+    }
+
+    // Ctrl+V: Paste
+    if (ctrl && (key == 'v' || key == 'V')) {
+      if (context.clipboard.isEmpty) return null;
+      return _pasteElements(context.clipboard);
+    }
+
+    // Ctrl+X: Cut
+    if (ctrl && (key == 'x' || key == 'X')) {
+      if (selectedElements.isEmpty) return null;
+      final results = <ToolResult>[
+        SetClipboardResult(List.of(selectedElements)),
+        for (final e in selectedElements) RemoveElementResult(e.id),
+        SetSelectionResult({}),
+      ];
+      return CompoundResult(results);
+    }
+
+    // Arrow keys: Nudge
+    final nudge = shift ? 10.0 : 1.0;
+    if (key == 'ArrowLeft' || key == 'ArrowRight' ||
+        key == 'ArrowUp' || key == 'ArrowDown') {
+      if (selectedElements.isEmpty) return null;
+      final dx = key == 'ArrowLeft' ? -nudge : key == 'ArrowRight' ? nudge : 0.0;
+      final dy = key == 'ArrowUp' ? -nudge : key == 'ArrowDown' ? nudge : 0.0;
+      return _nudgeElements(selectedElements, dx, dy);
+    }
+
+    return null;
+  }
+
+  ToolResult _duplicateElements(List<Element> elements) {
+    final results = <ToolResult>[];
+    final newIds = <ElementId>{};
+    for (final e in elements) {
+      final newId = ElementId.generate();
+      newIds.add(newId);
+      results.add(AddElementResult(e.copyWith(
+        id: newId,
+        x: e.x + 10,
+        y: e.y + 10,
+      )));
+    }
+    results.add(SetSelectionResult(newIds));
+    return CompoundResult(results);
+  }
+
+  ToolResult _pasteElements(List<Element> clipboard) {
+    final results = <ToolResult>[];
+    final newIds = <ElementId>{};
+    for (final e in clipboard) {
+      final newId = ElementId.generate();
+      newIds.add(newId);
+      results.add(AddElementResult(e.copyWith(
+        id: newId,
+        x: e.x + 10,
+        y: e.y + 10,
+      )));
+    }
+    results.add(SetSelectionResult(newIds));
+    return CompoundResult(results);
+  }
+
+  ToolResult _nudgeElements(List<Element> elements, double dx, double dy) {
+    if (elements.length == 1) {
+      return UpdateElementResult(elements.first.copyWith(
+        x: elements.first.x + dx,
+        y: elements.first.y + dy,
+      ));
+    }
+    final results = <ToolResult>[];
+    for (final e in elements) {
+      results.add(UpdateElementResult(e.copyWith(
+        x: e.x + dx,
+        y: e.y + dy,
+      )));
+    }
+    return CompoundResult(results);
+  }
+
   @override
   ToolOverlay? get overlay {
-    if (!_isMarquee) return null;
+    if (_dragMode != _DragMode.marquee || !_isDragging) return null;
     final down = _downPoint;
     final current = _current;
     if (down == null || current == null) return null;
@@ -161,7 +697,60 @@ class SelectTool implements Tool {
     _current = null;
     _hitElement = null;
     _isDragging = false;
-    _isMarquee = false;
     _shiftDown = false;
+    _dragMode = _DragMode.none;
+    _startBounds = null;
+    _startAngle = 0.0;
+    _startPoints = null;
+    _activeHandle = null;
+    _activePointIndex = null;
+    _startElements = null;
+    _startUnionBounds = null;
+  }
+
+  // --- Helpers ---
+
+  List<Element> _getSelectedElements(ToolContext context) {
+    return context.scene.activeElements
+        .where((e) => context.selectedIds.contains(e.id))
+        .toList();
+  }
+
+  void _captureStartState(List<Element> elements) {
+    _startElements = List.of(elements);
+    if (elements.length == 1) {
+      final e = elements.first;
+      _startBounds = Bounds.fromLTWH(e.x, e.y, e.width, e.height);
+      _startAngle = e.angle;
+      if (e is LineElement) {
+        _startPoints = List.of(e.points);
+      }
+    } else {
+      // Multi-element: union bounds
+      Bounds union = Bounds.fromLTWH(
+        elements.first.x, elements.first.y,
+        elements.first.width, elements.first.height,
+      );
+      for (var i = 1; i < elements.length; i++) {
+        final e = elements[i];
+        union = union.union(
+          Bounds.fromLTWH(e.x, e.y, e.width, e.height),
+        );
+      }
+      _startBounds = union;
+      _startUnionBounds = union;
+      _startAngle = 0.0;
+    }
+  }
+
+  void _captureStartStateForMove(ToolContext context) {
+    final hit = _hitElement;
+    if (hit == null) return;
+    final isSelected = context.selectedIds.contains(hit.id);
+    if (isSelected && context.selectedIds.length > 1) {
+      _startElements = _getSelectedElements(context);
+    } else {
+      _startElements = [hit];
+    }
   }
 }

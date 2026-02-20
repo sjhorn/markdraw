@@ -49,7 +49,7 @@ class TextTool implements Tool {
   }
 
   @override
-  ToolResult? onKeyEvent(String key, {bool shift = false, bool ctrl = false}) {
+  ToolResult? onKeyEvent(String key, {bool shift = false, bool ctrl = false, ToolContext? context}) {
     return null;
   }
 

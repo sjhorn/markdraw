@@ -28,7 +28,9 @@ abstract class Tool {
   ToolResult? onPointerUp(Point point, ToolContext context);
 
   /// Called on key events.
-  ToolResult? onKeyEvent(String key, {bool shift = false, bool ctrl = false});
+  /// [context] is provided for tools that need scene/selection info (e.g., SelectTool).
+  ToolResult? onKeyEvent(String key,
+      {bool shift = false, bool ctrl = false, ToolContext? context});
 
   /// Transient overlay data for the UI layer (e.g., creation preview).
   ToolOverlay? get overlay;
