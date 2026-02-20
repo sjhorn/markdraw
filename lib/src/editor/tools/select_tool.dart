@@ -419,8 +419,8 @@ class SelectTool implements Tool {
       }
     }
 
-    var newW = newRight - newLeft;
-    var newH = newBottom - newTop;
+    final newW = newRight - newLeft;
+    final newH = newBottom - newTop;
 
     // For rotated elements, adjust x/y to keep the anchor point (opposite
     // the dragged handle) fixed in world space. Changing width/height shifts
