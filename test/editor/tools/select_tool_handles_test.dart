@@ -212,6 +212,70 @@ void main() {
     });
   });
 
+  group('Rotated element resize', () {
+    test('resize rotated element via bottomRight changes size without moving', () {
+      // 45° rotated rectangle
+      final ctx = contextWith(
+        elements: [rotatedRect],
+        selectedIds: {rotatedRect.id},
+      );
+      // Click at the visual position of the bottomRight handle.
+      // bottomRight handle is at (300, 200) in unrotated space, relative to center (200, 150).
+      // Rotated by 45°: offset (100, 50) → (100*cos45 - 50*sin45, 100*sin45 + 50*cos45)
+      final cos45 = math.cos(math.pi / 4);
+      final sin45 = math.sin(math.pi / 4);
+      final handleX = 200 + 100 * cos45 - 50 * sin45;
+      final handleY = 150 + 100 * sin45 + 50 * cos45;
+      tool.onPointerDown(Point(handleX, handleY), ctx);
+
+      // Drag outward along the element's local bottomRight direction.
+      // In rotated space, "right+down" in local is rotated 45° in world.
+      // Drag 20px in the rotated-right direction (cos45, sin45) * 20
+      final dragX = handleX + 20 * cos45;
+      final dragY = handleY + 20 * sin45;
+      final result = tool.onPointerMove(Point(dragX, dragY), ctx);
+      expect(result, isA<UpdateElementResult>());
+      final updated = (result! as UpdateElementResult).element;
+      // Width should increase, position should stay near original
+      expect(updated.width, greaterThan(rotatedRect.width));
+      expect(updated.x, closeTo(rotatedRect.x, 1.0));
+      expect(updated.y, closeTo(rotatedRect.y, 1.0));
+    });
+
+    test('resize rotated element via topCenter only changes height and y', () {
+      final ctx = contextWith(
+        elements: [rotatedRect],
+        selectedIds: {rotatedRect.id},
+      );
+      // topCenter handle is at (200, 100) in unrotated space, relative to center (200, 150).
+      // offset (0, -50), rotated by 45°: (0*cos45 - (-50)*sin45, 0*sin45 + (-50)*cos45)
+      // = (50*sin45, -50*cos45) + center = (200 + 35.36, 150 - 35.36)
+      final cos45 = math.cos(math.pi / 4);
+      final sin45 = math.sin(math.pi / 4);
+      final handleX = 200 + 50 * sin45;
+      final handleY = 150 - 50 * cos45;
+      tool.onPointerDown(Point(handleX, handleY), ctx);
+
+      // Drag in the element's local "up" direction (which is rotated 45°).
+      // Local up = (sin45, -cos45) rotated by 45° from world up.
+      // Actually, local "up" direction when element is rotated 45° is:
+      // (-sin45, -cos45) in world... Let me just drag the handle further in
+      // the same direction from center: direction from center to handle is
+      // (handleX - 200, handleY - 150), extend it by 20 units.
+      final dirX = handleX - 200;
+      final dirY = handleY - 150;
+      final dirLen = math.sqrt(dirX * dirX + dirY * dirY);
+      final dragX = handleX + (dirX / dirLen) * 20;
+      final dragY = handleY + (dirY / dirLen) * 20;
+      final result = tool.onPointerMove(Point(dragX, dragY), ctx);
+      expect(result, isA<UpdateElementResult>());
+      final updated = (result! as UpdateElementResult).element;
+      // Width should stay the same, height should increase
+      expect(updated.width, closeTo(rotatedRect.width, 1.0));
+      expect(updated.height, greaterThan(rotatedRect.height));
+    });
+  });
+
   group('Single-element resize', () {
     test('drag bottomRight handle increases width and height', () {
       final ctx = contextWith(

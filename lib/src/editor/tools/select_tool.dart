@@ -326,8 +326,14 @@ class SelectTool implements Tool {
       return null;
     }
 
-    final dx = current.x - down.x;
-    final dy = current.y - down.y;
+    // Unrotate the drag delta into the element's local coordinate system
+    // so that resize directions align with the element's axes.
+    final angle = _startAngle;
+    final center = _startBounds!.center;
+    final localCurrent = _unrotatePoint(current, center, angle);
+    final localDown = _unrotatePoint(down, center, angle);
+    final dx = localCurrent.x - localDown.x;
+    final dy = localCurrent.y - localDown.y;
     final b = _startBounds!;
 
     var newLeft = b.left;
