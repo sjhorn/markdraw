@@ -521,6 +521,56 @@ void main() {
       expect(adapter.calls, ['rectangle', 'diamond']);
     });
 
+    test('previewElement is rendered after scene elements', () {
+      final (recorder, canvas) = _makeCanvas();
+
+      var scene = Scene();
+      scene = scene.addElement(RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+      ));
+
+      final preview = EllipseElement(
+        id: const ElementId('preview'),
+        x: 200, y: 200, width: 150, height: 100,
+      );
+
+      final painter = StaticCanvasPainter(
+        scene: scene,
+        adapter: adapter,
+        viewport: const ViewportState(),
+        previewElement: preview,
+      );
+
+      painter.paint(canvas, const Size(800, 600));
+      recorder.endRecording();
+
+      // Scene rectangle first, then preview ellipse
+      expect(adapter.calls, ['rectangle', 'ellipse']);
+    });
+
+    test('shouldRepaint returns true when previewElement changes', () {
+      final scene = Scene();
+      final preview = RectangleElement(
+        id: const ElementId('p1'),
+        x: 0, y: 0, width: 50, height: 50,
+      );
+
+      final painter1 = StaticCanvasPainter(
+        scene: scene,
+        adapter: adapter,
+        viewport: const ViewportState(),
+      );
+      final painter2 = StaticCanvasPainter(
+        scene: scene,
+        adapter: adapter,
+        viewport: const ViewportState(),
+        previewElement: preview,
+      );
+
+      expect(painter2.shouldRepaint(painter1), isTrue);
+    });
+
     test('panned viewport culls elements no longer visible', () {
       final (recorder, canvas) = _makeCanvas();
 

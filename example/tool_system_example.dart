@@ -16,8 +16,15 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' hide Element, SelectionOverlay;
 import 'package:flutter/services.dart';
 
+import 'dart:math' as math;
+
+import 'package:markdraw/src/core/elements/diamond_element.dart';
 import 'package:markdraw/src/core/elements/element.dart';
 import 'package:markdraw/src/core/elements/element_id.dart';
+import 'package:markdraw/src/core/elements/ellipse_element.dart';
+import 'package:markdraw/src/core/elements/freedraw_element.dart';
+import 'package:markdraw/src/core/elements/line_element.dart';
+import 'package:markdraw/src/core/elements/rectangle_element.dart';
 import 'package:markdraw/src/core/elements/text_element.dart';
 import 'package:markdraw/src/core/math/point.dart';
 import 'package:markdraw/src/editor/editor_state.dart';
@@ -290,12 +297,11 @@ class _CanvasPageState extends State<_CanvasPage> {
                     scene: _editorState.scene,
                     adapter: _adapter,
                     viewport: _editorState.viewport,
+                    previewElement: _buildPreviewElement(toolOverlay),
                   ),
                   foregroundPainter: InteractiveCanvasPainter(
                     viewport: _editorState.viewport,
                     selection: _buildSelectionOverlay(),
-                    creationBounds: toolOverlay?.creationBounds,
-                    creationPoints: toolOverlay?.creationPoints,
                     marqueeRect: marqueeRect,
                   ),
                   child: const SizedBox.expand(),
@@ -309,6 +315,65 @@ class _CanvasPageState extends State<_CanvasPage> {
         ),
       ),
     );
+  }
+
+  /// Constructs a temporary preview element from the active tool's overlay
+  /// data, so the StaticCanvasPainter renders it with the actual rough style.
+  Element? _buildPreviewElement(ToolOverlay? overlay) {
+    if (overlay == null) return null;
+    final toolType = _editorState.activeToolType;
+    const previewId = ElementId('__preview__');
+
+    // Shape tools: preview from creationBounds
+    if (overlay.creationBounds != null) {
+      final b = overlay.creationBounds!;
+      return switch (toolType) {
+        ToolType.rectangle => RectangleElement(
+            id: previewId, x: b.left, y: b.top,
+            width: b.size.width, height: b.size.height,
+          ),
+        ToolType.ellipse => EllipseElement(
+            id: previewId, x: b.left, y: b.top,
+            width: b.size.width, height: b.size.height,
+          ),
+        ToolType.diamond => DiamondElement(
+            id: previewId, x: b.left, y: b.top,
+            width: b.size.width, height: b.size.height,
+          ),
+        _ => null,
+      };
+    }
+
+    // Line/arrow/freedraw tools: preview from creationPoints
+    if (overlay.creationPoints != null && overlay.creationPoints!.length >= 2) {
+      final pts = overlay.creationPoints!;
+      final minX = pts.map((p) => p.x).reduce(math.min);
+      final minY = pts.map((p) => p.y).reduce(math.min);
+      final maxX = pts.map((p) => p.x).reduce(math.max);
+      final maxY = pts.map((p) => p.y).reduce(math.max);
+      final relPts = pts.map((p) => Point(p.x - minX, p.y - minY)).toList();
+
+      return switch (toolType) {
+        ToolType.line => LineElement(
+            id: previewId, x: minX, y: minY,
+            width: maxX - minX, height: maxY - minY,
+            points: relPts,
+          ),
+        ToolType.arrow => LineElement(
+            id: previewId, x: minX, y: minY,
+            width: maxX - minX, height: maxY - minY,
+            points: relPts,
+          ),
+        ToolType.freedraw => FreedrawElement(
+            id: previewId, x: minX, y: minY,
+            width: maxX - minX, height: maxY - minY,
+            points: relPts,
+          ),
+        _ => null,
+      };
+    }
+
+    return null;
   }
 
   Widget _buildTextEditingOverlay() {
