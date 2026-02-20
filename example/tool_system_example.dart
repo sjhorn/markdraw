@@ -1,8 +1,12 @@
-/// Example demonstrating the Phase 3.1 Tool System.
+/// Example demonstrating the Phase 3.2 Tool System with transforms.
 ///
 /// Uses EditorState + Tool abstractions to handle pointer events. A toolbar
 /// lets the user switch between tools. The active tool produces ToolResults
 /// that are applied to EditorState, driving scene and viewport changes.
+///
+/// Supports resize via handles, rotation, point editing, multi-element
+/// transforms, and keyboard shortcuts (delete, duplicate, copy/paste,
+/// nudge, select-all).
 ///
 /// Usage:
 ///   cd example && flutter run tool_system_example.dart
@@ -10,6 +14,7 @@ library;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' hide Element, SelectionOverlay;
+import 'package:flutter/services.dart';
 
 import 'package:markdraw/src/core/math/point.dart';
 import 'package:markdraw/src/editor/editor_state.dart';
@@ -92,6 +97,7 @@ class _CanvasPageState extends State<_CanvasPage> {
         scene: _editorState.scene,
         viewport: _editorState.viewport,
         selectedIds: _editorState.selectedIds,
+        clipboard: _editorState.clipboard,
       );
 
   Point _toScene(Offset screenPos) {
@@ -117,7 +123,11 @@ class _CanvasPageState extends State<_CanvasPage> {
             ),
         ],
       ),
-      body: Listener(
+      body: KeyboardListener(
+        focusNode: FocusNode()..requestFocus(),
+        autofocus: true,
+        onKeyEvent: _handleKeyEvent,
+        child: Listener(
         onPointerDown: (event) {
           final point = _toScene(event.localPosition);
           final shift = event.buttons == kSecondaryMouseButton;
@@ -160,7 +170,42 @@ class _CanvasPageState extends State<_CanvasPage> {
           child: const SizedBox.expand(),
         ),
       ),
+      ),
     );
+  }
+
+  void _handleKeyEvent(KeyEvent event) {
+    if (event is! KeyDownEvent) return;
+    final key = event.logicalKey;
+    final shift = HardwareKeyboard.instance.isShiftPressed;
+    final ctrl = HardwareKeyboard.instance.isControlPressed ||
+        HardwareKeyboard.instance.isMetaPressed;
+
+    String? keyName;
+    if (key == LogicalKeyboardKey.delete || key == LogicalKeyboardKey.backspace) {
+      keyName = key == LogicalKeyboardKey.delete ? 'Delete' : 'Backspace';
+    } else if (key == LogicalKeyboardKey.escape) {
+      keyName = 'Escape';
+    } else if (key == LogicalKeyboardKey.arrowLeft) {
+      keyName = 'ArrowLeft';
+    } else if (key == LogicalKeyboardKey.arrowRight) {
+      keyName = 'ArrowRight';
+    } else if (key == LogicalKeyboardKey.arrowUp) {
+      keyName = 'ArrowUp';
+    } else if (key == LogicalKeyboardKey.arrowDown) {
+      keyName = 'ArrowDown';
+    } else if (key.keyLabel.length == 1) {
+      keyName = key.keyLabel.toLowerCase();
+    }
+
+    if (keyName != null) {
+      _applyResult(_activeTool.onKeyEvent(
+        keyName,
+        shift: shift,
+        ctrl: ctrl,
+        context: _toolContext,
+      ));
+    }
   }
 
   markdraw.SelectionOverlay? _buildSelectionOverlay() {

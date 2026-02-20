@@ -301,15 +301,23 @@ markdraw/
 > **TDD checkpoint**: Tool abstract class with 9 implementations. EditorState applies ToolResult mutations. Each tool produces correct element type from simulated pointer events. ~114 new tests, 718 total. Zero analyzer issues. ✅
 
 ### 3.2 Selection & Transform
-- [ ] Single element selection — bounding box + handles
-- [ ] Multi-element selection — group bounding box
-- [ ] Move — drag selected elements, snap to grid
-- [ ] Resize — drag handles, maintain aspect ratio with Shift
-- [ ] Rotate — drag rotation handle, 15° snaps with Shift
-- [ ] Delete — Backspace/Delete key
-- [ ] Duplicate — Ctrl/Cmd+D
-- [ ] Copy/Paste — clipboard with `.markdraw` format for cross-instance paste
-- [ ] **Tests**: Transform operations produce correct element properties
+- [x] Handle hit-testing with inverse rotation for rotated elements
+- [x] Single-element resize via 8 directional handles with minimum 10×10 constraint
+- [x] Shift+resize for aspect ratio lock
+- [x] Single-element rotation with Shift for 15° snap increments
+- [x] Line/arrow point dragging with bounding box recalculation
+- [x] Multi-element move — same delta applied to all selected
+- [x] Multi-element resize — proportional scaling from union bounds
+- [x] Multi-element rotate — each element rotates around union center
+- [x] Delete/Backspace — removes all selected elements
+- [x] Ctrl+D duplicate — copies with new IDs at +10,+10 offset
+- [x] Ctrl+A select all active elements
+- [x] Arrow key nudge — ±1px (±10px with Shift)
+- [x] Ctrl+C copy / Ctrl+V paste / Ctrl+X cut via in-memory clipboard
+- [x] Clipboard stored in EditorState, survives tool switches
+- [x] **Tests**: Handle hit-testing, resize all 8 directions, rotation, point drag, multi-element transforms, all keyboard shortcuts, clipboard round-trip
+
+> **TDD checkpoint**: SelectTool handles resize (8 directions), rotation, point drag, multi-element transforms. Delete, duplicate, copy/paste/cut, select-all, nudge all work via keyboard. Clipboard stored in EditorState. ~84 new tests, ~802 total. Zero analyzer issues. ✅
 
 ### 3.3 Arrow Binding
 - [ ] Binding detection — when arrow endpoint is near a bindable element, snap to it
