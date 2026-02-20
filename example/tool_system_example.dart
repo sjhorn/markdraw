@@ -376,32 +376,52 @@ class _CanvasPageState extends State<_CanvasPage> {
     return null;
   }
 
+  void _onTextChanged() {
+    // Update the element in real-time as the user types
+    final id = _editingTextElementId;
+    if (id == null) return;
+    final element = _editorState.scene.getElementById(id);
+    if (element is! TextElement) return;
+
+    final text = _textEditingController.text;
+    setState(() {
+      final updated = element.copyWithText(text: text).copyWith(
+        width: math.max(text.length * 10.0, 20.0),
+        height: element.fontSize * element.lineHeight,
+      );
+      _editorState = _editorState.applyResult(UpdateElementResult(updated));
+    });
+  }
+
   Widget _buildTextEditingOverlay() {
     final element = _editorState.scene.getElementById(_editingTextElementId!);
     if (element == null) return const SizedBox.shrink();
 
     final screenPos = _editorState.viewport
         .sceneToScreen(Offset(element.x, element.y));
+    final zoom = _editorState.viewport.zoom;
+
+    // Match the rendered text's font settings
+    final fontSize = (element is TextElement ? element.fontSize : 20.0) * zoom;
 
     return Positioned(
       left: screenPos.dx,
       top: screenPos.dy,
-      child: SizedBox(
-        width: 200,
-        child: Material(
-          elevation: 2,
-          child: TextField(
-            controller: _textEditingController,
-            focusNode: _textFocusNode,
-            autofocus: true,
-            decoration: const InputDecoration(
-              hintText: 'Type text...',
-              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              isDense: true,
-              border: OutlineInputBorder(),
-            ),
-            onSubmitted: (_) => _commitTextEditing(),
+      child: IntrinsicWidth(
+        child: EditableText(
+          controller: _textEditingController,
+          focusNode: _textFocusNode,
+          autofocus: true,
+          style: TextStyle(
+            fontSize: fontSize,
+            fontFamily: 'Virgil',
+            color: Colors.black,
+            height: 1.25,
           ),
+          cursorColor: Colors.blue,
+          backgroundCursorColor: Colors.grey,
+          onChanged: (_) => _onTextChanged(),
+          onSubmitted: (_) => _commitTextEditing(),
         ),
       ),
     );
