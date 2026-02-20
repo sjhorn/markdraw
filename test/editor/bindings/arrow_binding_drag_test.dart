@@ -91,7 +91,7 @@ void main() {
       final ctx = ToolContext(
         scene: scene,
         viewport: const ViewportState(),
-        selectedIds: {ElementId('a1')},
+        selectedIds: {const ElementId('a1')},
       );
 
       // Drag the start point (at absolute 100, 50) far away
@@ -100,7 +100,7 @@ void main() {
       final updates = _extractUpdates(result);
 
       final arrowUpdate =
-          updates.where((e) => e.id == ElementId('a1')).first as ArrowElement;
+          updates.where((e) => e.id == const ElementId('a1')).first as ArrowElement;
       expect(arrowUpdate.startBinding, isNull,
           reason: 'Start binding should be cleared');
     });
@@ -120,7 +120,7 @@ void main() {
       final ctx = ToolContext(
         scene: scene,
         viewport: const ViewportState(),
-        selectedIds: {ElementId('a1')},
+        selectedIds: {const ElementId('a1')},
       );
 
       // Drag the last point (at absolute 200, 50) near rect's left edge
@@ -129,7 +129,7 @@ void main() {
       final updates = _extractUpdates(result);
 
       final arrowUpdate =
-          updates.where((e) => e.id == ElementId('a1')).first as ArrowElement;
+          updates.where((e) => e.id == const ElementId('a1')).first as ArrowElement;
       expect(arrowUpdate.endBinding, isNotNull,
           reason: 'End binding should be set');
       expect(arrowUpdate.endBinding!.elementId, 'r1');
@@ -155,7 +155,7 @@ void main() {
       final ctx = ToolContext(
         scene: scene,
         viewport: const ViewportState(),
-        selectedIds: {ElementId('a1')},
+        selectedIds: {const ElementId('a1')},
       );
 
       // Drag start point near rect2's right edge
@@ -164,7 +164,7 @@ void main() {
       final updates = _extractUpdates(result);
 
       final arrowUpdate =
-          updates.where((e) => e.id == ElementId('a1')).first as ArrowElement;
+          updates.where((e) => e.id == const ElementId('a1')).first as ArrowElement;
       expect(arrowUpdate.startBinding, isNotNull);
       expect(arrowUpdate.startBinding!.elementId, 'r2',
           reason: 'Should rebind to rect2');
@@ -189,7 +189,7 @@ void main() {
       final ctx = ToolContext(
         scene: scene,
         viewport: const ViewportState(),
-        selectedIds: {ElementId('a1')},
+        selectedIds: {const ElementId('a1')},
       );
 
       // Drag the middle point (at absolute 200, 50) somewhere
@@ -198,7 +198,7 @@ void main() {
       final updates = _extractUpdates(result);
 
       final arrowUpdate =
-          updates.where((e) => e.id == ElementId('a1')).first as ArrowElement;
+          updates.where((e) => e.id == const ElementId('a1')).first as ArrowElement;
       // Binding should be unchanged — middle points don't affect bindings
       expect(arrowUpdate.startBinding, isNotNull);
       expect(arrowUpdate.startBinding!.elementId, 'r1');
@@ -222,7 +222,7 @@ void main() {
       final ctx = ToolContext(
         scene: scene,
         viewport: const ViewportState(),
-        selectedIds: {ElementId('a1')},
+        selectedIds: {const ElementId('a1')},
       );
 
       // Step 1: Drag start point away to unbind
@@ -230,7 +230,7 @@ void main() {
           _pointDrag(tool, ctx, const Point(100, 50), const Point(500, 300));
       final updates1 = _extractUpdates(result1);
       final unboundArrow =
-          updates1.where((e) => e.id == ElementId('a1')).first as ArrowElement;
+          updates1.where((e) => e.id == const ElementId('a1')).first as ArrowElement;
       expect(unboundArrow.startBinding, isNull);
 
       // Step 2: Now move the rect with the unbound arrow in scene
@@ -238,7 +238,7 @@ void main() {
       final ctx2 = ToolContext(
         scene: scene2,
         viewport: const ViewportState(),
-        selectedIds: {ElementId('r1')},
+        selectedIds: {const ElementId('r1')},
       );
       final tool2 = SelectTool();
       tool2.onPointerDown(const Point(50, 50), ctx2);
@@ -248,7 +248,7 @@ void main() {
       final updates2 = _extractUpdates(result2);
       // Arrow should NOT be updated since it's no longer bound
       final arrowUpdate2 =
-          updates2.where((e) => e.id == ElementId('a1')).firstOrNull;
+          updates2.where((e) => e.id == const ElementId('a1')).firstOrNull;
       expect(arrowUpdate2, isNull,
           reason: 'Unbound arrow should not be affected by rect move');
     });
@@ -267,7 +267,7 @@ void main() {
       final ctx = ToolContext(
         scene: scene,
         viewport: const ViewportState(),
-        selectedIds: {ElementId('a1')},
+        selectedIds: {const ElementId('a1')},
       );
 
       // Start point drag on last point

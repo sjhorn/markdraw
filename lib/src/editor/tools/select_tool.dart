@@ -730,31 +730,31 @@ class SelectTool implements Tool {
             maxY = math.max(maxY, pt.y);
           }
 
-          updated = (updated as ArrowElement)
+          updated = (updated)
               .copyWithLine(points: newPoints)
               .copyWith(
                 width: maxX - minX,
                 height: maxY - minY,
-              ) as ArrowElement;
+              );
 
           if (isFirst) {
-            updated = (updated as ArrowElement).copyWithArrow(
+            updated = (updated).copyWithArrow(
               startBinding: binding,
             );
           } else {
-            updated = (updated as ArrowElement).copyWithArrow(
+            updated = (updated).copyWithArrow(
               endBinding: binding,
             );
           }
         } else {
           // No target — clear binding if was bound
           if (isFirst && (line as ArrowElement).startBinding != null) {
-            updated = (updated as ArrowElement).copyWithArrow(
+            updated = (updated).copyWithArrow(
               clearStartBinding: true,
             );
           }
           if (isLast && (line as ArrowElement).endBinding != null) {
-            updated = (updated as ArrowElement).copyWithArrow(
+            updated = (updated).copyWithArrow(
               clearEndBinding: true,
             );
           }
@@ -788,6 +788,32 @@ class SelectTool implements Tool {
         for (final e in selectedElements) RemoveElementResult(e.id),
         SetSelectionResult({}),
       ];
+      // Clear bindings on arrows that were bound to deleted elements
+      final deletedIds =
+          selectedElements.map((e) => e.id).toSet();
+      final seen = <ElementId>{};
+      for (final elem in selectedElements) {
+        final arrows = BindingUtils.findBoundArrows(context.scene, elem.id);
+        for (final arrow in arrows) {
+          if (deletedIds.contains(arrow.id)) continue;
+          if (seen.contains(arrow.id)) continue;
+          seen.add(arrow.id);
+          var updated = arrow;
+          if (arrow.startBinding != null &&
+              deletedIds.contains(
+                  ElementId(arrow.startBinding!.elementId))) {
+            updated = updated.copyWithArrow(clearStartBinding: true);
+          }
+          if (arrow.endBinding != null &&
+              deletedIds.contains(
+                  ElementId(arrow.endBinding!.elementId))) {
+            updated = updated.copyWithArrow(clearEndBinding: true);
+          }
+          if (!identical(updated, arrow)) {
+            results.add(UpdateElementResult(updated));
+          }
+        }
+      }
       return CompoundResult(results);
     }
 

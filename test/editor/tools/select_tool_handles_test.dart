@@ -1,8 +1,10 @@
 import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:markdraw/src/core/elements/arrow_element.dart';
 import 'package:markdraw/src/core/elements/element.dart';
 import 'package:markdraw/src/core/elements/element_id.dart';
+import 'package:markdraw/src/core/elements/freedraw_element.dart';
 import 'package:markdraw/src/core/elements/line_element.dart';
 import 'package:markdraw/src/core/elements/rectangle_element.dart';
 import 'package:markdraw/src/core/math/point.dart';
@@ -522,6 +524,113 @@ void main() {
       expect(updated.y, rect1.y);
       expect(updated.width, rect1.width);
       expect(updated.height, rect1.height);
+    });
+  });
+
+  group('Line/Arrow resize scales points', () {
+    test('resize line via middleRight scales points proportionally', () {
+      final ctx = contextWith(
+        elements: [line1],
+        selectedIds: {line1.id},
+      );
+      // line1 at (50,50) size 100x100, points [(0,0), (100,100)]
+      // middleRight handle at (150, 100) — not near any endpoint
+      tool.onPointerDown(const Point(150, 100), ctx);
+      // Drag to (200, 100) → new width=150, height=100 (middleRight only changes width)
+      final result = tool.onPointerMove(const Point(200, 100), ctx);
+      expect(result, isA<UpdateElementResult>());
+      final updated = (result! as UpdateElementResult).element as LineElement;
+      // scaleX=1.5, scaleY=1.0
+      expect(updated.width, 150);
+      expect(updated.height, 100);
+      expect(updated.points[0], const Point(0, 0));
+      expect(updated.points[1].x, closeTo(150, 0.1));
+      expect(updated.points[1].y, closeTo(100, 0.1));
+    });
+
+    test('resize arrow via middleRight scales points proportionally', () {
+      // Arrow with non-zero dimensions, endpoints not at handles
+      final arrow = ArrowElement(
+        id: const ElementId('a2'),
+        x: 100,
+        y: 100,
+        width: 100,
+        height: 50,
+        points: [const Point(0, 0), const Point(100, 50)],
+        endArrowhead: Arrowhead.arrow,
+      );
+      final ctx = contextWith(
+        elements: [arrow],
+        selectedIds: {arrow.id},
+      );
+      // middleRight handle at (200, 125) — not near any endpoint
+      tool.onPointerDown(const Point(200, 125), ctx);
+      // Drag to (250, 125) → new width=150, height=50
+      final result = tool.onPointerMove(const Point(250, 125), ctx);
+      expect(result, isA<UpdateElementResult>());
+      final updated = (result! as UpdateElementResult).element as ArrowElement;
+      expect(updated.width, 150);
+      expect(updated.height, 50);
+      // Points should scale x by 1.5, y unchanged
+      expect(updated.points[0], const Point(0, 0));
+      expect(updated.points[1].x, closeTo(150, 0.1));
+      expect(updated.points[1].y, closeTo(50, 0.1));
+      // Arrow-specific fields preserved
+      expect(updated.endArrowhead, Arrowhead.arrow);
+    });
+
+    test('resize line via bottomCenter scales only y of points', () {
+      final ctx = contextWith(
+        elements: [line1],
+        selectedIds: {line1.id},
+      );
+      // line1 at (50,50) size 100x100
+      // bottomCenter handle at (100, 150) — not near any endpoint
+      tool.onPointerDown(const Point(100, 150), ctx);
+      // Drag to (100, 200) → height 100→150
+      final result = tool.onPointerMove(const Point(100, 200), ctx);
+      expect(result, isA<UpdateElementResult>());
+      final updated = (result! as UpdateElementResult).element as LineElement;
+      expect(updated.width, 100);
+      expect(updated.height, 150);
+      // scaleX=1.0, scaleY=1.5
+      expect(updated.points[0], const Point(0, 0));
+      expect(updated.points[1].x, closeTo(100, 0.1));
+      expect(updated.points[1].y, closeTo(150, 0.1));
+    });
+
+    test('resize freedraw via middleRight scales points proportionally', () {
+      final freedraw = FreedrawElement(
+        id: const ElementId('fd1'),
+        x: 50,
+        y: 50,
+        width: 100,
+        height: 80,
+        points: [
+          const Point(0, 0),
+          const Point(50, 40),
+          const Point(100, 80),
+        ],
+      );
+      final ctx = contextWith(
+        elements: [freedraw],
+        selectedIds: {freedraw.id},
+      );
+      // middleRight handle at (150, 90) — not near any point
+      tool.onPointerDown(const Point(150, 90), ctx);
+      // Drag to (200, 90) → width 100→150
+      final result = tool.onPointerMove(const Point(200, 90), ctx);
+      expect(result, isA<UpdateElementResult>());
+      final updated =
+          (result! as UpdateElementResult).element as FreedrawElement;
+      expect(updated.width, 150);
+      expect(updated.height, 80);
+      // scaleX=1.5, scaleY=1.0
+      expect(updated.points[0], const Point(0, 0));
+      expect(updated.points[1].x, closeTo(75, 0.1));
+      expect(updated.points[1].y, closeTo(40, 0.1));
+      expect(updated.points[2].x, closeTo(150, 0.1));
+      expect(updated.points[2].y, closeTo(80, 0.1));
     });
   });
 

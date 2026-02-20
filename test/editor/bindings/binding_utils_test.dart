@@ -131,7 +131,7 @@ void main() {
         snapRadius: 20,
       );
       expect(target, isNotNull);
-      expect(target!.id, ElementId('r1'));
+      expect(target!.id, const ElementId('r1'));
     });
 
     test('returns null when no element within radius', () {
@@ -163,7 +163,7 @@ void main() {
         scene,
         const Point(10, 10),
         snapRadius: 20,
-        excludeId: ElementId('r1'),
+        excludeId: const ElementId('r1'),
       );
       expect(target, isNull);
     });
@@ -178,12 +178,12 @@ void main() {
         const Point(57, 25),
         snapRadius: 20,
       );
-      expect(target!.id, ElementId('r2'));
+      expect(target!.id, const ElementId('r2'));
     });
 
     test('ignores deleted elements', () {
       var rect = _rect(id: 'r1', x: 0, y: 0);
-      rect = rect.copyWith(isDeleted: true) as Element;
+      rect = rect.copyWith(isDeleted: true);
       final scene = Scene().addElement(rect);
       final target = BindingUtils.findBindTarget(
         scene,
@@ -242,9 +242,9 @@ void main() {
   group('resolveBindingPoint', () {
     test('resolves left edge center', () {
       final rect = _rect(id: 'r1', x: 100, y: 100, w: 100, h: 100);
-      final binding = PointBinding(
+      const binding = PointBinding(
         elementId: 'r1',
-        fixedPoint: const Point(0.0, 0.5),
+        fixedPoint: Point(0.0, 0.5),
       );
       final resolved = BindingUtils.resolveBindingPoint(rect, binding);
       expect(resolved.x, closeTo(100, 0.01)); // left edge
@@ -253,9 +253,9 @@ void main() {
 
     test('resolves right edge center', () {
       final rect = _rect(id: 'r1', x: 100, y: 100, w: 100, h: 100);
-      final binding = PointBinding(
+      const binding = PointBinding(
         elementId: 'r1',
-        fixedPoint: const Point(1.0, 0.5),
+        fixedPoint: Point(1.0, 0.5),
       );
       final resolved = BindingUtils.resolveBindingPoint(rect, binding);
       expect(resolved.x, closeTo(200, 0.01));
@@ -264,9 +264,9 @@ void main() {
 
     test('resolves top edge center', () {
       final rect = _rect(id: 'r1', x: 100, y: 100, w: 100, h: 100);
-      final binding = PointBinding(
+      const binding = PointBinding(
         elementId: 'r1',
-        fixedPoint: const Point(0.5, 0.0),
+        fixedPoint: Point(0.5, 0.0),
       );
       final resolved = BindingUtils.resolveBindingPoint(rect, binding);
       expect(resolved.x, closeTo(150, 0.01));
@@ -275,9 +275,9 @@ void main() {
 
     test('resolves bottom edge center', () {
       final rect = _rect(id: 'r1', x: 100, y: 100, w: 100, h: 100);
-      final binding = PointBinding(
+      const binding = PointBinding(
         elementId: 'r1',
-        fixedPoint: const Point(0.5, 1.0),
+        fixedPoint: Point(0.5, 1.0),
       );
       final resolved = BindingUtils.resolveBindingPoint(rect, binding);
       expect(resolved.x, closeTo(150, 0.01));
@@ -286,7 +286,7 @@ void main() {
 
     test('round-trips with computeFixedPoint', () {
       final rect = _rect(id: 'r1', x: 50, y: 80, w: 120, h: 60);
-      final scenePoint = const Point(50, 100); // left edge, 20px down
+      const scenePoint = Point(50, 100); // left edge, 20px down
       final fp = BindingUtils.computeFixedPoint(rect, scenePoint);
       final binding = PointBinding(elementId: 'r1', fixedPoint: fp);
       final resolved = BindingUtils.resolveBindingPoint(rect, binding);
@@ -417,9 +417,9 @@ void main() {
         ),
       );
       final scene = Scene().addElement(rect).addElement(arrow);
-      final bound = BindingUtils.findBoundArrows(scene, ElementId('r1'));
+      final bound = BindingUtils.findBoundArrows(scene, const ElementId('r1'));
       expect(bound, hasLength(1));
-      expect(bound.first.id, ElementId('a1'));
+      expect(bound.first.id, const ElementId('a1'));
     });
 
     test('finds arrows bound at end', () {
@@ -432,16 +432,16 @@ void main() {
         ),
       );
       final scene = Scene().addElement(rect).addElement(arrow);
-      final bound = BindingUtils.findBoundArrows(scene, ElementId('r1'));
+      final bound = BindingUtils.findBoundArrows(scene, const ElementId('r1'));
       expect(bound, hasLength(1));
-      expect(bound.first.id, ElementId('a1'));
+      expect(bound.first.id, const ElementId('a1'));
     });
 
     test('returns empty when no arrows bound', () {
       final rect = _rect(id: 'r1');
       final arrow = _arrow(id: 'a1');
       final scene = Scene().addElement(rect).addElement(arrow);
-      final bound = BindingUtils.findBoundArrows(scene, ElementId('r1'));
+      final bound = BindingUtils.findBoundArrows(scene, const ElementId('r1'));
       expect(bound, isEmpty);
     });
 
@@ -463,7 +463,7 @@ void main() {
       );
       final scene =
           Scene().addElement(rect).addElement(arrow1).addElement(arrow2);
-      final bound = BindingUtils.findBoundArrows(scene, ElementId('r1'));
+      final bound = BindingUtils.findBoundArrows(scene, const ElementId('r1'));
       expect(bound, hasLength(2));
     });
   });

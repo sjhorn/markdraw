@@ -179,7 +179,7 @@ class BindingUtils {
       y: minY,
       width: maxX - minX,
       height: maxY - minY,
-    ) as ArrowElement;
+    );
   }
 
   /// Find all arrows in [scene] that are bound to [elementId].

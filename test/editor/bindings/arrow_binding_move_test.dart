@@ -93,7 +93,7 @@ void main() {
       final ctx = ToolContext(
         scene: scene,
         viewport: const ViewportState(),
-        selectedIds: {ElementId('r1')},
+        selectedIds: {const ElementId('r1')},
       );
 
       // Drag rect 50px right
@@ -102,7 +102,7 @@ void main() {
 
       // Find the arrow update
       final arrowUpdate =
-          updates.where((e) => e.id == ElementId('a1')).firstOrNull;
+          updates.where((e) => e.id == const ElementId('a1')).firstOrNull;
       expect(arrowUpdate, isNotNull, reason: 'Arrow should be updated');
 
       // Arrow start should now be at (150, 50) — moved right edge center
@@ -130,7 +130,7 @@ void main() {
       final ctx = ToolContext(
         scene: scene,
         viewport: const ViewportState(),
-        selectedIds: {ElementId('r1')},
+        selectedIds: {const ElementId('r1')},
       );
 
       // Drag rect 50px right
@@ -139,7 +139,7 @@ void main() {
       final updates = _extractUpdates(result);
 
       final arrowUpdate =
-          updates.where((e) => e.id == ElementId('a1')).firstOrNull;
+          updates.where((e) => e.id == const ElementId('a1')).firstOrNull;
       expect(arrowUpdate, isNotNull);
 
       final a = arrowUpdate! as ArrowElement;
@@ -181,15 +181,15 @@ void main() {
       final ctx = ToolContext(
         scene: scene,
         viewport: const ViewportState(),
-        selectedIds: {ElementId('r1')},
+        selectedIds: {const ElementId('r1')},
       );
 
       final result =
           _drag(tool, ctx, const Point(150, 150), const Point(200, 150));
       final updates = _extractUpdates(result);
 
-      final a1 = updates.where((e) => e.id == ElementId('a1')).firstOrNull;
-      final a2 = updates.where((e) => e.id == ElementId('a2')).firstOrNull;
+      final a1 = updates.where((e) => e.id == const ElementId('a1')).firstOrNull;
+      final a2 = updates.where((e) => e.id == const ElementId('a2')).firstOrNull;
       expect(a1, isNotNull, reason: 'arrow1 should be updated');
       expect(a2, isNotNull, reason: 'arrow2 should be updated');
     });
@@ -201,14 +201,14 @@ void main() {
       final ctx = ToolContext(
         scene: scene,
         viewport: const ViewportState(),
-        selectedIds: {ElementId('r1')},
+        selectedIds: {const ElementId('r1')},
       );
 
       final result = _drag(tool, ctx, const Point(50, 50), const Point(100, 50));
       final updates = _extractUpdates(result);
 
       final arrowUpdate =
-          updates.where((e) => e.id == ElementId('a1')).firstOrNull;
+          updates.where((e) => e.id == const ElementId('a1')).firstOrNull;
       expect(arrowUpdate, isNull);
     });
 
@@ -231,7 +231,7 @@ void main() {
       final ctx = ToolContext(
         scene: scene,
         viewport: const ViewportState(),
-        selectedIds: {ElementId('r1'), ElementId('a1')},
+        selectedIds: {const ElementId('r1'), const ElementId('a1')},
       );
 
       final result = _drag(tool, ctx, const Point(50, 50), const Point(100, 50));
@@ -239,7 +239,7 @@ void main() {
 
       // Arrow should only appear once in updates (from multi-move, not from binding)
       final arrowUpdates =
-          updates.where((e) => e.id == ElementId('a1')).toList();
+          updates.where((e) => e.id == const ElementId('a1')).toList();
       expect(arrowUpdates, hasLength(1));
     });
 
@@ -261,7 +261,7 @@ void main() {
       final ctx = ToolContext(
         scene: scene,
         viewport: const ViewportState(),
-        selectedIds: {ElementId('r1')},
+        selectedIds: {const ElementId('r1')},
       );
 
       final result =
@@ -269,7 +269,7 @@ void main() {
       final updates = _extractUpdates(result);
 
       final arrowUpdate =
-          updates.where((e) => e.id == ElementId('a1')).firstOrNull;
+          updates.where((e) => e.id == const ElementId('a1')).firstOrNull;
       expect(arrowUpdate, isNotNull);
     });
 
@@ -297,7 +297,7 @@ void main() {
       final ctx = ToolContext(
         scene: scene,
         viewport: const ViewportState(),
-        selectedIds: {ElementId('r1')},
+        selectedIds: {const ElementId('r1')},
       );
 
       // Move rect1 50px down
@@ -305,7 +305,7 @@ void main() {
       final updates = _extractUpdates(result);
 
       final arrowUpdate =
-          updates.where((e) => e.id == ElementId('a1')).firstOrNull;
+          updates.where((e) => e.id == const ElementId('a1')).firstOrNull;
       expect(arrowUpdate, isNotNull);
 
       final a = arrowUpdate! as ArrowElement;
