@@ -18,28 +18,35 @@ import 'package:markdraw/src/rendering/element_renderer.dart';
 import 'package:markdraw/src/rendering/rough/draw_style.dart';
 import 'package:markdraw/src/rendering/rough/rough_adapter.dart';
 
-/// A mock RoughAdapter that records which methods were called.
+/// A mock RoughAdapter that records which methods were called and
+/// captures the arguments for verification.
 class MockRoughAdapter implements RoughAdapter {
   final List<String> calls = [];
+  Bounds? lastBounds;
+  List<Point>? lastPoints;
 
   @override
   void drawRectangle(Canvas canvas, Bounds bounds, DrawStyle style) {
     calls.add('drawRectangle');
+    lastBounds = bounds;
   }
 
   @override
   void drawEllipse(Canvas canvas, Bounds bounds, DrawStyle style) {
     calls.add('drawEllipse');
+    lastBounds = bounds;
   }
 
   @override
   void drawDiamond(Canvas canvas, Bounds bounds, DrawStyle style) {
     calls.add('drawDiamond');
+    lastBounds = bounds;
   }
 
   @override
   void drawLine(Canvas canvas, List<Point> points, DrawStyle style) {
     calls.add('drawLine');
+    lastPoints = List.of(points);
   }
 
   @override
@@ -51,6 +58,7 @@ class MockRoughAdapter implements RoughAdapter {
     DrawStyle style,
   ) {
     calls.add('drawArrow');
+    lastPoints = List.of(points);
   }
 
   @override
@@ -62,6 +70,7 @@ class MockRoughAdapter implements RoughAdapter {
     DrawStyle style,
   ) {
     calls.add('drawFreedraw');
+    lastPoints = List.of(points);
   }
 }
 
@@ -253,6 +262,109 @@ void main() {
       recorder.endRecording();
 
       expect(adapter.calls, ['drawRectangle']);
+    });
+
+    test('rectangle bounds include element position', () {
+      final (recorder, canvas) = _makeCanvas();
+      final element = RectangleElement(
+        id: ElementId.generate(),
+        x: 100,
+        y: 200,
+        width: 50,
+        height: 30,
+      );
+
+      ElementRenderer.render(canvas, element, adapter);
+      recorder.endRecording();
+
+      expect(adapter.lastBounds!.left, 100);
+      expect(adapter.lastBounds!.top, 200);
+      expect(adapter.lastBounds!.size.width, 50);
+      expect(adapter.lastBounds!.size.height, 30);
+    });
+  });
+
+  group('Line/arrow/freedraw position', () {
+    test('line at non-zero origin renders with offset points', () {
+      final (recorder, canvas) = _makeCanvas();
+      final element = LineElement(
+        id: ElementId.generate(),
+        x: 100,
+        y: 200,
+        width: 50,
+        height: 50,
+        points: [const Point(0, 0), const Point(50, 50)],
+      );
+
+      ElementRenderer.render(canvas, element, adapter);
+      recorder.endRecording();
+
+      expect(adapter.calls, ['drawLine']);
+      // Points passed to adapter should be offset by element position
+      expect(adapter.lastPoints![0], const Point(100, 200));
+      expect(adapter.lastPoints![1], const Point(150, 250));
+    });
+
+    test('arrow at non-zero origin renders with offset points', () {
+      final (recorder, canvas) = _makeCanvas();
+      final element = ArrowElement(
+        id: ElementId.generate(),
+        x: 100,
+        y: 200,
+        width: 80,
+        height: 0,
+        points: [const Point(0, 0), const Point(80, 0)],
+        endArrowhead: Arrowhead.arrow,
+      );
+
+      ElementRenderer.render(canvas, element, adapter);
+      recorder.endRecording();
+
+      expect(adapter.calls, ['drawArrow']);
+      expect(adapter.lastPoints![0], const Point(100, 200));
+      expect(adapter.lastPoints![1], const Point(180, 200));
+    });
+
+    test('freedraw at non-zero origin renders with offset points', () {
+      final (recorder, canvas) = _makeCanvas();
+      final element = FreedrawElement(
+        id: ElementId.generate(),
+        x: 50,
+        y: 75,
+        width: 100,
+        height: 100,
+        points: [
+          const Point(0, 0),
+          const Point(50, 50),
+          const Point(100, 0),
+        ],
+      );
+
+      ElementRenderer.render(canvas, element, adapter);
+      recorder.endRecording();
+
+      expect(adapter.calls, ['drawFreedraw']);
+      expect(adapter.lastPoints![0], const Point(50, 75));
+      expect(adapter.lastPoints![1], const Point(100, 125));
+      expect(adapter.lastPoints![2], const Point(150, 75));
+    });
+
+    test('line at origin renders points unchanged', () {
+      final (recorder, canvas) = _makeCanvas();
+      final element = LineElement(
+        id: ElementId.generate(),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        points: [const Point(0, 0), const Point(100, 100)],
+      );
+
+      ElementRenderer.render(canvas, element, adapter);
+      recorder.endRecording();
+
+      expect(adapter.lastPoints![0], const Point(0, 0));
+      expect(adapter.lastPoints![1], const Point(100, 100));
     });
   });
 }

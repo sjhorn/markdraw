@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import '../core/math/point.dart';
 import '../core/elements/arrow_element.dart';
 import '../core/elements/element.dart' as core;
 import '../core/elements/freedraw_element.dart';
@@ -65,13 +66,15 @@ class ElementRenderer {
         adapter.drawDiamond(canvas, bounds, style);
       case 'line':
         if (element is LineElement) {
-          adapter.drawLine(canvas, element.points, style);
+          final absPoints = _absolutePoints(element.points, element.x, element.y);
+          adapter.drawLine(canvas, absPoints, style);
         }
       case 'arrow':
         if (element is ArrowElement) {
+          final absPoints = _absolutePoints(element.points, element.x, element.y);
           adapter.drawArrow(
             canvas,
-            element.points,
+            absPoints,
             element.startArrowhead,
             element.endArrowhead,
             style,
@@ -79,9 +82,10 @@ class ElementRenderer {
         }
       case 'freedraw':
         if (element is FreedrawElement) {
+          final absPoints = _absolutePoints(element.points, element.x, element.y);
           adapter.drawFreedraw(
             canvas,
-            element.points,
+            absPoints,
             element.pressures,
             element.simulatePressure,
             style,
@@ -94,5 +98,11 @@ class ElementRenderer {
       default:
         break; // Unknown type — silently skip
     }
+  }
+
+  /// Converts relative points to absolute by adding the element's origin.
+  static List<Point> _absolutePoints(
+      List<Point> points, double x, double y) {
+    return points.map((p) => Point(p.x + x, p.y + y)).toList();
   }
 }
