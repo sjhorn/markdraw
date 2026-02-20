@@ -55,6 +55,9 @@ class SelectTool implements Tool {
   List<Element>? _startElements;
   Bounds? _startUnionBounds;
 
+  // Binding indicator during point drag
+  Element? _bindTarget;
+
   @override
   ToolType get type => ToolType.select;
 
@@ -137,7 +140,7 @@ class SelectTool implements Tool {
     return switch (_dragMode) {
       _DragMode.resize => _applyResize(point, context),
       _DragMode.rotate => _applyRotation(point, context),
-      _DragMode.dragPoint => _applyPointDrag(point),
+      _DragMode.dragPoint => _applyPointDrag(point, context),
       _DragMode.move => _applyMove(point, context),
       _DragMode.marquee => null, // Marquee is overlay-only during drag
       _DragMode.none => null,
@@ -161,7 +164,7 @@ class SelectTool implements Tool {
         return _applyRotation(point, context);
       }
       if (_isDragging && _dragMode == _DragMode.dragPoint) {
-        return _applyPointDrag(point);
+        return _applyPointDrag(point, context);
       }
       if (_isDragging && _dragMode == _DragMode.move) {
         return _applyMove(point, context);
@@ -655,7 +658,7 @@ class SelectTool implements Tool {
 
   // --- Point drag ---
 
-  ToolResult? _applyPointDrag(Point current) {
+  ToolResult? _applyPointDrag(Point current, ToolContext context) {
     final down = _downPoint;
     if (down == null || _hitElement is! LineElement || _activePointIndex == null) {
       return null;
@@ -682,10 +685,84 @@ class SelectTool implements Tool {
     }
 
     final line = _hitElement! as LineElement;
-    final updated = line.copyWithLine(points: newPoints).copyWith(
+    var updated = line.copyWithLine(points: newPoints).copyWith(
       width: maxX - minX,
       height: maxY - minY,
     );
+
+    // Handle binding for arrow first/last point
+    if (updated is ArrowElement) {
+      final isFirst = _activePointIndex == 0;
+      final isLast = _activePointIndex == newPoints.length - 1;
+
+      if (isFirst || isLast) {
+        // Compute absolute position of the dragged point
+        final absPoint = Point(
+          updated.x + newPoints[_activePointIndex!].x,
+          updated.y + newPoints[_activePointIndex!].y,
+        );
+        final target = BindingUtils.findBindTarget(context.scene, absPoint);
+        _bindTarget = target;
+
+        if (target != null) {
+          final fixedPoint =
+              BindingUtils.computeFixedPoint(target, absPoint);
+          final binding = PointBinding(
+            elementId: target.id.value,
+            fixedPoint: fixedPoint,
+          );
+
+          // Snap the point to the edge
+          final snapped =
+              BindingUtils.resolveBindingPoint(target, binding);
+          newPoints[_activePointIndex!] =
+              Point(snapped.x - updated.x, snapped.y - updated.y);
+
+          // Recalculate bounding box with snapped point
+          minX = newPoints.first.x;
+          minY = newPoints.first.y;
+          maxX = newPoints.first.x;
+          maxY = newPoints.first.y;
+          for (final pt in newPoints) {
+            minX = math.min(minX, pt.x);
+            minY = math.min(minY, pt.y);
+            maxX = math.max(maxX, pt.x);
+            maxY = math.max(maxY, pt.y);
+          }
+
+          updated = (updated as ArrowElement)
+              .copyWithLine(points: newPoints)
+              .copyWith(
+                width: maxX - minX,
+                height: maxY - minY,
+              ) as ArrowElement;
+
+          if (isFirst) {
+            updated = (updated as ArrowElement).copyWithArrow(
+              startBinding: binding,
+            );
+          } else {
+            updated = (updated as ArrowElement).copyWithArrow(
+              endBinding: binding,
+            );
+          }
+        } else {
+          // No target — clear binding if was bound
+          if (isFirst && (line as ArrowElement).startBinding != null) {
+            updated = (updated as ArrowElement).copyWithArrow(
+              clearStartBinding: true,
+            );
+          }
+          if (isLast && (line as ArrowElement).endBinding != null) {
+            updated = (updated as ArrowElement).copyWithArrow(
+              clearEndBinding: true,
+            );
+          }
+        }
+      } else {
+        _bindTarget = null;
+      }
+    }
 
     return UpdateElementResult(updated);
   }
@@ -811,6 +888,17 @@ class SelectTool implements Tool {
 
   @override
   ToolOverlay? get overlay {
+    // Binding indicator during point drag
+    if (_dragMode == _DragMode.dragPoint && _isDragging && _bindTarget != null) {
+      return ToolOverlay(
+        bindTargetBounds: Bounds.fromLTWH(
+          _bindTarget!.x,
+          _bindTarget!.y,
+          _bindTarget!.width,
+          _bindTarget!.height,
+        ),
+      );
+    }
     if (_dragMode != _DragMode.marquee || !_isDragging) return null;
     final down = _downPoint;
     final current = _current;
@@ -837,6 +925,7 @@ class SelectTool implements Tool {
     _activePointIndex = null;
     _startElements = null;
     _startUnionBounds = null;
+    _bindTarget = null;
   }
 
   // --- Helpers ---
