@@ -1,12 +1,12 @@
-/// Example demonstrating the Phase 3.2 Tool System with transforms.
+/// Example demonstrating the Tool System with undo/redo support.
 ///
 /// Uses EditorState + Tool abstractions to handle pointer events. A toolbar
 /// lets the user switch between tools. The active tool produces ToolResults
 /// that are applied to EditorState, driving scene and viewport changes.
 ///
 /// Supports resize via handles, rotation, point editing, multi-element
-/// transforms, and keyboard shortcuts (delete, duplicate, copy/paste,
-/// nudge, select-all).
+/// transforms, keyboard shortcuts (delete, duplicate, copy/paste,
+/// nudge, select-all), and undo/redo (Ctrl+Z / Ctrl+Shift+Z).
 ///
 /// Usage:
 ///   cd example && flutter run tool_system_example.dart
@@ -18,6 +18,7 @@ import 'package:flutter/services.dart';
 
 import 'dart:math' as math;
 
+import 'package:markdraw/src/core/history/history_manager.dart';
 import 'package:markdraw/src/core/elements/arrow_element.dart';
 import 'package:markdraw/src/core/elements/diamond_element.dart';
 import 'package:markdraw/src/core/elements/element.dart';
@@ -72,6 +73,10 @@ class _CanvasPageState extends State<_CanvasPage> {
   late EditorState _editorState;
   late Tool _activeTool;
   final _adapter = RoughCanvasAdapter();
+  final _historyManager = HistoryManager();
+
+  // Drag coalescing: capture scene before drag, push once on pointer up
+  Scene? _sceneBeforeDrag;
 
   // Double-click detection for line/arrow finalization
   DateTime? _lastPointerUpTime;
@@ -162,6 +167,7 @@ class _CanvasPageState extends State<_CanvasPage> {
 
     final text = _textEditingController.text.trim();
     setState(() {
+      _historyManager.push(_editorState.scene);
       if (text.isEmpty) {
         // Remove empty text element
         _editorState = _editorState.applyResult(RemoveElementResult(id));
@@ -187,6 +193,7 @@ class _CanvasPageState extends State<_CanvasPage> {
   void _cancelTextEditing() {
     if (_editingTextElementId != null) {
       setState(() {
+        _historyManager.push(_editorState.scene);
         _editorState = _editorState.applyResult(
             RemoveElementResult(_editingTextElementId!));
         _editorState = _editorState.applyResult(SetSelectionResult({}));
@@ -262,6 +269,8 @@ class _CanvasPageState extends State<_CanvasPage> {
                   if (_editingTextElementId != null) {
                     _commitTextEditing();
                   }
+                  // Capture scene before drag for coalesced undo
+                  _sceneBeforeDrag = _editorState.scene;
                   final point = _toScene(event.localPosition);
                   final shift = event.buttons == kSecondaryMouseButton;
                   if (_activeTool is SelectTool) {
@@ -298,6 +307,13 @@ class _CanvasPageState extends State<_CanvasPage> {
                     _applyResult(
                         _activeTool.onPointerUp(point, _toolContext));
                   }
+
+                  // Push coalesced history if scene changed during drag
+                  if (_sceneBeforeDrag != null &&
+                      !identical(_editorState.scene, _sceneBeforeDrag)) {
+                    _historyManager.push(_sceneBeforeDrag!);
+                  }
+                  _sceneBeforeDrag = null;
                 },
                 onPointerSignal: (event) {
                   if (event is PointerScrollEvent) {
@@ -461,6 +477,26 @@ class _CanvasPageState extends State<_CanvasPage> {
     final ctrl = HardwareKeyboard.instance.isControlPressed ||
         HardwareKeyboard.instance.isMetaPressed;
 
+    // Undo/redo shortcuts (intercept before tool dispatch)
+    if (ctrl && key == LogicalKeyboardKey.keyZ) {
+      if (shift) {
+        final redone = _historyManager.redo(_editorState.scene);
+        if (redone != null) {
+          setState(() {
+            _editorState = _editorState.copyWith(scene: redone);
+          });
+        }
+      } else {
+        final undone = _historyManager.undo(_editorState.scene);
+        if (undone != null) {
+          setState(() {
+            _editorState = _editorState.copyWith(scene: undone);
+          });
+        }
+      }
+      return;
+    }
+
     String? keyName;
     if (key == LogicalKeyboardKey.delete ||
         key == LogicalKeyboardKey.backspace) {
@@ -482,12 +518,16 @@ class _CanvasPageState extends State<_CanvasPage> {
     }
 
     if (keyName != null) {
-      _applyResult(_activeTool.onKeyEvent(
+      final result = _activeTool.onKeyEvent(
         keyName,
         shift: shift,
         ctrl: ctrl,
         context: _toolContext,
-      ));
+      );
+      if (isSceneChangingResult(result)) {
+        _historyManager.push(_editorState.scene);
+      }
+      _applyResult(result);
     }
   }
 
