@@ -320,12 +320,18 @@ markdraw/
 > **TDD checkpoint**: SelectTool handles resize (8 directions), rotation, point drag, multi-element transforms. Delete, duplicate, copy/paste/cut, select-all, nudge all work via keyboard. Clipboard stored in EditorState. ~84 new tests, ~802 total. Zero analyzer issues. ✅
 
 ### 3.3 Arrow Binding
-- [ ] Binding detection — when arrow endpoint is near a bindable element, snap to it
-- [ ] `FixedPointBinding` — stores element ID + normalized position (0–1, 0–1)
-- [ ] Bound arrow updates when target element moves/resizes
-- [ ] Unbind on drag away from element
-- [ ] Visual indicator during binding (highlight target element)
-- [ ] **Tests**: Create bound arrow, move target, verify arrow endpoint updates; unbind, verify independence
+- [x] Binding detection — when arrow endpoint is near a bindable element, snap to it
+- [x] `PointBinding` — stores element ID + normalized position (0–1, 0–1) as fixedPoint
+- [x] `BindingUtils` — stateless utility class with `isBindable`, `findBindTarget`, `computeFixedPoint`, `resolveBindingPoint`, `updateBoundArrowEndpoints`, `findBoundArrows`
+- [x] ArrowTool snaps endpoints to nearby shapes on creation, stores PointBindings
+- [x] Bound arrow updates when target element moves/resizes/rotates/nudges
+- [x] Unbind on drag away from element; rebind on drag to new element
+- [x] Visual indicator during binding (green highlight around target element)
+- [x] Delete bound target clears bindings on affected arrows
+- [x] Arrows in selection set excluded from binding updates (no double-move)
+- [x] **Tests**: 68 new tests — binding utils, arrow creation, move/resize updates, point drag rebind/unbind, edge cases, integration round-trip
+
+> **TDD checkpoint**: Arrow binding complete with BindingUtils, ArrowTool creation binding, SelectTool move/resize/delete binding updates, point drag rebind/unbind, visual indicator. 870 tests total. Zero analyzer issues. ✅
 
 ### 3.4 Undo/Redo
 - [ ] `HistoryManager` — stores snapshots of element changes (not full scene)
