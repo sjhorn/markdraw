@@ -90,3 +90,19 @@ class ToolOverlay {
     this.bindTargetBounds,
   });
 }
+
+/// Returns true if [result] modifies the scene (adds, updates, or removes
+/// elements). Used to decide whether to push to the undo history.
+bool isSceneChangingResult(ToolResult? result) {
+  if (result == null) return false;
+  return switch (result) {
+    AddElementResult() => true,
+    UpdateElementResult() => true,
+    RemoveElementResult() => true,
+    CompoundResult(:final results) => results.any(isSceneChangingResult),
+    SetSelectionResult() => false,
+    UpdateViewportResult() => false,
+    SwitchToolResult() => false,
+    SetClipboardResult() => false,
+  };
+}

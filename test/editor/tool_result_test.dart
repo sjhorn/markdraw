@@ -168,6 +168,61 @@ void main() {
     });
   });
 
+  group('isSceneChangingResult', () {
+    final element = RectangleElement(
+      id: const ElementId('r1'),
+      x: 10,
+      y: 20,
+      width: 100,
+      height: 50,
+    );
+
+    test('true for AddElementResult', () {
+      expect(isSceneChangingResult(AddElementResult(element)), isTrue);
+    });
+
+    test('true for UpdateElementResult', () {
+      expect(isSceneChangingResult(UpdateElementResult(element)), isTrue);
+    });
+
+    test('true for RemoveElementResult', () {
+      expect(
+          isSceneChangingResult(RemoveElementResult(const ElementId('r1'))),
+          isTrue);
+    });
+
+    test('false for non-scene-changing results', () {
+      expect(isSceneChangingResult(SetSelectionResult({})), isFalse);
+      expect(
+          isSceneChangingResult(
+              UpdateViewportResult(const ViewportState())),
+          isFalse);
+      expect(
+          isSceneChangingResult(SwitchToolResult(ToolType.select)), isFalse);
+      expect(isSceneChangingResult(SetClipboardResult([])), isFalse);
+    });
+
+    test('true for CompoundResult containing scene change', () {
+      final compound = CompoundResult([
+        SetSelectionResult({const ElementId('r1')}),
+        AddElementResult(element),
+      ]);
+      expect(isSceneChangingResult(compound), isTrue);
+    });
+
+    test('false for CompoundResult with only non-scene results', () {
+      final compound = CompoundResult([
+        SetSelectionResult({const ElementId('r1')}),
+        SwitchToolResult(ToolType.select),
+      ]);
+      expect(isSceneChangingResult(compound), isFalse);
+    });
+
+    test('false for null', () {
+      expect(isSceneChangingResult(null), isFalse);
+    });
+  });
+
   group('ToolOverlay', () {
     test('creationBounds holds bounds during shape creation', () {
       final overlay = ToolOverlay(
