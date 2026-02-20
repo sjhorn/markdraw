@@ -334,10 +334,15 @@ markdraw/
 > **TDD checkpoint**: Arrow binding complete with BindingUtils, ArrowTool creation binding, SelectTool move/resize/delete binding updates, point drag rebind/unbind, visual indicator. 870 tests total. Zero analyzer issues. ✅
 
 ### 3.4 Undo/Redo
-- [ ] `HistoryManager` — stores snapshots of element changes (not full scene)
-- [ ] Ctrl/Cmd+Z undo, Ctrl/Cmd+Shift+Z redo
-- [ ] Coalesce rapid changes (e.g., many move events during drag → one undo step)
-- [ ] **Tests**: Sequence of operations → undo each → verify state matches
+- [x] `HistoryManager` — stores Scene snapshots with configurable maxDepth (100)
+- [x] Ctrl/Cmd+Z undo, Ctrl/Cmd+Shift+Z redo
+- [x] Coalesce rapid changes (drag events → single undo step via scene-before-drag capture)
+- [x] `isSceneChangingResult` classifier — determines which ToolResults affect the scene
+- [x] Keyboard scene-changing shortcuts (delete, duplicate, paste, nudge) each push history
+- [x] Text commit/cancel push history
+- [x] **Tests**: 43 new tests — HistoryManager unit tests, classifier tests, integration tests
+
+> **TDD checkpoint**: HistoryManager with undo/redo stacks, drag coalescing, keyboard shortcut history. isSceneChangingResult classifier. 913 tests total. Zero analyzer issues. ✅
 
 ### 3.5 Keyboard Shortcuts
 - [ ] Tool shortcuts (R, E, D, L, A, P, T, H, V for select)
