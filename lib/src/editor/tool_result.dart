@@ -81,10 +81,12 @@ class ToolOverlay {
   final Bounds? creationBounds;
   final List<Point>? creationPoints;
   final Bounds? marqueeRect;
+  final Bounds? bindTargetBounds;
 
   const ToolOverlay({
     this.creationBounds,
     this.creationPoints,
     this.marqueeRect,
+    this.bindTargetBounds,
   });
 }

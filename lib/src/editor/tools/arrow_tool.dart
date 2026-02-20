@@ -2,9 +2,12 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import '../../core/elements/arrow_element.dart';
+import '../../core/elements/element.dart';
 import '../../core/elements/element_id.dart';
 import '../../core/elements/line_element.dart';
+import '../../core/math/bounds.dart';
 import '../../core/math/point.dart';
+import '../bindings/binding_utils.dart';
 import '../tool_result.dart';
 import '../tool_type.dart';
 import 'tool.dart';
@@ -14,6 +17,9 @@ import 'tool.dart';
 class ArrowTool implements Tool {
   final List<Point> _points = [];
   Point? _previewPoint;
+  PointBinding? _startBinding;
+  PointBinding? _endBinding;
+  Element? _bindTarget;
 
   @override
   ToolType get type => ToolType.arrow;
@@ -28,6 +34,7 @@ class ArrowTool implements Tool {
       {Offset? screenDelta}) {
     if (_points.isNotEmpty) {
       _previewPoint = point;
+      _bindTarget = BindingUtils.findBindTarget(context.scene, point);
     }
     return null;
   }
@@ -36,8 +43,36 @@ class ArrowTool implements Tool {
   @override
   ToolResult? onPointerUp(Point point, ToolContext context,
       {bool isDoubleClick = false}) {
-    _points.add(point);
+    // Check for binding at this point
+    final target = BindingUtils.findBindTarget(context.scene, point);
+    Point snappedPoint = point;
+
+    if (target != null) {
+      final fixedPoint = BindingUtils.computeFixedPoint(target, point);
+      final binding = PointBinding(
+        elementId: target.id.value,
+        fixedPoint: fixedPoint,
+      );
+      snappedPoint = BindingUtils.resolveBindingPoint(target, binding);
+
+      if (_points.isEmpty) {
+        // This will be the first point (start)
+        _startBinding = binding;
+      } else {
+        // This will be the last point (end) — updated on each click
+        _endBinding = binding;
+      }
+    } else {
+      if (_points.isEmpty) {
+        _startBinding = null;
+      } else {
+        _endBinding = null;
+      }
+    }
+
+    _points.add(snappedPoint);
     _previewPoint = null;
+    _bindTarget = null;
 
     if (isDoubleClick && _points.length >= 2) {
       return _finalize();
@@ -46,13 +81,14 @@ class ArrowTool implements Tool {
   }
 
   @override
-  ToolResult? onKeyEvent(String key, {bool shift = false, bool ctrl = false, ToolContext? context}) {
+  ToolResult? onKeyEvent(String key,
+      {bool shift = false, bool ctrl = false, ToolContext? context}) {
+    if ((key == 'Escape' || key == 'Enter') && _points.length >= 2) {
+      return _finalize();
+    }
     if (key == 'Escape') {
       reset();
       return null;
-    }
-    if (key == 'Enter' && _points.length >= 2) {
-      return _finalize();
     }
     return null;
   }
@@ -84,6 +120,8 @@ class ArrowTool implements Tool {
       height: maxY - minY,
       points: relativePoints,
       endArrowhead: Arrowhead.arrow,
+      startBinding: _startBinding,
+      endBinding: _endBinding,
     );
   }
 
@@ -94,12 +132,27 @@ class ArrowTool implements Tool {
     if (_previewPoint != null) {
       displayPoints.add(_previewPoint!);
     }
-    return ToolOverlay(creationPoints: displayPoints);
+    Bounds? targetBounds;
+    if (_bindTarget != null) {
+      targetBounds = Bounds.fromLTWH(
+        _bindTarget!.x,
+        _bindTarget!.y,
+        _bindTarget!.width,
+        _bindTarget!.height,
+      );
+    }
+    return ToolOverlay(
+      creationPoints: displayPoints,
+      bindTargetBounds: targetBounds,
+    );
   }
 
   @override
   void reset() {
     _points.clear();
     _previewPoint = null;
+    _startBinding = null;
+    _endBinding = null;
+    _bindTarget = null;
   }
 }
