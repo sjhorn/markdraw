@@ -212,8 +212,8 @@ markdraw/
 ### 1.4 File I/O
 - [x] Platform-agnostic file read/write abstraction (Interface Segregation)
 - [x] Desktop: native file picker & save dialog (via file_picker package)
-- [ ] Web: download blob / upload file input *(deferred)*
-- [ ] Mobile: share sheet integration *(deferred)*
+- [x] Web: download blob / upload file input (blob download for save, file_picker for open)
+- [x] Mobile: file picker integration for iOS/Android (FileType.any for custom UTI compatibility)
 - [x] **Tests**: Mock file system, verify read/write round-trip
 
 > **TDD checkpoint**: Can load an excalidraw file, convert to `.markdraw`, save, reload, and verify all elements match. ✅
