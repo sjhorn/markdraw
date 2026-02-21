@@ -36,6 +36,7 @@ import 'package:markdraw/src/editor/tools/arrow_tool.dart';
 import 'package:markdraw/src/editor/tools/line_tool.dart';
 import 'package:markdraw/src/editor/tools/select_tool.dart';
 import 'package:markdraw/src/editor/tools/tool.dart';
+import 'package:markdraw/src/editor/tool_shortcuts.dart';
 import 'package:markdraw/src/editor/tools/tool_factory.dart';
 import 'package:markdraw/src/rendering/interactive/interactive_canvas_painter.dart';
 import 'package:markdraw/src/rendering/interactive/selection_overlay.dart'
@@ -495,6 +496,18 @@ class _CanvasPageState extends State<_CanvasPage> {
         }
       }
       return;
+    }
+
+    // Tool shortcuts (no modifier keys held)
+    if (!ctrl && !shift) {
+      final label = key.keyLabel;
+      if (label.length == 1) {
+        final toolType = toolTypeForKey(label.toLowerCase());
+        if (toolType != null) {
+          _switchTool(toolType);
+          return;
+        }
+      }
     }
 
     String? keyName;
