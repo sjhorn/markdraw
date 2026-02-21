@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 
 import '../../core/elements/arrow_element.dart';
 import '../../core/math/point.dart';

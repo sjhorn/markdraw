@@ -1,10 +1,8 @@
-import 'dart:math' as math;
 
 import 'package:flutter/rendering.dart';
 
 import '../core/elements/arrow_element.dart';
 import '../core/elements/element.dart';
-import '../core/elements/line_element.dart';
 import '../core/elements/text_element.dart' as core show TextElement;
 import '../core/math/point.dart';
 import '../core/scene/scene.dart';

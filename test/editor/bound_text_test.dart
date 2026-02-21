@@ -8,7 +8,6 @@ import 'package:markdraw/src/core/math/point.dart';
 import 'package:markdraw/src/core/scene/scene.dart';
 import 'package:markdraw/src/editor/tool_result.dart';
 import 'package:markdraw/src/editor/tools/select_tool.dart';
-import 'package:markdraw/src/editor/tools/tool.dart';
 import 'package:markdraw/src/rendering/viewport_state.dart';
 
 /// Apply a ToolResult to a scene, returning the new scene.

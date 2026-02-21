@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:markdraw/src/core/elements/arrow_element.dart';
 import 'package:markdraw/src/core/elements/diamond_element.dart';
-import 'package:markdraw/src/core/elements/element.dart';
 import 'package:markdraw/src/core/elements/element_id.dart';
 import 'package:markdraw/src/core/elements/ellipse_element.dart';
 import 'package:markdraw/src/core/elements/freedraw_element.dart';

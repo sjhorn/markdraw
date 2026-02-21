@@ -32,6 +32,8 @@ import 'package:markdraw/src/core/elements/text_element.dart'
 import 'package:markdraw/src/core/elements/text_element.dart'
     as core show TextAlign;
 import 'package:markdraw/src/core/math/point.dart';
+import 'package:markdraw/src/editor/bindings/arrow_label_utils.dart';
+import 'package:markdraw/src/editor/bindings/bound_text_utils.dart';
 import 'package:markdraw/src/editor/editor_state.dart';
 import 'package:markdraw/src/editor/tool_result.dart';
 import 'package:markdraw/src/editor/tool_type.dart';
@@ -45,6 +47,7 @@ import 'package:markdraw/src/core/elements/stroke_style.dart';
 import 'package:markdraw/src/editor/property_panel_state.dart';
 import 'package:markdraw/src/editor/tool_shortcuts.dart';
 import 'package:markdraw/src/editor/tools/tool_factory.dart';
+import 'package:markdraw/src/rendering/text_renderer.dart';
 import 'package:markdraw/src/rendering/interactive/interactive_canvas_painter.dart';
 import 'package:markdraw/src/rendering/interactive/selection_overlay.dart'
     as markdraw;
@@ -96,6 +99,10 @@ class _CanvasPageState extends State<_CanvasPage> {
   ElementId? _editingTextElementId;
   final _textEditingController = TextEditingController();
   final _textFocusNode = FocusNode();
+
+  // Track whether we're editing an existing element vs a newly created one
+  bool _isEditingExisting = false;
+  String? _originalText;
 
   @override
   void initState() {
@@ -149,6 +156,7 @@ class _CanvasPageState extends State<_CanvasPage> {
     });
   }
 
+  /// Start editing a NEW text element (just created by TextTool).
   void _startTextEditing(EditorState state) {
     if (state.selectedIds.length != 1) return;
     final id = state.selectedIds.first;
@@ -156,8 +164,123 @@ class _CanvasPageState extends State<_CanvasPage> {
     if (element == null || element.type != 'text') return;
 
     _editingTextElementId = id;
+    _isEditingExisting = false;
+    _originalText = null;
     _textEditingController.text = '';
-    // Schedule focus request after the frame so the TextField is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _textFocusNode.requestFocus();
+    });
+  }
+
+  /// Start editing an EXISTING text element on double-click.
+  void _startTextEditingExisting(TextElement element) {
+    _historyManager.push(_editorState.scene);
+    _editingTextElementId = element.id;
+    _isEditingExisting = true;
+    _originalText = element.text;
+    _textEditingController.text = element.text;
+    _textEditingController.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: element.text.length,
+    );
+    setState(() {
+      _editorState = _editorState.applyResult(
+          SetSelectionResult({element.id}));
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _textFocusNode.requestFocus();
+    });
+  }
+
+  /// Double-click a container shape: create or edit bound text.
+  void _startBoundTextEditing(Element shape) {
+    _historyManager.push(_editorState.scene);
+    final existing = _editorState.scene.findBoundText(shape.id);
+    if (existing != null) {
+      // Edit existing bound text
+      _editingTextElementId = existing.id;
+      _isEditingExisting = true;
+      _originalText = existing.text;
+      _textEditingController.text = existing.text;
+      _textEditingController.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: existing.text.length,
+      );
+    } else {
+      // Create new bound text
+      final newTextId = ElementId.generate();
+      final textElem = TextElement(
+        id: newTextId,
+        x: shape.x,
+        y: shape.y,
+        width: shape.width,
+        height: shape.height,
+        text: '',
+        containerId: shape.id.value,
+      );
+      setState(() {
+        _editorState = _editorState.applyResult(AddElementResult(textElem));
+        // Update parent's boundElements
+        final newBound = [
+          ...shape.boundElements,
+          BoundElement(id: newTextId.value, type: 'text'),
+        ];
+        _editorState = _editorState.applyResult(
+            UpdateElementResult(shape.copyWith(boundElements: newBound)));
+      });
+      _editingTextElementId = newTextId;
+      _isEditingExisting = false;
+      _originalText = null;
+      _textEditingController.text = '';
+    }
+    setState(() {});
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _textFocusNode.requestFocus();
+    });
+  }
+
+  /// Double-click an arrow: create or edit label.
+  void _startArrowLabelEditing(ArrowElement arrow) {
+    _historyManager.push(_editorState.scene);
+    final existing = _editorState.scene.findBoundText(arrow.id);
+    if (existing != null) {
+      // Edit existing label
+      _editingTextElementId = existing.id;
+      _isEditingExisting = true;
+      _originalText = existing.text;
+      _textEditingController.text = existing.text;
+      _textEditingController.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: existing.text.length,
+      );
+    } else {
+      // Create new label at arrow midpoint
+      final mid = ArrowLabelUtils.computeLabelPosition(arrow);
+      final newTextId = ElementId.generate();
+      final textElem = TextElement(
+        id: newTextId,
+        x: mid.x,
+        y: mid.y,
+        width: 100,
+        height: 24,
+        text: '',
+        containerId: arrow.id.value,
+      );
+      setState(() {
+        _editorState = _editorState.applyResult(AddElementResult(textElem));
+        final newBound = [
+          ...arrow.boundElements,
+          BoundElement(id: newTextId.value, type: 'text'),
+        ];
+        _editorState = _editorState.applyResult(
+            UpdateElementResult(arrow.copyWith(boundElements: newBound)));
+      });
+      _editingTextElementId = newTextId;
+      _isEditingExisting = false;
+      _originalText = null;
+      _textEditingController.text = '';
+    }
+    setState(() {});
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _textFocusNode.requestFocus();
     });
@@ -175,37 +298,87 @@ class _CanvasPageState extends State<_CanvasPage> {
 
     final text = _textEditingController.text.trim();
     setState(() {
-      _historyManager.push(_editorState.scene);
       if (text.isEmpty) {
-        // Remove empty text element
+        final element = _editorState.scene.getElementById(id);
+        // Empty text: remove element
         _editorState = _editorState.applyResult(RemoveElementResult(id));
+        // If it's bound text, also clean up parent's boundElements
+        if (element is TextElement && element.containerId != null) {
+          final parentId = ElementId(element.containerId!);
+          final parent = _editorState.scene.getElementById(parentId);
+          if (parent != null) {
+            final newBound = parent.boundElements
+                .where((b) => b.id != id.value)
+                .toList();
+            _editorState = _editorState.applyResult(
+                UpdateElementResult(parent.copyWith(boundElements: newBound)));
+          }
+        }
         _editorState = _editorState.applyResult(SetSelectionResult({}));
       } else {
-        // Update element with entered text
         final element = _editorState.scene.getElementById(id);
         if (element is TextElement) {
-          final updated = element.copyWithText(text: text).copyWith(
-            width: text.length * 10.0, // Approximate width
-            height: 24.0,
-          );
-          _editorState = _editorState.applyResult(UpdateElementResult(updated));
+          // Use TextRenderer.measure for proper sizing
+          final measured = element.copyWithText(text: text);
+          final isBound = element.containerId != null;
+          if (isBound) {
+            // Bound text: just update text, keep parent's dimensions
+            _editorState =
+                _editorState.applyResult(UpdateElementResult(measured));
+          } else {
+            // Standalone text: auto-resize
+            final (w, h) = TextRenderer.measure(measured);
+            final updated = measured.copyWith(
+              width: math.max(w + 4, 20.0),
+              height: math.max(h, element.fontSize * element.lineHeight),
+            );
+            _editorState =
+                _editorState.applyResult(UpdateElementResult(updated));
+          }
         }
       }
       _editingTextElementId = null;
+      _isEditingExisting = false;
+      _originalText = null;
       _textEditingController.clear();
     });
-    // Restore keyboard focus after text editing
     _keyboardFocusNode.requestFocus();
   }
 
   void _cancelTextEditing() {
     if (_editingTextElementId != null) {
       setState(() {
-        _historyManager.push(_editorState.scene);
-        _editorState = _editorState.applyResult(
-            RemoveElementResult(_editingTextElementId!));
-        _editorState = _editorState.applyResult(SetSelectionResult({}));
+        if (_isEditingExisting && _originalText != null) {
+          // Restore original text for existing elements
+          final element =
+              _editorState.scene.getElementById(_editingTextElementId!);
+          if (element is TextElement) {
+            _editorState = _editorState.applyResult(
+                UpdateElementResult(element.copyWithText(text: _originalText!)));
+          }
+        } else {
+          // Remove newly created element
+          final element =
+              _editorState.scene.getElementById(_editingTextElementId!);
+          _editorState = _editorState.applyResult(
+              RemoveElementResult(_editingTextElementId!));
+          // Clean up parent's boundElements if it was bound text
+          if (element is TextElement && element.containerId != null) {
+            final parentId = ElementId(element.containerId!);
+            final parent = _editorState.scene.getElementById(parentId);
+            if (parent != null) {
+              final newBound = parent.boundElements
+                  .where((b) => b.id != _editingTextElementId!.value)
+                  .toList();
+              _editorState = _editorState.applyResult(
+                  UpdateElementResult(parent.copyWith(boundElements: newBound)));
+            }
+          }
+          _editorState = _editorState.applyResult(SetSelectionResult({}));
+        }
         _editingTextElementId = null;
+        _isEditingExisting = false;
+        _originalText = null;
         _textEditingController.clear();
       });
     }
@@ -316,6 +489,22 @@ class _CanvasPageState extends State<_CanvasPage> {
                         } else {
                           _applyResult(
                               _activeTool.onPointerUp(point, _toolContext));
+                        }
+
+                        // Double-click dispatch for text editing
+                        if (isDoubleClick &&
+                            _activeTool is SelectTool &&
+                            _editingTextElementId == null) {
+                          final hit = _editorState.scene
+                              .getElementAtPoint(point);
+                          if (hit is TextElement) {
+                            _startTextEditingExisting(hit);
+                          } else if (hit != null &&
+                              BoundTextUtils.isTextContainer(hit)) {
+                            _startBoundTextEditing(hit);
+                          } else if (hit is ArrowElement) {
+                            _startArrowLabelEditing(hit);
+                          }
                         }
 
                         if (_sceneBeforeDrag != null &&
@@ -714,11 +903,22 @@ class _CanvasPageState extends State<_CanvasPage> {
 
     final text = _textEditingController.text;
     setState(() {
-      final updated = element.copyWithText(text: text).copyWith(
-        width: math.max(text.length * 10.0, 20.0),
-        height: element.fontSize * element.lineHeight,
-      );
-      _editorState = _editorState.applyResult(UpdateElementResult(updated));
+      final measured = element.copyWithText(text: text);
+      final isBound = element.containerId != null;
+      if (isBound) {
+        // Bound text: keep parent's dimensions, just update text
+        _editorState =
+            _editorState.applyResult(UpdateElementResult(measured));
+      } else {
+        // Standalone text: auto-resize using TextRenderer.measure
+        final (w, h) = TextRenderer.measure(measured);
+        final updated = measured.copyWith(
+          width: math.max(w + 4, 20.0),
+          height: math.max(h, element.fontSize * element.lineHeight),
+        );
+        _editorState =
+            _editorState.applyResult(UpdateElementResult(updated));
+      }
     });
   }
 
@@ -726,16 +926,40 @@ class _CanvasPageState extends State<_CanvasPage> {
     final element = _editorState.scene.getElementById(_editingTextElementId!);
     if (element == null) return const SizedBox.shrink();
 
-    final screenPos = _editorState.viewport
-        .sceneToScreen(Offset(element.x, element.y));
     final zoom = _editorState.viewport.zoom;
+    final textElem = element is TextElement ? element : null;
+    final fontSize = (textElem?.fontSize ?? 20.0) * zoom;
+    final fontFamily = textElem?.fontFamily ?? 'Virgil';
+    final lineHeight = textElem?.lineHeight ?? 1.25;
+    final textColor = _parseColor(element.strokeColor);
 
-    // Match the rendered text's font settings
-    final fontSize = (element is TextElement ? element.fontSize : 20.0) * zoom;
+    // For bound text, position at the parent shape's center
+    final double posX;
+    final double posY;
+    if (textElem != null && textElem.containerId != null) {
+      final parent = _editorState.scene
+          .getElementById(ElementId(textElem.containerId!));
+      if (parent != null) {
+        final parentScreen = _editorState.viewport
+            .sceneToScreen(Offset(parent.x, parent.y));
+        posX = parentScreen.dx;
+        posY = parentScreen.dy;
+      } else {
+        final screenPos = _editorState.viewport
+            .sceneToScreen(Offset(element.x, element.y));
+        posX = screenPos.dx;
+        posY = screenPos.dy;
+      }
+    } else {
+      final screenPos = _editorState.viewport
+          .sceneToScreen(Offset(element.x, element.y));
+      posX = screenPos.dx;
+      posY = screenPos.dy;
+    }
 
     return Positioned(
-      left: screenPos.dx,
-      top: screenPos.dy,
+      left: posX,
+      top: posY,
       child: IntrinsicWidth(
         child: EditableText(
           controller: _textEditingController,
@@ -743,9 +967,9 @@ class _CanvasPageState extends State<_CanvasPage> {
           autofocus: true,
           style: TextStyle(
             fontSize: fontSize,
-            fontFamily: 'Virgil',
-            color: Colors.black,
-            height: 1.25,
+            fontFamily: fontFamily,
+            color: textColor,
+            height: lineHeight,
           ),
           cursorColor: Colors.blue,
           backgroundCursorColor: Colors.grey,
