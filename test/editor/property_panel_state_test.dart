@@ -1,0 +1,447 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:markdraw/src/core/elements/element.dart';
+import 'package:markdraw/src/core/elements/element_id.dart';
+import 'package:markdraw/src/core/elements/fill_style.dart';
+import 'package:markdraw/src/core/elements/rectangle_element.dart';
+import 'package:markdraw/src/core/elements/roundness.dart';
+import 'package:markdraw/src/core/elements/stroke_style.dart';
+import 'package:markdraw/src/core/elements/text_element.dart';
+import 'package:markdraw/src/core/elements/ellipse_element.dart';
+import 'package:markdraw/src/editor/property_panel_state.dart';
+import 'package:markdraw/src/editor/tool_result.dart';
+
+void main() {
+  group('PropertyPanelState.fromElements', () {
+    test('empty list returns all-null style', () {
+      final style = PropertyPanelState.fromElements([]);
+      expect(style.strokeColor, isNull);
+      expect(style.backgroundColor, isNull);
+      expect(style.strokeWidth, isNull);
+      expect(style.strokeStyle, isNull);
+      expect(style.fillStyle, isNull);
+      expect(style.roughness, isNull);
+      expect(style.opacity, isNull);
+      expect(style.roundness, isNull);
+      expect(style.hasRoundness, isFalse);
+      expect(style.hasText, isFalse);
+      expect(style.fontSize, isNull);
+      expect(style.fontFamily, isNull);
+      expect(style.textAlign, isNull);
+    });
+
+    test('single element returns all properties', () {
+      final element = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        strokeColor: '#ff0000',
+        backgroundColor: '#00ff00',
+        strokeWidth: 4.0,
+        strokeStyle: StrokeStyle.dashed,
+        fillStyle: FillStyle.hachure,
+        roughness: 2.0,
+        opacity: 0.8,
+        roundness: const Roundness.adaptive(value: 5),
+      );
+
+      final style = PropertyPanelState.fromElements([element]);
+      expect(style.strokeColor, '#ff0000');
+      expect(style.backgroundColor, '#00ff00');
+      expect(style.strokeWidth, 4.0);
+      expect(style.strokeStyle, StrokeStyle.dashed);
+      expect(style.fillStyle, FillStyle.hachure);
+      expect(style.roughness, 2.0);
+      expect(style.opacity, 0.8);
+      expect(style.roundness, const Roundness.adaptive(value: 5));
+      expect(style.hasRoundness, isTrue);
+    });
+
+    test('matching elements return common values', () {
+      final e1 = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+        strokeColor: '#000000',
+        opacity: 0.5,
+      );
+      final e2 = RectangleElement(
+        id: const ElementId('r2'),
+        x: 50, y: 50, width: 200, height: 200,
+        strokeColor: '#000000',
+        opacity: 0.5,
+      );
+
+      final style = PropertyPanelState.fromElements([e1, e2]);
+      expect(style.strokeColor, '#000000');
+      expect(style.opacity, 0.5);
+    });
+
+    test('mixed strokeColor returns null', () {
+      final e1 = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+        strokeColor: '#ff0000',
+      );
+      final e2 = RectangleElement(
+        id: const ElementId('r2'),
+        x: 0, y: 0, width: 100, height: 100,
+        strokeColor: '#0000ff',
+      );
+
+      final style = PropertyPanelState.fromElements([e1, e2]);
+      expect(style.strokeColor, isNull);
+    });
+
+    test('mixed fillStyle returns null', () {
+      final e1 = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+        fillStyle: FillStyle.solid,
+      );
+      final e2 = RectangleElement(
+        id: const ElementId('r2'),
+        x: 0, y: 0, width: 100, height: 100,
+        fillStyle: FillStyle.hachure,
+      );
+
+      final style = PropertyPanelState.fromElements([e1, e2]);
+      expect(style.fillStyle, isNull);
+    });
+
+    test('includes text properties when TextElement present', () {
+      final textEl = TextElement(
+        id: const ElementId('t1'),
+        x: 0, y: 0, width: 100, height: 24,
+        text: 'Hello',
+        fontSize: 24.0,
+        fontFamily: 'Helvetica',
+        textAlign: TextAlign.center,
+      );
+
+      final style = PropertyPanelState.fromElements([textEl]);
+      expect(style.hasText, isTrue);
+      expect(style.fontSize, 24.0);
+      expect(style.fontFamily, 'Helvetica');
+      expect(style.textAlign, TextAlign.center);
+    });
+
+    test('text properties null when mixed text elements', () {
+      final t1 = TextElement(
+        id: const ElementId('t1'),
+        x: 0, y: 0, width: 100, height: 24,
+        text: 'Hello',
+        fontSize: 24.0,
+        fontFamily: 'Virgil',
+      );
+      final t2 = TextElement(
+        id: const ElementId('t2'),
+        x: 0, y: 0, width: 100, height: 24,
+        text: 'World',
+        fontSize: 16.0,
+        fontFamily: 'Helvetica',
+      );
+
+      final style = PropertyPanelState.fromElements([t1, t2]);
+      expect(style.hasText, isTrue);
+      expect(style.fontSize, isNull);
+      expect(style.fontFamily, isNull);
+    });
+
+    test('text properties null when no text elements', () {
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+      );
+
+      final style = PropertyPanelState.fromElements([rect]);
+      expect(style.hasText, isFalse);
+      expect(style.fontSize, isNull);
+      expect(style.fontFamily, isNull);
+      expect(style.textAlign, isNull);
+    });
+
+    test('mixed roundness: hasRoundness true, roundness null', () {
+      final e1 = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+        roundness: const Roundness.adaptive(value: 5),
+      );
+      final e2 = EllipseElement(
+        id: const ElementId('e1'),
+        x: 0, y: 0, width: 100, height: 100,
+        // no roundness
+      );
+
+      final style = PropertyPanelState.fromElements([e1, e2]);
+      expect(style.hasRoundness, isTrue);
+      expect(style.roundness, isNull);
+    });
+  });
+
+  group('PropertyPanelState.applyStyle', () {
+    test('produces UpdateElementResult with changed strokeColor', () {
+      final element = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+        strokeColor: '#000000',
+      );
+
+      final result = PropertyPanelState.applyStyle(
+        [element],
+        const ElementStyle(strokeColor: '#ff0000'),
+      );
+
+      expect(result, isA<UpdateElementResult>());
+      final updated = (result as UpdateElementResult).element;
+      expect(updated.strokeColor, '#ff0000');
+    });
+
+    test('produces UpdateElementResult with changed fillStyle', () {
+      final element = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+        fillStyle: FillStyle.solid,
+      );
+
+      final result = PropertyPanelState.applyStyle(
+        [element],
+        const ElementStyle(fillStyle: FillStyle.crossHatch),
+      );
+
+      final updated = (result as UpdateElementResult).element;
+      expect(updated.fillStyle, FillStyle.crossHatch);
+    });
+
+    test('produces UpdateElementResult with changed strokeWidth', () {
+      final element = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+        strokeWidth: 2.0,
+      );
+
+      final result = PropertyPanelState.applyStyle(
+        [element],
+        const ElementStyle(strokeWidth: 6.0),
+      );
+
+      final updated = (result as UpdateElementResult).element;
+      expect(updated.strokeWidth, 6.0);
+    });
+
+    test('produces UpdateElementResult with changed strokeStyle', () {
+      final element = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+        strokeStyle: StrokeStyle.solid,
+      );
+
+      final result = PropertyPanelState.applyStyle(
+        [element],
+        const ElementStyle(strokeStyle: StrokeStyle.dotted),
+      );
+
+      final updated = (result as UpdateElementResult).element;
+      expect(updated.strokeStyle, StrokeStyle.dotted);
+    });
+
+    test('produces UpdateElementResult with changed roughness', () {
+      final element = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+        roughness: 1.0,
+      );
+
+      final result = PropertyPanelState.applyStyle(
+        [element],
+        const ElementStyle(roughness: 2.5),
+      );
+
+      final updated = (result as UpdateElementResult).element;
+      expect(updated.roughness, 2.5);
+    });
+
+    test('produces UpdateElementResult with changed opacity', () {
+      final element = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+        opacity: 1.0,
+      );
+
+      final result = PropertyPanelState.applyStyle(
+        [element],
+        const ElementStyle(opacity: 0.5),
+      );
+
+      final updated = (result as UpdateElementResult).element;
+      expect(updated.opacity, 0.5);
+    });
+
+    test('produces UpdateElementResult for TextElement fontSize', () {
+      final element = TextElement(
+        id: const ElementId('t1'),
+        x: 0, y: 0, width: 100, height: 24,
+        text: 'Hello',
+        fontSize: 20.0,
+      );
+
+      final result = PropertyPanelState.applyStyle(
+        [element],
+        const ElementStyle(hasText: true, fontSize: 28.0),
+      );
+
+      final updated = (result as UpdateElementResult).element as TextElement;
+      expect(updated.fontSize, 28.0);
+      expect(updated.text, 'Hello'); // text preserved
+    });
+
+    test('produces CompoundResult for multiple elements', () {
+      final e1 = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+      );
+      final e2 = RectangleElement(
+        id: const ElementId('r2'),
+        x: 50, y: 50, width: 200, height: 200,
+      );
+
+      final result = PropertyPanelState.applyStyle(
+        [e1, e2],
+        const ElementStyle(strokeColor: '#ff0000'),
+      );
+
+      expect(result, isA<CompoundResult>());
+      final compound = result as CompoundResult;
+      expect(compound.results, hasLength(2));
+      expect(
+        (compound.results[0] as UpdateElementResult).element.strokeColor,
+        '#ff0000',
+      );
+      expect(
+        (compound.results[1] as UpdateElementResult).element.strokeColor,
+        '#ff0000',
+      );
+    });
+
+    test('skips null values (only applies non-null changes)', () {
+      final element = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+        strokeColor: '#000000',
+        backgroundColor: '#ffffff',
+        strokeWidth: 2.0,
+      );
+
+      // Only change strokeColor, leave others as-is
+      final result = PropertyPanelState.applyStyle(
+        [element],
+        const ElementStyle(strokeColor: '#ff0000'),
+      );
+
+      final updated = (result as UpdateElementResult).element;
+      expect(updated.strokeColor, '#ff0000');
+      expect(updated.backgroundColor, '#ffffff'); // unchanged
+      expect(updated.strokeWidth, 2.0); // unchanged
+    });
+
+    test('applyStyle on text element preserves text content', () {
+      final element = TextElement(
+        id: const ElementId('t1'),
+        x: 0, y: 0, width: 100, height: 24,
+        text: 'Important text',
+        fontSize: 20.0,
+        fontFamily: 'Virgil',
+      );
+
+      final result = PropertyPanelState.applyStyle(
+        [element],
+        const ElementStyle(strokeColor: '#ff0000'),
+      );
+
+      final updated = (result as UpdateElementResult).element as TextElement;
+      expect(updated.text, 'Important text');
+      expect(updated.fontSize, 20.0);
+      expect(updated.fontFamily, 'Virgil');
+      expect(updated.strokeColor, '#ff0000');
+    });
+
+    test('roundness on rectangle element', () {
+      final element = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+      );
+
+      final result = PropertyPanelState.applyStyle(
+        [element],
+        const ElementStyle(
+          roundness: Roundness.adaptive(value: 10),
+          hasRoundness: true,
+        ),
+      );
+
+      final updated = (result as UpdateElementResult).element;
+      expect(updated.roundness, const Roundness.adaptive(value: 10));
+    });
+
+    test('text fontFamily and textAlign via copyWithText', () {
+      final element = TextElement(
+        id: const ElementId('t1'),
+        x: 0, y: 0, width: 100, height: 24,
+        text: 'Hello',
+        fontFamily: 'Virgil',
+        textAlign: TextAlign.left,
+      );
+
+      final result = PropertyPanelState.applyStyle(
+        [element],
+        const ElementStyle(
+          hasText: true,
+          fontFamily: 'Cascadia',
+          textAlign: TextAlign.center,
+        ),
+      );
+
+      final updated = (result as UpdateElementResult).element as TextElement;
+      expect(updated.fontFamily, 'Cascadia');
+      expect(updated.textAlign, TextAlign.center);
+    });
+
+    test('mixed elements: text and non-text', () {
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+        strokeColor: '#000000',
+      );
+      final text = TextElement(
+        id: const ElementId('t1'),
+        x: 0, y: 0, width: 100, height: 24,
+        text: 'Hello',
+        strokeColor: '#000000',
+        fontSize: 20.0,
+      );
+
+      final result = PropertyPanelState.applyStyle(
+        [rect, text],
+        const ElementStyle(
+          strokeColor: '#ff0000',
+          hasText: true,
+          fontSize: 28.0,
+        ),
+      );
+
+      final compound = result as CompoundResult;
+      expect(compound.results, hasLength(2));
+
+      // Rectangle: strokeColor changed, no fontSize
+      final updatedRect = (compound.results[0] as UpdateElementResult).element;
+      expect(updatedRect.strokeColor, '#ff0000');
+
+      // TextElement: strokeColor changed + fontSize changed
+      final updatedText =
+          (compound.results[1] as UpdateElementResult).element as TextElement;
+      expect(updatedText.strokeColor, '#ff0000');
+      expect(updatedText.fontSize, 28.0);
+      expect(updatedText.text, 'Hello');
+    });
+  });
+}
