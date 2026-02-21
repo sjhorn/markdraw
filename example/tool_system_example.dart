@@ -13,9 +13,10 @@
 ///   cd example && flutter run tool_system_example.dart
 library;
 
-import 'dart:io';
+import 'dart:convert';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' hide Element, SelectionOverlay;
 import 'package:flutter/services.dart';
@@ -23,8 +24,14 @@ import 'package:flutter/services.dart';
 import 'dart:math' as math;
 
 import 'package:markdraw/src/core/history/history_manager.dart';
+import 'package:markdraw/src/core/io/document_format.dart';
 import 'package:markdraw/src/core/io/document_service.dart';
 import 'package:markdraw/src/core/io/scene_document_converter.dart';
+import 'package:markdraw/src/core/serialization/document_parser.dart';
+import 'package:markdraw/src/core/serialization/document_serializer.dart';
+import 'package:markdraw/src/core/serialization/excalidraw_json_codec.dart';
+
+import 'file_io_stub.dart' if (dart.library.io) 'file_io_native.dart';
 import 'package:markdraw/src/core/elements/arrow_element.dart';
 import 'package:markdraw/src/core/elements/diamond_element.dart';
 import 'package:markdraw/src/core/elements/element.dart';
@@ -116,9 +123,9 @@ class _CanvasPageState extends State<_CanvasPage> {
   @override
   void initState() {
     super.initState();
-    _documentService = DocumentService(
-      readFile: (path) => File(path).readAsString(),
-      writeFile: (path, content) => File(path).writeAsString(content),
+    _documentService = const DocumentService(
+      readFile: readStringFromFile,
+      writeFile: writeStringToFile,
     );
     _editorState = EditorState(
       scene: Scene(),
@@ -398,7 +405,7 @@ class _CanvasPageState extends State<_CanvasPage> {
   }
 
   Future<void> _saveFile() async {
-    if (_currentFilePath != null) {
+    if (!kIsWeb && _currentFilePath != null) {
       final doc =
           SceneDocumentConverter.sceneToDocument(_editorState.scene);
       await _documentService.save(doc, _currentFilePath!);
@@ -408,17 +415,27 @@ class _CanvasPageState extends State<_CanvasPage> {
   }
 
   Future<void> _saveFileAs() async {
-    final result = await FilePicker.platform.saveFile(
-      dialogTitle: 'Save drawing',
-      fileName: 'drawing.markdraw',
-      type: FileType.custom,
-      allowedExtensions: ['markdraw', 'excalidraw'],
-    );
-    if (result != null) {
-      _currentFilePath = result;
-      final doc =
-          SceneDocumentConverter.sceneToDocument(_editorState.scene);
-      await _documentService.save(doc, result);
+    final doc =
+        SceneDocumentConverter.sceneToDocument(_editorState.scene);
+    final content = DocumentSerializer.serialize(doc);
+
+    if (kIsWeb) {
+      await FilePicker.platform.saveFile(
+        dialogTitle: 'Save drawing',
+        fileName: 'drawing.markdraw',
+        bytes: Uint8List.fromList(utf8.encode(content)),
+      );
+    } else {
+      final result = await FilePicker.platform.saveFile(
+        dialogTitle: 'Save drawing',
+        fileName: 'drawing.markdraw',
+        type: FileType.custom,
+        allowedExtensions: ['markdraw', 'excalidraw'],
+      );
+      if (result != null) {
+        _currentFilePath = result;
+        await _documentService.save(doc, result);
+      }
     }
   }
 
@@ -427,20 +444,34 @@ class _CanvasPageState extends State<_CanvasPage> {
       dialogTitle: 'Open drawing',
       type: FileType.custom,
       allowedExtensions: ['markdraw', 'excalidraw', 'json'],
+      withData: kIsWeb,
     );
-    if (result != null && result.files.single.path != null) {
-      final path = result.files.single.path!;
-      final parseResult = await _documentService.load(path);
-      final scene = SceneDocumentConverter.documentToScene(parseResult.value);
-      _historyManager.clear();
-      setState(() {
-        _currentFilePath = path;
-        _editorState = _editorState.copyWith(
-          scene: scene,
-          selectedIds: {},
-        );
-      });
+    if (result == null) return;
+
+    final file = result.files.single;
+    final String content;
+    if (file.bytes != null) {
+      content = utf8.decode(file.bytes!);
+    } else if (file.path != null) {
+      content = await readStringFromFile(file.path!);
+    } else {
+      return;
     }
+
+    final format = DocumentService.detectFormat(file.name);
+    final parseResult = switch (format) {
+      DocumentFormat.markdraw => DocumentParser.parse(content),
+      DocumentFormat.excalidraw => ExcalidrawJsonCodec.parse(content),
+    };
+    final scene = SceneDocumentConverter.documentToScene(parseResult.value);
+    _historyManager.clear();
+    setState(() {
+      _currentFilePath = file.path;
+      _editorState = _editorState.copyWith(
+        scene: scene,
+        selectedIds: {},
+      );
+    });
   }
 
   ToolContext get _toolContext => ToolContext(
