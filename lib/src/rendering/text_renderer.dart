@@ -10,6 +10,21 @@ import '../core/elements/text_element.dart' as core;
 /// layout for readability. This mirrors how Excalidraw renders text
 /// (clean, not hand-drawn).
 class TextRenderer {
+  /// Measures the text in [element] and returns `(width, height)`.
+  ///
+  /// If [maxWidth] is provided, the text wraps within that width.
+  /// Returns `(0, 0)` for empty text.
+  static (double, double) measure(core.TextElement element,
+      {double? maxWidth}) {
+    if (element.text.isEmpty) return (0.0, 0.0);
+
+    final painter = buildTextPainter(element);
+    painter.layout(maxWidth: maxWidth ?? double.infinity);
+    final result = (painter.width, painter.height);
+    painter.dispose();
+    return result;
+  }
+
   /// Draws a [TextElement] onto [canvas] at the element's position.
   static void draw(ui.Canvas canvas, core.TextElement element) {
     if (element.text.isEmpty) return;

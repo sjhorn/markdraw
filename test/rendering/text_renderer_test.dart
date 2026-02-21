@@ -155,5 +155,30 @@ void main() {
         largePainter.dispose();
       });
     });
+
+    group('measure', () {
+      test('returns non-zero for text', () {
+        final element = _text(text: 'Hello');
+        final (w, h) = TextRenderer.measure(element);
+        expect(w, greaterThan(0));
+        expect(h, greaterThan(0));
+      });
+
+      test('with maxWidth wraps and increases height', () {
+        final element = _text(
+          text: 'This is a longer text that should wrap within narrow width',
+        );
+        final (_, hNoWrap) = TextRenderer.measure(element);
+        final (_, hWrapped) = TextRenderer.measure(element, maxWidth: 80);
+        expect(hWrapped, greaterThan(hNoWrap));
+      });
+
+      test('empty string returns zero', () {
+        final element = _text(text: '');
+        final (w, h) = TextRenderer.measure(element);
+        expect(w, 0.0);
+        expect(h, 0.0);
+      });
+    });
   });
 }

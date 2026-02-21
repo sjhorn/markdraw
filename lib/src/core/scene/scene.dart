@@ -1,5 +1,6 @@
 import '../elements/element.dart';
 import '../elements/element_id.dart';
+import '../elements/text_element.dart';
 import '../math/bounds.dart';
 import '../math/point.dart';
 
@@ -71,6 +72,18 @@ class Scene {
     return Scene._(updated);
   }
 
+  /// Returns the bound text element whose [containerId] matches [parentId],
+  /// or null if none exists.
+  TextElement? findBoundText(ElementId parentId) {
+    for (final e in _elements) {
+      if (e.isDeleted) continue;
+      if (e is TextElement && e.containerId == parentId.value) {
+        return e;
+      }
+    }
+    return null;
+  }
+
   /// Returns the bounding box that encloses all active (non-deleted) elements,
   /// or null if there are no active elements.
   Bounds? sceneBounds() {
@@ -85,11 +98,16 @@ class Scene {
 
   /// Returns the topmost active element whose bounding box contains [point],
   /// or null if no element is hit.
+  ///
+  /// Bound text elements (containerId != null) are skipped — hit the parent
+  /// shape instead.
   Element? getElementAtPoint(Point point) {
     final ordered = orderedElements.where((e) => !e.isDeleted).toList();
     // Iterate in reverse to find topmost (highest index) first.
     for (var i = ordered.length - 1; i >= 0; i--) {
       final e = ordered[i];
+      // Skip bound text — users interact with the parent shape
+      if (e is TextElement && e.containerId != null) continue;
       final bounds = Bounds.fromLTWH(e.x, e.y, e.width, e.height);
       if (bounds.containsPoint(point)) return e;
     }
