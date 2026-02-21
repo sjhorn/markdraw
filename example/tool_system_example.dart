@@ -933,33 +933,55 @@ class _CanvasPageState extends State<_CanvasPage> {
     final lineHeight = textElem?.lineHeight ?? 1.25;
     final textColor = _parseColor(element.strokeColor);
 
-    // For bound text, position at the parent shape's center
-    final double posX;
-    final double posY;
+    // For bound text, center the editor within the parent shape
     if (textElem != null && textElem.containerId != null) {
       final parent = _editorState.scene
           .getElementById(ElementId(textElem.containerId!));
       if (parent != null) {
-        final parentScreen = _editorState.viewport
+        final parentTopLeft = _editorState.viewport
             .sceneToScreen(Offset(parent.x, parent.y));
-        posX = parentScreen.dx;
-        posY = parentScreen.dy;
-      } else {
-        final screenPos = _editorState.viewport
-            .sceneToScreen(Offset(element.x, element.y));
-        posX = screenPos.dx;
-        posY = screenPos.dy;
+        final parentW = parent.width * zoom;
+        final parentH = parent.height * zoom;
+
+        return Positioned(
+          left: parentTopLeft.dx,
+          top: parentTopLeft.dy,
+          child: SizedBox(
+            width: parentW,
+            height: parentH,
+            child: Center(
+              child: IntrinsicWidth(
+                child: EditableText(
+                  controller: _textEditingController,
+                  focusNode: _textFocusNode,
+                  autofocus: true,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: fontSize,
+                    fontFamily: fontFamily,
+                    color: textColor,
+                    height: lineHeight,
+                  ),
+                  cursorColor: Colors.blue,
+                  backgroundCursorColor: Colors.grey,
+                  maxLines: null,
+                  onChanged: (_) => _onTextChanged(),
+                  onSubmitted: (_) => _commitTextEditing(),
+                ),
+              ),
+            ),
+          ),
+        );
       }
-    } else {
-      final screenPos = _editorState.viewport
-          .sceneToScreen(Offset(element.x, element.y));
-      posX = screenPos.dx;
-      posY = screenPos.dy;
     }
 
+    // Standalone text: position at element's top-left
+    final screenPos = _editorState.viewport
+        .sceneToScreen(Offset(element.x, element.y));
+
     return Positioned(
-      left: posX,
-      top: posY,
+      left: screenPos.dx,
+      top: screenPos.dy,
       child: IntrinsicWidth(
         child: EditableText(
           controller: _textEditingController,
