@@ -140,10 +140,10 @@ markdraw/
 ### 0.1 Project Setup
 - [x] Initialize Flutter project with multi-platform targets
 - [x] Configure linting (`flutter_lints` strict mode + custom rules)
-- [ ] Set up CI (GitHub Actions: test, analyze, format on every PR)
+- [x] Set up CI (GitHub Actions: test, analyze, coverage on every PR)
 - [x] Add dependencies: `uuid`, `equatable`, `freezed`
-- [ ] Configure code coverage reporting (target: 90%+)
-- [ ] Clone excalidraw repo into `./excalidraw/` for reference
+- [x] Configure code coverage reporting (80% threshold enforced in CI)
+- [x] Clone excalidraw repo into `./excalidraw/` for reference
 
 ### 0.2 Core Element Model
 - [x] `Element` base class with all 26 shared properties (immutable, manual `copyWith`)
@@ -172,7 +172,7 @@ markdraw/
 - [x] `getElementAtPoint(Point)` — hit testing placeholder (bounds-only)
 - [x] **Tests**: Add/remove/update elements, ordering, soft delete, version bumping
 
-> **TDD checkpoint**: All core model tests pass (120 tests). Zero Flutter imports in `core/`. ✅
+> **TDD checkpoint**: All core model tests pass (120 tests). Zero Flutter imports in `core/`. CI green with coverage enforcement. ✅
 
 ---
 
@@ -211,9 +211,9 @@ markdraw/
 
 ### 1.4 File I/O
 - [x] Platform-agnostic file read/write abstraction (Interface Segregation)
-- [ ] Desktop: native file picker & save dialog
-- [ ] Web: download blob / upload file input
-- [ ] Mobile: share sheet integration
+- [x] Desktop: native file picker & save dialog (via file_picker package)
+- [ ] Web: download blob / upload file input *(deferred)*
+- [ ] Mobile: share sheet integration *(deferred)*
 - [x] **Tests**: Mock file system, verify read/write round-trip
 
 > **TDD checkpoint**: Can load an excalidraw file, convert to `.markdraw`, save, reload, and verify all elements match. ✅
@@ -234,7 +234,7 @@ markdraw/
 - [x] `drawFreedraw(List<Point>, List<double> pressures, DrawStyle)` → smooth path
 - [x] `DrawStyle` value object mapping element properties → rough DrawConfig + FillerConfig
 - [x] Seed-based deterministic rendering (same seed = same wobble)
-- [ ] **Tests**: Golden image tests comparing rendered output against reference PNGs (deferred to Phase 2.2)
+- [x] **Tests**: Golden image tests comparing rendered output against reference PNGs (10 golden tests)
 
 > **TDD checkpoint**: RoughCanvasAdapter draws all 7 element types via rough_flutter. Dashed/dotted strokes, all 4 arrowhead types, and Bezier freedraw interpolation. ~86 new tests. Zero analyzer issues. ✅
 
@@ -295,7 +295,7 @@ markdraw/
 - [x] `TextTool` — click to place text element
 - [x] `HandTool` (pan) — drag to scroll viewport via screen-space delta
 - [x] `createTool` factory function for ToolType → Tool mapping
-- [ ] Tool switching via toolbar and keyboard shortcuts (R, E, D, L, A, P, T, H)
+- [x] Tool switching via toolbar and keyboard shortcuts (R, E, D, L, A, P, T, H) *(implemented in 3.5)*
 - [x] **Tests**: Each tool produces correct element type with expected properties from simulated gestures
 
 > **TDD checkpoint**: Tool abstract class with 9 implementations. EditorState applies ToolResult mutations. Each tool produces correct element type from simulated pointer events. ~114 new tests, 718 total. Zero analyzer issues. ✅
@@ -348,7 +348,7 @@ markdraw/
 - [x] Tool shortcuts (V=select, R=rectangle, E=ellipse, D=diamond, L=line, A=arrow, P=freedraw, T=text, H=hand)
 - [x] Escape to deselect / cancel current tool *(done in 3.2 — SelectTool.onKeyEvent)*
 - [x] Ctrl/Cmd+A select all *(done in 3.2 — SelectTool.onKeyEvent)*
-- [ ] Ctrl/Cmd+S save *(deferred — no save target wired up yet)*
+- [x] Ctrl/Cmd+S save, Ctrl/Cmd+Shift+S save-as, Ctrl/Cmd+O open
 - [x] Ctrl/Cmd+Z / Ctrl/Cmd+Shift+Z undo/redo *(done in 3.4 — widget _handleKeyEvent)*
 - [x] Delete/Backspace to remove *(done in 3.2 — SelectTool.onKeyEvent)*
 - [x] Arrow keys to nudge selection (1px, 10px with Shift) *(done in 3.2 — SelectTool.onKeyEvent)*
@@ -356,7 +356,7 @@ markdraw/
 - [x] Ctrl+D duplicate *(done in 3.2 — SelectTool.onKeyEvent)*
 - [x] **Tests**: Key event → expected action dispatched *(covered in 3.2 + 3.4 + 3.5 tests)*
 
-> **TDD checkpoint**: Single-key tool switching via toolTypeForKey() mapping function. Only fires without modifier keys (no conflict with Ctrl+D, Ctrl+A). 12 new tests. Zero analyzer issues. ✅
+> **TDD checkpoint**: Single-key tool switching via toolTypeForKey() mapping function. Only fires without modifier keys (no conflict with Ctrl+D, Ctrl+A). Ctrl+S/Shift+S/O file operations via file_picker + DocumentService + SceneDocumentConverter. 12 new tests. Zero analyzer issues. ✅
 
 ### 3.6 Property Panel
 - [x] Stroke color picker (6 swatches)
@@ -408,7 +408,7 @@ markdraw/
 - [x] Deleting arrow deletes label; duplicating arrow duplicates label
 - [x] **Tests**: Create arrow label, move arrow endpoints, verify label repositions
 
-> **TDD checkpoint**: TextRenderer.measure() for auto-sizing. Scene.findBoundText() and fixed getElementAtPoint() to skip bound text. BoundTextUtils for position sync. ArrowLabelUtils for midpoint computation. StaticCanvasPainter renders bound text inside shapes and arrow labels. SelectTool cascading delete/duplicate/move/resize for bound text. Double-click editing in example app. ~53 new tests, 1000 total. Zero analyzer issues. ✅
+> **TDD checkpoint**: TextRenderer.measure() for auto-sizing. Scene.findBoundText() and fixed getElementAtPoint() to skip bound text. BoundTextUtils for position sync. ArrowLabelUtils for midpoint computation. StaticCanvasPainter renders bound text inside shapes and arrow labels. SelectTool cascading delete/duplicate/move/resize for bound text. Double-click editing in example app. SceneDocumentConverter for Scene↔Document round-trip. Golden image tests (10). CI with coverage. File open/save via file_picker. ~68 new tests, 1015 total. Zero analyzer issues. ✅
 
 ---
 

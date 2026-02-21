@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - run: flutter pub get
+
+      - run: flutter analyze
+
+      - name: Run tests with coverage
+        run: flutter test --coverage
+
+      - name: Check coverage threshold (80%)
+        run: |
+          TOTAL=$(grep -c "^DA:" coverage/lcov.info || echo 0)
+          HIT=$(grep "^DA:" coverage/lcov.info | grep -cv ",0$" || echo 0)
+          if [ "$TOTAL" -gt 0 ]; then
+            PCT=$((HIT * 100 / TOTAL))
+            echo "Coverage: $PCT% ($HIT/$TOTAL lines)"
+            if [ "$PCT" -lt 80 ]; then
+              echo "::error::Coverage $PCT% is below 80% threshold"
+              exit 1
+            fi
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/lcov.info

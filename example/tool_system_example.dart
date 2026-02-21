@@ -6,12 +6,16 @@
 ///
 /// Supports resize via handles, rotation, point editing, multi-element
 /// transforms, keyboard shortcuts (delete, duplicate, copy/paste,
-/// nudge, select-all), and undo/redo (Ctrl+Z / Ctrl+Shift+Z).
+/// nudge, select-all), undo/redo (Ctrl+Z / Ctrl+Shift+Z),
+/// and file open/save (Ctrl+O / Ctrl+S / Ctrl+Shift+S).
 ///
 /// Usage:
 ///   cd example && flutter run tool_system_example.dart
 library;
 
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' hide Element, SelectionOverlay;
 import 'package:flutter/services.dart';
@@ -19,6 +23,8 @@ import 'package:flutter/services.dart';
 import 'dart:math' as math;
 
 import 'package:markdraw/src/core/history/history_manager.dart';
+import 'package:markdraw/src/core/io/document_service.dart';
+import 'package:markdraw/src/core/io/scene_document_converter.dart';
 import 'package:markdraw/src/core/elements/arrow_element.dart';
 import 'package:markdraw/src/core/elements/diamond_element.dart';
 import 'package:markdraw/src/core/elements/element.dart';
@@ -85,6 +91,8 @@ class _CanvasPageState extends State<_CanvasPage> {
   late Tool _activeTool;
   final _adapter = RoughCanvasAdapter();
   final _historyManager = HistoryManager();
+  late final DocumentService _documentService;
+  String? _currentFilePath;
 
   // Drag coalescing: capture scene before drag, push once on pointer up
   Scene? _sceneBeforeDrag;
@@ -108,6 +116,10 @@ class _CanvasPageState extends State<_CanvasPage> {
   @override
   void initState() {
     super.initState();
+    _documentService = DocumentService(
+      readFile: (path) => File(path).readAsString(),
+      writeFile: (path, content) => File(path).writeAsString(content),
+    );
     _editorState = EditorState(
       scene: Scene(),
       viewport: const ViewportState(),
@@ -381,6 +393,52 @@ class _CanvasPageState extends State<_CanvasPage> {
         _isEditingExisting = false;
         _originalText = null;
         _textEditingController.clear();
+      });
+    }
+  }
+
+  Future<void> _saveFile() async {
+    if (_currentFilePath != null) {
+      final doc =
+          SceneDocumentConverter.sceneToDocument(_editorState.scene);
+      await _documentService.save(doc, _currentFilePath!);
+    } else {
+      await _saveFileAs();
+    }
+  }
+
+  Future<void> _saveFileAs() async {
+    final result = await FilePicker.platform.saveFile(
+      dialogTitle: 'Save drawing',
+      fileName: 'drawing.markdraw',
+      type: FileType.custom,
+      allowedExtensions: ['markdraw', 'excalidraw'],
+    );
+    if (result != null) {
+      _currentFilePath = result;
+      final doc =
+          SceneDocumentConverter.sceneToDocument(_editorState.scene);
+      await _documentService.save(doc, result);
+    }
+  }
+
+  Future<void> _openFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      dialogTitle: 'Open drawing',
+      type: FileType.custom,
+      allowedExtensions: ['markdraw', 'excalidraw', 'json'],
+    );
+    if (result != null && result.files.single.path != null) {
+      final path = result.files.single.path!;
+      final parseResult = await _documentService.load(path);
+      final scene = SceneDocumentConverter.documentToScene(parseResult.value);
+      _historyManager.clear();
+      setState(() {
+        _currentFilePath = path;
+        _editorState = _editorState.copyWith(
+          scene: scene,
+          selectedIds: {},
+        );
       });
     }
   }
@@ -1047,6 +1105,20 @@ class _CanvasPageState extends State<_CanvasPage> {
           });
         }
       }
+      return;
+    }
+
+    // File shortcuts: Ctrl+S save, Ctrl+Shift+S save-as, Ctrl+O open
+    if (ctrl && key == LogicalKeyboardKey.keyS) {
+      if (shift) {
+        _saveFileAs();
+      } else {
+        _saveFile();
+      }
+      return;
+    }
+    if (ctrl && key == LogicalKeyboardKey.keyO) {
+      _openFile();
       return;
     }
 
