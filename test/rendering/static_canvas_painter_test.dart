@@ -601,6 +601,184 @@ void main() {
       expect(painter2.shouldRepaint(painter1), isTrue);
     });
 
+    test('bound text rendered inside rectangle without error', () {
+      final (recorder, canvas) = _makeCanvas();
+
+      var scene = Scene();
+      scene = scene.addElement(RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 200, height: 100,
+      ));
+      scene = scene.addElement(core.TextElement(
+        id: const ElementId('t1'),
+        x: 0, y: 0, width: 200, height: 100,
+        text: 'Label',
+        containerId: 'r1',
+      ));
+
+      final painter = StaticCanvasPainter(
+        scene: scene,
+        adapter: adapter,
+        viewport: const ViewportState(),
+      );
+
+      expect(
+        () {
+          painter.paint(canvas, const Size(800, 600));
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+      // Rectangle is rendered via adapter; bound text via TextRenderer
+      expect(adapter.calls, ['rectangle']);
+    });
+
+    test('bound text rendered inside ellipse without error', () {
+      final (recorder, canvas) = _makeCanvas();
+
+      var scene = Scene();
+      scene = scene.addElement(EllipseElement(
+        id: const ElementId('e1'),
+        x: 0, y: 0, width: 200, height: 100,
+      ));
+      scene = scene.addElement(core.TextElement(
+        id: const ElementId('t1'),
+        x: 0, y: 0, width: 200, height: 100,
+        text: 'Ellipse Label',
+        containerId: 'e1',
+      ));
+
+      final painter = StaticCanvasPainter(
+        scene: scene,
+        adapter: adapter,
+        viewport: const ViewportState(),
+      );
+
+      expect(
+        () {
+          painter.paint(canvas, const Size(800, 600));
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+      expect(adapter.calls, ['ellipse']);
+    });
+
+    test('bound text with empty string not rendered', () {
+      final (recorder, canvas) = _makeCanvas();
+
+      var scene = Scene();
+      scene = scene.addElement(RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 200, height: 100,
+      ));
+      scene = scene.addElement(core.TextElement(
+        id: const ElementId('t1'),
+        x: 0, y: 0, width: 200, height: 100,
+        text: '',
+        containerId: 'r1',
+      ));
+
+      final painter = StaticCanvasPainter(
+        scene: scene,
+        adapter: adapter,
+        viewport: const ViewportState(),
+      );
+
+      // Should paint normally without error
+      expect(
+        () {
+          painter.paint(canvas, const Size(800, 600));
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
+    test('bound text inherits parent rotation without error', () {
+      final (recorder, canvas) = _makeCanvas();
+
+      var scene = Scene();
+      scene = scene.addElement(RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 200, height: 100,
+        angle: 0.5,
+      ));
+      scene = scene.addElement(core.TextElement(
+        id: const ElementId('t1'),
+        x: 0, y: 0, width: 200, height: 100,
+        text: 'Rotated',
+        containerId: 'r1',
+      ));
+
+      final painter = StaticCanvasPainter(
+        scene: scene,
+        adapter: adapter,
+        viewport: const ViewportState(),
+      );
+
+      expect(
+        () {
+          painter.paint(canvas, const Size(800, 600));
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
+    test('arrow label rendered at midpoint without error', () {
+      final (recorder, canvas) = _makeCanvas();
+
+      var scene = Scene();
+      scene = scene.addElement(ArrowElement(
+        id: const ElementId('a1'),
+        x: 0, y: 0, width: 200, height: 0,
+        points: [const Point(0, 0), const Point(200, 0)],
+      ));
+      scene = scene.addElement(core.TextElement(
+        id: const ElementId('t1'),
+        x: 0, y: 0, width: 100, height: 20,
+        text: 'Arrow Label',
+        containerId: 'a1',
+      ));
+
+      final painter = StaticCanvasPainter(
+        scene: scene,
+        adapter: adapter,
+        viewport: const ViewportState(),
+      );
+
+      expect(
+        () {
+          painter.paint(canvas, const Size(800, 600));
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+      expect(adapter.calls, ['arrow']);
+    });
+
+    test('element with no bound text renders normally', () {
+      final (recorder, canvas) = _makeCanvas();
+
+      var scene = Scene();
+      scene = scene.addElement(RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 200, height: 100,
+      ));
+
+      final painter = StaticCanvasPainter(
+        scene: scene,
+        adapter: adapter,
+        viewport: const ViewportState(),
+      );
+
+      painter.paint(canvas, const Size(800, 600));
+      recorder.endRecording();
+
+      expect(adapter.calls, ['rectangle']);
+    });
+
     test('panned viewport culls elements no longer visible', () {
       final (recorder, canvas) = _makeCanvas();
 

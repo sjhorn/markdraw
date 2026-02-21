@@ -1,9 +1,16 @@
+import 'dart:math' as math;
+
 import 'package:flutter/rendering.dart';
 
+import '../core/elements/arrow_element.dart';
 import '../core/elements/element.dart';
+import '../core/elements/line_element.dart';
+import '../core/elements/text_element.dart' as core show TextElement;
+import '../core/math/point.dart';
 import '../core/scene/scene.dart';
 import 'element_renderer.dart';
 import 'rough/rough_adapter.dart';
+import 'text_renderer.dart';
 import 'viewport_culling.dart';
 import 'viewport_state.dart';
 
@@ -40,6 +47,7 @@ class StaticCanvasPainter extends CustomPainter {
     final visible = cullElements(scene.orderedElements, viewport, size);
     for (final element in visible) {
       ElementRenderer.render(canvas, element, adapter);
+      _renderBoundText(canvas, element);
     }
 
     // Render live creation preview on top
@@ -48,6 +56,92 @@ class StaticCanvasPainter extends CustomPainter {
     }
 
     canvas.restore();
+  }
+
+  /// Renders bound text inside a container shape or at an arrow's midpoint.
+  void _renderBoundText(Canvas canvas, Element element) {
+    final boundText = scene.findBoundText(element.id);
+    if (boundText == null || boundText.text.isEmpty) return;
+
+    if (element is ArrowElement) {
+      _renderArrowLabel(canvas, element, boundText);
+    } else {
+      _renderShapeLabel(canvas, element, boundText);
+    }
+  }
+
+  /// Renders bound text centered inside a container shape.
+  void _renderShapeLabel(
+      Canvas canvas, Element shape, core.TextElement textElem) {
+    final hasRotation = shape.angle != 0.0;
+    if (hasRotation) {
+      canvas.save();
+      final cx = shape.x + shape.width / 2;
+      final cy = shape.y + shape.height / 2;
+      canvas.translate(cx, cy);
+      canvas.rotate(shape.angle);
+      canvas.translate(-cx, -cy);
+    }
+
+    final maxWidth = shape.width * 0.9;
+    final painter = TextRenderer.buildTextPainter(textElem);
+    painter.layout(maxWidth: maxWidth);
+
+    // Center the text within the shape bounds
+    final textX = shape.x + (shape.width - painter.width) / 2;
+    final textY = shape.y + (shape.height - painter.height) / 2;
+    painter.paint(canvas, Offset(textX, textY));
+    painter.dispose();
+
+    if (hasRotation) {
+      canvas.restore();
+    }
+  }
+
+  /// Renders a label at the arrow's midpoint.
+  void _renderArrowLabel(
+      Canvas canvas, ArrowElement arrow, core.TextElement textElem) {
+    final mid = _computeArrowMidpoint(arrow);
+
+    final painter = TextRenderer.buildTextPainter(textElem);
+    painter.layout();
+
+    // Position above the midpoint
+    final textX = mid.x - painter.width / 2;
+    final textY = mid.y - painter.height - 4;
+    painter.paint(canvas, Offset(textX, textY));
+    painter.dispose();
+  }
+
+  /// Compute the midpoint along an arrow's polyline path.
+  static Point _computeArrowMidpoint(ArrowElement arrow) {
+    final pts = arrow.points
+        .map((p) => Point(p.x + arrow.x, p.y + arrow.y))
+        .toList();
+    if (pts.length < 2) {
+      return Point(arrow.x + arrow.width / 2, arrow.y + arrow.height / 2);
+    }
+
+    var totalLength = 0.0;
+    for (var i = 1; i < pts.length; i++) {
+      totalLength += pts[i - 1].distanceTo(pts[i]);
+    }
+
+    final halfLength = totalLength / 2;
+    var walked = 0.0;
+    for (var i = 1; i < pts.length; i++) {
+      final segLen = pts[i - 1].distanceTo(pts[i]);
+      if (walked + segLen >= halfLength) {
+        final remaining = halfLength - walked;
+        final t = segLen > 0 ? remaining / segLen : 0.0;
+        return Point(
+          pts[i - 1].x + (pts[i].x - pts[i - 1].x) * t,
+          pts[i - 1].y + (pts[i].y - pts[i - 1].y) * t,
+        );
+      }
+      walked += segLen;
+    }
+    return pts.last;
   }
 
   @override
