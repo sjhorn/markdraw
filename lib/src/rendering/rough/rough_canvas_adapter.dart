@@ -60,9 +60,15 @@ class RoughCanvasAdapter implements RoughAdapter {
     if (points.length < 2) return;
 
     final generator = style.toGenerator();
-    final roughPoints = points.map((p) => PointD(p.x, p.y)).toList();
-    final drawable = generator.linearPath(roughPoints);
-    _drawRough(canvas, drawable, style);
+    // Draw individual segments instead of linearPath, which always closes
+    // the path (draws a return line from last point to first point).
+    for (var i = 0; i < points.length - 1; i++) {
+      final drawable = generator.line(
+        points[i].x, points[i].y,
+        points[i + 1].x, points[i + 1].y,
+      );
+      _drawRough(canvas, drawable, style);
+    }
   }
 
   @override

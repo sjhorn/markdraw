@@ -46,12 +46,12 @@ class LineTool implements Tool {
 
   @override
   ToolResult? onKeyEvent(String key, {bool shift = false, bool ctrl = false, ToolContext? context}) {
+    if ((key == 'Escape' || key == 'Enter') && _points.length >= 2) {
+      return _finalize();
+    }
     if (key == 'Escape') {
       reset();
       return null;
-    }
-    if (key == 'Enter' && _points.length >= 2) {
-      return _finalize();
     }
     return null;
   }
