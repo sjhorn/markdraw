@@ -529,6 +529,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                           adapter: _adapter,
                           viewport: _editorState.viewport,
                           previewElement: _buildPreviewElement(toolOverlay),
+                          editingElementId: _editingTextElementId,
                         ),
                         foregroundPainter: InteractiveCanvasPainter(
                           viewport: _editorState.viewport,

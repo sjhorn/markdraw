@@ -3,6 +3,7 @@ import 'package:flutter/rendering.dart';
 
 import '../core/elements/arrow_element.dart';
 import '../core/elements/element.dart';
+import '../core/elements/element_id.dart';
 import '../core/elements/text_element.dart' as core show TextElement;
 import '../core/math/point.dart';
 import '../core/scene/scene.dart';
@@ -27,11 +28,16 @@ class StaticCanvasPainter extends CustomPainter {
   final ViewportState viewport;
   final Element? previewElement;
 
+  /// When set, the text element with this ID is not rendered — the editing
+  /// overlay is shown instead.
+  final ElementId? editingElementId;
+
   const StaticCanvasPainter({
     required this.scene,
     required this.adapter,
     required this.viewport,
     this.previewElement,
+    this.editingElementId,
   });
 
   @override
@@ -44,6 +50,12 @@ class StaticCanvasPainter extends CustomPainter {
 
     final visible = cullElements(scene.orderedElements, viewport, size);
     for (final element in visible) {
+      // Skip standalone text that is being edited
+      if (editingElementId != null &&
+          element.id == editingElementId &&
+          element is core.TextElement) {
+        continue;
+      }
       ElementRenderer.render(canvas, element, adapter);
       _renderBoundText(canvas, element);
     }
@@ -60,6 +72,8 @@ class StaticCanvasPainter extends CustomPainter {
   void _renderBoundText(Canvas canvas, Element element) {
     final boundText = scene.findBoundText(element.id);
     if (boundText == null || boundText.text.isEmpty) return;
+    // Skip bound text that is being edited
+    if (editingElementId != null && boundText.id == editingElementId) return;
 
     if (element is ArrowElement) {
       _renderArrowLabel(canvas, element, boundText);
