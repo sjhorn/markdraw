@@ -6,12 +6,14 @@ import '../../core/elements/element.dart';
 import '../../core/elements/element_id.dart';
 import '../../core/elements/freedraw_element.dart';
 import '../../core/elements/line_element.dart';
+import '../../core/elements/text_element.dart';
 import '../../core/math/bounds.dart';
 import '../../core/math/point.dart';
 import '../../core/scene/scene.dart';
 import '../../rendering/interactive/handle.dart';
 import '../../rendering/interactive/selection_overlay.dart';
 import '../bindings/binding_utils.dart';
+import '../bindings/bound_text_utils.dart';
 import '../tool_result.dart';
 import '../tool_type.dart';
 import 'tool.dart';
@@ -225,6 +227,8 @@ class SelectTool implements Tool {
       }
       updates.addAll(_buildBoundArrowUpdates(
           context.scene, movedElements, context.selectedIds));
+      updates.addAll(BoundTextUtils.updateBoundTextPositions(
+          context.scene, movedElements));
       return CompoundResult(updates);
     }
 
@@ -236,18 +240,27 @@ class SelectTool implements Tool {
     if (isSelected) {
       final arrowUpdates = _buildBoundArrowUpdates(
           context.scene, [moved], context.selectedIds);
-      if (arrowUpdates.isEmpty) {
+      final textUpdates = BoundTextUtils.updateBoundTextPositions(
+          context.scene, [moved]);
+      if (arrowUpdates.isEmpty && textUpdates.isEmpty) {
         return UpdateElementResult(moved);
       }
-      return CompoundResult([UpdateElementResult(moved), ...arrowUpdates]);
+      return CompoundResult([
+        UpdateElementResult(moved),
+        ...arrowUpdates,
+        ...textUpdates,
+      ]);
     }
     // Dragging an unselected element: select then move
     final arrowUpdates = _buildBoundArrowUpdates(
         context.scene, [moved], {hit.id});
+    final textUpdates = BoundTextUtils.updateBoundTextPositions(
+        context.scene, [moved]);
     return CompoundResult([
       SetSelectionResult({hit.id}),
       UpdateElementResult(moved),
       ...arrowUpdates,
+      ...textUpdates,
     ]);
   }
 
@@ -260,6 +273,8 @@ class SelectTool implements Tool {
 
     final selected = <ElementId>{};
     for (final e in context.scene.activeElements) {
+      // Skip bound text — users interact with the parent shape
+      if (e is TextElement && e.containerId != null) continue;
       final eBounds = Bounds.fromLTWH(e.x, e.y, e.width, e.height);
       if (marquee.containsPoint(eBounds.origin) &&
           marquee.containsPoint(
@@ -516,10 +531,16 @@ class SelectTool implements Tool {
 
     final arrowUpdates = _buildBoundArrowUpdates(
         context.scene, [resized], context.selectedIds);
-    if (arrowUpdates.isEmpty) {
+    final textUpdates = BoundTextUtils.updateBoundTextPositions(
+        context.scene, [resized]);
+    if (arrowUpdates.isEmpty && textUpdates.isEmpty) {
       return UpdateElementResult(resized);
     }
-    return CompoundResult([UpdateElementResult(resized), ...arrowUpdates]);
+    return CompoundResult([
+      UpdateElementResult(resized),
+      ...arrowUpdates,
+      ...textUpdates,
+    ]);
   }
 
   /// Returns the anchor point's offset from center as fractions of half-size.
@@ -586,6 +607,8 @@ class SelectTool implements Tool {
     }
     updates.addAll(_buildBoundArrowUpdates(
         context.scene, movedElements, context.selectedIds));
+    updates.addAll(BoundTextUtils.updateBoundTextPositions(
+        context.scene, movedElements));
     return CompoundResult(updates);
   }
 
@@ -623,10 +646,16 @@ class SelectTool implements Tool {
     final rotated = startElem.copyWith(angle: _startAngle + delta);
     final arrowUpdates = _buildBoundArrowUpdates(
         context.scene, [rotated], context.selectedIds);
-    if (arrowUpdates.isEmpty) {
+    final textUpdates = BoundTextUtils.updateBoundTextPositions(
+        context.scene, [rotated]);
+    if (arrowUpdates.isEmpty && textUpdates.isEmpty) {
       return UpdateElementResult(rotated);
     }
-    return CompoundResult([UpdateElementResult(rotated), ...arrowUpdates]);
+    return CompoundResult([
+      UpdateElementResult(rotated),
+      ...arrowUpdates,
+      ...textUpdates,
+    ]);
   }
 
   ToolResult _applyMultiRotation(double angleDelta, ToolContext context) {
@@ -653,6 +682,8 @@ class SelectTool implements Tool {
     }
     updates.addAll(_buildBoundArrowUpdates(
         context.scene, movedElements, context.selectedIds));
+    updates.addAll(BoundTextUtils.updateBoundTextPositions(
+        context.scene, movedElements));
     return CompoundResult(updates);
   }
 
@@ -788,9 +819,35 @@ class SelectTool implements Tool {
         for (final e in selectedElements) RemoveElementResult(e.id),
         SetSelectionResult({}),
       ];
-      // Clear bindings on arrows that were bound to deleted elements
       final deletedIds =
           selectedElements.map((e) => e.id).toSet();
+
+      // Cascade: delete bound text children, and clean parent boundElements
+      for (final elem in selectedElements) {
+        // If this is a container/arrow, delete its bound text
+        final boundText = context.scene.findBoundText(elem.id);
+        if (boundText != null && !deletedIds.contains(boundText.id)) {
+          results.add(RemoveElementResult(boundText.id));
+          deletedIds.add(boundText.id);
+        }
+
+        // If this is bound text, update parent's boundElements list
+        if (elem is TextElement && elem.containerId != null) {
+          final parentId = ElementId(elem.containerId!);
+          if (!deletedIds.contains(parentId)) {
+            final parent = context.scene.getElementById(parentId);
+            if (parent != null) {
+              final newBound = parent.boundElements
+                  .where((b) => b.id != elem.id.value)
+                  .toList();
+              results.add(UpdateElementResult(
+                  parent.copyWith(boundElements: newBound)));
+            }
+          }
+        }
+      }
+
+      // Clear bindings on arrows that were bound to deleted elements
       final seen = <ElementId>{};
       for (final elem in selectedElements) {
         final arrows = BindingUtils.findBoundArrows(context.scene, elem.id);
@@ -820,12 +877,15 @@ class SelectTool implements Tool {
     // Ctrl+D: Duplicate
     if (ctrl && (key == 'd' || key == 'D')) {
       if (selectedElements.isEmpty) return null;
-      return _duplicateElements(selectedElements);
+      return _duplicateElements(selectedElements, context: context);
     }
 
-    // Ctrl+A: Select all
+    // Ctrl+A: Select all (skip bound text)
     if (ctrl && (key == 'a' || key == 'A')) {
-      final allIds = context.scene.activeElements.map((e) => e.id).toSet();
+      final allIds = context.scene.activeElements
+          .where((e) => e is! TextElement || e.containerId == null)
+          .map((e) => e.id)
+          .toSet();
       return SetSelectionResult(allIds);
     }
 
@@ -838,7 +898,7 @@ class SelectTool implements Tool {
     // Ctrl+V: Paste
     if (ctrl && (key == 'v' || key == 'V')) {
       if (context.clipboard.isEmpty) return null;
-      return _pasteElements(context.clipboard);
+      return _pasteElements(context.clipboard, context: context);
     }
 
     // Ctrl+X: Cut
@@ -865,33 +925,86 @@ class SelectTool implements Tool {
     return null;
   }
 
-  ToolResult _duplicateElements(List<Element> elements) {
+  ToolResult _duplicateElements(List<Element> elements,
+      {ToolContext? context}) {
     final results = <ToolResult>[];
     final newIds = <ElementId>{};
+    // Map old ID → new ID for reconnecting bound text
+    final idMap = <String, ElementId>{};
     for (final e in elements) {
       final newId = ElementId.generate();
       newIds.add(newId);
+      idMap[e.id.value] = newId;
       results.add(AddElementResult(e.copyWith(
         id: newId,
         x: e.x + 10,
         y: e.y + 10,
       )));
     }
+    // Duplicate bound text for each element that has it
+    if (context != null) {
+      for (final e in elements) {
+        final boundText = context.scene.findBoundText(e.id);
+        if (boundText != null) {
+          final newTextId = ElementId.generate();
+          final newParentId = idMap[e.id.value]!;
+          results.add(AddElementResult(
+            boundText.copyWithText(containerId: newParentId.value).copyWith(
+              id: newTextId,
+              x: boundText.x + 10,
+              y: boundText.y + 10,
+            ),
+          ));
+          // Update the duplicated parent's boundElements
+          final parentResult = results.firstWhere(
+            (r) => r is AddElementResult &&
+                r.element.id == newParentId,
+          ) as AddElementResult;
+          final updatedBound = [
+            ...parentResult.element.boundElements,
+            BoundElement(id: newTextId.value, type: 'text'),
+          ];
+          results[results.indexOf(parentResult)] = AddElementResult(
+            parentResult.element.copyWith(boundElements: updatedBound),
+          );
+        }
+      }
+    }
     results.add(SetSelectionResult(newIds));
     return CompoundResult(results);
   }
 
-  ToolResult _pasteElements(List<Element> clipboard) {
+  ToolResult _pasteElements(List<Element> clipboard,
+      {ToolContext? context}) {
     final results = <ToolResult>[];
     final newIds = <ElementId>{};
+    final idMap = <String, ElementId>{};
     for (final e in clipboard) {
       final newId = ElementId.generate();
       newIds.add(newId);
+      idMap[e.id.value] = newId;
       results.add(AddElementResult(e.copyWith(
         id: newId,
         x: e.x + 10,
         y: e.y + 10,
       )));
+    }
+    // Also paste bound text for clipboard elements
+    if (context != null) {
+      for (final e in clipboard) {
+        final boundText = context.scene.findBoundText(e.id);
+        if (boundText != null) {
+          final newTextId = ElementId.generate();
+          final newParentId = idMap[e.id.value]!;
+          results.add(AddElementResult(
+            boundText.copyWithText(containerId: newParentId.value).copyWith(
+              id: newTextId,
+              x: boundText.x + 10,
+              y: boundText.y + 10,
+            ),
+          ));
+        }
+      }
     }
     results.add(SetSelectionResult(newIds));
     return CompoundResult(results);
@@ -908,6 +1021,8 @@ class SelectTool implements Tool {
     }
     results.addAll(_buildBoundArrowUpdates(
         context.scene, movedElements, context.selectedIds));
+    results.addAll(BoundTextUtils.updateBoundTextPositions(
+        context.scene, movedElements));
     if (results.length == 1) return results.first;
     return CompoundResult(results);
   }
