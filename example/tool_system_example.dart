@@ -426,11 +426,7 @@ class _CanvasPageState extends State<_CanvasPage> {
       final content = DocumentSerializer.serialize(doc);
 
       if (kIsWeb) {
-        await FilePicker.platform.saveFile(
-          dialogTitle: 'Save drawing',
-          fileName: 'drawing.markdraw',
-          bytes: Uint8List.fromList(utf8.encode(content)),
-        );
+        downloadFile('drawing.markdraw', content);
       } else {
         final result = await FilePicker.platform.saveFile(
           dialogTitle: 'Save drawing',
@@ -454,7 +450,7 @@ class _CanvasPageState extends State<_CanvasPage> {
         dialogTitle: 'Open drawing',
         type: FileType.custom,
         allowedExtensions: ['markdraw', 'excalidraw', 'json'],
-        withData: kIsWeb,
+        withData: true,
       );
       if (result == null) return;
 
@@ -462,7 +458,7 @@ class _CanvasPageState extends State<_CanvasPage> {
       final String content;
       if (file.bytes != null) {
         content = utf8.decode(file.bytes!);
-      } else if (file.path != null) {
+      } else if (!kIsWeb) {
         content = await readStringFromFile(file.path!);
       } else {
         return;
@@ -477,7 +473,7 @@ class _CanvasPageState extends State<_CanvasPage> {
           SceneDocumentConverter.documentToScene(parseResult.value);
       _historyManager.clear();
       setState(() {
-        _currentFilePath = file.path;
+        _currentFilePath = kIsWeb ? null : file.path;
         _editorState = _editorState.copyWith(
           scene: scene,
           selectedIds: {},
