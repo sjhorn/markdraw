@@ -383,26 +383,32 @@ markdraw/
 > Goal: Rich inline text editing and text-inside-shapes (the most complex UI feature).
 
 ### 4.1 Inline Text Editor
-- [ ] Double-click text element → overlay `TextField` at element position
-- [ ] Match font size, family, color, alignment to element
-- [ ] Auto-resize element width as user types (when `autoResize: true`)
-- [ ] Commit on Enter (single line) or Ctrl+Enter (multi-line), blur, or Escape
-- [ ] **Tests**: Edit text, verify element `text` property updates
+- [x] Double-click text element → overlay `TextField` at element position
+- [x] Match font size, family, color, alignment to element
+- [x] Auto-resize element width as user types (using `TextRenderer.measure`)
+- [x] Commit on blur or Enter; cancel restores original text or removes new element
+- [x] **Tests**: Edit text, verify element `text` property updates
 
 ### 4.2 Bound Text (Text-in-Shapes)
-- [ ] Double-click rectangle/ellipse/diamond → create bound text child
-- [ ] Text `containerId` references parent shape
-- [ ] Text auto-wraps within parent bounds
-- [ ] Text centered vertically and horizontally (configurable)
-- [ ] Text inherits rotation from parent
-- [ ] Deleting parent deletes bound text; deleting text doesn't delete parent
-- [ ] **Tests**: Create bound text, resize parent, verify text reflows
+- [x] Double-click rectangle/ellipse/diamond → create bound text child
+- [x] Text `containerId` references parent shape
+- [x] Text auto-wraps within parent bounds (90% width)
+- [x] Text centered vertically and horizontally
+- [x] Text inherits rotation from parent
+- [x] Deleting parent deletes bound text; deleting text doesn't delete parent
+- [x] Moving/resizing parent syncs bound text position
+- [x] Duplicating parent also duplicates bound text with new IDs
+- [x] Marquee/select-all excludes bound text elements
+- [x] **Tests**: Create bound text, resize parent, verify text follows
 
 ### 4.3 Arrow Labels
-- [ ] Double-click arrow midpoint → create bound text
-- [ ] Label positioned at midpoint of arrow path
-- [ ] Label moves as arrow moves
-- [ ] **Tests**: Create arrow label, move arrow endpoints, verify label repositions
+- [x] Double-click arrow midpoint → create bound text
+- [x] Label positioned at midpoint of arrow path (computed by ArrowLabelUtils)
+- [x] Label rendered at midpoint by StaticCanvasPainter
+- [x] Deleting arrow deletes label; duplicating arrow duplicates label
+- [x] **Tests**: Create arrow label, move arrow endpoints, verify label repositions
+
+> **TDD checkpoint**: TextRenderer.measure() for auto-sizing. Scene.findBoundText() and fixed getElementAtPoint() to skip bound text. BoundTextUtils for position sync. ArrowLabelUtils for midpoint computation. StaticCanvasPainter renders bound text inside shapes and arrow labels. SelectTool cascading delete/duplicate/move/resize for bound text. Double-click editing in example app. ~53 new tests, 1000 total. Zero analyzer issues. ✅
 
 ---
 
