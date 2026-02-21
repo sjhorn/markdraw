@@ -155,6 +155,7 @@ class _CanvasPageState extends State<_CanvasPage> {
       _editorState = _editorState.copyWith(activeToolType: type);
       _cancelTextEditing();
     });
+    _keyboardFocusNode.requestFocus();
   }
 
   void _applyResult(ToolResult? result) {
@@ -504,26 +505,47 @@ class _CanvasPageState extends State<_CanvasPage> {
       marqueeRect = Rect.fromLTWH(b.left, b.top, b.size.width, b.size.height);
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Tool System Example'),
-        actions: [
-          for (final type in ToolType.values)
-            IconButton(
-              icon: Icon(_iconFor(type)),
-              color: _editorState.activeToolType == type
-                  ? Colors.blue
-                  : null,
-              onPressed: () => _switchTool(type),
-              tooltip: type.name,
-            ),
-        ],
-      ),
-      body: KeyboardListener(
+    return CallbackShortcuts(
+      bindings: _shortcutBindings,
+      child: Focus(
         focusNode: _keyboardFocusNode,
         autofocus: true,
-        onKeyEvent: _handleKeyEvent,
-        child: Row(
+        onKeyEvent: (_, event) {
+          _handleKeyEvent(event);
+          return KeyEventResult.ignored;
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Markdraw'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.folder_open),
+                onPressed: _openFile,
+                tooltip: 'Open (Ctrl+O)',
+              ),
+              IconButton(
+                icon: const Icon(Icons.save),
+                onPressed: _saveFile,
+                tooltip: 'Save (Ctrl+S)',
+              ),
+              IconButton(
+                icon: const Icon(Icons.save_as),
+                onPressed: _saveFileAs,
+                tooltip: 'Save As (Ctrl+Shift+S)',
+              ),
+              const VerticalDivider(width: 16, indent: 12, endIndent: 12),
+              for (final type in ToolType.values)
+                IconButton(
+                  icon: Icon(_iconFor(type)),
+                  color: _editorState.activeToolType == type
+                      ? Colors.blue
+                      : null,
+                  onPressed: () => _switchTool(type),
+                  tooltip: type.name,
+                ),
+            ],
+          ),
+          body: Row(
           children: [
             Expanded(
               child: MouseRegion(
@@ -537,6 +559,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                         setState(() {});
                       },
                       onPointerDown: (event) {
+                        _keyboardFocusNode.requestFocus();
                         if (_editingTextElementId != null) {
                           _commitTextEditing();
                         }
@@ -640,9 +663,62 @@ class _CanvasPageState extends State<_CanvasPage> {
               _buildPropertyPanel(),
           ],
         ),
+        ),
       ),
     );
   }
+
+  /// Shortcut bindings for system-level shortcuts (Cmd+S, Cmd+O, etc.)
+  /// that macOS intercepts before KeyEvent reaches Flutter.
+  Map<ShortcutActivator, VoidCallback> get _shortcutBindings => {
+        const SingleActivator(LogicalKeyboardKey.keyS, meta: true):
+            _saveFile,
+        const SingleActivator(LogicalKeyboardKey.keyS, meta: true,
+            shift: true): _saveFileAs,
+        const SingleActivator(LogicalKeyboardKey.keyO, meta: true):
+            _openFile,
+        const SingleActivator(LogicalKeyboardKey.keyZ, meta: true): () {
+          final undone = _historyManager.undo(_editorState.scene);
+          if (undone != null) {
+            setState(() {
+              _editorState = _editorState.copyWith(scene: undone);
+            });
+          }
+        },
+        const SingleActivator(LogicalKeyboardKey.keyZ, meta: true,
+            shift: true): () {
+          final redone = _historyManager.redo(_editorState.scene);
+          if (redone != null) {
+            setState(() {
+              _editorState = _editorState.copyWith(scene: redone);
+            });
+          }
+        },
+        // Ctrl variants for non-macOS platforms
+        const SingleActivator(LogicalKeyboardKey.keyS, control: true):
+            _saveFile,
+        const SingleActivator(LogicalKeyboardKey.keyS, control: true,
+            shift: true): _saveFileAs,
+        const SingleActivator(LogicalKeyboardKey.keyO, control: true):
+            _openFile,
+        const SingleActivator(LogicalKeyboardKey.keyZ, control: true): () {
+          final undone = _historyManager.undo(_editorState.scene);
+          if (undone != null) {
+            setState(() {
+              _editorState = _editorState.copyWith(scene: undone);
+            });
+          }
+        },
+        const SingleActivator(LogicalKeyboardKey.keyZ, control: true,
+            shift: true): () {
+          final redone = _historyManager.redo(_editorState.scene);
+          if (redone != null) {
+            setState(() {
+              _editorState = _editorState.copyWith(scene: redone);
+            });
+          }
+        },
+      };
 
   List<Element> get _selectedElements {
     return _editorState.selectedIds
