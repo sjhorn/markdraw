@@ -346,13 +346,15 @@ markdraw/
 
 ### 3.5 Keyboard Shortcuts
 - [ ] Tool shortcuts (R, E, D, L, A, P, T, H, V for select)
-- [ ] Escape to deselect / cancel current tool
-- [ ] Ctrl/Cmd+A select all
+- [x] Escape to deselect / cancel current tool *(done in 3.2 — SelectTool.onKeyEvent)*
+- [x] Ctrl/Cmd+A select all *(done in 3.2 — SelectTool.onKeyEvent)*
 - [ ] Ctrl/Cmd+S save
-- [ ] Ctrl/Cmd+Z / Ctrl/Cmd+Shift+Z undo/redo
-- [ ] Delete/Backspace to remove
-- [ ] Arrow keys to nudge selection (1px, 10px with Shift)
-- [ ] **Tests**: Key event → expected action dispatched
+- [x] Ctrl/Cmd+Z / Ctrl/Cmd+Shift+Z undo/redo *(done in 3.4 — widget _handleKeyEvent)*
+- [x] Delete/Backspace to remove *(done in 3.2 — SelectTool.onKeyEvent)*
+- [x] Arrow keys to nudge selection (1px, 10px with Shift) *(done in 3.2 — SelectTool.onKeyEvent)*
+- [x] Ctrl+C copy / Ctrl+V paste / Ctrl+X cut *(done in 3.2 — SelectTool.onKeyEvent)*
+- [x] Ctrl+D duplicate *(done in 3.2 — SelectTool.onKeyEvent)*
+- [x] **Tests**: Key event → expected action dispatched *(covered in 3.2 + 3.4 tests)*
 
 ### 3.6 Property Panel
 - [ ] Stroke color picker
