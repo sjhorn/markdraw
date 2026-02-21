@@ -406,73 +406,86 @@ class _CanvasPageState extends State<_CanvasPage> {
   }
 
   Future<void> _saveFile() async {
-    if (!kIsWeb && _currentFilePath != null) {
-      final doc =
-          SceneDocumentConverter.sceneToDocument(_editorState.scene);
-      await _documentService.save(doc, _currentFilePath!);
-    } else {
-      await _saveFileAs();
+    try {
+      if (!kIsWeb && _currentFilePath != null) {
+        final doc =
+            SceneDocumentConverter.sceneToDocument(_editorState.scene);
+        await _documentService.save(doc, _currentFilePath!);
+      } else {
+        await _saveFileAs();
+      }
+    } catch (e) {
+      debugPrint('Save error: $e');
     }
   }
 
   Future<void> _saveFileAs() async {
-    final doc =
-        SceneDocumentConverter.sceneToDocument(_editorState.scene);
-    final content = DocumentSerializer.serialize(doc);
+    try {
+      final doc =
+          SceneDocumentConverter.sceneToDocument(_editorState.scene);
+      final content = DocumentSerializer.serialize(doc);
 
-    if (kIsWeb) {
-      await FilePicker.platform.saveFile(
-        dialogTitle: 'Save drawing',
-        fileName: 'drawing.markdraw',
-        bytes: Uint8List.fromList(utf8.encode(content)),
-      );
-    } else {
-      final result = await FilePicker.platform.saveFile(
-        dialogTitle: 'Save drawing',
-        fileName: 'drawing.markdraw',
-        type: FileType.custom,
-        allowedExtensions: ['markdraw', 'excalidraw'],
-      );
-      if (result != null) {
-        _currentFilePath = result;
-        await _documentService.save(doc, result);
+      if (kIsWeb) {
+        await FilePicker.platform.saveFile(
+          dialogTitle: 'Save drawing',
+          fileName: 'drawing.markdraw',
+          bytes: Uint8List.fromList(utf8.encode(content)),
+        );
+      } else {
+        final result = await FilePicker.platform.saveFile(
+          dialogTitle: 'Save drawing',
+          fileName: 'drawing.markdraw',
+          type: FileType.custom,
+          allowedExtensions: ['markdraw', 'excalidraw'],
+        );
+        if (result != null) {
+          _currentFilePath = result;
+          await _documentService.save(doc, result);
+        }
       }
+    } catch (e) {
+      debugPrint('Save As error: $e');
     }
   }
 
   Future<void> _openFile() async {
-    final result = await FilePicker.platform.pickFiles(
-      dialogTitle: 'Open drawing',
-      type: FileType.custom,
-      allowedExtensions: ['markdraw', 'excalidraw', 'json'],
-      withData: kIsWeb,
-    );
-    if (result == null) return;
-
-    final file = result.files.single;
-    final String content;
-    if (file.bytes != null) {
-      content = utf8.decode(file.bytes!);
-    } else if (file.path != null) {
-      content = await readStringFromFile(file.path!);
-    } else {
-      return;
-    }
-
-    final format = DocumentService.detectFormat(file.name);
-    final parseResult = switch (format) {
-      DocumentFormat.markdraw => DocumentParser.parse(content),
-      DocumentFormat.excalidraw => ExcalidrawJsonCodec.parse(content),
-    };
-    final scene = SceneDocumentConverter.documentToScene(parseResult.value);
-    _historyManager.clear();
-    setState(() {
-      _currentFilePath = file.path;
-      _editorState = _editorState.copyWith(
-        scene: scene,
-        selectedIds: {},
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        dialogTitle: 'Open drawing',
+        type: FileType.custom,
+        allowedExtensions: ['markdraw', 'excalidraw', 'json'],
+        withData: kIsWeb,
       );
-    });
+      if (result == null) return;
+
+      final file = result.files.single;
+      final String content;
+      if (file.bytes != null) {
+        content = utf8.decode(file.bytes!);
+      } else if (file.path != null) {
+        content = await readStringFromFile(file.path!);
+      } else {
+        return;
+      }
+
+      final format = DocumentService.detectFormat(file.name);
+      final parseResult = switch (format) {
+        DocumentFormat.markdraw => DocumentParser.parse(content),
+        DocumentFormat.excalidraw => ExcalidrawJsonCodec.parse(content),
+      };
+      final scene =
+          SceneDocumentConverter.documentToScene(parseResult.value);
+      _historyManager.clear();
+      setState(() {
+        _currentFilePath = file.path;
+        _editorState = _editorState.copyWith(
+          scene: scene,
+          selectedIds: {},
+        );
+      });
+    } catch (e) {
+      debugPrint('Open error: $e');
+    }
   }
 
   ToolContext get _toolContext => ToolContext(
