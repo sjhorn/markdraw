@@ -27,7 +27,10 @@ import 'package:markdraw/src/core/elements/ellipse_element.dart';
 import 'package:markdraw/src/core/elements/freedraw_element.dart';
 import 'package:markdraw/src/core/elements/line_element.dart';
 import 'package:markdraw/src/core/elements/rectangle_element.dart';
-import 'package:markdraw/src/core/elements/text_element.dart';
+import 'package:markdraw/src/core/elements/text_element.dart'
+    hide TextAlign;
+import 'package:markdraw/src/core/elements/text_element.dart'
+    as core show TextAlign;
 import 'package:markdraw/src/core/math/point.dart';
 import 'package:markdraw/src/editor/editor_state.dart';
 import 'package:markdraw/src/editor/tool_result.dart';
@@ -36,6 +39,10 @@ import 'package:markdraw/src/editor/tools/arrow_tool.dart';
 import 'package:markdraw/src/editor/tools/line_tool.dart';
 import 'package:markdraw/src/editor/tools/select_tool.dart';
 import 'package:markdraw/src/editor/tools/tool.dart';
+import 'package:markdraw/src/core/elements/fill_style.dart';
+import 'package:markdraw/src/core/elements/roundness.dart';
+import 'package:markdraw/src/core/elements/stroke_style.dart';
+import 'package:markdraw/src/editor/property_panel_state.dart';
 import 'package:markdraw/src/editor/tool_shortcuts.dart';
 import 'package:markdraw/src/editor/tools/tool_factory.dart';
 import 'package:markdraw/src/rendering/interactive/interactive_canvas_painter.dart';
@@ -253,100 +260,381 @@ class _CanvasPageState extends State<_CanvasPage> {
         focusNode: _keyboardFocusNode,
         autofocus: true,
         onKeyEvent: _handleKeyEvent,
-        child: MouseRegion(
-          cursor: _cursorForTool,
-          child: Stack(
-            children: [
-              Listener(
-                onPointerHover: (event) {
-                  // Fires when pointer moves without button pressed.
-                  // Needed for line/arrow tools to show preview between clicks.
-                  final point = _toScene(event.localPosition);
-                  _activeTool.onPointerMove(point, _toolContext);
-                  setState(() {}); // Refresh overlay
-                },
-                onPointerDown: (event) {
-                  // If editing text, commit before handling new pointer events
-                  if (_editingTextElementId != null) {
-                    _commitTextEditing();
-                  }
-                  // Capture scene before drag for coalesced undo
-                  _sceneBeforeDrag = _editorState.scene;
-                  final point = _toScene(event.localPosition);
-                  final shift = event.buttons == kSecondaryMouseButton;
-                  if (_activeTool is SelectTool) {
-                    _applyResult((_activeTool as SelectTool)
-                        .onPointerDown(point, _toolContext, shift: shift));
-                  } else {
-                    _applyResult(
-                        _activeTool.onPointerDown(point, _toolContext));
-                  }
-                },
-                onPointerMove: (event) {
-                  final point = _toScene(event.localPosition);
-                  final delta = event.delta;
-                  _applyResult(_activeTool.onPointerMove(point, _toolContext,
-                      screenDelta: Offset(delta.dx, delta.dy)));
-                  setState(() {}); // Refresh overlay
-                },
-                onPointerUp: (event) {
-                  final point = _toScene(event.localPosition);
-                  final now = DateTime.now();
-                  final isDoubleClick = _lastPointerUpTime != null &&
-                      now.difference(_lastPointerUpTime!).inMilliseconds < 300;
-                  _lastPointerUpTime = now;
+        child: Row(
+          children: [
+            Expanded(
+              child: MouseRegion(
+                cursor: _cursorForTool,
+                child: Stack(
+                  children: [
+                    Listener(
+                      onPointerHover: (event) {
+                        final point = _toScene(event.localPosition);
+                        _activeTool.onPointerMove(point, _toolContext);
+                        setState(() {});
+                      },
+                      onPointerDown: (event) {
+                        if (_editingTextElementId != null) {
+                          _commitTextEditing();
+                        }
+                        _sceneBeforeDrag = _editorState.scene;
+                        final point = _toScene(event.localPosition);
+                        final shift = event.buttons == kSecondaryMouseButton;
+                        if (_activeTool is SelectTool) {
+                          _applyResult((_activeTool as SelectTool)
+                              .onPointerDown(point, _toolContext,
+                                  shift: shift));
+                        } else {
+                          _applyResult(
+                              _activeTool.onPointerDown(point, _toolContext));
+                        }
+                      },
+                      onPointerMove: (event) {
+                        final point = _toScene(event.localPosition);
+                        final delta = event.delta;
+                        _applyResult(_activeTool.onPointerMove(
+                            point, _toolContext,
+                            screenDelta: Offset(delta.dx, delta.dy)));
+                        setState(() {});
+                      },
+                      onPointerUp: (event) {
+                        final point = _toScene(event.localPosition);
+                        final now = DateTime.now();
+                        final isDoubleClick = _lastPointerUpTime != null &&
+                            now.difference(_lastPointerUpTime!).inMilliseconds <
+                                300;
+                        _lastPointerUpTime = now;
 
-                  if (_activeTool is LineTool) {
-                    _applyResult((_activeTool as LineTool)
-                        .onPointerUp(point, _toolContext,
-                            isDoubleClick: isDoubleClick));
-                  } else if (_activeTool is ArrowTool) {
-                    _applyResult((_activeTool as ArrowTool)
-                        .onPointerUp(point, _toolContext,
-                            isDoubleClick: isDoubleClick));
-                  } else {
-                    _applyResult(
-                        _activeTool.onPointerUp(point, _toolContext));
-                  }
+                        if (_activeTool is LineTool) {
+                          _applyResult((_activeTool as LineTool)
+                              .onPointerUp(point, _toolContext,
+                                  isDoubleClick: isDoubleClick));
+                        } else if (_activeTool is ArrowTool) {
+                          _applyResult((_activeTool as ArrowTool)
+                              .onPointerUp(point, _toolContext,
+                                  isDoubleClick: isDoubleClick));
+                        } else {
+                          _applyResult(
+                              _activeTool.onPointerUp(point, _toolContext));
+                        }
 
-                  // Push coalesced history if scene changed during drag
-                  if (_sceneBeforeDrag != null &&
-                      !identical(_editorState.scene, _sceneBeforeDrag)) {
-                    _historyManager.push(_sceneBeforeDrag!);
-                  }
-                  _sceneBeforeDrag = null;
-                },
-                onPointerSignal: (event) {
-                  if (event is PointerScrollEvent) {
-                    final factor = event.scrollDelta.dy < 0 ? 1.1 : 0.9;
-                    final newViewport = _editorState.viewport
-                        .zoomAt(factor, event.localPosition);
-                    _applyResult(UpdateViewportResult(newViewport));
-                  }
-                },
-                child: CustomPaint(
-                  painter: StaticCanvasPainter(
-                    scene: _editorState.scene,
-                    adapter: _adapter,
-                    viewport: _editorState.viewport,
-                    previewElement: _buildPreviewElement(toolOverlay),
-                  ),
-                  foregroundPainter: InteractiveCanvasPainter(
-                    viewport: _editorState.viewport,
-                    selection: _buildSelectionOverlay(),
-                    marqueeRect: marqueeRect,
-                    bindTargetBounds: toolOverlay?.bindTargetBounds,
-                  ),
-                  child: const SizedBox.expand(),
+                        if (_sceneBeforeDrag != null &&
+                            !identical(
+                                _editorState.scene, _sceneBeforeDrag)) {
+                          _historyManager.push(_sceneBeforeDrag!);
+                        }
+                        _sceneBeforeDrag = null;
+                      },
+                      onPointerSignal: (event) {
+                        if (event is PointerScrollEvent) {
+                          final factor =
+                              event.scrollDelta.dy < 0 ? 1.1 : 0.9;
+                          final newViewport = _editorState.viewport
+                              .zoomAt(factor, event.localPosition);
+                          _applyResult(UpdateViewportResult(newViewport));
+                        }
+                      },
+                      child: CustomPaint(
+                        painter: StaticCanvasPainter(
+                          scene: _editorState.scene,
+                          adapter: _adapter,
+                          viewport: _editorState.viewport,
+                          previewElement: _buildPreviewElement(toolOverlay),
+                        ),
+                        foregroundPainter: InteractiveCanvasPainter(
+                          viewport: _editorState.viewport,
+                          selection: _buildSelectionOverlay(),
+                          marqueeRect: marqueeRect,
+                          bindTargetBounds: toolOverlay?.bindTargetBounds,
+                        ),
+                        child: const SizedBox.expand(),
+                      ),
+                    ),
+                    if (_editingTextElementId != null)
+                      _buildTextEditingOverlay(),
+                  ],
                 ),
               ),
-              // Inline text editing overlay
-              if (_editingTextElementId != null)
-                _buildTextEditingOverlay(),
-            ],
-          ),
+            ),
+            if (_selectedElements.isNotEmpty)
+              _buildPropertyPanel(),
+          ],
         ),
       ),
+    );
+  }
+
+  List<Element> get _selectedElements {
+    return _editorState.selectedIds
+        .map((id) => _editorState.scene.getElementById(id))
+        .whereType<Element>()
+        .toList();
+  }
+
+  void _applyStyleChange(ElementStyle style) {
+    final elements = _selectedElements;
+    if (elements.isEmpty) return;
+
+    _historyManager.push(_editorState.scene);
+    final result = PropertyPanelState.applyStyle(elements, style);
+    _applyResult(result);
+  }
+
+  Widget _buildPropertyPanel() {
+    final elements = _selectedElements;
+    if (elements.isEmpty) return const SizedBox.shrink();
+
+    final style = PropertyPanelState.fromElements(elements);
+
+    return SizedBox(
+      width: 240,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border(left: BorderSide(color: Colors.grey.shade300)),
+          color: Colors.grey.shade50,
+        ),
+        child: ListView(
+          padding: const EdgeInsets.all(12),
+          children: [
+            _buildSectionLabel('Stroke'),
+            _buildColorRow(
+              selected: style.strokeColor,
+              onSelect: (c) =>
+                  _applyStyleChange(ElementStyle(strokeColor: c)),
+            ),
+            const SizedBox(height: 8),
+            _buildSectionLabel('Background'),
+            _buildColorRow(
+              selected: style.backgroundColor,
+              includeTransparent: true,
+              onSelect: (c) =>
+                  _applyStyleChange(ElementStyle(backgroundColor: c)),
+            ),
+            const SizedBox(height: 8),
+            _buildSectionLabel('Stroke width'),
+            _buildStrokeWidthRow(style.strokeWidth),
+            const SizedBox(height: 8),
+            _buildSectionLabel('Stroke style'),
+            _buildStrokeStyleRow(style.strokeStyle),
+            const SizedBox(height: 8),
+            _buildSectionLabel('Fill style'),
+            _buildFillStyleRow(style.fillStyle),
+            const SizedBox(height: 8),
+            _buildSectionLabel('Roughness'),
+            _buildRoughnessSlider(style.roughness),
+            const SizedBox(height: 8),
+            _buildSectionLabel('Opacity'),
+            _buildOpacitySlider(style.opacity),
+            if (style.hasRoundness) ...[
+              const SizedBox(height: 8),
+              _buildSectionLabel('Roundness'),
+              _buildRoundnessToggle(style.roundness),
+            ],
+            if (style.hasText) ...[
+              const SizedBox(height: 12),
+              _buildSectionLabel('Font size'),
+              _buildFontSizeRow(style.fontSize),
+              const SizedBox(height: 8),
+              _buildSectionLabel('Font family'),
+              _buildFontFamilyRow(style.fontFamily),
+              const SizedBox(height: 8),
+              _buildSectionLabel('Text align'),
+              _buildTextAlignRow(style.textAlign),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Text(text,
+          style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade700)),
+    );
+  }
+
+  static const _colorSwatches = [
+    '#000000',
+    '#e03131',
+    '#2f9e44',
+    '#1971c2',
+    '#f08c00',
+    '#6741d9',
+  ];
+
+  Widget _buildColorRow({
+    required String? selected,
+    required ValueChanged<String> onSelect,
+    bool includeTransparent = false,
+  }) {
+    final colors = [
+      if (includeTransparent) 'transparent',
+      ..._colorSwatches,
+    ];
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      children: [
+        for (final c in colors)
+          _ColorSwatch(
+            color: c,
+            isSelected: selected == c,
+            onTap: () => onSelect(c),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildStrokeWidthRow(double? current) {
+    const widths = [1.0, 2.0, 4.0, 6.0];
+    const labels = ['Thin', 'Medium', 'Bold', 'Extra'];
+    return _buildToggleRow(
+      count: 4,
+      labels: labels,
+      isSelected: (i) => current == widths[i],
+      onTap: (i) => _applyStyleChange(ElementStyle(strokeWidth: widths[i])),
+    );
+  }
+
+  Widget _buildStrokeStyleRow(StrokeStyle? current) {
+    const styles = StrokeStyle.values;
+    final labels = styles.map((s) => s.name).toList();
+    return _buildToggleRow(
+      count: styles.length,
+      labels: labels,
+      isSelected: (i) => current == styles[i],
+      onTap: (i) => _applyStyleChange(ElementStyle(strokeStyle: styles[i])),
+    );
+  }
+
+  Widget _buildFillStyleRow(FillStyle? current) {
+    const styles = FillStyle.values;
+    final labels = styles.map((s) => s.name).toList();
+    return _buildToggleRow(
+      count: styles.length,
+      labels: labels,
+      isSelected: (i) => current == styles[i],
+      onTap: (i) => _applyStyleChange(ElementStyle(fillStyle: styles[i])),
+    );
+  }
+
+  Widget _buildRoughnessSlider(double? current) {
+    return Slider(
+      value: current ?? 1.0,
+      min: 0,
+      max: 3,
+      divisions: 6,
+      label: current != null ? current.toStringAsFixed(1) : 'mixed',
+      onChanged: (v) => _applyStyleChange(ElementStyle(roughness: v)),
+    );
+  }
+
+  Widget _buildOpacitySlider(double? current) {
+    return Slider(
+      value: current ?? 1.0,
+      min: 0,
+      max: 1,
+      divisions: 20,
+      label: current != null
+          ? '${(current * 100).round()}%'
+          : 'mixed',
+      onChanged: (v) => _applyStyleChange(ElementStyle(opacity: v)),
+    );
+  }
+
+  Widget _buildRoundnessToggle(Roundness? current) {
+    final hasRoundness = current != null;
+    return Row(
+      children: [
+        const Text('Round corners', style: TextStyle(fontSize: 12)),
+        const Spacer(),
+        Switch(
+          value: hasRoundness,
+          onChanged: (on) {
+            if (on) {
+              _applyStyleChange(const ElementStyle(
+                roundness: Roundness.adaptive(value: 8),
+                hasRoundness: true,
+              ));
+            } else {
+              // Clear roundness by applying with hasRoundness but null value
+              // We need a special approach — set a zero-value roundness to
+              // signal clearing. Use copyWith(clearRoundness: true) directly.
+              final elements = _selectedElements;
+              if (elements.isEmpty) return;
+              _historyManager.push(_editorState.scene);
+              final results = <ToolResult>[];
+              for (final e in elements) {
+                results.add(
+                    UpdateElementResult(e.copyWith(clearRoundness: true)));
+              }
+              _applyResult(results.length == 1
+                  ? results.first
+                  : CompoundResult(results));
+            }
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFontSizeRow(double? current) {
+    const sizes = [16.0, 20.0, 28.0, 36.0];
+    const labels = ['S', 'M', 'L', 'XL'];
+    return _buildToggleRow(
+      count: 4,
+      labels: labels,
+      isSelected: (i) => current == sizes[i],
+      onTap: (i) =>
+          _applyStyleChange(ElementStyle(hasText: true, fontSize: sizes[i])),
+    );
+  }
+
+  Widget _buildFontFamilyRow(String? current) {
+    const families = ['Virgil', 'Helvetica', 'Cascadia'];
+    return _buildToggleRow(
+      count: families.length,
+      labels: families,
+      isSelected: (i) => current == families[i],
+      onTap: (i) => _applyStyleChange(
+          ElementStyle(hasText: true, fontFamily: families[i])),
+    );
+  }
+
+  Widget _buildTextAlignRow(core.TextAlign? current) {
+    const aligns = core.TextAlign.values;
+    final labels = aligns.map((a) => a.name).toList();
+    return _buildToggleRow(
+      count: aligns.length,
+      labels: labels,
+      isSelected: (i) => current == aligns[i],
+      onTap: (i) => _applyStyleChange(
+          ElementStyle(hasText: true, textAlign: aligns[i])),
+    );
+  }
+
+  Widget _buildToggleRow({
+    required int count,
+    required List<String> labels,
+    required bool Function(int) isSelected,
+    required ValueChanged<int> onTap,
+  }) {
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      children: [
+        for (var i = 0; i < count; i++)
+          _ToggleChip(
+            label: labels[i],
+            isSelected: isSelected(i),
+            onTap: () => onTap(i),
+          ),
+      ],
     );
   }
 
@@ -566,5 +854,102 @@ class _CanvasPageState extends State<_CanvasPage> {
       ToolType.text => Icons.text_fields,
       ToolType.hand => Icons.pan_tool,
     };
+  }
+}
+
+Color _parseColor(String hex) {
+  if (hex == 'transparent') return Colors.transparent;
+  final h = hex.replaceFirst('#', '');
+  return Color(int.parse('ff$h', radix: 16));
+}
+
+class _ColorSwatch extends StatelessWidget {
+  final String color;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _ColorSwatch({
+    required this.color,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final parsed = _parseColor(color);
+    final isTransparent = color == 'transparent';
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          color: isTransparent ? Colors.white : parsed,
+          border: Border.all(
+            color: isSelected ? Colors.blue : Colors.grey.shade400,
+            width: isSelected ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: isTransparent
+            ? CustomPaint(
+                painter: _DiagonalLinePainter(),
+              )
+            : null,
+      ),
+    );
+  }
+}
+
+class _DiagonalLinePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.red
+      ..strokeWidth = 1.5;
+    canvas.drawLine(
+      Offset(0, size.height),
+      Offset(size.width, 0),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _ToggleChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _ToggleChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.blue.shade100 : Colors.white,
+          border: Border.all(
+            color: isSelected ? Colors.blue : Colors.grey.shade400,
+          ),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: isSelected ? Colors.blue.shade900 : Colors.grey.shade800,
+          ),
+        ),
+      ),
+    );
   }
 }
