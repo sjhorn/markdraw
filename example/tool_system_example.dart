@@ -99,6 +99,7 @@ class _CanvasPageState extends State<_CanvasPage> {
   ElementId? _editingTextElementId;
   final _textEditingController = TextEditingController();
   final _textFocusNode = FocusNode();
+  final _editableTextKey = GlobalKey<EditableTextState>();
 
   // Track whether we're editing an existing element vs a newly created one
   bool _isEditingExisting = false;
@@ -952,22 +953,30 @@ class _CanvasPageState extends State<_CanvasPage> {
             height: parentH,
             child: Center(
               child: IntrinsicWidth(
-                child: EditableText(
-                  controller: _textEditingController,
-                  focusNode: _textFocusNode,
-                  autofocus: true,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: fontSize,
-                    fontFamily: fontFamily,
-                    color: textColor,
-                    height: lineHeight,
+                child: TextSelectionGestureDetectorBuilder(
+                  delegate: _TextSelectionDelegate(_editableTextKey),
+                ).buildGestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  child: EditableText(
+                    key: _editableTextKey,
+                    rendererIgnoresPointer: true,
+                    controller: _textEditingController,
+                    focusNode: _textFocusNode,
+                    autofocus: true,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: fontSize,
+                      fontFamily: fontFamily,
+                      color: textColor,
+                      height: lineHeight,
+                    ),
+                    cursorColor: Colors.blue,
+                    backgroundCursorColor: Colors.grey,
+                    selectionColor: Colors.blue.shade300.withValues(alpha: 0.5),
+                    maxLines: null,
+                    onChanged: (_) => _onTextChanged(),
+                    onSubmitted: (_) => _commitTextEditing(),
                   ),
-                  cursorColor: Colors.blue,
-                  backgroundCursorColor: Colors.grey,
-                  maxLines: null,
-                  onChanged: (_) => _onTextChanged(),
-                  onSubmitted: (_) => _commitTextEditing(),
                 ),
               ),
             ),
@@ -984,20 +993,28 @@ class _CanvasPageState extends State<_CanvasPage> {
       left: screenPos.dx,
       top: screenPos.dy,
       child: IntrinsicWidth(
-        child: EditableText(
-          controller: _textEditingController,
-          focusNode: _textFocusNode,
-          autofocus: true,
-          style: TextStyle(
-            fontSize: fontSize,
-            fontFamily: fontFamily,
-            color: textColor,
-            height: lineHeight,
+        child: TextSelectionGestureDetectorBuilder(
+          delegate: _TextSelectionDelegate(_editableTextKey),
+        ).buildGestureDetector(
+          behavior: HitTestBehavior.translucent,
+          child: EditableText(
+            key: _editableTextKey,
+            rendererIgnoresPointer: true,
+            controller: _textEditingController,
+            focusNode: _textFocusNode,
+            autofocus: true,
+            style: TextStyle(
+              fontSize: fontSize,
+              fontFamily: fontFamily,
+              color: textColor,
+              height: lineHeight,
+            ),
+            cursorColor: Colors.blue,
+            backgroundCursorColor: Colors.grey,
+            selectionColor: Colors.blue.shade300.withValues(alpha: 0.5),
+            onChanged: (_) => _onTextChanged(),
+            onSubmitted: (_) => _commitTextEditing(),
           ),
-          cursorColor: Colors.blue,
-          backgroundCursorColor: Colors.grey,
-          onChanged: (_) => _onTextChanged(),
-          onSubmitted: (_) => _commitTextEditing(),
         ),
       ),
     );
@@ -1199,4 +1216,20 @@ class _ToggleChip extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Delegate for [TextSelectionGestureDetectorBuilder] to enable text
+/// selection (tap-to-place-cursor, drag-to-select) on [EditableText].
+class _TextSelectionDelegate
+    extends TextSelectionGestureDetectorBuilderDelegate {
+  @override
+  final GlobalKey<EditableTextState> editableTextKey;
+
+  _TextSelectionDelegate(this.editableTextKey);
+
+  @override
+  bool get forcePressEnabled => true;
+
+  @override
+  bool get selectionEnabled => true;
 }
