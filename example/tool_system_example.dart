@@ -449,13 +449,18 @@ class _CanvasPageState extends State<_CanvasPage> {
     try {
       final result = await FilePicker.platform.pickFiles(
         dialogTitle: 'Open drawing',
-        type: FileType.custom,
-        allowedExtensions: ['markdraw', 'excalidraw', 'json'],
+        type: FileType.any,
         withData: true,
       );
       if (result == null) return;
 
       final file = result.files.single;
+      final ext = file.name.split('.').last.toLowerCase();
+      if (!{'markdraw', 'excalidraw', 'json'}.contains(ext)) {
+        debugPrint('Unsupported file type: .$ext');
+        return;
+      }
+
       final String content;
       if (file.bytes != null) {
         content = utf8.decode(file.bytes!);
