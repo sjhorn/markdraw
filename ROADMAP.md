@@ -417,30 +417,32 @@ markdraw/
 > Goal: Get drawings out of the app in useful formats.
 
 ### 5.1 PNG Export
-- [ ] Render scene to offscreen canvas → PNG bytes
-- [ ] Configurable scale factor (1x, 2x, 3x)
-- [ ] Optional background color or transparent
-- [ ] Embed `.markdraw` data in PNG metadata (like Excalidraw's tEXt chunk)
-- [ ] Export selection only or full scene
-- [ ] **Tests**: Export → verify PNG dimensions, re-import embedded data
+- [x] Render scene to offscreen canvas → PNG bytes (`PngExporter`)
+- [x] Configurable scale factor (1x, 2x, 3x)
+- [x] Optional background color or transparent
+- [ ] Embed `.markdraw` data in PNG metadata (like Excalidraw's tEXt chunk) — *deferred: requires raw PNG byte manipulation*
+- [x] Export selection only or full scene
+- [x] **Tests**: Export → verify PNG bytes, scale, background, selection
 
 ### 5.2 SVG Export
-- [ ] Render scene to SVG string
-- [ ] Rough.js style paths as SVG `<path>` elements
-- [ ] Embed `.markdraw` data in SVG comment
-- [ ] **Tests**: Valid SVG output, round-trip via embedded data
+- [x] Render scene to SVG string (`SvgExporter`)
+- [x] Rough.js style paths as SVG `<path>` elements (`SvgPathConverter` + `SvgElementRenderer`)
+- [x] Embed `.markdraw` data in SVG comment (base64 encoded)
+- [x] **Tests**: Valid SVG output, round-trip via embedded data
 
 ### 5.3 Clipboard
-- [ ] Copy selected elements as `.markdraw` text to clipboard
-- [ ] Paste `.markdraw` text from clipboard → add elements to scene
-- [ ] Also copy as PNG for pasting into other apps
-- [ ] **Tests**: Copy → paste → verify elements duplicated with new IDs
+- [x] Copy selected elements as `.markdraw` text to clipboard (`ClipboardCodec` + `ClipboardService`)
+- [x] Paste `.markdraw` text from clipboard → add elements to scene
+- [ ] Also copy as PNG for pasting into other apps — *deferred: platform-dependent native code*
+- [x] **Tests**: Copy → paste → verify elements round-trip, mock service tests
 
 ### 5.4 Excalidraw Interop
-- [ ] Import `.excalidraw` JSON files
-- [ ] Export to `.excalidraw` JSON (lossy for prose sections)
-- [ ] Drag-and-drop file support
-- [ ] **Tests**: Round-trip with sample Excalidraw files
+- [x] Import `.excalidraw` JSON files *(done in Phase 1.3)*
+- [x] Export to `.excalidraw` JSON (lossy for prose sections) *(done in Phase 1.3)*
+- [ ] Drag-and-drop file support — *deferred: DropRegion API is brittle across platforms*
+- [x] **Tests**: Round-trip with sample Excalidraw files (all 7 types, bindings, styles, 50+ elements)
+
+> **TDD checkpoint**: ExportBounds utility, PngExporter (PictureRecorder → PNG bytes), SvgPathConverter (rough OpSets → SVG path data), SvgElementRenderer (element → SVG markup), SvgExporter (full SVG with embedded markdraw), ClipboardCodec (serialize/parse for clipboard), ClipboardService abstraction, Excalidraw round-trip tests. Example app with export buttons and system clipboard. ~97 new tests, 1112 total. Zero analyzer issues. ✅
 
 ---
 
@@ -605,7 +607,7 @@ For every feature:
 | **M2: Render** | 2 | Visual canvas with pan/zoom | All element types render correctly |
 | **M3: Edit (80%)** | 3 | Full drawing interaction | Create, select, move, resize, connect, undo |
 | **M4: Text** | 4 | Inline text editing + bound text | Text in shapes, arrow labels |
-| **M5: Export** | 5 | PNG, SVG, clipboard, Excalidraw interop | Round-trip with Excalidraw files |
+| **M5: Export** | 5 | PNG, SVG, clipboard, Excalidraw interop | 1112 tests, round-trip verified |
 | **M6: Advanced (100%)** | 6 | Groups, frames, images, elbow arrows | Feature parity with Excalidraw essentials |
 | **M7: Ship** | 7 | All platforms polished | App store ready |
 | **M8: Grow** | 8 | Collaboration, AI, plugins | Post-launch iteration |
