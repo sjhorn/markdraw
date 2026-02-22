@@ -3,7 +3,7 @@
   <rect x="6" y="6" width="52" height="52" rx="12"  fill="#7E57C2"/>
   <g stroke="#9bc257" stroke-width="3.5">
   
-
+   <path d="M 37,20 A 3.5,3.5 0 0 1 44,20 L 37,20 Z" fill="#9bc257" stroke="none" />
    <rect x="37" y="21" width="3" height="12" fill="#FFFFFF" stroke-width="0"/>
    <rect x="41" y="21" width="3" height="12" fill="#FFFFFF" stroke-width="0"/>
    <polygon points="37,34 44,34 40.5,40" fill="#9bc257" stroke-width="0"/>

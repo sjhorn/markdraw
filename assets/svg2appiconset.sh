@@ -81,5 +81,4 @@ rm -rf ../macos/Runner/Assets.xcassets/AppIcon.appiconset
 rm -rf ../ios/Runner/Assets.xcassets/AppIcon.appiconset
 cp -a "$APPICONSET" ../macos/Runner/Assets.xcassets/AppIcon.appiconset
 cp -a "$APPICONSET" ../ios/Runner/Assets.xcassets/AppIcon.appiconset
-rm -rf AppIcon.appiconset
 done

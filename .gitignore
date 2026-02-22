@@ -33,3 +33,13 @@ migrate_working_dir/
 /coverage/
 
 /excalidraw
+
+
+
+# Platform directories (generated, not needed for package)
+/android/
+/ios/
+/linux/
+/macos/
+/web/
+/windows/
