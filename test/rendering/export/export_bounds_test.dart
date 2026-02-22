@@ -102,7 +102,7 @@ void main() {
 
     test('includes bound text when parent is in selection', () {
       var scene = Scene();
-      final rectId = const ElementId('r1');
+      const rectId = ElementId('r1');
       scene = scene.addElement(RectangleElement(
         id: rectId,
         x: 100,

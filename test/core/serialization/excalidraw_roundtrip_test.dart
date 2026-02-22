@@ -17,12 +17,12 @@ import 'package:markdraw/src/core/serialization/markdraw_document.dart';
 
 void main() {
   group('Excalidraw round-trip', () {
-    MarkdrawDocument _makeDoc(List<Element> elements) {
+    MarkdrawDocument makeDoc(List<Element> elements) {
       return MarkdrawDocument(sections: [SketchSection(elements)]);
     }
 
     test('simple shapes round-trip', () {
-      final doc = _makeDoc([
+      final doc = makeDoc([
         RectangleElement(
           id: const ElementId('r1'),
           x: 10,
@@ -63,7 +63,7 @@ void main() {
     });
 
     test('text round-trip', () {
-      final doc = _makeDoc([
+      final doc = makeDoc([
         TextElement(
           id: const ElementId('t1'),
           x: 50,
@@ -90,7 +90,7 @@ void main() {
     });
 
     test('arrow with bindings round-trip', () {
-      final doc = _makeDoc([
+      final doc = makeDoc([
         RectangleElement(
           id: const ElementId('r1'),
           x: 0,
@@ -142,7 +142,7 @@ void main() {
     });
 
     test('line with points round-trip', () {
-      final doc = _makeDoc([
+      final doc = makeDoc([
         LineElement(
           id: const ElementId('l1'),
           x: 10,
@@ -170,7 +170,7 @@ void main() {
     });
 
     test('freedraw round-trip', () {
-      final doc = _makeDoc([
+      final doc = makeDoc([
         FreedrawElement(
           id: const ElementId('f1'),
           x: 0,
@@ -200,7 +200,7 @@ void main() {
     });
 
     test('mixed scene with all 7 types', () {
-      final doc = _makeDoc([
+      final doc = makeDoc([
         RectangleElement(
           id: const ElementId('r1'),
           x: 0,
@@ -281,7 +281,7 @@ void main() {
     });
 
     test('non-default styles preserved', () {
-      final doc = _makeDoc([
+      final doc = makeDoc([
         RectangleElement(
           id: const ElementId('r1'),
           x: 10,
@@ -313,7 +313,7 @@ void main() {
     });
 
     test('bound text containerId preserved', () {
-      final doc = _makeDoc([
+      final doc = makeDoc([
         RectangleElement(
           id: const ElementId('r1'),
           x: 10,
@@ -377,7 +377,7 @@ void main() {
           seed: 42 + i,
         ),
       );
-      final doc = _makeDoc(elements);
+      final doc = makeDoc(elements);
 
       final json = ExcalidrawJsonCodec.serialize(doc);
       final parsed = ExcalidrawJsonCodec.parse(json);

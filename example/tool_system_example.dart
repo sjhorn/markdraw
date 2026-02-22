@@ -27,9 +27,13 @@ import 'package:markdraw/src/core/history/history_manager.dart';
 import 'package:markdraw/src/core/io/document_format.dart';
 import 'package:markdraw/src/core/io/document_service.dart';
 import 'package:markdraw/src/core/io/scene_document_converter.dart';
+import 'package:markdraw/src/core/serialization/clipboard_codec.dart';
 import 'package:markdraw/src/core/serialization/document_parser.dart';
 import 'package:markdraw/src/core/serialization/document_serializer.dart';
 import 'package:markdraw/src/core/serialization/excalidraw_json_codec.dart';
+import 'package:markdraw/src/editor/clipboard_service.dart';
+import 'package:markdraw/src/rendering/export/png_exporter.dart';
+import 'package:markdraw/src/rendering/export/svg_exporter.dart';
 
 import 'file_io_stub.dart' if (dart.library.io) 'file_io_native.dart';
 import 'package:markdraw/src/core/elements/arrow_element.dart';
@@ -99,6 +103,7 @@ class _CanvasPageState extends State<_CanvasPage> {
   final _adapter = RoughCanvasAdapter();
   final _historyManager = HistoryManager();
   late final DocumentService _documentService;
+  final ClipboardService _clipboardService = const FlutterClipboardService();
   String? _currentFilePath;
 
   // Drag coalescing: capture scene before drag, push once on pointer up
@@ -160,6 +165,10 @@ class _CanvasPageState extends State<_CanvasPage> {
 
   void _applyResult(ToolResult? result) {
     if (result == null) return;
+
+    // Write to system clipboard on copy/cut
+    _syncToSystemClipboard(result);
+
     setState(() {
       final newState = _editorState.applyResult(result);
       // If tool switched, create new tool instance
@@ -175,6 +184,17 @@ class _CanvasPageState extends State<_CanvasPage> {
       }
       _editorState = newState;
     });
+  }
+
+  void _syncToSystemClipboard(ToolResult result) {
+    if (result is SetClipboardResult && result.elements.isNotEmpty) {
+      final text = ClipboardCodec.serialize(result.elements);
+      _clipboardService.copyText(text);
+    } else if (result is CompoundResult) {
+      for (final r in result.results) {
+        _syncToSystemClipboard(r);
+      }
+    }
   }
 
   /// Start editing a NEW text element (just created by TextTool).
@@ -405,6 +425,65 @@ class _CanvasPageState extends State<_CanvasPage> {
     }
   }
 
+  Future<void> _exportPng() async {
+    try {
+      final selectedIds = _editorState.selectedIds.isNotEmpty
+          ? _editorState.selectedIds
+          : null;
+      final bytes = await PngExporter.export(
+        _editorState.scene,
+        _adapter,
+        scale: 2,
+        backgroundColor: const Color(0xFFFFFFFF),
+        selectedIds: selectedIds,
+      );
+      if (bytes == null) return;
+
+      if (kIsWeb) {
+        downloadFile('drawing.png', String.fromCharCodes(bytes));
+      } else {
+        await FilePicker.platform.saveFile(
+          dialogTitle: 'Export PNG',
+          fileName: 'drawing.png',
+          type: FileType.custom,
+          allowedExtensions: ['png'],
+          bytes: bytes,
+        );
+      }
+    } catch (e) {
+      debugPrint('PNG export error: $e');
+    }
+  }
+
+  Future<void> _exportSvg() async {
+    try {
+      final selectedIds = _editorState.selectedIds.isNotEmpty
+          ? _editorState.selectedIds
+          : null;
+      final svg = SvgExporter.export(
+        _editorState.scene,
+        backgroundColor: '#ffffff',
+        selectedIds: selectedIds,
+      );
+      if (svg.isEmpty) return;
+
+      if (kIsWeb) {
+        downloadFile('drawing.svg', svg);
+      } else {
+        final bytes = Uint8List.fromList(utf8.encode(svg));
+        await FilePicker.platform.saveFile(
+          dialogTitle: 'Export SVG',
+          fileName: 'drawing.svg',
+          type: FileType.custom,
+          allowedExtensions: ['svg'],
+          bytes: bytes,
+        );
+      }
+    } catch (e) {
+      debugPrint('SVG export error: $e');
+    }
+  }
+
   Future<void> _saveFile() async {
     try {
       if (!kIsWeb && _currentFilePath != null) {
@@ -547,6 +626,17 @@ class _CanvasPageState extends State<_CanvasPage> {
                 icon: const Icon(Icons.save_as),
                 onPressed: _saveFileAs,
                 tooltip: 'Save As (Ctrl+Shift+S)',
+              ),
+              const VerticalDivider(width: 16, indent: 12, endIndent: 12),
+              IconButton(
+                icon: const Icon(Icons.image),
+                onPressed: _exportPng,
+                tooltip: 'Export PNG (Ctrl+Shift+E)',
+              ),
+              IconButton(
+                icon: const Icon(Icons.code),
+                onPressed: _exportSvg,
+                tooltip: 'Export SVG',
               ),
               const VerticalDivider(width: 16, indent: 12, endIndent: 12),
               for (final type in ToolType.values)
@@ -709,6 +799,8 @@ class _CanvasPageState extends State<_CanvasPage> {
             });
           }
         },
+        const SingleActivator(LogicalKeyboardKey.keyE, meta: true,
+            shift: true): _exportPng,
         // Ctrl variants for non-macOS platforms
         const SingleActivator(LogicalKeyboardKey.keyS, control: true):
             _saveFile,
@@ -716,6 +808,8 @@ class _CanvasPageState extends State<_CanvasPage> {
             shift: true): _saveFileAs,
         const SingleActivator(LogicalKeyboardKey.keyO, control: true):
             _openFile,
+        const SingleActivator(LogicalKeyboardKey.keyE, control: true,
+            shift: true): _exportPng,
         const SingleActivator(LogicalKeyboardKey.keyZ, control: true): () {
           final undone = _historyManager.undo(_editorState.scene);
           if (undone != null) {
