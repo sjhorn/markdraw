@@ -3,6 +3,7 @@ import '../elements/diamond_element.dart';
 import '../elements/element.dart';
 import '../elements/ellipse_element.dart';
 import '../elements/fill_style.dart';
+import '../elements/frame_element.dart';
 import '../elements/freedraw_element.dart';
 import '../elements/line_element.dart';
 import '../elements/rectangle_element.dart';
@@ -24,6 +25,7 @@ class SketchLineSerializer {
     return switch (element) {
       ArrowElement() => _serializeArrow(element, alias, aliasMap),
       LineElement() => _serializeLine(element, alias),
+      FrameElement() => _serializeFrame(element, alias),
       RectangleElement() => _serializeShape('rect', element, alias),
       EllipseElement() => _serializeShape('ellipse', element, alias),
       DiamondElement() => _serializeShape('diamond', element, alias),
@@ -57,6 +59,16 @@ class SketchLineSerializer {
   ) {
     final parts = <String>[keyword];
     parts.add('"$label"');
+    _addId(parts, alias);
+    _addPosition(parts, element.x, element.y);
+    _addSize(parts, element.width, element.height);
+    _addCommonProperties(parts, element);
+    return parts.join(' ');
+  }
+
+  String _serializeFrame(FrameElement element, String? alias) {
+    final parts = <String>['frame'];
+    parts.add('"${element.label}"');
     _addId(parts, alias);
     _addPosition(parts, element.x, element.y);
     _addSize(parts, element.width, element.height);
@@ -222,6 +234,9 @@ class SketchLineSerializer {
     }
     if (element.locked) {
       parts.add('locked');
+    }
+    if (element.frameId != null) {
+      parts.add('frame=${element.frameId}');
     }
     if (element.groupIds.isNotEmpty) {
       parts.add('group=${element.groupIds.join(',')}');

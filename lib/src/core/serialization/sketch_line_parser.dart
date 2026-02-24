@@ -4,6 +4,7 @@ import '../elements/element.dart';
 import '../elements/element_id.dart';
 import '../elements/ellipse_element.dart';
 import '../elements/fill_style.dart';
+import '../elements/frame_element.dart';
 import '../elements/freedraw_element.dart';
 import '../elements/line_element.dart';
 import '../elements/rectangle_element.dart';
@@ -51,6 +52,7 @@ class SketchLineParser {
         'rect' => _parseShape(keyword, trimmed, lineNumber),
         'ellipse' => _parseShape(keyword, trimmed, lineNumber),
         'diamond' => _parseShape(keyword, trimmed, lineNumber),
+        'frame' => _parseFrame(trimmed, lineNumber),
         'text' => _parseText(trimmed, lineNumber),
         'line' => _parseLine(trimmed, lineNumber),
         'arrow' => _parseArrow(trimmed, lineNumber),
@@ -175,6 +177,7 @@ class SketchLineParser {
           angle: common.angle,
           locked: common.locked,
           seed: common.seed,
+          frameId: common.frameId,
           groupIds: common.groupIds,
         ),
       'ellipse' => EllipseElement(
@@ -194,6 +197,7 @@ class SketchLineParser {
           angle: common.angle,
           locked: common.locked,
           seed: common.seed,
+          frameId: common.frameId,
           groupIds: common.groupIds,
         ),
       'diamond' => DiamondElement(
@@ -213,10 +217,51 @@ class SketchLineParser {
           angle: common.angle,
           locked: common.locked,
           seed: common.seed,
+          frameId: common.frameId,
           groupIds: common.groupIds,
         ),
       _ => null,
     };
+
+    return ParseResult(value: element);
+  }
+
+  // ── Frame parsing ──
+
+  ParseResult<Element?> _parseFrame(String line, int lineNumber) {
+    final props = _PropertyBag(line, 'frame');
+    final id = props.id;
+    final pos = props.position;
+    final size = props.size;
+    final common = props.commonProperties;
+    final label = props.quotedString ?? 'Frame';
+
+    final elementId = ElementId(id ?? _generateId());
+    if (id != null) {
+      aliases[id] = elementId.value;
+    }
+
+    final element = FrameElement(
+      id: elementId,
+      x: pos.$1,
+      y: pos.$2,
+      width: size.$1,
+      height: size.$2,
+      label: label,
+      strokeColor: common.strokeColor,
+      backgroundColor: common.backgroundColor,
+      fillStyle: common.fillStyle,
+      strokeWidth: common.strokeWidth,
+      strokeStyle: common.strokeStyle,
+      roughness: common.roughness,
+      opacity: common.opacity,
+      roundness: common.roundness,
+      angle: common.angle,
+      locked: common.locked,
+      seed: common.seed,
+      frameId: common.frameId,
+      groupIds: common.groupIds,
+    );
 
     return ParseResult(value: element);
   }
@@ -259,6 +304,7 @@ class SketchLineParser {
       angle: common.angle,
       locked: common.locked,
       seed: common.seed,
+      frameId: common.frameId,
       groupIds: common.groupIds,
     );
 
@@ -301,6 +347,7 @@ class SketchLineParser {
       angle: common.angle,
       locked: common.locked,
       seed: common.seed,
+      frameId: common.frameId,
       groupIds: common.groupIds,
     );
 
@@ -357,6 +404,7 @@ class SketchLineParser {
       angle: common.angle,
       locked: common.locked,
       seed: common.seed,
+      frameId: common.frameId,
       groupIds: common.groupIds,
     );
 
@@ -407,6 +455,7 @@ class SketchLineParser {
       angle: common.angle,
       locked: common.locked,
       seed: common.seed,
+      frameId: common.frameId,
       groupIds: common.groupIds,
     );
 
@@ -466,6 +515,7 @@ class _CommonProperties {
   final double angle;
   final bool locked;
   final int seed;
+  final String? frameId;
   final List<String> groupIds;
 
   _CommonProperties({
@@ -480,6 +530,7 @@ class _CommonProperties {
     required this.angle,
     required this.locked,
     required this.seed,
+    required this.frameId,
     required this.groupIds,
   });
 }
@@ -570,6 +621,7 @@ class _PropertyBag {
     final angleVal = namedDouble('angle');
     final seedVal = namedInt('seed');
     final isLocked = hasFlag('locked');
+    final frameIdStr = namedString('frame');
     final groupStr = namedString('group');
     final groupIds = groupStr != null && groupStr.isNotEmpty
         ? groupStr.split(',')
@@ -589,6 +641,7 @@ class _PropertyBag {
       angle: angleVal ?? 0.0,
       locked: isLocked,
       seed: seedVal ?? 1,
+      frameId: frameIdStr,
       groupIds: groupIds,
     );
   }
