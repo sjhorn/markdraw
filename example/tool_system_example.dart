@@ -44,10 +44,10 @@ import 'package:markdraw/src/core/elements/ellipse_element.dart';
 import 'package:markdraw/src/core/elements/freedraw_element.dart';
 import 'package:markdraw/src/core/elements/line_element.dart';
 import 'package:markdraw/src/core/elements/rectangle_element.dart';
+import 'package:markdraw/src/core/elements/text_element.dart' hide TextAlign;
 import 'package:markdraw/src/core/elements/text_element.dart'
-    hide TextAlign;
-import 'package:markdraw/src/core/elements/text_element.dart'
-    as core show TextAlign;
+    as core
+    show TextAlign;
 import 'package:markdraw/src/core/math/point.dart';
 import 'package:markdraw/src/editor/bindings/arrow_label_utils.dart';
 import 'package:markdraw/src/editor/bindings/bound_text_utils.dart';
@@ -86,6 +86,7 @@ class ToolSystemExampleApp extends StatelessWidget {
       title: 'Tool System Example',
       theme: ThemeData(useMaterial3: true),
       home: const _CanvasPage(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -225,8 +226,7 @@ class _CanvasPageState extends State<_CanvasPage> {
       extentOffset: element.text.length,
     );
     setState(() {
-      _editorState = _editorState.applyResult(
-          SetSelectionResult({element.id}));
+      _editorState = _editorState.applyResult(SetSelectionResult({element.id}));
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _textFocusNode.requestFocus();
@@ -267,7 +267,8 @@ class _CanvasPageState extends State<_CanvasPage> {
           BoundElement(id: newTextId.value, type: 'text'),
         ];
         _editorState = _editorState.applyResult(
-            UpdateElementResult(shape.copyWith(boundElements: newBound)));
+          UpdateElementResult(shape.copyWith(boundElements: newBound)),
+        );
       });
       _editingTextElementId = newTextId;
       _isEditingExisting = false;
@@ -314,7 +315,8 @@ class _CanvasPageState extends State<_CanvasPage> {
           BoundElement(id: newTextId.value, type: 'text'),
         ];
         _editorState = _editorState.applyResult(
-            UpdateElementResult(arrow.copyWith(boundElements: newBound)));
+          UpdateElementResult(arrow.copyWith(boundElements: newBound)),
+        );
       });
       _editingTextElementId = newTextId;
       _isEditingExisting = false;
@@ -352,7 +354,8 @@ class _CanvasPageState extends State<_CanvasPage> {
                 .where((b) => b.id != id.value)
                 .toList();
             _editorState = _editorState.applyResult(
-                UpdateElementResult(parent.copyWith(boundElements: newBound)));
+              UpdateElementResult(parent.copyWith(boundElements: newBound)),
+            );
           }
         }
         _editorState = _editorState.applyResult(SetSelectionResult({}));
@@ -364,8 +367,9 @@ class _CanvasPageState extends State<_CanvasPage> {
           final isBound = element.containerId != null;
           if (isBound) {
             // Bound text: just update text, keep parent's dimensions
-            _editorState =
-                _editorState.applyResult(UpdateElementResult(measured));
+            _editorState = _editorState.applyResult(
+              UpdateElementResult(measured),
+            );
           } else {
             // Standalone text: auto-resize
             final (w, h) = TextRenderer.measure(measured);
@@ -373,8 +377,9 @@ class _CanvasPageState extends State<_CanvasPage> {
               width: math.max(w + 4, 20.0),
               height: math.max(h, element.fontSize * element.lineHeight),
             );
-            _editorState =
-                _editorState.applyResult(UpdateElementResult(updated));
+            _editorState = _editorState.applyResult(
+              UpdateElementResult(updated),
+            );
           }
         }
       }
@@ -391,18 +396,22 @@ class _CanvasPageState extends State<_CanvasPage> {
       setState(() {
         if (_isEditingExisting && _originalText != null) {
           // Restore original text for existing elements
-          final element =
-              _editorState.scene.getElementById(_editingTextElementId!);
+          final element = _editorState.scene.getElementById(
+            _editingTextElementId!,
+          );
           if (element is TextElement) {
             _editorState = _editorState.applyResult(
-                UpdateElementResult(element.copyWithText(text: _originalText!)));
+              UpdateElementResult(element.copyWithText(text: _originalText!)),
+            );
           }
         } else {
           // Remove newly created element
-          final element =
-              _editorState.scene.getElementById(_editingTextElementId!);
+          final element = _editorState.scene.getElementById(
+            _editingTextElementId!,
+          );
           _editorState = _editorState.applyResult(
-              RemoveElementResult(_editingTextElementId!));
+            RemoveElementResult(_editingTextElementId!),
+          );
           // Clean up parent's boundElements if it was bound text
           if (element is TextElement && element.containerId != null) {
             final parentId = ElementId(element.containerId!);
@@ -412,7 +421,8 @@ class _CanvasPageState extends State<_CanvasPage> {
                   .where((b) => b.id != _editingTextElementId!.value)
                   .toList();
               _editorState = _editorState.applyResult(
-                  UpdateElementResult(parent.copyWith(boundElements: newBound)));
+                UpdateElementResult(parent.copyWith(boundElements: newBound)),
+              );
             }
           }
           _editorState = _editorState.applyResult(SetSelectionResult({}));
@@ -440,15 +450,18 @@ class _CanvasPageState extends State<_CanvasPage> {
       if (bytes == null) return;
 
       if (kIsWeb) {
-        downloadFile('drawing.png', String.fromCharCodes(bytes));
+        downloadBytes('drawing.png', bytes, mimeType: 'image/png');
       } else {
-        await FilePicker.platform.saveFile(
+        final result = await FilePicker.platform.saveFile(
           dialogTitle: 'Export PNG',
           fileName: 'drawing.png',
-          type: FileType.custom,
-          allowedExtensions: ['png'],
+          type: FileType.any,
           bytes: bytes,
         );
+        if (result != null) {
+          // On desktop, saveFile may not write bytes — write manually
+          await writeBytesToFile(result, bytes);
+        }
       }
     } catch (e) {
       debugPrint('PNG export error: $e');
@@ -470,14 +483,17 @@ class _CanvasPageState extends State<_CanvasPage> {
       if (kIsWeb) {
         downloadFile('drawing.svg', svg);
       } else {
-        final bytes = Uint8List.fromList(utf8.encode(svg));
-        await FilePicker.platform.saveFile(
+        final svgBytes = Uint8List.fromList(utf8.encode(svg));
+        final result = await FilePicker.platform.saveFile(
           dialogTitle: 'Export SVG',
           fileName: 'drawing.svg',
-          type: FileType.custom,
-          allowedExtensions: ['svg'],
-          bytes: bytes,
+          type: FileType.any,
+          bytes: svgBytes,
         );
+        if (result != null) {
+          // On desktop, saveFile may not write bytes — write manually
+          await writeStringToFile(result, svg);
+        }
       }
     } catch (e) {
       debugPrint('SVG export error: $e');
@@ -487,8 +503,7 @@ class _CanvasPageState extends State<_CanvasPage> {
   Future<void> _saveFile() async {
     try {
       if (!kIsWeb && _currentFilePath != null) {
-        final doc =
-            SceneDocumentConverter.sceneToDocument(_editorState.scene);
+        final doc = SceneDocumentConverter.sceneToDocument(_editorState.scene);
         await _documentService.save(doc, _currentFilePath!);
       } else {
         await _saveFileAs();
@@ -500,8 +515,7 @@ class _CanvasPageState extends State<_CanvasPage> {
 
   Future<void> _saveFileAs() async {
     try {
-      final doc =
-          SceneDocumentConverter.sceneToDocument(_editorState.scene);
+      final doc = SceneDocumentConverter.sceneToDocument(_editorState.scene);
       final content = DocumentSerializer.serialize(doc);
 
       if (kIsWeb) {
@@ -554,15 +568,11 @@ class _CanvasPageState extends State<_CanvasPage> {
         DocumentFormat.markdraw => DocumentParser.parse(content),
         DocumentFormat.excalidraw => ExcalidrawJsonCodec.parse(content),
       };
-      final scene =
-          SceneDocumentConverter.documentToScene(parseResult.value);
+      final scene = SceneDocumentConverter.documentToScene(parseResult.value);
       _historyManager.clear();
       setState(() {
         _currentFilePath = kIsWeb ? null : file.path;
-        _editorState = _editorState.copyWith(
-          scene: scene,
-          selectedIds: {},
-        );
+        _editorState = _editorState.copyWith(scene: scene, selectedIds: {});
       });
     } catch (e) {
       debugPrint('Open error: $e');
@@ -570,11 +580,11 @@ class _CanvasPageState extends State<_CanvasPage> {
   }
 
   ToolContext get _toolContext => ToolContext(
-        scene: _editorState.scene,
-        viewport: _editorState.viewport,
-        selectedIds: _editorState.selectedIds,
-        clipboard: _editorState.clipboard,
-      );
+    scene: _editorState.scene,
+    viewport: _editorState.viewport,
+    selectedIds: _editorState.selectedIds,
+    clipboard: _editorState.clipboard,
+  );
 
   Point _toScene(Offset screenPos) {
     final scene = _editorState.viewport.screenToScene(screenPos);
@@ -651,123 +661,147 @@ class _CanvasPageState extends State<_CanvasPage> {
             ],
           ),
           body: Row(
-          children: [
-            Expanded(
-              child: MouseRegion(
-                cursor: _cursorForTool,
-                child: Stack(
-                  children: [
-                    Listener(
-                      onPointerHover: (event) {
-                        final point = _toScene(event.localPosition);
-                        _activeTool.onPointerMove(point, _toolContext);
-                        setState(() {});
-                      },
-                      onPointerDown: (event) {
-                        _keyboardFocusNode.requestFocus();
-                        if (_editingTextElementId != null) {
-                          _commitTextEditing();
-                        }
-                        _sceneBeforeDrag = _editorState.scene;
-                        final point = _toScene(event.localPosition);
-                        final shift = event.buttons == kSecondaryMouseButton;
-                        if (_activeTool is SelectTool) {
-                          _applyResult((_activeTool as SelectTool)
-                              .onPointerDown(point, _toolContext,
-                                  shift: shift));
-                        } else {
-                          _applyResult(
-                              _activeTool.onPointerDown(point, _toolContext));
-                        }
-                      },
-                      onPointerMove: (event) {
-                        final point = _toScene(event.localPosition);
-                        final delta = event.delta;
-                        _applyResult(_activeTool.onPointerMove(
-                            point, _toolContext,
-                            screenDelta: Offset(delta.dx, delta.dy)));
-                        setState(() {});
-                      },
-                      onPointerUp: (event) {
-                        final point = _toScene(event.localPosition);
-                        final now = DateTime.now();
-                        final isDoubleClick = _lastPointerUpTime != null &&
-                            now.difference(_lastPointerUpTime!).inMilliseconds <
-                                300;
-                        _lastPointerUpTime = now;
-
-                        if (_activeTool is LineTool) {
-                          _applyResult((_activeTool as LineTool)
-                              .onPointerUp(point, _toolContext,
-                                  isDoubleClick: isDoubleClick));
-                        } else if (_activeTool is ArrowTool) {
-                          _applyResult((_activeTool as ArrowTool)
-                              .onPointerUp(point, _toolContext,
-                                  isDoubleClick: isDoubleClick));
-                        } else {
-                          _applyResult(
-                              _activeTool.onPointerUp(point, _toolContext));
-                        }
-
-                        // Double-click dispatch for text editing
-                        if (isDoubleClick &&
-                            _activeTool is SelectTool &&
-                            _editingTextElementId == null) {
-                          final hit = _editorState.scene
-                              .getElementAtPoint(point);
-                          if (hit is TextElement) {
-                            _startTextEditingExisting(hit);
-                          } else if (hit != null &&
-                              BoundTextUtils.isTextContainer(hit)) {
-                            _startBoundTextEditing(hit);
-                          } else if (hit is ArrowElement) {
-                            _startArrowLabelEditing(hit);
+            children: [
+              Expanded(
+                child: MouseRegion(
+                  cursor: _cursorForTool,
+                  child: Stack(
+                    children: [
+                      Listener(
+                        onPointerHover: (event) {
+                          final point = _toScene(event.localPosition);
+                          _activeTool.onPointerMove(point, _toolContext);
+                          setState(() {});
+                        },
+                        onPointerDown: (event) {
+                          _keyboardFocusNode.requestFocus();
+                          if (_editingTextElementId != null) {
+                            _commitTextEditing();
                           }
-                        }
+                          _sceneBeforeDrag = _editorState.scene;
+                          final point = _toScene(event.localPosition);
+                          final shift = event.buttons == kSecondaryMouseButton;
+                          if (_activeTool is SelectTool) {
+                            _applyResult(
+                              (_activeTool as SelectTool).onPointerDown(
+                                point,
+                                _toolContext,
+                                shift: shift,
+                              ),
+                            );
+                          } else {
+                            _applyResult(
+                              _activeTool.onPointerDown(point, _toolContext),
+                            );
+                          }
+                        },
+                        onPointerMove: (event) {
+                          final point = _toScene(event.localPosition);
+                          final delta = event.delta;
+                          _applyResult(
+                            _activeTool.onPointerMove(
+                              point,
+                              _toolContext,
+                              screenDelta: Offset(delta.dx, delta.dy),
+                            ),
+                          );
+                          setState(() {});
+                        },
+                        onPointerUp: (event) {
+                          final point = _toScene(event.localPosition);
+                          final now = DateTime.now();
+                          final isDoubleClick =
+                              _lastPointerUpTime != null &&
+                              now
+                                      .difference(_lastPointerUpTime!)
+                                      .inMilliseconds <
+                                  300;
+                          _lastPointerUpTime = now;
 
-                        if (_sceneBeforeDrag != null &&
-                            !identical(
-                                _editorState.scene, _sceneBeforeDrag)) {
-                          _historyManager.push(_sceneBeforeDrag!);
-                        }
-                        _sceneBeforeDrag = null;
-                      },
-                      onPointerSignal: (event) {
-                        if (event is PointerScrollEvent) {
-                          final factor =
-                              event.scrollDelta.dy < 0 ? 1.1 : 0.9;
-                          final newViewport = _editorState.viewport
-                              .zoomAt(factor, event.localPosition);
-                          _applyResult(UpdateViewportResult(newViewport));
-                        }
-                      },
-                      child: CustomPaint(
-                        painter: StaticCanvasPainter(
-                          scene: _editorState.scene,
-                          adapter: _adapter,
-                          viewport: _editorState.viewport,
-                          previewElement: _buildPreviewElement(toolOverlay),
-                          editingElementId: _editingTextElementId,
+                          if (_activeTool is LineTool) {
+                            _applyResult(
+                              (_activeTool as LineTool).onPointerUp(
+                                point,
+                                _toolContext,
+                                isDoubleClick: isDoubleClick,
+                              ),
+                            );
+                          } else if (_activeTool is ArrowTool) {
+                            _applyResult(
+                              (_activeTool as ArrowTool).onPointerUp(
+                                point,
+                                _toolContext,
+                                isDoubleClick: isDoubleClick,
+                              ),
+                            );
+                          } else {
+                            _applyResult(
+                              _activeTool.onPointerUp(point, _toolContext),
+                            );
+                          }
+
+                          // Double-click dispatch for text editing
+                          if (isDoubleClick &&
+                              _activeTool is SelectTool &&
+                              _editingTextElementId == null) {
+                            final hit = _editorState.scene.getElementAtPoint(
+                              point,
+                            );
+                            if (hit is TextElement) {
+                              _startTextEditingExisting(hit);
+                            } else if (hit != null &&
+                                BoundTextUtils.isTextContainer(hit)) {
+                              _startBoundTextEditing(hit);
+                            } else if (hit is ArrowElement) {
+                              _startArrowLabelEditing(hit);
+                            }
+                          }
+
+                          if (_sceneBeforeDrag != null &&
+                              !identical(
+                                _editorState.scene,
+                                _sceneBeforeDrag,
+                              )) {
+                            _historyManager.push(_sceneBeforeDrag!);
+                          }
+                          _sceneBeforeDrag = null;
+                        },
+                        onPointerSignal: (event) {
+                          if (event is PointerScrollEvent) {
+                            final factor = event.scrollDelta.dy < 0 ? 1.1 : 0.9;
+                            final newViewport = _editorState.viewport.zoomAt(
+                              factor,
+                              event.localPosition,
+                            );
+                            _applyResult(UpdateViewportResult(newViewport));
+                          }
+                        },
+                        child: CustomPaint(
+                          painter: StaticCanvasPainter(
+                            scene: _editorState.scene,
+                            adapter: _adapter,
+                            viewport: _editorState.viewport,
+                            previewElement: _buildPreviewElement(toolOverlay),
+                            editingElementId: _editingTextElementId,
+                          ),
+                          foregroundPainter: InteractiveCanvasPainter(
+                            viewport: _editorState.viewport,
+                            selection: _buildSelectionOverlay(),
+                            marqueeRect: marqueeRect,
+                            bindTargetBounds: toolOverlay?.bindTargetBounds,
+                          ),
+                          child: const SizedBox.expand(),
                         ),
-                        foregroundPainter: InteractiveCanvasPainter(
-                          viewport: _editorState.viewport,
-                          selection: _buildSelectionOverlay(),
-                          marqueeRect: marqueeRect,
-                          bindTargetBounds: toolOverlay?.bindTargetBounds,
-                        ),
-                        child: const SizedBox.expand(),
                       ),
-                    ),
-                    if (_editingTextElementId != null)
-                      _buildTextEditingOverlay(),
-                  ],
+                      if (_editingTextElementId != null)
+                        _buildTextEditingOverlay(),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            if (_selectedElements.isNotEmpty)
-              _buildPropertyPanel(),
-          ],
-        ),
+              if (_selectedElements.isNotEmpty) _buildPropertyPanel(),
+            ],
+          ),
         ),
       ),
     );
@@ -776,58 +810,60 @@ class _CanvasPageState extends State<_CanvasPage> {
   /// Shortcut bindings for system-level shortcuts (Cmd+S, Cmd+O, etc.)
   /// that macOS intercepts before KeyEvent reaches Flutter.
   Map<ShortcutActivator, VoidCallback> get _shortcutBindings => {
-        const SingleActivator(LogicalKeyboardKey.keyS, meta: true):
-            _saveFile,
-        const SingleActivator(LogicalKeyboardKey.keyS, meta: true,
-            shift: true): _saveFileAs,
-        const SingleActivator(LogicalKeyboardKey.keyO, meta: true):
-            _openFile,
-        const SingleActivator(LogicalKeyboardKey.keyZ, meta: true): () {
-          final undone = _historyManager.undo(_editorState.scene);
-          if (undone != null) {
-            setState(() {
-              _editorState = _editorState.copyWith(scene: undone);
-            });
-          }
-        },
-        const SingleActivator(LogicalKeyboardKey.keyZ, meta: true,
-            shift: true): () {
-          final redone = _historyManager.redo(_editorState.scene);
-          if (redone != null) {
-            setState(() {
-              _editorState = _editorState.copyWith(scene: redone);
-            });
-          }
-        },
-        const SingleActivator(LogicalKeyboardKey.keyE, meta: true,
-            shift: true): _exportPng,
-        // Ctrl variants for non-macOS platforms
-        const SingleActivator(LogicalKeyboardKey.keyS, control: true):
-            _saveFile,
-        const SingleActivator(LogicalKeyboardKey.keyS, control: true,
-            shift: true): _saveFileAs,
-        const SingleActivator(LogicalKeyboardKey.keyO, control: true):
-            _openFile,
-        const SingleActivator(LogicalKeyboardKey.keyE, control: true,
-            shift: true): _exportPng,
-        const SingleActivator(LogicalKeyboardKey.keyZ, control: true): () {
-          final undone = _historyManager.undo(_editorState.scene);
-          if (undone != null) {
-            setState(() {
-              _editorState = _editorState.copyWith(scene: undone);
-            });
-          }
-        },
-        const SingleActivator(LogicalKeyboardKey.keyZ, control: true,
-            shift: true): () {
-          final redone = _historyManager.redo(_editorState.scene);
-          if (redone != null) {
-            setState(() {
-              _editorState = _editorState.copyWith(scene: redone);
-            });
-          }
-        },
-      };
+    const SingleActivator(LogicalKeyboardKey.keyS, meta: true): _saveFile,
+    const SingleActivator(LogicalKeyboardKey.keyS, meta: true, shift: true):
+        _saveFileAs,
+    const SingleActivator(LogicalKeyboardKey.keyO, meta: true): _openFile,
+    const SingleActivator(LogicalKeyboardKey.keyZ, meta: true): () {
+      final undone = _historyManager.undo(_editorState.scene);
+      if (undone != null) {
+        setState(() {
+          _editorState = _editorState.copyWith(scene: undone);
+        });
+      }
+    },
+    const SingleActivator(
+      LogicalKeyboardKey.keyZ,
+      meta: true,
+      shift: true,
+    ): () {
+      final redone = _historyManager.redo(_editorState.scene);
+      if (redone != null) {
+        setState(() {
+          _editorState = _editorState.copyWith(scene: redone);
+        });
+      }
+    },
+    const SingleActivator(LogicalKeyboardKey.keyE, meta: true, shift: true):
+        _exportPng,
+    // Ctrl variants for non-macOS platforms
+    const SingleActivator(LogicalKeyboardKey.keyS, control: true): _saveFile,
+    const SingleActivator(LogicalKeyboardKey.keyS, control: true, shift: true):
+        _saveFileAs,
+    const SingleActivator(LogicalKeyboardKey.keyO, control: true): _openFile,
+    const SingleActivator(LogicalKeyboardKey.keyE, control: true, shift: true):
+        _exportPng,
+    const SingleActivator(LogicalKeyboardKey.keyZ, control: true): () {
+      final undone = _historyManager.undo(_editorState.scene);
+      if (undone != null) {
+        setState(() {
+          _editorState = _editorState.copyWith(scene: undone);
+        });
+      }
+    },
+    const SingleActivator(
+      LogicalKeyboardKey.keyZ,
+      control: true,
+      shift: true,
+    ): () {
+      final redone = _historyManager.redo(_editorState.scene);
+      if (redone != null) {
+        setState(() {
+          _editorState = _editorState.copyWith(scene: redone);
+        });
+      }
+    },
+  };
 
   List<Element> get _selectedElements {
     return _editorState.selectedIds
@@ -864,8 +900,7 @@ class _CanvasPageState extends State<_CanvasPage> {
             _buildSectionLabel('Stroke'),
             _buildColorRow(
               selected: style.strokeColor,
-              onSelect: (c) =>
-                  _applyStyleChange(ElementStyle(strokeColor: c)),
+              onSelect: (c) => _applyStyleChange(ElementStyle(strokeColor: c)),
             ),
             const SizedBox(height: 8),
             _buildSectionLabel('Background'),
@@ -915,11 +950,14 @@ class _CanvasPageState extends State<_CanvasPage> {
   Widget _buildSectionLabel(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
-      child: Text(text,
-          style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700)),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: Colors.grey.shade700,
+        ),
+      ),
     );
   }
 
@@ -937,10 +975,7 @@ class _CanvasPageState extends State<_CanvasPage> {
     required ValueChanged<String> onSelect,
     bool includeTransparent = false,
   }) {
-    final colors = [
-      if (includeTransparent) 'transparent',
-      ..._colorSwatches,
-    ];
+    final colors = [if (includeTransparent) 'transparent', ..._colorSwatches];
     return Wrap(
       spacing: 4,
       runSpacing: 4,
@@ -1005,9 +1040,7 @@ class _CanvasPageState extends State<_CanvasPage> {
       min: 0,
       max: 1,
       divisions: 20,
-      label: current != null
-          ? '${(current * 100).round()}%'
-          : 'mixed',
+      label: current != null ? '${(current * 100).round()}%' : 'mixed',
       onChanged: (v) => _applyStyleChange(ElementStyle(opacity: v)),
     );
   }
@@ -1022,10 +1055,12 @@ class _CanvasPageState extends State<_CanvasPage> {
           value: hasRoundness,
           onChanged: (on) {
             if (on) {
-              _applyStyleChange(const ElementStyle(
-                roundness: Roundness.adaptive(value: 8),
-                hasRoundness: true,
-              ));
+              _applyStyleChange(
+                const ElementStyle(
+                  roundness: Roundness.adaptive(value: 8),
+                  hasRoundness: true,
+                ),
+              );
             } else {
               // Clear roundness by applying with hasRoundness but null value
               // We need a special approach — set a zero-value roundness to
@@ -1036,11 +1071,12 @@ class _CanvasPageState extends State<_CanvasPage> {
               final results = <ToolResult>[];
               for (final e in elements) {
                 results.add(
-                    UpdateElementResult(e.copyWith(clearRoundness: true)));
+                  UpdateElementResult(e.copyWith(clearRoundness: true)),
+                );
               }
-              _applyResult(results.length == 1
-                  ? results.first
-                  : CompoundResult(results));
+              _applyResult(
+                results.length == 1 ? results.first : CompoundResult(results),
+              );
             }
           },
         ),
@@ -1067,7 +1103,8 @@ class _CanvasPageState extends State<_CanvasPage> {
       labels: families,
       isSelected: (i) => current == families[i],
       onTap: (i) => _applyStyleChange(
-          ElementStyle(hasText: true, fontFamily: families[i])),
+        ElementStyle(hasText: true, fontFamily: families[i]),
+      ),
     );
   }
 
@@ -1078,8 +1115,8 @@ class _CanvasPageState extends State<_CanvasPage> {
       count: aligns.length,
       labels: labels,
       isSelected: (i) => current == aligns[i],
-      onTap: (i) => _applyStyleChange(
-          ElementStyle(hasText: true, textAlign: aligns[i])),
+      onTap: (i) =>
+          _applyStyleChange(ElementStyle(hasText: true, textAlign: aligns[i])),
     );
   }
 
@@ -1119,20 +1156,29 @@ class _CanvasPageState extends State<_CanvasPage> {
       final b = overlay.creationBounds!;
       return switch (toolType) {
         ToolType.rectangle => RectangleElement(
-            id: previewId, x: b.left, y: b.top,
-            width: b.size.width, height: b.size.height,
-            seed: previewSeed,
-          ),
+          id: previewId,
+          x: b.left,
+          y: b.top,
+          width: b.size.width,
+          height: b.size.height,
+          seed: previewSeed,
+        ),
         ToolType.ellipse => EllipseElement(
-            id: previewId, x: b.left, y: b.top,
-            width: b.size.width, height: b.size.height,
-            seed: previewSeed,
-          ),
+          id: previewId,
+          x: b.left,
+          y: b.top,
+          width: b.size.width,
+          height: b.size.height,
+          seed: previewSeed,
+        ),
         ToolType.diamond => DiamondElement(
-            id: previewId, x: b.left, y: b.top,
-            width: b.size.width, height: b.size.height,
-            seed: previewSeed,
-          ),
+          id: previewId,
+          x: b.left,
+          y: b.top,
+          width: b.size.width,
+          height: b.size.height,
+          seed: previewSeed,
+        ),
         _ => null,
       };
     }
@@ -1148,21 +1194,33 @@ class _CanvasPageState extends State<_CanvasPage> {
 
       return switch (toolType) {
         ToolType.line => LineElement(
-            id: previewId, x: minX, y: minY,
-            width: maxX - minX, height: maxY - minY,
-            points: relPts, seed: previewSeed,
-          ),
+          id: previewId,
+          x: minX,
+          y: minY,
+          width: maxX - minX,
+          height: maxY - minY,
+          points: relPts,
+          seed: previewSeed,
+        ),
         ToolType.arrow => ArrowElement(
-            id: previewId, x: minX, y: minY,
-            width: maxX - minX, height: maxY - minY,
-            points: relPts, seed: previewSeed,
-            endArrowhead: Arrowhead.arrow,
-          ),
+          id: previewId,
+          x: minX,
+          y: minY,
+          width: maxX - minX,
+          height: maxY - minY,
+          points: relPts,
+          seed: previewSeed,
+          endArrowhead: Arrowhead.arrow,
+        ),
         ToolType.freedraw => FreedrawElement(
-            id: previewId, x: minX, y: minY,
-            width: maxX - minX, height: maxY - minY,
-            points: relPts, seed: previewSeed,
-          ),
+          id: previewId,
+          x: minX,
+          y: minY,
+          width: maxX - minX,
+          height: maxY - minY,
+          points: relPts,
+          seed: previewSeed,
+        ),
         _ => null,
       };
     }
@@ -1183,8 +1241,7 @@ class _CanvasPageState extends State<_CanvasPage> {
       final isBound = element.containerId != null;
       if (isBound) {
         // Bound text: keep parent's dimensions, just update text
-        _editorState =
-            _editorState.applyResult(UpdateElementResult(measured));
+        _editorState = _editorState.applyResult(UpdateElementResult(measured));
       } else {
         // Standalone text: auto-resize using TextRenderer.measure
         final (w, h) = TextRenderer.measure(measured);
@@ -1192,8 +1249,7 @@ class _CanvasPageState extends State<_CanvasPage> {
           width: math.max(w + 4, 20.0),
           height: math.max(h, element.fontSize * element.lineHeight),
         );
-        _editorState =
-            _editorState.applyResult(UpdateElementResult(updated));
+        _editorState = _editorState.applyResult(UpdateElementResult(updated));
       }
     });
   }
@@ -1211,11 +1267,13 @@ class _CanvasPageState extends State<_CanvasPage> {
 
     // For bound text, center the editor within the parent shape
     if (textElem != null && textElem.containerId != null) {
-      final parent = _editorState.scene
-          .getElementById(ElementId(textElem.containerId!));
+      final parent = _editorState.scene.getElementById(
+        ElementId(textElem.containerId!),
+      );
       if (parent != null) {
-        final parentTopLeft = _editorState.viewport
-            .sceneToScreen(Offset(parent.x, parent.y));
+        final parentTopLeft = _editorState.viewport.sceneToScreen(
+          Offset(parent.x, parent.y),
+        );
         final parentW = parent.width * zoom;
         final parentH = parent.height * zoom;
 
@@ -1227,31 +1285,34 @@ class _CanvasPageState extends State<_CanvasPage> {
             height: parentH,
             child: Center(
               child: IntrinsicWidth(
-                child: TextSelectionGestureDetectorBuilder(
-                  delegate: _TextSelectionDelegate(_editableTextKey),
-                ).buildGestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  child: EditableText(
-                    key: _editableTextKey,
-                    rendererIgnoresPointer: true,
-                    controller: _textEditingController,
-                    focusNode: _textFocusNode,
-                    autofocus: true,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: fontSize,
-                      fontFamily: fontFamily,
-                      color: textColor,
-                      height: lineHeight,
+                child:
+                    TextSelectionGestureDetectorBuilder(
+                      delegate: _TextSelectionDelegate(_editableTextKey),
+                    ).buildGestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      child: EditableText(
+                        key: _editableTextKey,
+                        rendererIgnoresPointer: true,
+                        controller: _textEditingController,
+                        focusNode: _textFocusNode,
+                        autofocus: true,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: fontSize,
+                          fontFamily: fontFamily,
+                          color: textColor,
+                          height: lineHeight,
+                        ),
+                        cursorColor: Colors.blue,
+                        backgroundCursorColor: Colors.grey,
+                        selectionColor: Colors.blue.shade300.withValues(
+                          alpha: 0.5,
+                        ),
+                        maxLines: null,
+                        onChanged: (_) => _onTextChanged(),
+                        onSubmitted: (_) => _commitTextEditing(),
+                      ),
                     ),
-                    cursorColor: Colors.blue,
-                    backgroundCursorColor: Colors.grey,
-                    selectionColor: Colors.blue.shade300.withValues(alpha: 0.5),
-                    maxLines: null,
-                    onChanged: (_) => _onTextChanged(),
-                    onSubmitted: (_) => _commitTextEditing(),
-                  ),
-                ),
               ),
             ),
           ),
@@ -1260,36 +1321,38 @@ class _CanvasPageState extends State<_CanvasPage> {
     }
 
     // Standalone text: position at element's top-left
-    final screenPos = _editorState.viewport
-        .sceneToScreen(Offset(element.x, element.y));
+    final screenPos = _editorState.viewport.sceneToScreen(
+      Offset(element.x, element.y),
+    );
 
     return Positioned(
       left: screenPos.dx,
       top: screenPos.dy,
       child: IntrinsicWidth(
-        child: TextSelectionGestureDetectorBuilder(
-          delegate: _TextSelectionDelegate(_editableTextKey),
-        ).buildGestureDetector(
-          behavior: HitTestBehavior.translucent,
-          child: EditableText(
-            key: _editableTextKey,
-            rendererIgnoresPointer: true,
-            controller: _textEditingController,
-            focusNode: _textFocusNode,
-            autofocus: true,
-            style: TextStyle(
-              fontSize: fontSize,
-              fontFamily: fontFamily,
-              color: textColor,
-              height: lineHeight,
+        child:
+            TextSelectionGestureDetectorBuilder(
+              delegate: _TextSelectionDelegate(_editableTextKey),
+            ).buildGestureDetector(
+              behavior: HitTestBehavior.translucent,
+              child: EditableText(
+                key: _editableTextKey,
+                rendererIgnoresPointer: true,
+                controller: _textEditingController,
+                focusNode: _textFocusNode,
+                autofocus: true,
+                style: TextStyle(
+                  fontSize: fontSize,
+                  fontFamily: fontFamily,
+                  color: textColor,
+                  height: lineHeight,
+                ),
+                cursorColor: Colors.blue,
+                backgroundCursorColor: Colors.grey,
+                selectionColor: Colors.blue.shade300.withValues(alpha: 0.5),
+                onChanged: (_) => _onTextChanged(),
+                onSubmitted: (_) => _commitTextEditing(),
+              ),
             ),
-            cursorColor: Colors.blue,
-            backgroundCursorColor: Colors.grey,
-            selectionColor: Colors.blue.shade300.withValues(alpha: 0.5),
-            onChanged: (_) => _onTextChanged(),
-            onSubmitted: (_) => _commitTextEditing(),
-          ),
-        ),
       ),
     );
   }
@@ -1301,7 +1364,8 @@ class _CanvasPageState extends State<_CanvasPage> {
     if (event is! KeyDownEvent) return;
     final key = event.logicalKey;
     final shift = HardwareKeyboard.instance.isShiftPressed;
-    final ctrl = HardwareKeyboard.instance.isControlPressed ||
+    final ctrl =
+        HardwareKeyboard.instance.isControlPressed ||
         HardwareKeyboard.instance.isMetaPressed;
 
     // Undo/redo shortcuts (intercept before tool dispatch)
@@ -1444,9 +1508,7 @@ class _ColorSwatch extends StatelessWidget {
           borderRadius: BorderRadius.circular(4),
         ),
         child: isTransparent
-            ? CustomPaint(
-                painter: _DiagonalLinePainter(),
-              )
+            ? CustomPaint(painter: _DiagonalLinePainter())
             : null,
       ),
     );
@@ -1459,11 +1521,7 @@ class _DiagonalLinePainter extends CustomPainter {
     final paint = Paint()
       ..color = Colors.red
       ..strokeWidth = 1.5;
-    canvas.drawLine(
-      Offset(0, size.height),
-      Offset(size.width, 0),
-      paint,
-    );
+    canvas.drawLine(Offset(0, size.height), Offset(size.width, 0), paint);
   }
 
   @override
