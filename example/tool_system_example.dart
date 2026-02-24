@@ -749,13 +749,31 @@ class _CanvasPageState extends State<_CanvasPage> {
                 tooltip: 'Export SVG',
               ),
               const VerticalDivider(width: 16, indent: 12, endIndent: 12),
-              IconButton(
-                icon: const Icon(Icons.add_photo_alternate),
-                onPressed: _importImage,
-                tooltip: 'Import Image',
-              ),
-              const VerticalDivider(width: 16, indent: 12, endIndent: 12),
-              for (final type in ToolType.values)
+              for (final type in ToolType.values) ...[
+                // Insert image import button at position 9 (after text)
+                if (type == ToolType.hand)
+                  IconButton(
+                    icon: const Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Icon(Icons.add_photo_alternate),
+                        Positioned(
+                          right: -6,
+                          bottom: -4,
+                          child: Text(
+                            '9',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    onPressed: _importImage,
+                    tooltip: 'Import Image (9)',
+                  ),
                 IconButton(
                   icon: Stack(
                     clipBehavior: Clip.none,
@@ -786,6 +804,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                   onPressed: () => _switchTool(type),
                   tooltip: '${type.name} (${shortcutForToolType(type)})',
                 ),
+              ],
             ],
           ),
           body: Row(
@@ -1535,6 +1554,11 @@ class _CanvasPageState extends State<_CanvasPage> {
     if (!ctrl && !shift) {
       final label = key.keyLabel;
       if (label.length == 1) {
+        // 9 = import image (not a tool, but an action)
+        if (label == '9') {
+          _importImage();
+          return;
+        }
         final toolType = toolTypeForKey(label.toLowerCase());
         if (toolType != null) {
           _switchTool(toolType);
