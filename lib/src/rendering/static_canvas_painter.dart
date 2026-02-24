@@ -4,6 +4,7 @@ import 'package:flutter/rendering.dart';
 import '../core/elements/arrow_element.dart';
 import '../core/elements/element.dart';
 import '../core/elements/element_id.dart';
+import '../core/elements/frame_element.dart';
 import '../core/elements/text_element.dart' as core show TextElement;
 import '../core/math/point.dart';
 import '../core/scene/scene.dart';
@@ -56,8 +57,31 @@ class StaticCanvasPainter extends CustomPainter {
           element is core.TextElement) {
         continue;
       }
+
+      // Clip children of frames to frame bounds
+      final hasClip = element.frameId != null;
+      if (hasClip) {
+        final frame = _findFrameElement(element.frameId!);
+        if (frame != null) {
+          canvas.save();
+          canvas.clipRect(Rect.fromLTWH(
+            frame.x,
+            frame.y,
+            frame.width,
+            frame.height,
+          ));
+        }
+      }
+
       ElementRenderer.render(canvas, element, adapter);
       _renderBoundText(canvas, element);
+
+      if (hasClip) {
+        final frame = _findFrameElement(element.frameId!);
+        if (frame != null) {
+          canvas.restore();
+        }
+      }
     }
 
     // Render live creation preview on top
@@ -66,6 +90,12 @@ class StaticCanvasPainter extends CustomPainter {
     }
 
     canvas.restore();
+  }
+
+  /// Finds a frame element by its ID value.
+  FrameElement? _findFrameElement(String frameId) {
+    final el = scene.getElementById(ElementId(frameId));
+    return el is FrameElement ? el : null;
   }
 
   /// Renders bound text inside a container shape or at an arrow's midpoint.

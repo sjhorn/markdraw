@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../../core/elements/arrow_element.dart';
 import '../../core/elements/element_id.dart';
+import '../../core/elements/frame_element.dart';
 import '../../core/elements/text_element.dart';
 import '../../core/io/scene_document_converter.dart';
 import '../../core/scene/scene.dart';
@@ -47,6 +48,20 @@ class SvgExporter {
     // Collect elements to render
     final ordered = scene.orderedElements;
 
+    // Emit clipPath definitions for frames
+    final frames = ordered.where(
+        (e) => !e.isDeleted && e is FrameElement);
+    if (frames.isNotEmpty) {
+      buf.write('<defs>');
+      for (final frame in frames) {
+        buf.write('<clipPath id="clip-${frame.id.value}">');
+        buf.write('<rect x="${_n(frame.x)}" y="${_n(frame.y)}" ');
+        buf.write('width="${_n(frame.width)}" height="${_n(frame.height)}"/>');
+        buf.write('</clipPath>');
+      }
+      buf.write('</defs>');
+    }
+
     for (final element in ordered) {
       if (element.isDeleted) continue;
       // Skip bound text — rendered with parent
@@ -55,12 +70,22 @@ class SvgExporter {
       // If selection filter is active, skip non-selected elements
       if (selectedIds != null && !selectedIds.contains(element.id)) continue;
 
+      // Wrap frame children in clip group
+      final hasClip = element.frameId != null;
+      if (hasClip) {
+        buf.write('<g clip-path="url(#clip-${element.frameId})">');
+      }
+
       buf.write(SvgElementRenderer.render(element));
 
       // Render bound text for this element
       final boundText = scene.findBoundText(element.id);
       if (boundText != null && boundText.text.isNotEmpty) {
         _renderBoundText(buf, element, boundText);
+      }
+
+      if (hasClip) {
+        buf.write('</g>');
       }
     }
 

@@ -3,6 +3,7 @@ import 'dart:ui';
 import '../core/math/point.dart';
 import '../core/elements/arrow_element.dart';
 import '../core/elements/element.dart' as core;
+import '../core/elements/frame_element.dart';
 import '../core/elements/freedraw_element.dart';
 import '../core/elements/line_element.dart';
 import '../core/elements/text_element.dart' as core show TextElement;
@@ -64,6 +65,8 @@ class ElementRenderer {
         adapter.drawEllipse(canvas, bounds, style);
       case 'diamond':
         adapter.drawDiamond(canvas, bounds, style);
+      case 'frame':
+        _renderFrame(canvas, element, bounds);
       case 'line':
         if (element is LineElement) {
           final absPoints = _absolutePoints(element.points, element.x, element.y);
@@ -98,6 +101,47 @@ class ElementRenderer {
       default:
         break; // Unknown type — silently skip
     }
+  }
+
+  /// Renders a frame with clean (non-rough) lines and a label above the top.
+  static void _renderFrame(
+    Canvas canvas,
+    core.Element element,
+    Bounds bounds,
+  ) {
+    final strokePaint = Paint()
+      ..color = Color(_parseColor(element.strokeColor))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = element.strokeWidth;
+
+    canvas.drawRect(
+      Rect.fromLTWH(bounds.left, bounds.top, bounds.size.width, bounds.size.height),
+      strokePaint,
+    );
+
+    // Draw label above the top-left corner
+    if (element is FrameElement) {
+      TextRenderer.drawFrameLabel(
+        canvas,
+        element.label,
+        bounds.left,
+        bounds.top - 4,
+        element.strokeColor,
+      );
+    }
+  }
+
+  /// Parses a hex color string to an int value.
+  static int _parseColor(String color) {
+    if (color.startsWith('#')) {
+      final hex = color.substring(1);
+      if (hex.length == 6) {
+        return int.parse('FF$hex', radix: 16);
+      } else if (hex.length == 8) {
+        return int.parse(hex, radix: 16);
+      }
+    }
+    return 0xFF000000; // Default to black
   }
 
   /// Converts relative points to absolute by adding the element's origin.

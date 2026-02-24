@@ -68,6 +68,35 @@ class ExportBounds {
         }
       }
 
+      // Include frame children when frame is in selection
+      final addedIds = <String>{};
+      for (final e in scene.elements) {
+        if (e.isDeleted) continue;
+        if (e.frameId != null &&
+            selectedIdValues.contains(e.frameId) &&
+            !selectedIdValues.contains(e.id.value) &&
+            !addedIds.contains(e.id.value)) {
+          selected.add(e);
+          addedIds.add(e.id.value);
+        }
+      }
+
+      // Include frame when any of its children is in selection
+      for (final e in scene.elements) {
+        if (e.isDeleted) continue;
+        if (e.frameId != null &&
+            selectedIdValues.contains(e.id.value)) {
+          if (!selectedIdValues.contains(e.frameId) &&
+              !addedIds.contains(e.frameId)) {
+            final frame = scene.getElementById(ElementId(e.frameId!));
+            if (frame != null) {
+              selected.add(frame);
+              addedIds.add(e.frameId!);
+            }
+          }
+        }
+      }
+
       return selected;
     }
 

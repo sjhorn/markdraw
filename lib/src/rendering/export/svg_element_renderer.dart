@@ -4,6 +4,7 @@ import 'package:rough_flutter/rough_flutter.dart';
 
 import '../../core/elements/arrow_element.dart';
 import '../../core/elements/element.dart';
+import '../../core/elements/frame_element.dart';
 import '../../core/elements/freedraw_element.dart';
 import '../../core/elements/line_element.dart';
 import '../../core/elements/stroke_style.dart';
@@ -65,6 +66,8 @@ class SvgElementRenderer {
         if (element is FreedrawElement) _renderFreedraw(buf, element);
       case 'text':
         if (element is TextElement) _renderText(buf, element);
+      case 'frame':
+        if (element is FrameElement) _renderFrame(buf, element);
     }
   }
 
@@ -211,6 +214,33 @@ class SvgElementRenderer {
     buf.write('>');
     buf.write(_escapeXml(element.text));
     buf.write('</text>');
+  }
+
+  static void _renderFrame(StringBuffer buf, FrameElement element) {
+    // Clean rectangle border (not rough)
+    buf.write('<rect ');
+    buf.write('x="${_n(element.x)}" ');
+    buf.write('y="${_n(element.y)}" ');
+    buf.write('width="${_n(element.width)}" ');
+    buf.write('height="${_n(element.height)}" ');
+    buf.write('stroke="${element.strokeColor}" ');
+    buf.write('stroke-width="${_n(element.strokeWidth)}" ');
+    buf.write('fill="none"');
+    buf.write('/>');
+
+    // Label above top-left corner
+    if (element.label.isNotEmpty) {
+      buf.write('<text ');
+      buf.write('x="${_n(element.x)}" ');
+      buf.write('y="${_n(element.y - 4)}" ');
+      buf.write('font-size="14" ');
+      buf.write('font-family="Helvetica" ');
+      buf.write('fill="${element.strokeColor}" ');
+      buf.write('text-anchor="start"');
+      buf.write('>');
+      buf.write(_escapeXml(element.label));
+      buf.write('</text>');
+    }
   }
 
   static void _drawableToSvg(

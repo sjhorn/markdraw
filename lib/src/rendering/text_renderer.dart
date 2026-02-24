@@ -57,6 +57,32 @@ class TextRenderer {
     );
   }
 
+  /// Draws a frame label above its top-left corner.
+  static void drawFrameLabel(
+    ui.Canvas canvas,
+    String label,
+    double x,
+    double y,
+    String colorStr,
+  ) {
+    if (label.isEmpty) return;
+
+    final color = _parseColor(colorStr);
+    final style = TextStyle(
+      color: color,
+      fontSize: 14,
+      fontFamily: 'Helvetica',
+    );
+
+    final painter = TextPainter(
+      text: TextSpan(text: label, style: style),
+      textDirection: ui.TextDirection.ltr,
+    );
+    painter.layout();
+    painter.paint(canvas, Offset(x, y - painter.height));
+    painter.dispose();
+  }
+
   static TextAlign _mapTextAlign(core.TextAlign align) {
     return switch (align) {
       core.TextAlign.left => TextAlign.left,
