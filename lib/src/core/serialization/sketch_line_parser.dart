@@ -175,6 +175,7 @@ class SketchLineParser {
           angle: common.angle,
           locked: common.locked,
           seed: common.seed,
+          groupIds: common.groupIds,
         ),
       'ellipse' => EllipseElement(
           id: elementId,
@@ -193,6 +194,7 @@ class SketchLineParser {
           angle: common.angle,
           locked: common.locked,
           seed: common.seed,
+          groupIds: common.groupIds,
         ),
       'diamond' => DiamondElement(
           id: elementId,
@@ -211,6 +213,7 @@ class SketchLineParser {
           angle: common.angle,
           locked: common.locked,
           seed: common.seed,
+          groupIds: common.groupIds,
         ),
       _ => null,
     };
@@ -256,6 +259,7 @@ class SketchLineParser {
       angle: common.angle,
       locked: common.locked,
       seed: common.seed,
+      groupIds: common.groupIds,
     );
 
     return ParseResult(value: element);
@@ -297,6 +301,7 @@ class SketchLineParser {
       angle: common.angle,
       locked: common.locked,
       seed: common.seed,
+      groupIds: common.groupIds,
     );
 
     return ParseResult(value: element);
@@ -352,6 +357,7 @@ class SketchLineParser {
       angle: common.angle,
       locked: common.locked,
       seed: common.seed,
+      groupIds: common.groupIds,
     );
 
     if (hasBindings) {
@@ -401,6 +407,7 @@ class SketchLineParser {
       angle: common.angle,
       locked: common.locked,
       seed: common.seed,
+      groupIds: common.groupIds,
     );
 
     return ParseResult(value: element);
@@ -459,6 +466,7 @@ class _CommonProperties {
   final double angle;
   final bool locked;
   final int seed;
+  final List<String> groupIds;
 
   _CommonProperties({
     required this.strokeColor,
@@ -472,6 +480,7 @@ class _CommonProperties {
     required this.angle,
     required this.locked,
     required this.seed,
+    required this.groupIds,
   });
 }
 
@@ -561,6 +570,10 @@ class _PropertyBag {
     final angleVal = namedDouble('angle');
     final seedVal = namedInt('seed');
     final isLocked = hasFlag('locked');
+    final groupStr = namedString('group');
+    final groupIds = groupStr != null && groupStr.isNotEmpty
+        ? groupStr.split(',')
+        : <String>[];
 
     return _CommonProperties(
       strokeColor: colorStr ?? '#000000',
@@ -576,6 +589,7 @@ class _PropertyBag {
       angle: angleVal ?? 0.0,
       locked: isLocked,
       seed: seedVal ?? 1,
+      groupIds: groupIds,
     );
   }
 

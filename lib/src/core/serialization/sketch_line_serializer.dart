@@ -223,6 +223,9 @@ class SketchLineSerializer {
     if (element.locked) {
       parts.add('locked');
     }
+    if (element.groupIds.isNotEmpty) {
+      parts.add('group=${element.groupIds.join(',')}');
+    }
     parts.add('seed=${element.seed}');
   }
 
