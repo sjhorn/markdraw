@@ -7,6 +7,7 @@ import '../../core/elements/element_id.dart';
 import '../../core/elements/freedraw_element.dart';
 import '../../core/elements/line_element.dart';
 import '../../core/elements/text_element.dart';
+import '../../core/groups/group_utils.dart';
 import '../../core/math/bounds.dart';
 import '../../core/math/point.dart';
 import '../../core/scene/scene.dart';
@@ -191,15 +192,39 @@ class SelectTool implements Tool {
   }
 
   ToolResult _handleClick(Element hit, ToolContext context) {
+    // Resolve group level for this click
+    final groupId = GroupUtils.resolveGroupForClick(
+      hit,
+      context.selectedIds,
+      context.scene,
+    );
+
     if (_shiftDown) {
       // Toggle in/out of selection
       final ids = Set<ElementId>.from(context.selectedIds);
-      if (ids.contains(hit.id)) {
-        ids.remove(hit.id);
+      if (groupId != null) {
+        // Toggle entire group
+        final members = GroupUtils.findGroupMembers(context.scene, groupId);
+        final memberIds = members.map((e) => e.id).toSet();
+        final allSelected = memberIds.every((id) => ids.contains(id));
+        if (allSelected) {
+          ids.removeAll(memberIds);
+        } else {
+          ids.addAll(memberIds);
+        }
       } else {
-        ids.add(hit.id);
+        if (ids.contains(hit.id)) {
+          ids.remove(hit.id);
+        } else {
+          ids.add(hit.id);
+        }
       }
       return SetSelectionResult(ids);
+    }
+
+    if (groupId != null) {
+      final members = GroupUtils.findGroupMembers(context.scene, groupId);
+      return SetSelectionResult(members.map((e) => e.id).toSet());
     }
     return SetSelectionResult({hit.id});
   }
@@ -251,7 +276,29 @@ class SelectTool implements Tool {
         ...textUpdates,
       ]);
     }
-    // Dragging an unselected element: select then move
+
+    // Dragging an unselected element: expand to outermost group if grouped
+    final outermostGid = GroupUtils.outermostGroupId(hit);
+    if (outermostGid != null) {
+      final groupMembers =
+          GroupUtils.findGroupMembers(context.scene, outermostGid);
+      final groupIds = groupMembers.map((e) => e.id).toSet();
+      final startElems = _startElements ?? groupMembers;
+      final updates = <ToolResult>[SetSelectionResult(groupIds)];
+      final movedElements = <Element>[];
+      for (final elem in startElems) {
+        final m = elem.copyWith(x: elem.x + dx, y: elem.y + dy);
+        updates.add(UpdateElementResult(m));
+        movedElements.add(m);
+      }
+      updates.addAll(
+          _buildBoundArrowUpdates(context.scene, movedElements, groupIds));
+      updates.addAll(
+          BoundTextUtils.updateBoundTextPositions(context.scene, movedElements));
+      return CompoundResult(updates);
+    }
+
+    // Dragging an unselected ungrouped element: select then move
     final arrowUpdates = _buildBoundArrowUpdates(
         context.scene, [moved], {hit.id});
     final textUpdates = BoundTextUtils.updateBoundTextPositions(
@@ -282,7 +329,22 @@ class SelectTool implements Tool {
         selected.add(e.id);
       }
     }
-    return SetSelectionResult(selected);
+
+    // Expand to include all members of any group that has at least one hit
+    final groupsToExpand = <String>{};
+    for (final id in selected) {
+      final element = context.scene.getElementById(id);
+      if (element != null) {
+        for (final gid in element.groupIds) {
+          groupsToExpand.add(gid);
+        }
+      }
+    }
+    var expanded = Set<ElementId>.from(selected);
+    for (final gid in groupsToExpand) {
+      expanded = GroupUtils.expandToGroup(context.scene, expanded, gid);
+    }
+    return SetSelectionResult(expanded);
   }
 
   // --- Handle hit-testing ---
@@ -880,6 +942,31 @@ class SelectTool implements Tool {
       return _duplicateElements(selectedElements, context: context);
     }
 
+    // Ctrl+G: Group selected elements
+    if (ctrl && !shift && (key == 'g' || key == 'G')) {
+      if (selectedElements.length < 2) return null;
+      final newGroupId = ElementId.generate().value;
+      final grouped = GroupUtils.groupElements(selectedElements, newGroupId);
+      final results = <ToolResult>[
+        for (final e in grouped) UpdateElementResult(e),
+      ];
+      return CompoundResult(results);
+    }
+
+    // Ctrl+Shift+G: Ungroup selected elements
+    if (ctrl && shift && (key == 'g' || key == 'G')) {
+      if (selectedElements.isEmpty) return null;
+      // Only ungroup elements that actually have groupIds
+      final groupedElements =
+          selectedElements.where((e) => e.groupIds.isNotEmpty).toList();
+      if (groupedElements.isEmpty) return null;
+      final ungrouped = GroupUtils.ungroupElements(groupedElements);
+      final results = <ToolResult>[
+        for (final e in ungrouped) UpdateElementResult(e),
+      ];
+      return CompoundResult(results);
+    }
+
     // Ctrl+A: Select all (skip bound text)
     if (ctrl && (key == 'a' || key == 'A')) {
       final allIds = context.scene.activeElements
@@ -931,14 +1018,24 @@ class SelectTool implements Tool {
     final newIds = <ElementId>{};
     // Map old ID → new ID for reconnecting bound text
     final idMap = <String, ElementId>{};
+    // Map old groupId → new groupId for independent duplicate groups
+    final groupIdMap = <String, String>{};
+    for (final e in elements) {
+      for (final gid in e.groupIds) {
+        groupIdMap.putIfAbsent(gid, () => ElementId.generate().value);
+      }
+    }
     for (final e in elements) {
       final newId = ElementId.generate();
       newIds.add(newId);
       idMap[e.id.value] = newId;
+      final remappedGroupIds =
+          e.groupIds.map((gid) => groupIdMap[gid]!).toList();
       results.add(AddElementResult(e.copyWith(
         id: newId,
         x: e.x + 10,
         y: e.y + 10,
+        groupIds: remappedGroupIds,
       )));
     }
     // Duplicate bound text for each element that has it
@@ -979,14 +1076,24 @@ class SelectTool implements Tool {
     final results = <ToolResult>[];
     final newIds = <ElementId>{};
     final idMap = <String, ElementId>{};
+    // Map old groupId → new groupId for independent pasted groups
+    final groupIdMap = <String, String>{};
+    for (final e in clipboard) {
+      for (final gid in e.groupIds) {
+        groupIdMap.putIfAbsent(gid, () => ElementId.generate().value);
+      }
+    }
     for (final e in clipboard) {
       final newId = ElementId.generate();
       newIds.add(newId);
       idMap[e.id.value] = newId;
+      final remappedGroupIds =
+          e.groupIds.map((gid) => groupIdMap[gid]!).toList();
       results.add(AddElementResult(e.copyWith(
         id: newId,
         x: e.x + 10,
         y: e.y + 10,
+        groupIds: remappedGroupIds,
       )));
     }
     // Also paste bound text for clipboard elements
@@ -1110,6 +1217,15 @@ class SelectTool implements Tool {
     final isSelected = context.selectedIds.contains(hit.id);
     if (isSelected && context.selectedIds.length > 1) {
       _startElements = _getSelectedElements(context);
+    } else if (!isSelected) {
+      // Dragging an unselected element: capture group members if grouped
+      final outermostGid = GroupUtils.outermostGroupId(hit);
+      if (outermostGid != null) {
+        _startElements =
+            GroupUtils.findGroupMembers(context.scene, outermostGid);
+      } else {
+        _startElements = [hit];
+      }
     } else {
       _startElements = [hit];
     }
