@@ -451,12 +451,19 @@ markdraw/
 > Goal: The remaining 20% — frames, images, grouping, advanced arrows.
 
 ### 6.1 Grouping
-- [ ] Select multiple elements → Ctrl/Cmd+G to group
-- [ ] Groups behave as single selectable unit
-- [ ] Ctrl/Cmd+Shift+G to ungroup
-- [ ] Nested groups
-- [ ] `.markdraw` syntax: `group id=mygroup { ... }`
-- [ ] **Tests**: Group operations, nested selection, serialization
+- [x] Select multiple elements → Ctrl/Cmd+G to group
+- [x] Groups behave as single selectable unit (click selects group, click again drills to individual)
+- [x] Ctrl/Cmd+Shift+G to ungroup (removes outermost groupId)
+- [x] Nested groups (groupIds list: innermost-first, outermost-last)
+- [x] `.markdraw` syntax: `group=id1,id2` inline property on element lines
+- [x] Marquee selection expands to include all group members
+- [x] Dragging unselected grouped element moves entire group
+- [x] Duplicate/paste remap groupIds for independence
+- [x] Shift+click toggles entire group in/out of selection
+- [x] `GroupUtils` stateless utility class (follows `BindingUtils` pattern)
+- [x] **Tests**: 73 new tests — GroupUtils (25), SelectTool grouping (34), serialization round-trip (14)
+
+> **TDD checkpoint**: GroupUtils with outermost/innermost, findGroupMembers, expandToGroup, groupElements, ungroupElements, resolveGroupForClick. SelectTool group-aware click/marquee/move/keyboard. Serializer/parser for group= property. ~73 new tests, ~1185 total. Zero analyzer issues. ✅
 
 ### 6.2 Frames
 - [ ] Frame element — named container that clips children
@@ -608,6 +615,6 @@ For every feature:
 | **M3: Edit (80%)** | 3 | Full drawing interaction | Create, select, move, resize, connect, undo |
 | **M4: Text** | 4 | Inline text editing + bound text | Text in shapes, arrow labels |
 | **M5: Export** | 5 | PNG, SVG, clipboard, Excalidraw interop | 1112 tests, round-trip verified |
-| **M6: Advanced (100%)** | 6 | Groups, frames, images, elbow arrows | Feature parity with Excalidraw essentials |
+| **M6: Advanced (100%)** | 6 | Groups, frames, images, elbow arrows | 6.1 grouping complete (1185 tests) |
 | **M7: Ship** | 7 | All platforms polished | App store ready |
 | **M8: Grow** | 8 | Collaboration, AI, plugins | Post-launch iteration |

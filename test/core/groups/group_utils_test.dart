@@ -22,22 +22,6 @@ Element _rect({
       groupIds: groupIds,
     );
 
-Element _ellipse({
-  required String id,
-  double x = 0,
-  double y = 0,
-  List<String> groupIds = const [],
-}) =>
-    Element(
-      id: ElementId(id),
-      type: 'ellipse',
-      x: x,
-      y: y,
-      width: 100,
-      height: 100,
-      groupIds: groupIds,
-    );
-
 void main() {
   group('outermostGroupId', () {
     test('returns null for ungrouped element', () {
