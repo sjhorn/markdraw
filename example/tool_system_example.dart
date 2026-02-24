@@ -651,12 +651,34 @@ class _CanvasPageState extends State<_CanvasPage> {
               const VerticalDivider(width: 16, indent: 12, endIndent: 12),
               for (final type in ToolType.values)
                 IconButton(
-                  icon: Icon(_iconFor(type)),
-                  color: _editorState.activeToolType == type
-                      ? Colors.blue
-                      : null,
+                  icon: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Icon(
+                        _iconFor(type),
+                        color: _editorState.activeToolType == type
+                            ? Colors.blue
+                            : null,
+                      ),
+                      if (shortcutForToolType(type) != null)
+                        Positioned(
+                          right: -6,
+                          bottom: -4,
+                          child: Text(
+                            shortcutForToolType(type)!,
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: _editorState.activeToolType == type
+                                  ? Colors.blue
+                                  : Colors.grey,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                   onPressed: () => _switchTool(type),
-                  tooltip: type.name,
+                  tooltip: '${type.name} (${shortcutForToolType(type)})',
                 ),
             ],
           ),

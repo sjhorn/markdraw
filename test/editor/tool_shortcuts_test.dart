@@ -4,71 +4,85 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('toolTypeForKey', () {
-    test('v maps to select', () {
-      expect(toolTypeForKey('v'), ToolType.select);
+    test('1 maps to select', () {
+      expect(toolTypeForKey('1'), ToolType.select);
     });
 
-    test('r maps to rectangle', () {
-      expect(toolTypeForKey('r'), ToolType.rectangle);
+    test('2 maps to rectangle', () {
+      expect(toolTypeForKey('2'), ToolType.rectangle);
     });
 
-    test('e maps to ellipse', () {
-      expect(toolTypeForKey('e'), ToolType.ellipse);
+    test('3 maps to diamond', () {
+      expect(toolTypeForKey('3'), ToolType.diamond);
     });
 
-    test('d maps to diamond', () {
-      expect(toolTypeForKey('d'), ToolType.diamond);
+    test('4 maps to ellipse', () {
+      expect(toolTypeForKey('4'), ToolType.ellipse);
     });
 
-    test('l maps to line', () {
-      expect(toolTypeForKey('l'), ToolType.line);
+    test('5 maps to arrow', () {
+      expect(toolTypeForKey('5'), ToolType.arrow);
     });
 
-    test('a maps to arrow', () {
-      expect(toolTypeForKey('a'), ToolType.arrow);
+    test('6 maps to line', () {
+      expect(toolTypeForKey('6'), ToolType.line);
     });
 
-    test('p maps to freedraw', () {
-      expect(toolTypeForKey('p'), ToolType.freedraw);
+    test('7 maps to freedraw', () {
+      expect(toolTypeForKey('7'), ToolType.freedraw);
     });
 
-    test('t maps to text', () {
-      expect(toolTypeForKey('t'), ToolType.text);
+    test('8 maps to text', () {
+      expect(toolTypeForKey('8'), ToolType.text);
     });
 
-    test('h maps to hand', () {
-      expect(toolTypeForKey('h'), ToolType.hand);
+    test('9 maps to frame', () {
+      expect(toolTypeForKey('9'), ToolType.frame);
+    });
+
+    test('0 maps to hand', () {
+      expect(toolTypeForKey('0'), ToolType.hand);
     });
 
     test('unknown key returns null', () {
       expect(toolTypeForKey('x'), isNull);
       expect(toolTypeForKey('z'), isNull);
-      expect(toolTypeForKey('1'), isNull);
       expect(toolTypeForKey(' '), isNull);
     });
 
-    test('uppercase keys return null', () {
-      expect(toolTypeForKey('V'), isNull);
-      expect(toolTypeForKey('R'), isNull);
-      expect(toolTypeForKey('E'), isNull);
-      expect(toolTypeForKey('D'), isNull);
-      expect(toolTypeForKey('L'), isNull);
-      expect(toolTypeForKey('A'), isNull);
-      expect(toolTypeForKey('P'), isNull);
-      expect(toolTypeForKey('T'), isNull);
-      expect(toolTypeForKey('H'), isNull);
+    test('letter keys return null', () {
+      expect(toolTypeForKey('v'), isNull);
+      expect(toolTypeForKey('r'), isNull);
+      expect(toolTypeForKey('e'), isNull);
+      expect(toolTypeForKey('d'), isNull);
     });
 
     test('all ToolType values have a shortcut', () {
-      // Verify every ToolType is reachable via some key
       final reachable = <ToolType>{};
-      for (final c in 'abcdefghijklmnopqrstuvwxyz'.split('')) {
+      for (final c in '0123456789'.split('')) {
         final t = toolTypeForKey(c);
         if (t != null) reachable.add(t);
       }
       for (final type in ToolType.values) {
         expect(reachable, contains(type),
             reason: '${type.name} has no keyboard shortcut');
+      }
+    });
+  });
+
+  group('shortcutForToolType', () {
+    test('every tool type has a shortcut label', () {
+      for (final type in ToolType.values) {
+        expect(shortcutForToolType(type), isNotNull,
+            reason: '${type.name} should have a shortcut');
+      }
+    });
+
+    test('shortcut round-trips with toolTypeForKey', () {
+      for (final type in ToolType.values) {
+        final key = shortcutForToolType(type)!;
+        expect(toolTypeForKey(key), type,
+            reason: 'shortcut "$key" should map back to ${type.name}');
       }
     });
   });
