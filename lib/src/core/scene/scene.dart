@@ -1,5 +1,6 @@
 import '../elements/element.dart';
 import '../elements/element_id.dart';
+import '../elements/image_file.dart';
 import '../elements/text_element.dart';
 import '../math/bounds.dart';
 import '../math/point.dart';
@@ -7,10 +8,17 @@ import '../math/point.dart';
 /// An immutable collection of drawing elements with CRUD operations.
 class Scene {
   final List<Element> _elements;
+  final Map<String, ImageFile> files;
 
-  Scene() : _elements = const [];
+  Scene()
+      : _elements = const [],
+        files = const {};
 
-  Scene._(List<Element> elements) : _elements = List.unmodifiable(elements);
+  Scene._(List<Element> elements, [Map<String, ImageFile>? files])
+      : _elements = List.unmodifiable(elements),
+        files = files != null
+            ? Map.unmodifiable(files)
+            : const {};
 
   /// All elements in the scene (including soft-deleted).
   List<Element> get elements => _elements;
@@ -33,14 +41,14 @@ class Scene {
 
   /// Returns a new scene with the element added.
   Scene addElement(Element element) {
-    return Scene._([..._elements, element]);
+    return Scene._([..._elements, element], files);
   }
 
   /// Returns a new scene with the element removed by [id].
   Scene removeElement(ElementId id) {
     final filtered = _elements.where((e) => e.id != id).toList();
     if (filtered.length == _elements.length) return this;
-    return Scene._(filtered);
+    return Scene._(filtered, files);
   }
 
   /// Returns a new scene with the element replaced.
@@ -52,7 +60,7 @@ class Scene {
       }
       return e;
     }).toList();
-    return Scene._(updated);
+    return Scene._(updated, files);
   }
 
   /// Finds an element by [id], or returns null.
@@ -69,7 +77,18 @@ class Scene {
       if (e.id == id) return e.softDelete();
       return e;
     }).toList();
-    return Scene._(updated);
+    return Scene._(updated, files);
+  }
+
+  /// Returns a new scene with the file added to the store.
+  Scene addFile(String fileId, ImageFile file) {
+    return Scene._(_elements.toList(), {...files, fileId: file});
+  }
+
+  /// Returns a new scene with the file removed from the store.
+  Scene removeFile(String fileId) {
+    final newFiles = Map<String, ImageFile>.of(files)..remove(fileId);
+    return Scene._(_elements.toList(), newFiles);
   }
 
   /// Returns the bound text element whose [containerId] matches [parentId],
