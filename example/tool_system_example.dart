@@ -753,19 +753,19 @@ class _CanvasPageState extends State<_CanvasPage> {
                 // Insert image import button at position 9 (after text)
                 if (type == ToolType.frame)
                   IconButton(
-                    icon: const Stack(
+                    icon: Stack(
                       clipBehavior: Clip.none,
                       children: [
-                        Icon(Icons.add_photo_alternate),
+                        const Icon(Icons.add_photo_alternate),
                         Positioned(
-                          right: -6,
+                          right: -8,
                           bottom: -4,
                           child: Text(
                             '9',
                             style: TextStyle(
                               fontSize: 9,
                               fontWeight: FontWeight.bold,
-                              color: Colors.grey,
+                              color: Colors.grey.shade400,
                             ),
                           ),
                         ),
@@ -778,8 +778,8 @@ class _CanvasPageState extends State<_CanvasPage> {
                   icon: Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      Icon(
-                        _iconFor(type),
+                      _iconWidgetFor(
+                        type,
                         color: _editorState.activeToolType == type
                             ? Colors.blue
                             : null,
@@ -794,8 +794,8 @@ class _CanvasPageState extends State<_CanvasPage> {
                               fontSize: 9,
                               fontWeight: FontWeight.bold,
                               color: _editorState.activeToolType == type
-                                  ? Colors.blue
-                                  : Colors.grey,
+                                  ? Colors.blue.shade300
+                                  : Colors.grey.shade400,
                             ),
                           ),
                         ),
@@ -1611,12 +1611,22 @@ class _CanvasPageState extends State<_CanvasPage> {
     return markdraw.SelectionOverlay.fromElements(selected);
   }
 
+  Widget _iconWidgetFor(ToolType type, {Color? color}) {
+    if (type == ToolType.diamond) {
+      return CustomPaint(
+        size: const Size(24, 24),
+        painter: _DiamondIconPainter(color: color ?? Colors.grey.shade800),
+      );
+    }
+    return Icon(_iconFor(type), color: color);
+  }
+
   IconData _iconFor(ToolType type) {
     return switch (type) {
       ToolType.select => Icons.near_me,
       ToolType.rectangle => Icons.rectangle_outlined,
       ToolType.ellipse => Icons.circle_outlined,
-      ToolType.diamond => Icons.diamond_outlined,
+      ToolType.diamond => Icons.square_outlined,
       ToolType.line => Icons.show_chart,
       ToolType.arrow => Icons.arrow_forward,
       ToolType.freedraw => Icons.draw,
@@ -1667,6 +1677,37 @@ class _ColorSwatch extends StatelessWidget {
       ),
     );
   }
+}
+
+class _DiamondIconPainter extends CustomPainter {
+  final Color color;
+  _DiamondIconPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Matches Excalidraw's Tabler "square-rotated" icon:
+    // a rounded square rotated 45°.
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    final s = size.width * 0.58; // side length of inner square
+    canvas.save();
+    canvas.translate(cx, cy);
+    canvas.rotate(math.pi / 4);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset.zero, width: s, height: s),
+        const Radius.circular(2.5),
+      ),
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.0,
+    );
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_DiamondIconPainter old) => old.color != color;
 }
 
 class _DiagonalLinePainter extends CustomPainter {
