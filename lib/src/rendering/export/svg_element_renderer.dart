@@ -136,11 +136,21 @@ class SvgElementRenderer {
   }
 
   static void _renderArrow(StringBuffer buf, ArrowElement element) {
-    final style = DrawStyle.fromElement(element);
-    final generator = style.toGenerator();
     final absPoints = _absolutePoints(element.points, element.x, element.y);
 
     if (absPoints.length < 2) return;
+
+    if (element.elbowed) {
+      _renderElbowArrow(buf, element, absPoints);
+    } else {
+      _renderRoughArrow(buf, element, absPoints);
+    }
+  }
+
+  static void _renderRoughArrow(
+      StringBuffer buf, ArrowElement element, List<Point> absPoints) {
+    final style = DrawStyle.fromElement(element);
+    final generator = style.toGenerator();
 
     // Draw line segments
     for (var i = 0; i < absPoints.length - 1; i++) {
@@ -153,6 +163,33 @@ class SvgElementRenderer {
       _drawableToSvg(buf, drawable, style, element);
     }
 
+    _renderArrowheads(buf, element, absPoints);
+  }
+
+  static void _renderElbowArrow(
+      StringBuffer buf, ArrowElement element, List<Point> absPoints) {
+    // Build clean polyline path (M...L...L...)
+    final d = StringBuffer();
+    d.write('M${_n(absPoints.first.x)},${_n(absPoints.first.y)}');
+    for (var i = 1; i < absPoints.length; i++) {
+      d.write(' L${_n(absPoints[i].x)},${_n(absPoints[i].y)}');
+    }
+
+    buf.write('<path d="$d" ');
+    buf.write('stroke="${element.strokeColor}" ');
+    buf.write('stroke-width="${_n(element.strokeWidth)}" ');
+    buf.write('fill="none"');
+    final dashArray = _dashArrayFor(element.strokeStyle);
+    if (dashArray != null) {
+      buf.write(' stroke-dasharray="$dashArray"');
+    }
+    buf.write('/>');
+
+    _renderArrowheads(buf, element, absPoints);
+  }
+
+  static void _renderArrowheads(
+      StringBuffer buf, ArrowElement element, List<Point> absPoints) {
     // Draw start arrowhead
     if (element.startArrowhead != null) {
       final angle = ArrowheadRenderer.directionAngle(absPoints, isStart: true);

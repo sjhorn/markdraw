@@ -83,13 +83,23 @@ class ElementRenderer {
       case 'arrow':
         if (element is ArrowElement) {
           final absPoints = _absolutePoints(element.points, element.x, element.y);
-          adapter.drawArrow(
-            canvas,
-            absPoints,
-            element.startArrowhead,
-            element.endArrowhead,
-            style,
-          );
+          if (element.elbowed) {
+            adapter.drawElbowArrow(
+              canvas,
+              absPoints,
+              element.startArrowhead,
+              element.endArrowhead,
+              style,
+            );
+          } else {
+            adapter.drawArrow(
+              canvas,
+              absPoints,
+              element.startArrowhead,
+              element.endArrowhead,
+              style,
+            );
+          }
         }
       case 'freedraw':
         if (element is FreedrawElement) {

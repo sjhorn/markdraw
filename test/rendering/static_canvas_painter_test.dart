@@ -54,6 +54,17 @@ class MockRoughAdapter implements RoughAdapter {
   }
 
   @override
+  void drawElbowArrow(
+    Canvas canvas,
+    List<Point> points,
+    Arrowhead? startArrowhead,
+    Arrowhead? endArrowhead,
+    DrawStyle style,
+  ) {
+    calls.add('elbowArrow');
+  }
+
+  @override
   void drawFreedraw(
     Canvas canvas,
     List<Point> points,

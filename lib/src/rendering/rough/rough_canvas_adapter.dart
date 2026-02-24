@@ -123,6 +123,62 @@ class RoughCanvasAdapter implements RoughAdapter {
   }
 
   @override
+  void drawElbowArrow(
+    Canvas canvas,
+    List<Point> points,
+    Arrowhead? startArrowhead,
+    Arrowhead? endArrowhead,
+    DrawStyle style,
+  ) {
+    if (points.length < 2) return;
+
+    // Build clean polyline path (no rough generator)
+    final path = Path();
+    path.moveTo(points.first.x, points.first.y);
+    for (var i = 1; i < points.length; i++) {
+      path.lineTo(points[i].x, points[i].y);
+    }
+
+    // Apply dash/dot pattern if needed
+    final strokePaint = style.toStrokePaint();
+    if (style.strokeStyle == core.StrokeStyle.solid) {
+      canvas.drawPath(path, strokePaint);
+    } else {
+      final dashedPath = PathDashUtility.dashPath(path, style.strokeStyle);
+      canvas.drawPath(dashedPath, strokePaint);
+    }
+
+    // Draw arrowheads
+    final paint = Paint()
+      ..color = strokePaint.color
+      ..strokeWidth = strokePaint.strokeWidth;
+
+    if (startArrowhead != null) {
+      final angle = ArrowheadRenderer.directionAngle(points, isStart: true);
+      ArrowheadRenderer.draw(
+        canvas,
+        startArrowhead,
+        points.first,
+        angle,
+        style.strokeWidth,
+        paint,
+      );
+    }
+
+    if (endArrowhead != null) {
+      final angle = ArrowheadRenderer.directionAngle(points, isStart: false);
+      ArrowheadRenderer.draw(
+        canvas,
+        endArrowhead,
+        points.last,
+        angle,
+        style.strokeWidth,
+        paint,
+      );
+    }
+  }
+
+  @override
   void drawFreedraw(
     Canvas canvas,
     List<Point> points,

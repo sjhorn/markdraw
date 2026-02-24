@@ -31,6 +31,15 @@ abstract class RoughAdapter {
     DrawStyle style,
   );
 
+  /// Draws an elbow (orthogonal) arrow with clean straight lines.
+  void drawElbowArrow(
+    Canvas canvas,
+    List<Point> points,
+    Arrowhead? startArrowhead,
+    Arrowhead? endArrowhead,
+    DrawStyle style,
+  );
+
   /// Draws a freehand path through the given points.
   void drawFreedraw(
     Canvas canvas,
