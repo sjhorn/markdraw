@@ -133,9 +133,9 @@ void main() {
     });
   });
 
-  group('9 shortcut', () {
+  group('F shortcut', () {
     test('maps to ToolType.frame', () {
-      expect(toolTypeForKey('9'), ToolType.frame);
+      expect(toolTypeForKey('f'), ToolType.frame);
     });
   });
 

@@ -36,12 +36,17 @@ void main() {
       expect(toolTypeForKey('8'), ToolType.text);
     });
 
-    test('9 maps to frame', () {
-      expect(toolTypeForKey('9'), ToolType.frame);
+    test('f maps to frame', () {
+      expect(toolTypeForKey('f'), ToolType.frame);
     });
 
-    test('0 maps to hand', () {
-      expect(toolTypeForKey('0'), ToolType.hand);
+    test('h maps to hand', () {
+      expect(toolTypeForKey('h'), ToolType.hand);
+    });
+
+    test('9 and 0 are reserved (return null)', () {
+      expect(toolTypeForKey('9'), isNull);
+      expect(toolTypeForKey('0'), isNull);
     });
 
     test('unknown key returns null', () {
@@ -50,7 +55,7 @@ void main() {
       expect(toolTypeForKey(' '), isNull);
     });
 
-    test('letter keys return null', () {
+    test('unrelated letter keys return null', () {
       expect(toolTypeForKey('v'), isNull);
       expect(toolTypeForKey('r'), isNull);
       expect(toolTypeForKey('e'), isNull);
@@ -59,7 +64,7 @@ void main() {
 
     test('all ToolType values have a shortcut', () {
       final reachable = <ToolType>{};
-      for (final c in '0123456789'.split('')) {
+      for (final c in '12345678fh'.split('')) {
         final t = toolTypeForKey(c);
         if (t != null) reachable.add(t);
       }
@@ -80,7 +85,7 @@ void main() {
 
     test('shortcut round-trips with toolTypeForKey', () {
       for (final type in ToolType.values) {
-        final key = shortcutForToolType(type)!;
+        final key = shortcutForToolType(type)!.toLowerCase();
         expect(toolTypeForKey(key), type,
             reason: 'shortcut "$key" should map back to ${type.name}');
       }
