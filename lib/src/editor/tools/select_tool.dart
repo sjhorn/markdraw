@@ -38,6 +38,7 @@ enum _DragMode {
   resize,
   rotate,
   dragPoint,
+  dragSegment,
   marquee,
 }
 
@@ -56,6 +57,7 @@ class SelectTool implements Tool {
   List<Point>? _startPoints;
   HandleType? _activeHandle;
   int? _activePointIndex;
+  int? _activeSegmentIndex;
 
   // For multi-element transforms
   List<Element>? _startElements;
@@ -79,14 +81,29 @@ class SelectTool implements Tool {
 
     final selectedElements = _getSelectedElements(context);
 
-    // 1. Point handle hit-test (line/arrow only, single selection)
+    // 1. Point/segment handle hit-test (line/arrow only, single selection)
     if (selectedElements.length == 1) {
-      final pointIndex = _hitTestPointHandle(point, selectedElements.first);
+      final elem = selectedElements.first;
+
+      // For elbowed arrows, check segment hit before point hit
+      if (elem is ArrowElement && elem.elbowed) {
+        final segIndex = _hitTestSegment(point, elem);
+        if (segIndex != null) {
+          _dragMode = _DragMode.dragSegment;
+          _activeSegmentIndex = segIndex;
+          _hitElement = elem;
+          _startBounds = Bounds.fromLTWH(
+              elem.x, elem.y, elem.width, elem.height);
+          _startPoints = List.of(elem.points);
+          return null;
+        }
+      }
+
+      final pointIndex = _hitTestPointHandle(point, elem);
       if (pointIndex != null) {
         _dragMode = _DragMode.dragPoint;
         _activePointIndex = pointIndex;
-        _hitElement = selectedElements.first;
-        final elem = selectedElements.first;
+        _hitElement = elem;
         _startBounds = Bounds.fromLTWH(elem.x, elem.y, elem.width, elem.height);
         if (elem is LineElement) {
           _startPoints = List.of(elem.points);
@@ -147,6 +164,7 @@ class SelectTool implements Tool {
       _DragMode.resize => _applyResize(point, context),
       _DragMode.rotate => _applyRotation(point, context),
       _DragMode.dragPoint => _applyPointDrag(point, context),
+      _DragMode.dragSegment => _applySegmentDrag(point, context),
       _DragMode.move => _applyMove(point, context),
       _DragMode.marquee => null, // Marquee is overlay-only during drag
       _DragMode.none => null,
@@ -171,6 +189,9 @@ class SelectTool implements Tool {
       }
       if (_isDragging && _dragMode == _DragMode.dragPoint) {
         return _applyPointDrag(point, context);
+      }
+      if (_isDragging && _dragMode == _DragMode.dragSegment) {
+        return _applySegmentDrag(point, context);
       }
       if (_isDragging && _dragMode == _DragMode.move) {
         return _applyMove(point, context);
@@ -886,6 +907,90 @@ class SelectTool implements Tool {
     return UpdateElementResult(updated);
   }
 
+  // --- Segment drag (elbow arrows) ---
+
+  /// Hit-test for segment proximity on an elbowed arrow.
+  /// Returns the segment index (0-based) or null.
+  int? _hitTestSegment(Point scenePoint, ArrowElement arrow) {
+    final points = arrow.points;
+    if (points.length < 2) return null;
+
+    for (var i = 0; i < points.length - 1; i++) {
+      final a = Point(arrow.x + points[i].x, arrow.y + points[i].y);
+      final b = Point(arrow.x + points[i + 1].x, arrow.y + points[i + 1].y);
+      final dist = _distToSegment(scenePoint, a, b);
+      if (dist <= _handleHitRadius) {
+        return i;
+      }
+    }
+    return null;
+  }
+
+  /// Minimum distance from [p] to the line segment [a]-[b].
+  static double _distToSegment(Point p, Point a, Point b) {
+    final dx = b.x - a.x;
+    final dy = b.y - a.y;
+    final lengthSq = dx * dx + dy * dy;
+    if (lengthSq == 0) return p.distanceTo(a);
+    var t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / lengthSq;
+    t = t.clamp(0.0, 1.0);
+    final proj = Point(a.x + t * dx, a.y + t * dy);
+    return p.distanceTo(proj);
+  }
+
+  ToolResult? _applySegmentDrag(Point current, ToolContext context) {
+    final down = _downPoint;
+    if (down == null ||
+        _hitElement is! ArrowElement ||
+        _activeSegmentIndex == null ||
+        _startPoints == null) {
+      return null;
+    }
+
+    final arrow = _hitElement! as ArrowElement;
+    final segIdx = _activeSegmentIndex!;
+    final startPts = _startPoints!;
+
+    final dx = current.x - down.x;
+    final dy = current.y - down.y;
+
+    final newPoints = List<Point>.from(startPts);
+    final ptA = startPts[segIdx];
+    final ptB = startPts[segIdx + 1];
+
+    // Determine if segment is horizontal or vertical
+    final isHorizontal = (ptA.y - ptB.y).abs() < 0.5;
+
+    if (isHorizontal) {
+      // Horizontal segment: drag vertically (change Y)
+      newPoints[segIdx] = Point(ptA.x, ptA.y + dy);
+      newPoints[segIdx + 1] = Point(ptB.x, ptB.y + dy);
+    } else {
+      // Vertical segment: drag horizontally (change X)
+      newPoints[segIdx] = Point(ptA.x + dx, ptA.y);
+      newPoints[segIdx + 1] = Point(ptB.x + dx, ptB.y);
+    }
+
+    // Recalculate bounding box
+    var minX = newPoints.first.x;
+    var minY = newPoints.first.y;
+    var maxX = newPoints.first.x;
+    var maxY = newPoints.first.y;
+    for (final pt in newPoints) {
+      minX = math.min(minX, pt.x);
+      minY = math.min(minY, pt.y);
+      maxX = math.max(maxX, pt.x);
+      maxY = math.max(maxY, pt.y);
+    }
+
+    final updated = arrow.copyWithLine(points: newPoints).copyWith(
+      width: maxX - minX,
+      height: maxY - minY,
+    );
+
+    return UpdateElementResult(updated);
+  }
+
   // --- Keyboard ---
 
   @override
@@ -1246,6 +1351,7 @@ class SelectTool implements Tool {
     _startPoints = null;
     _activeHandle = null;
     _activePointIndex = null;
+    _activeSegmentIndex = null;
     _startElements = null;
     _startUnionBounds = null;
     _bindTarget = null;
