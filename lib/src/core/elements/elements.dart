@@ -4,6 +4,7 @@ export 'element.dart';
 export 'element_id.dart';
 export 'ellipse_element.dart';
 export 'fill_style.dart';
+export 'frame_element.dart';
 export 'freedraw_element.dart';
 export 'line_element.dart';
 export 'rectangle_element.dart';
