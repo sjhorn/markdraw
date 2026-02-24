@@ -151,6 +151,7 @@ class ExcalidrawJsonCodec {
         'endArrowhead': el.endArrowhead?.name,
         'startBinding': _bindingToJson(el.startBinding),
         'endBinding': _bindingToJson(el.endBinding),
+        if (el.elbowed) 'elbowed': true,
       };
     } else if (el is LineElement) {
       return {
@@ -822,6 +823,7 @@ class ExcalidrawJsonCodec {
           _arrowhead(raw['endArrowhead'] as String?, index, warnings),
       startBinding: _binding(raw, 'startBinding'),
       endBinding: _binding(raw, 'endBinding'),
+      elbowed: raw['elbowed'] as bool? ?? false,
       angle: _double(raw, 'angle'),
       strokeColor: raw['strokeColor'] as String? ?? '#000000',
       backgroundColor: raw['backgroundColor'] as String? ?? 'transparent',

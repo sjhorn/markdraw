@@ -161,6 +161,10 @@ class SketchLineSerializer {
       _addPoints(parts, element.points);
     }
 
+    if (element.elbowed) {
+      parts.add('elbowed');
+    }
+
     // Arrow default endArrowhead is Arrowhead.arrow, so only emit non-defaults
     _addArrowheads(parts, element.startArrowhead, element.endArrowhead, true);
     _addCommonProperties(parts, element);

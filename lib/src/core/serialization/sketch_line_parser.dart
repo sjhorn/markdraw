@@ -444,6 +444,8 @@ class SketchLineParser {
 
     final bounds = _boundsFromPoints(points);
 
+    final isElbowed = props.hasFlag('elbowed');
+
     final arrow = ArrowElement(
       id: elementId,
       x: bounds.$1,
@@ -453,6 +455,7 @@ class SketchLineParser {
       points: points,
       startArrowhead: startArrow,
       endArrowhead: endArrow,
+      elbowed: isElbowed,
       strokeColor: common.strokeColor,
       backgroundColor: common.backgroundColor,
       fillStyle: common.fillStyle,
