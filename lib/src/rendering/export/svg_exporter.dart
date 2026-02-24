@@ -76,7 +76,7 @@ class SvgExporter {
         buf.write('<g clip-path="url(#clip-${element.frameId})">');
       }
 
-      buf.write(SvgElementRenderer.render(element));
+      buf.write(SvgElementRenderer.render(element, files: scene.files));
 
       // Render bound text for this element
       final boundText = scene.findBoundText(element.id);

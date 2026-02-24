@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:rough_flutter/rough_flutter.dart';
@@ -6,6 +7,8 @@ import '../../core/elements/arrow_element.dart';
 import '../../core/elements/element.dart';
 import '../../core/elements/frame_element.dart';
 import '../../core/elements/freedraw_element.dart';
+import '../../core/elements/image_element.dart';
+import '../../core/elements/image_file.dart';
 import '../../core/elements/line_element.dart';
 import '../../core/elements/stroke_style.dart';
 import '../../core/elements/text_element.dart';
@@ -21,7 +24,9 @@ import 'svg_path_converter.dart';
 /// XML strings instead of canvas draw calls.
 class SvgElementRenderer {
   /// Renders [element] to an SVG markup string.
-  static String render(Element element) {
+  ///
+  /// If [files] is provided, image elements embed their data as data URIs.
+  static String render(Element element, {Map<String, ImageFile>? files}) {
     final buf = StringBuffer();
     final hasRotation = element.angle != 0.0;
     final hasOpacity = element.opacity < 1.0;
@@ -40,7 +45,7 @@ class SvgElementRenderer {
       buf.write('<g opacity="${_n(element.opacity)}">');
     }
 
-    _dispatch(buf, element);
+    _dispatch(buf, element, files);
 
     // Close rotation/opacity group
     if (hasRotation || hasOpacity) {
@@ -50,7 +55,8 @@ class SvgElementRenderer {
     return buf.toString();
   }
 
-  static void _dispatch(StringBuffer buf, Element element) {
+  static void _dispatch(
+      StringBuffer buf, Element element, Map<String, ImageFile>? files) {
     switch (element.type) {
       case 'rectangle':
         _renderShape(buf, element, _ShapeType.rectangle);
@@ -58,6 +64,8 @@ class SvgElementRenderer {
         _renderShape(buf, element, _ShapeType.ellipse);
       case 'diamond':
         _renderShape(buf, element, _ShapeType.diamond);
+      case 'image':
+        if (element is ImageElement) _renderImage(buf, element, files);
       case 'line':
         if (element is LineElement) _renderLine(buf, element);
       case 'arrow':
@@ -241,6 +249,36 @@ class SvgElementRenderer {
       buf.write(_escapeXml(element.label));
       buf.write('</text>');
     }
+  }
+
+  static void _renderImage(
+    StringBuffer buf,
+    ImageElement element,
+    Map<String, ImageFile>? files,
+  ) {
+    final file = files?[element.fileId];
+    if (file == null) {
+      // Placeholder rect for missing image
+      buf.write('<rect ');
+      buf.write('x="${_n(element.x)}" ');
+      buf.write('y="${_n(element.y)}" ');
+      buf.write('width="${_n(element.width)}" ');
+      buf.write('height="${_n(element.height)}" ');
+      buf.write('fill="#E0E0E0" stroke="#999999" stroke-width="1"');
+      buf.write('/>');
+      return;
+    }
+
+    final dataUrl =
+        'data:${file.mimeType};base64,${base64Encode(file.bytes)}';
+    buf.write('<image ');
+    buf.write('x="${_n(element.x)}" ');
+    buf.write('y="${_n(element.y)}" ');
+    buf.write('width="${_n(element.width)}" ');
+    buf.write('height="${_n(element.height)}" ');
+    buf.write('href="$dataUrl"');
+    buf.write(' preserveAspectRatio="none"');
+    buf.write('/>');
   }
 
   static void _drawableToSvg(

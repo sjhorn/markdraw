@@ -5,6 +5,7 @@ import '../core/elements/arrow_element.dart';
 import '../core/elements/element.dart' as core;
 import '../core/elements/frame_element.dart';
 import '../core/elements/freedraw_element.dart';
+import '../core/elements/image_element.dart';
 import '../core/elements/line_element.dart';
 import '../core/elements/text_element.dart' as core show TextElement;
 import '../core/math/bounds.dart';
@@ -21,11 +22,13 @@ class ElementRenderer {
   /// Renders a single [element] onto [canvas] using [adapter].
   ///
   /// Applies rotation if [element.angle] is non-zero.
+  /// If [resolvedImages] is provided, image elements use the decoded Image.
   static void render(
     Canvas canvas,
     core.Element element,
-    RoughAdapter adapter,
-  ) {
+    RoughAdapter adapter, {
+    Map<String, Image>? resolvedImages,
+  }) {
     final hasRotation = element.angle != 0.0;
 
     if (hasRotation) {
@@ -38,7 +41,7 @@ class ElementRenderer {
       canvas.translate(-cx, -cy);
     }
 
-    _dispatch(canvas, element, adapter);
+    _dispatch(canvas, element, adapter, resolvedImages);
 
     if (hasRotation) {
       canvas.restore();
@@ -49,6 +52,7 @@ class ElementRenderer {
     Canvas canvas,
     core.Element element,
     RoughAdapter adapter,
+    Map<String, Image>? resolvedImages,
   ) {
     final style = DrawStyle.fromElement(element);
     final bounds = Bounds.fromLTWH(
@@ -67,6 +71,10 @@ class ElementRenderer {
         adapter.drawDiamond(canvas, bounds, style);
       case 'frame':
         _renderFrame(canvas, element, bounds);
+      case 'image':
+        if (element is ImageElement) {
+          _renderImage(canvas, element, bounds, resolvedImages);
+        }
       case 'line':
         if (element is LineElement) {
           final absPoints = _absolutePoints(element.points, element.x, element.y);
@@ -100,6 +108,64 @@ class ElementRenderer {
         }
       default:
         break; // Unknown type — silently skip
+    }
+  }
+
+  /// Renders an image element, or a placeholder if the image isn't decoded yet.
+  static void _renderImage(
+    Canvas canvas,
+    ImageElement element,
+    Bounds bounds,
+    Map<String, Image>? resolvedImages,
+  ) {
+    final image = resolvedImages?[element.fileId];
+    final dst = Rect.fromLTWH(
+      bounds.left,
+      bounds.top,
+      bounds.size.width,
+      bounds.size.height,
+    );
+
+    if (image != null) {
+      // Compute source rect (with optional crop)
+      Rect src;
+      if (element.crop != null) {
+        final c = element.crop!;
+        src = Rect.fromLTWH(
+          c.x * image.width,
+          c.y * image.height,
+          c.width * image.width,
+          c.height * image.height,
+        );
+      } else {
+        src = Rect.fromLTWH(
+          0,
+          0,
+          image.width.toDouble(),
+          image.height.toDouble(),
+        );
+      }
+
+      final paint = Paint()..filterQuality = FilterQuality.medium;
+      if (element.opacity < 1.0) {
+        paint.color = Color.fromRGBO(0, 0, 0, element.opacity);
+      }
+      canvas.drawImageRect(image, src, dst, paint);
+    } else {
+      // Placeholder: grey rect with border
+      final fillPaint = Paint()
+        ..color = const Color(0xFFE0E0E0)
+        ..style = PaintingStyle.fill;
+      final strokePaint = Paint()
+        ..color = const Color(0xFF999999)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.0;
+      canvas.drawRect(dst, fillPaint);
+      canvas.drawRect(dst, strokePaint);
+
+      // Draw a simple X to indicate image placeholder
+      canvas.drawLine(dst.topLeft, dst.bottomRight, strokePaint);
+      canvas.drawLine(dst.topRight, dst.bottomLeft, strokePaint);
     }
   }
 

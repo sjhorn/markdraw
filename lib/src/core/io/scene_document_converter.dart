@@ -10,6 +10,7 @@ class SceneDocumentConverter {
   static MarkdrawDocument sceneToDocument(Scene scene) {
     return MarkdrawDocument(
       sections: [SketchSection(scene.activeElements)],
+      files: scene.files,
     );
   }
 
@@ -18,6 +19,9 @@ class SceneDocumentConverter {
     var scene = Scene();
     for (final element in doc.allElements) {
       scene = scene.addElement(element);
+    }
+    for (final entry in doc.files.entries) {
+      scene = scene.addFile(entry.key, entry.value);
     }
     return scene;
   }

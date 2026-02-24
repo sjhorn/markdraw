@@ -1,4 +1,6 @@
 
+import 'dart:ui' as ui;
+
 import 'package:flutter/rendering.dart';
 
 import '../core/elements/arrow_element.dart';
@@ -33,12 +35,16 @@ class StaticCanvasPainter extends CustomPainter {
   /// overlay is shown instead.
   final ElementId? editingElementId;
 
+  /// Decoded images keyed by fileId, passed through to ElementRenderer.
+  final Map<String, ui.Image>? resolvedImages;
+
   const StaticCanvasPainter({
     required this.scene,
     required this.adapter,
     required this.viewport,
     this.previewElement,
     this.editingElementId,
+    this.resolvedImages,
   });
 
   @override
@@ -73,7 +79,8 @@ class StaticCanvasPainter extends CustomPainter {
         }
       }
 
-      ElementRenderer.render(canvas, element, adapter);
+      ElementRenderer.render(canvas, element, adapter,
+          resolvedImages: resolvedImages);
       _renderBoundText(canvas, element);
 
       if (hasClip) {
@@ -86,7 +93,8 @@ class StaticCanvasPainter extends CustomPainter {
 
     // Render live creation preview on top
     if (previewElement != null) {
-      ElementRenderer.render(canvas, previewElement!, adapter);
+      ElementRenderer.render(canvas, previewElement!, adapter,
+          resolvedImages: resolvedImages);
     }
 
     canvas.restore();
