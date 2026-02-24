@@ -96,12 +96,17 @@ void main() {
       final result = tool.onPointerMove(const Point(72, 80), ctx);
       expect(result, isA<UpdateElementResult>());
       final updated = (result! as UpdateElementResult).element as ArrowElement;
-      // Vertical segment dragged horizontally → X of both endpoints changed
-      expect(updated.points[0].x, closeTo(20, 1));
-      expect(updated.points[1].x, closeTo(20, 1));
-      // Y values unchanged
-      expect(updated.points[0].y, closeTo(0, 1));
-      expect(updated.points[1].y, closeTo(100, 1));
+      // Vertical segment dragged horizontally → check absolute positions
+      // First point: was at (50,50), now at (70,50) after +20 horizontal drag
+      final abs0 = Point(updated.x + updated.points[0].x,
+          updated.y + updated.points[0].y);
+      expect(abs0.x, closeTo(70, 1));
+      expect(abs0.y, closeTo(50, 1));
+      // Second point: was at (50,150), now at (70,150)
+      final abs1 = Point(updated.x + updated.points[1].x,
+          updated.y + updated.points[1].y);
+      expect(abs1.x, closeTo(70, 1));
+      expect(abs1.y, closeTo(150, 1));
     });
 
     test('detects horizontal segment on elbowed arrow', () {
@@ -111,16 +116,20 @@ void main() {
       );
       // Click near horizontal segment (100, 150) — close to y=150, between x=50..150
       tool.onPointerDown(const Point(100, 148), ctx);
-      // Drag vertically
+      // Drag vertically by -20
       final result = tool.onPointerMove(const Point(100, 128), ctx);
       expect(result, isA<UpdateElementResult>());
       final updated = (result! as UpdateElementResult).element as ArrowElement;
-      // Horizontal segment dragged vertically → Y of both endpoints changed
-      expect(updated.points[1].y, closeTo(80, 1));
-      expect(updated.points[2].y, closeTo(80, 1));
+      // Horizontal segment moved from y=150 to y=130 — check absolute positions
+      final abs1 = Point(updated.x + updated.points[1].x,
+          updated.y + updated.points[1].y);
+      final abs2 = Point(updated.x + updated.points[2].x,
+          updated.y + updated.points[2].y);
+      expect(abs1.y, closeTo(130, 1));
+      expect(abs2.y, closeTo(130, 1));
       // X values unchanged
-      expect(updated.points[1].x, closeTo(0, 1));
-      expect(updated.points[2].x, closeTo(100, 1));
+      expect(abs1.x, closeTo(50, 1));
+      expect(abs2.x, closeTo(150, 1));
     });
   });
 
@@ -135,9 +144,13 @@ void main() {
       final result = tool.onPointerMove(const Point(100, 170), ctx);
       expect(result, isA<UpdateElementResult>());
       final updated = (result! as UpdateElementResult).element as ArrowElement;
-      // dy = +20 applied to segment 1 (horizontal)
-      expect(updated.points[1].y, closeTo(120, 1));
-      expect(updated.points[2].y, closeTo(120, 1));
+      // dy = +20: horizontal segment endpoints move from y=150 to y=170
+      final abs1 = Point(updated.x + updated.points[1].x,
+          updated.y + updated.points[1].y);
+      final abs2 = Point(updated.x + updated.points[2].x,
+          updated.y + updated.points[2].y);
+      expect(abs1.y, closeTo(170, 1));
+      expect(abs2.y, closeTo(170, 1));
     });
 
     test('drag vertical segment changes X of endpoints', () {
@@ -150,9 +163,13 @@ void main() {
       final result = tool.onPointerMove(const Point(30, 100), ctx);
       expect(result, isA<UpdateElementResult>());
       final updated = (result! as UpdateElementResult).element as ArrowElement;
-      // dx = -20 applied to segment 0 (vertical)
-      expect(updated.points[0].x, closeTo(-20, 1));
-      expect(updated.points[1].x, closeTo(-20, 1));
+      // dx = -20: vertical segment endpoints move from x=50 to x=30
+      final abs0 = Point(updated.x + updated.points[0].x,
+          updated.y + updated.points[0].y);
+      final abs1 = Point(updated.x + updated.points[1].x,
+          updated.y + updated.points[1].y);
+      expect(abs0.x, closeTo(30, 1));
+      expect(abs1.x, closeTo(30, 1));
     });
 
     test('segment drag recalculates bounding box', () {

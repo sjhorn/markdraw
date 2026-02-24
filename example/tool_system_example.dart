@@ -931,7 +931,9 @@ class _CanvasPageState extends State<_CanvasPage> {
                           ),
                           foregroundPainter: InteractiveCanvasPainter(
                             viewport: _editorState.viewport,
-                            selection: _buildSelectionOverlay(),
+                            selection: _isDraggingPointHandle()
+                                ? null
+                                : _buildSelectionOverlay(),
                             marqueeRect: marqueeRect,
                             bindTargetBounds: toolOverlay?.bindTargetBounds,
                             pointHandles: _buildPointHandles(),
@@ -1618,6 +1620,11 @@ class _CanvasPageState extends State<_CanvasPage> {
       }
       _applyResult(result);
     }
+  }
+
+  bool _isDraggingPointHandle() {
+    return _activeTool is SelectTool &&
+        (_activeTool as SelectTool).isDraggingPoint;
   }
 
   List<Point>? _buildPointHandles() {

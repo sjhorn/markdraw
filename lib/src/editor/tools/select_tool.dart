@@ -69,6 +69,13 @@ class SelectTool implements Tool {
   @override
   ToolType get type => ToolType.select;
 
+  /// True when the user is actively dragging a point or segment handle.
+  /// UI should hide the selection bounding box during these drags.
+  bool get isDraggingPoint =>
+      _isDragging &&
+      (_dragMode == _DragMode.dragPoint ||
+          _dragMode == _DragMode.dragSegment);
+
   /// Extended onPointerDown that accepts shift modifier.
   @override
   ToolResult? onPointerDown(Point point, ToolContext context,
@@ -812,34 +819,21 @@ class SelectTool implements Tool {
     final newPoints = List<Point>.from(startPts);
     newPoints[_activePointIndex!] = Point(oldPt.x + dx, oldPt.y + dy);
 
-    // Recalculate bounding box from points
-    double minX = newPoints.first.x;
-    double minY = newPoints.first.y;
-    double maxX = newPoints.first.x;
-    double maxY = newPoints.first.y;
-    for (final pt in newPoints) {
-      minX = math.min(minX, pt.x);
-      minY = math.min(minY, pt.y);
-      maxX = math.max(maxX, pt.x);
-      maxY = math.max(maxY, pt.y);
-    }
-
     final line = _hitElement! as LineElement;
-    var updated = line.copyWithLine(points: newPoints).copyWith(
-      width: maxX - minX,
-      height: maxY - minY,
-    );
+    var updated = _normalizeLineElement(line, newPoints);
+    // Get the normalized points for binding calculations
+    final normalizedPoints = (updated as LineElement).points;
 
     // Handle binding for arrow first/last point
     if (updated is ArrowElement) {
       final isFirst = _activePointIndex == 0;
-      final isLast = _activePointIndex == newPoints.length - 1;
+      final isLast = _activePointIndex == normalizedPoints.length - 1;
 
       if (isFirst || isLast) {
         // Compute absolute position of the dragged point
         final absPoint = Point(
-          updated.x + newPoints[_activePointIndex!].x,
-          updated.y + newPoints[_activePointIndex!].y,
+          updated.x + normalizedPoints[_activePointIndex!].x,
+          updated.y + normalizedPoints[_activePointIndex!].y,
         );
         final target = BindingUtils.findBindTarget(context.scene, absPoint);
         _bindTarget = target;
@@ -855,34 +849,22 @@ class SelectTool implements Tool {
           // Snap the point to the edge
           final snapped =
               BindingUtils.resolveBindingPoint(target, binding);
-          newPoints[_activePointIndex!] =
-              Point(snapped.x - updated.x, snapped.y - updated.y);
+          final snappedRel = Point(
+            snapped.x - updated.x,
+            snapped.y - updated.y,
+          );
+          final snappedPoints = List<Point>.of(normalizedPoints);
+          snappedPoints[_activePointIndex!] = snappedRel;
 
-          // Recalculate bounding box with snapped point
-          minX = newPoints.first.x;
-          minY = newPoints.first.y;
-          maxX = newPoints.first.x;
-          maxY = newPoints.first.y;
-          for (final pt in newPoints) {
-            minX = math.min(minX, pt.x);
-            minY = math.min(minY, pt.y);
-            maxX = math.max(maxX, pt.x);
-            maxY = math.max(maxY, pt.y);
-          }
-
-          updated = (updated)
-              .copyWithLine(points: newPoints)
-              .copyWith(
-                width: maxX - minX,
-                height: maxY - minY,
-              );
+          // Re-normalize with snapped point
+          updated = _normalizeLineElement(updated, snappedPoints);
 
           if (isFirst) {
-            updated = (updated).copyWithArrow(
+            updated = (updated as ArrowElement).copyWithArrow(
               startBinding: binding,
             );
           } else {
-            updated = (updated).copyWithArrow(
+            updated = (updated as ArrowElement).copyWithArrow(
               endBinding: binding,
             );
           }
@@ -971,24 +953,32 @@ class SelectTool implements Tool {
       newPoints[segIdx + 1] = Point(ptB.x + dx, ptB.y);
     }
 
-    // Recalculate bounding box
-    var minX = newPoints.first.x;
-    var minY = newPoints.first.y;
-    var maxX = newPoints.first.x;
-    var maxY = newPoints.first.y;
-    for (final pt in newPoints) {
+    return UpdateElementResult(_normalizeLineElement(arrow, newPoints));
+  }
+
+  /// Normalize a line element's x/y/width/height to match its points.
+  ///
+  /// Re-relativizes [points] so the origin is at the min x/y, and updates
+  /// x/y/width/height accordingly.
+  static Element _normalizeLineElement(LineElement elem, List<Point> points) {
+    var minX = points.first.x;
+    var minY = points.first.y;
+    var maxX = points.first.x;
+    var maxY = points.first.y;
+    for (final pt in points) {
       minX = math.min(minX, pt.x);
       minY = math.min(minY, pt.y);
       maxX = math.max(maxX, pt.x);
       maxY = math.max(maxY, pt.y);
     }
-
-    final updated = arrow.copyWithLine(points: newPoints).copyWith(
+    final normalized =
+        points.map((p) => Point(p.x - minX, p.y - minY)).toList();
+    return elem.copyWithLine(points: normalized).copyWith(
+      x: elem.x + minX,
+      y: elem.y + minY,
       width: maxX - minX,
       height: maxY - minY,
     );
-
-    return UpdateElementResult(updated);
   }
 
   // --- Keyboard ---

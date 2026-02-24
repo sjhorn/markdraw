@@ -209,13 +209,24 @@ class PropertyPanelState {
           final absLast = Point(
               arrow.x + arrow.points.last.x, arrow.y + arrow.points.last.y);
           final routed = ElbowRouting.route(start: absFirst, end: absLast);
-          // Convert back to relative points
+          // Compute proper bounding box from absolute routed points
+          var minX = routed.first.x;
+          var minY = routed.first.y;
+          var maxX = routed.first.x;
+          var maxY = routed.first.y;
+          for (final p in routed) {
+            if (p.x < minX) minX = p.x;
+            if (p.y < minY) minY = p.y;
+            if (p.x > maxX) maxX = p.x;
+            if (p.y > maxY) maxY = p.y;
+          }
           final relPoints =
-              routed.map((p) => Point(p.x - arrow.x, p.y - arrow.y)).toList();
+              routed.map((p) => Point(p.x - minX, p.y - minY)).toList();
           updated = arrow
               .copyWithArrow(elbowed: true)
               .copyWithLine(points: relPoints)
-              .copyWith(angle: 0);
+              .copyWith(x: minX, y: minY, width: maxX - minX,
+                  height: maxY - minY, angle: 0);
         } else if (!style.elbowed! && arrow.elbowed) {
           // Elbowed → regular: simplify to just first and last point
           final simplifiedPoints = [arrow.points.first, arrow.points.last];

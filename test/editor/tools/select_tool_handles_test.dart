@@ -121,11 +121,16 @@ void main() {
       final result = tool.onPointerMove(const Point(60, 60), ctx);
       expect(result, isA<UpdateElementResult>());
       final updated = (result! as UpdateElementResult).element as LineElement;
-      // First point should have moved
-      expect(updated.points[0].x, closeTo(10, 0.1)); // 0 + 10
-      expect(updated.points[0].y, closeTo(10, 0.1)); // 0 + 10
-      // Second point stays
-      expect(updated.points[1], const Point(100, 100));
+      // First point moved to absolute (60, 60)
+      final absFirst = Point(updated.x + updated.points[0].x,
+          updated.y + updated.points[0].y);
+      expect(absFirst.x, closeTo(60, 0.1));
+      expect(absFirst.y, closeTo(60, 0.1));
+      // Second point stays at absolute (150, 150)
+      final absSecond = Point(updated.x + updated.points[1].x,
+          updated.y + updated.points[1].y);
+      expect(absSecond.x, closeTo(150, 0.1));
+      expect(absSecond.y, closeTo(150, 0.1));
     });
 
     test('hit-test on element body does not trigger handle mode', () {
@@ -207,10 +212,15 @@ void main() {
       final result = tool.onPointerMove(const Point(110, 110), ctx);
       expect(result, isA<UpdateElementResult>());
       final updated = (result! as UpdateElementResult).element as LineElement;
-      // Should be a point drag, not a resize — first point moved, second stayed
-      expect(updated.points[0].x, closeTo(10, 0.1));
-      expect(updated.points[0].y, closeTo(10, 0.1));
-      expect(updated.points[1], const Point(100, 100));
+      // Should be a point drag, not a resize — check absolute positions
+      final absFirst = Point(updated.x + updated.points[0].x,
+          updated.y + updated.points[0].y);
+      expect(absFirst.x, closeTo(110, 0.1));
+      expect(absFirst.y, closeTo(110, 0.1));
+      final absSecond = Point(updated.x + updated.points[1].x,
+          updated.y + updated.points[1].y);
+      expect(absSecond.x, closeTo(200, 0.1));
+      expect(absSecond.y, closeTo(200, 0.1));
     });
   });
 
@@ -677,9 +687,15 @@ void main() {
       final result = tool.onPointerMove(const Point(40, 30), ctx);
       expect(result, isA<UpdateElementResult>());
       final updated = (result! as UpdateElementResult).element as LineElement;
-      expect(updated.points[0].x, closeTo(-10, 0.1));
-      expect(updated.points[0].y, closeTo(-20, 0.1));
-      expect(updated.points[1], const Point(100, 100));
+      // Check absolute positions: first moved to (40, 30), second stays at (150, 150)
+      final absFirst = Point(updated.x + updated.points[0].x,
+          updated.y + updated.points[0].y);
+      expect(absFirst.x, closeTo(40, 0.1));
+      expect(absFirst.y, closeTo(30, 0.1));
+      final absSecond = Point(updated.x + updated.points[1].x,
+          updated.y + updated.points[1].y);
+      expect(absSecond.x, closeTo(150, 0.1));
+      expect(absSecond.y, closeTo(150, 0.1));
     });
   });
 }
