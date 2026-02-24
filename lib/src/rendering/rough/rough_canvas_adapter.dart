@@ -49,16 +49,7 @@ class RoughCanvasAdapter implements RoughAdapter {
       bounds.size.width,
       bounds.size.height,
     );
-    // Clip fill to ellipse bounds
-    canvas.save();
-    canvas.clipPath(Path()..addOval(Rect.fromLTWH(
-      bounds.left,
-      bounds.top,
-      bounds.size.width,
-      bounds.size.height,
-    )));
     _drawRough(canvas, drawable, style);
-    canvas.restore();
   }
 
   @override
@@ -70,16 +61,7 @@ class RoughCanvasAdapter implements RoughAdapter {
     final bottom = PointD(bounds.center.x, bounds.bottom);
     final left = PointD(bounds.left, bounds.center.y);
     final drawable = generator.polygon([top, right, bottom, left]);
-    // Clip fill to diamond shape
-    canvas.save();
-    canvas.clipPath(Path()
-      ..moveTo(bounds.center.x, bounds.top)
-      ..lineTo(bounds.right, bounds.center.y)
-      ..lineTo(bounds.center.x, bounds.bottom)
-      ..lineTo(bounds.left, bounds.center.y)
-      ..close());
     _drawRough(canvas, drawable, style);
-    canvas.restore();
   }
 
   @override
