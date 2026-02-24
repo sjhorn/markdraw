@@ -40,6 +40,16 @@ class ImageElementCache {
   /// Whether [fileId] has a decoded image in the cache.
   bool contains(String fileId) => _cache.containsKey(fileId);
 
+  /// Pre-populates the cache with an already-decoded image.
+  ///
+  /// Use this when the caller has already decoded the image (e.g., during
+  /// import to get dimensions) to avoid a redundant async decode.
+  void putImage(String fileId, ui.Image image) {
+    _cache[fileId] = image;
+    _lruOrder.add(fileId);
+    _evictIfNeeded();
+  }
+
   /// Number of decoded images currently cached.
   int get length => _cache.length;
 

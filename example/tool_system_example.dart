@@ -539,12 +539,12 @@ class _CanvasPageState extends State<_CanvasPage> {
       final fileId = digest.toString().substring(0, 8);
       final imageFile = ImageFile(mimeType: mimeType, bytes: bytes);
 
-      // Decode to get natural dimensions
+      // Decode to get natural dimensions and pre-populate cache
       final codec = await ui.instantiateImageCodec(bytes);
       final frame = await codec.getNextFrame();
-      final naturalWidth = frame.image.width.toDouble();
-      final naturalHeight = frame.image.height.toDouble();
-      frame.image.dispose();
+      final decodedImage = frame.image;
+      final naturalWidth = decodedImage.width.toDouble();
+      final naturalHeight = decodedImage.height.toDouble();
 
       // Scale to fit within 800px while preserving aspect ratio
       double width = naturalWidth;
@@ -575,6 +575,9 @@ class _CanvasPageState extends State<_CanvasPage> {
         fileId: fileId,
         mimeType: mimeType,
       );
+
+      // Pre-populate cache so the image renders instantly
+      _imageCache.putImage(fileId, decodedImage);
 
       _historyManager.push(_editorState.scene);
       _applyResult(CompoundResult([
