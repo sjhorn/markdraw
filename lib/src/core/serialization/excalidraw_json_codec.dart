@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import '../elements/arrow_element.dart';
 import '../elements/diamond_element.dart';
@@ -8,6 +9,9 @@ import '../elements/ellipse_element.dart';
 import '../elements/fill_style.dart';
 import '../elements/frame_element.dart';
 import '../elements/freedraw_element.dart';
+import '../elements/image_crop.dart';
+import '../elements/image_element.dart';
+import '../elements/image_file.dart';
 import '../elements/line_element.dart';
 import '../elements/rectangle_element.dart';
 import '../elements/roundness.dart';
@@ -26,7 +30,6 @@ import 'parse_result.dart';
 class ExcalidrawJsonCodec {
   // Unsupported Excalidraw element types that we skip with a warning.
   static const _unsupportedTypes = {
-    'image',
     'magicframe',
     'iframe',
     'embeddable',
@@ -84,13 +87,24 @@ class ExcalidrawJsonCodec {
   /// Serializes a [MarkdrawDocument] to Excalidraw JSON format.
   static String serialize(MarkdrawDocument doc) {
     final elements = doc.allElements.map(_elementToJson).toList();
+    final filesJson = <String, dynamic>{};
+    for (final entry in doc.files.entries) {
+      final dataUrl =
+          'data:${entry.value.mimeType};base64,${base64Encode(entry.value.bytes)}';
+      filesJson[entry.key] = {
+        'mimeType': entry.value.mimeType,
+        'id': entry.key,
+        'dataURL': dataUrl,
+        'created': DateTime.now().millisecondsSinceEpoch,
+      };
+    }
     final result = {
       'type': 'excalidraw',
       'version': 2,
       'source': 'markdraw',
       'elements': elements,
       'appState': <String, dynamic>{},
-      'files': <String, dynamic>{},
+      'files': filesJson,
     };
     return jsonEncode(result);
   }
@@ -101,6 +115,20 @@ class ExcalidrawJsonCodec {
       return {
         ...base,
         'name': el.label,
+      };
+    } else if (el is ImageElement) {
+      return {
+        ...base,
+        'fileId': el.fileId,
+        'status': 'saved',
+        'scale': [el.imageScale, el.imageScale],
+        if (el.crop != null && !el.crop!.isFullImage)
+          'crop': {
+            'x': el.crop!.x,
+            'y': el.crop!.y,
+            'width': el.crop!.width,
+            'height': el.crop!.height,
+          },
       };
     } else if (el is TextElement) {
       return {
@@ -273,8 +301,43 @@ class ExcalidrawJsonCodec {
       }
     }
 
+    // Parse files map
+    final files = <String, ImageFile>{};
+    final filesJson = decoded['files'];
+    if (filesJson is Map<String, dynamic>) {
+      for (final entry in filesJson.entries) {
+        final fileData = entry.value;
+        if (fileData is Map<String, dynamic>) {
+          final dataUrl = fileData['dataURL'] as String?;
+          final mimeType = fileData['mimeType'] as String? ?? 'image/png';
+          if (dataUrl != null) {
+            try {
+              // Parse data URL: data:mime;base64,<data>
+              final commaIdx = dataUrl.indexOf(',');
+              if (commaIdx >= 0) {
+                final b64 = dataUrl.substring(commaIdx + 1);
+                final bytes = base64Decode(b64);
+                files[entry.key] = ImageFile(
+                  mimeType: mimeType,
+                  bytes: Uint8List.fromList(bytes),
+                );
+              }
+            } catch (_) {
+              warnings.add(ParseWarning(
+                line: 0,
+                message: 'Failed to decode file data for "${entry.key}"',
+              ));
+            }
+          }
+        }
+      }
+    }
+
     return ParseResult(
-      value: MarkdrawDocument(sections: [SketchSection(elements)]),
+      value: MarkdrawDocument(
+        sections: [SketchSection(elements)],
+        files: files,
+      ),
       warnings: warnings,
     );
   }
@@ -302,6 +365,8 @@ class ExcalidrawJsonCodec {
         return _parseFreedraw(raw);
       case 'frame':
         return _parseFrame(raw);
+      case 'image':
+        return _parseImage(raw);
       default:
         warnings.add(
           ParseWarning(
@@ -585,6 +650,55 @@ class ExcalidrawJsonCodec {
       width: _double(raw, 'width'),
       height: _double(raw, 'height'),
       label: raw['name'] as String? ?? 'Frame',
+      angle: _double(raw, 'angle'),
+      strokeColor: raw['strokeColor'] as String? ?? '#000000',
+      backgroundColor: raw['backgroundColor'] as String? ?? 'transparent',
+      fillStyle: _fillStyle(raw),
+      strokeWidth: _double(raw, 'strokeWidth', 2.0),
+      strokeStyle: _strokeStyle(raw),
+      roughness: _double(raw, 'roughness', 1.0),
+      opacity: _opacity(raw),
+      roundness: _roundness(raw),
+      seed: _int(raw, 'seed'),
+      version: _int(raw, 'version', 1),
+      versionNonce: _int(raw, 'versionNonce'),
+      isDeleted: raw['isDeleted'] as bool? ?? false,
+      groupIds: _groupIds(raw),
+      frameId: raw['frameId'] as String?,
+      boundElements: _boundElements(raw),
+      updated: _int(raw, 'updated'),
+      link: raw['link'] as String?,
+      locked: raw['locked'] as bool? ?? false,
+      index: raw['index'] as String?,
+    );
+  }
+
+  static ImageElement _parseImage(Map<String, dynamic> raw) {
+    final scaleList = raw['scale'];
+    final imageScale = (scaleList is List && scaleList.isNotEmpty)
+        ? (scaleList[0] as num).toDouble()
+        : 1.0;
+
+    ImageCrop? crop;
+    final cropJson = raw['crop'];
+    if (cropJson is Map<String, dynamic>) {
+      crop = ImageCrop(
+        x: (cropJson['x'] as num?)?.toDouble() ?? 0,
+        y: (cropJson['y'] as num?)?.toDouble() ?? 0,
+        width: (cropJson['width'] as num?)?.toDouble() ?? 1,
+        height: (cropJson['height'] as num?)?.toDouble() ?? 1,
+      );
+    }
+
+    return ImageElement(
+      id: _id(raw),
+      x: _double(raw, 'x'),
+      y: _double(raw, 'y'),
+      width: _double(raw, 'width'),
+      height: _double(raw, 'height'),
+      fileId: raw['fileId'] as String? ?? '',
+      imageScale: imageScale,
+      crop: crop,
       angle: _double(raw, 'angle'),
       strokeColor: raw['strokeColor'] as String? ?? '#000000',
       backgroundColor: raw['backgroundColor'] as String? ?? 'transparent',

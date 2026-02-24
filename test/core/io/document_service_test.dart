@@ -199,8 +199,8 @@ void main() {
         'source': 'test',
         'elements': [
           {
-            'id': 'img1',
-            'type': 'image',
+            'id': 'mf1',
+            'type': 'magicframe',
             'x': 0,
             'y': 0,
             'width': 100,
@@ -216,7 +216,7 @@ void main() {
       final result = await service.load('/docs/file.excalidraw');
 
       expect(result.hasWarnings, isTrue);
-      expect(result.warnings.first.message, contains('image'));
+      expect(result.warnings.first.message, contains('magicframe'));
     });
 
     test('propagates readFile errors naturally', () async {
@@ -349,8 +349,8 @@ void main() {
         'source': 'test',
         'elements': [
           {
-            'id': 'img1',
-            'type': 'image',
+            'id': 'mf1',
+            'type': 'magicframe',
             'x': 0,
             'y': 0,
             'width': 100,
@@ -392,7 +392,7 @@ void main() {
       );
 
       expect(result.hasWarnings, isTrue);
-      expect(result.warnings.first.message, contains('image'));
+      expect(result.warnings.first.message, contains('magicframe'));
       // The supported rect should still be converted
       expect(result.value.allElements, hasLength(1));
     });

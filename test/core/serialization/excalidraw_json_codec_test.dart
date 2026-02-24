@@ -134,16 +134,16 @@ void main() {
       test('unknown element types are skipped with warning', () {
         final json = _wrapElements([
           _baseElement(id: 'rect1', type: 'rectangle'),
-          _baseElement(id: 'img1', type: 'image'),
+          _baseElement(id: 'mf1', type: 'magicframe'),
           _baseElement(id: 'frame1', type: 'frame'),
         ]);
         final result = ExcalidrawJsonCodec.parse(json);
-        // rectangle and frame are supported; image is skipped
+        // rectangle and frame are supported; magicframe is skipped
         expect(result.value.allElements, hasLength(2));
         expect(result.warnings, hasLength(1));
         expect(
           result.warnings[0].message,
-          contains('image'),
+          contains('magicframe'),
         );
       });
     });
