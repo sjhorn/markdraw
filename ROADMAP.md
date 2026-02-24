@@ -466,12 +466,22 @@ markdraw/
 > **TDD checkpoint**: GroupUtils with outermost/innermost, findGroupMembers, expandToGroup, groupElements, ungroupElements, resolveGroupForClick. SelectTool group-aware click/marquee/move/keyboard. Serializer/parser for group= property. ~73 new tests, ~1185 total. Zero analyzer issues. ✅
 
 ### 6.2 Frames
-- [ ] Frame element — named container that clips children
-- [ ] Elements inside frame boundary become frame children (`frameId`)
-- [ ] Drag element into/out of frame
-- [ ] Frame label at top
-- [ ] `.markdraw` syntax: `frame "Section A" at X,Y size WxH { ... }`
-- [ ] **Tests**: Frame membership, clipping, serialization
+- [x] `FrameElement` — named container with `label` field, clean (non-rough) rendering
+- [x] `FrameUtils` — stateless utility for containment logic (follows `BindingUtils`/`GroupUtils` pattern)
+- [x] Frame rendering with child clipping (Canvas.save/clipRect/restore)
+- [x] SVG export with `<clipPath>` for frame children
+- [x] `FrameTool` — drag to create frame, F keyboard shortcut, default label "Frame N"
+- [x] Auto-assign `frameId` when element moved fully inside a frame
+- [x] Clear `frameId` when element moved outside frame boundary
+- [x] Moving/nudging frame also moves its children
+- [x] Deleting frame releases children (clears `frameId`)
+- [x] Duplicate/paste remap `frameId` for independent copies
+- [x] Frame label rendered above top edge
+- [x] `.markdraw` syntax: `frame "Section A" id=sec at X,Y size WxH` with `frame=sec` property on children
+- [x] Excalidraw JSON codec support for frame type
+- [x] **Tests**: ~75 new tests — FrameElement (7), FrameUtils (21), serialization (18), rendering (6), FrameTool (13), SelectTool frame-aware (10)
+
+> **TDD checkpoint**: FrameElement with label, FrameUtils containment logic, .markdraw and Excalidraw serialization, frame rendering with clipping, FrameTool with F shortcut, SelectTool frame-aware move/delete/duplicate/paste. ~75 new tests, ~1260 total. Zero analyzer issues. ✅
 
 ### 6.3 Image Elements
 - [ ] Import image → create image element
@@ -615,6 +625,6 @@ For every feature:
 | **M3: Edit (80%)** | 3 | Full drawing interaction | Create, select, move, resize, connect, undo |
 | **M4: Text** | 4 | Inline text editing + bound text | Text in shapes, arrow labels |
 | **M5: Export** | 5 | PNG, SVG, clipboard, Excalidraw interop | 1112 tests, round-trip verified |
-| **M6: Advanced (100%)** | 6 | Groups, frames, images, elbow arrows | 6.1 grouping complete (1185 tests) |
+| **M6: Advanced (100%)** | 6 | Groups, frames, images, elbow arrows | 6.1 grouping (1185), 6.2 frames (1260 tests) |
 | **M7: Ship** | 7 | All platforms polished | App store ready |
 | **M8: Grow** | 8 | Collaboration, AI, plugins | Post-launch iteration |
