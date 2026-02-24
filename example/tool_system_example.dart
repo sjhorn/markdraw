@@ -751,7 +751,7 @@ class _CanvasPageState extends State<_CanvasPage> {
               const VerticalDivider(width: 16, indent: 12, endIndent: 12),
               for (final type in ToolType.values) ...[
                 // Insert image import button at position 9 (after text)
-                if (type == ToolType.hand)
+                if (type == ToolType.frame)
                   IconButton(
                     icon: const Stack(
                       clipBehavior: Clip.none,
