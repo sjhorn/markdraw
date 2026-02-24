@@ -106,6 +106,48 @@ void main() {
       final a = createArrow();
       expect(a.bumpVersion(), isA<ArrowElement>());
     });
+
+    test('elbowed defaults to false', () {
+      final a = createArrow();
+      expect(a.elbowed, isFalse);
+    });
+
+    test('copyWith preserves elbowed', () {
+      final a = ArrowElement(
+        id: const ElementId('arrow-1'),
+        x: 0.0,
+        y: 0.0,
+        width: 100.0,
+        height: 100.0,
+        points: const [Point(0, 0), Point(100, 100)],
+        elbowed: true,
+      );
+      final modified = a.copyWith(x: 50.0);
+      expect(modified.elbowed, isTrue);
+    });
+
+    test('copyWithLine preserves elbowed', () {
+      final a = ArrowElement(
+        id: const ElementId('arrow-1'),
+        x: 0.0,
+        y: 0.0,
+        width: 100.0,
+        height: 100.0,
+        points: const [Point(0, 0), Point(100, 100)],
+        elbowed: true,
+      );
+      final modified = a.copyWithLine(
+        points: [const Point(10, 20), const Point(200, 300)],
+      );
+      expect(modified.elbowed, isTrue);
+    });
+
+    test('copyWithArrow can change elbowed', () {
+      final a = createArrow();
+      expect(a.elbowed, isFalse);
+      final modified = a.copyWithArrow(elbowed: true);
+      expect(modified.elbowed, isTrue);
+    });
   });
 
   group('PointBinding', () {

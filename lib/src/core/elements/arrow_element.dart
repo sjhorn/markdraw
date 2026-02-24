@@ -31,6 +31,7 @@ class PointBinding {
 class ArrowElement extends LineElement {
   final PointBinding? startBinding;
   final PointBinding? endBinding;
+  final bool elbowed;
 
   ArrowElement({
     required super.id,
@@ -43,6 +44,7 @@ class ArrowElement extends LineElement {
     super.endArrowhead = Arrowhead.arrow,
     this.startBinding,
     this.endBinding,
+    this.elbowed = false,
     super.angle,
     super.strokeColor,
     super.backgroundColor,
@@ -71,6 +73,7 @@ class ArrowElement extends LineElement {
     bool clearStartBinding = false,
     PointBinding? endBinding,
     bool clearEndBinding = false,
+    bool? elbowed,
   }) {
     return ArrowElement(
       id: id,
@@ -84,6 +87,7 @@ class ArrowElement extends LineElement {
       startBinding:
           clearStartBinding ? null : (startBinding ?? this.startBinding),
       endBinding: clearEndBinding ? null : (endBinding ?? this.endBinding),
+      elbowed: elbowed ?? this.elbowed,
       angle: angle,
       strokeColor: strokeColor,
       backgroundColor: backgroundColor,
@@ -129,6 +133,7 @@ class ArrowElement extends LineElement {
           clearEndArrowhead ? null : (endArrowhead ?? this.endArrowhead),
       startBinding: startBinding,
       endBinding: endBinding,
+      elbowed: elbowed,
       angle: angle,
       strokeColor: strokeColor,
       backgroundColor: backgroundColor,
@@ -196,6 +201,7 @@ class ArrowElement extends LineElement {
       endArrowhead: endArrowhead,
       startBinding: startBinding,
       endBinding: endBinding,
+      elbowed: elbowed,
       angle: angle ?? this.angle,
       strokeColor: strokeColor ?? this.strokeColor,
       backgroundColor: backgroundColor ?? this.backgroundColor,
