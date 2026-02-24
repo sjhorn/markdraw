@@ -14,7 +14,9 @@
 library;
 
 import 'dart:convert';
+import 'dart:ui' as ui;
 
+import 'package:crypto/crypto.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/gestures.dart';
@@ -37,6 +39,9 @@ import 'package:markdraw/src/rendering/export/svg_exporter.dart';
 
 import 'file_io_stub.dart' if (dart.library.io) 'file_io_native.dart';
 import 'package:markdraw/src/core/elements/arrow_element.dart';
+import 'package:markdraw/src/core/elements/image_element.dart';
+import 'package:markdraw/src/core/elements/image_file.dart';
+import 'package:markdraw/src/rendering/image_cache.dart';
 import 'package:markdraw/src/core/elements/diamond_element.dart';
 import 'package:markdraw/src/core/elements/element.dart';
 import 'package:markdraw/src/core/elements/element_id.dart';
@@ -105,6 +110,7 @@ class _CanvasPageState extends State<_CanvasPage> {
   final _historyManager = HistoryManager();
   late final DocumentService _documentService;
   final ClipboardService _clipboardService = const FlutterClipboardService();
+  final _imageCache = ImageElementCache();
   String? _currentFilePath;
 
   // Drag coalescing: capture scene before drag, push once on pointer up
@@ -143,10 +149,15 @@ class _CanvasPageState extends State<_CanvasPage> {
     _keyboardFocusNode.requestFocus();
 
     _textFocusNode.addListener(_onTextFocusChanged);
+
+    _imageCache.onImageDecoded = () {
+      if (mounted) setState(() {});
+    };
   }
 
   @override
   void dispose() {
+    _imageCache.dispose();
     _keyboardFocusNode.dispose();
     _textEditingController.dispose();
     _textFocusNode.removeListener(_onTextFocusChanged);
@@ -500,6 +511,82 @@ class _CanvasPageState extends State<_CanvasPage> {
     }
   }
 
+  Future<void> _importImage() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        dialogTitle: 'Import Image',
+        type: FileType.image,
+        withData: true,
+      );
+      if (result == null) return;
+
+      final file = result.files.single;
+      final bytes = file.bytes;
+      if (bytes == null) return;
+
+      // Determine MIME type from extension
+      final ext = file.name.split('.').last.toLowerCase();
+      final mimeType = switch (ext) {
+        'png' => 'image/png',
+        'jpg' || 'jpeg' => 'image/jpeg',
+        'gif' => 'image/gif',
+        'webp' => 'image/webp',
+        _ => 'image/png',
+      };
+
+      // Compute fileId (SHA-1 first 8 hex chars)
+      final digest = sha1.convert(bytes);
+      final fileId = digest.toString().substring(0, 8);
+      final imageFile = ImageFile(mimeType: mimeType, bytes: bytes);
+
+      // Decode to get natural dimensions
+      final codec = await ui.instantiateImageCodec(bytes);
+      final frame = await codec.getNextFrame();
+      final naturalWidth = frame.image.width.toDouble();
+      final naturalHeight = frame.image.height.toDouble();
+      frame.image.dispose();
+
+      // Scale to fit within 800px while preserving aspect ratio
+      double width = naturalWidth;
+      double height = naturalHeight;
+      const maxSize = 800.0;
+      if (width > maxSize || height > maxSize) {
+        final scale = maxSize / (width > height ? width : height);
+        width *= scale;
+        height *= scale;
+      }
+
+      // Place at viewport center
+      if (!mounted) return;
+      final renderBox = context.findRenderObject() as RenderBox?;
+      final screenSize = renderBox?.size ?? const Size(800, 600);
+      final centerScene = _editorState.viewport.screenToScene(
+        Offset(screenSize.width / 2, screenSize.height / 2),
+      );
+      final x = centerScene.dx - width / 2;
+      final y = centerScene.dy - height / 2;
+
+      final element = ImageElement(
+        id: ElementId.generate(),
+        x: x,
+        y: y,
+        width: width,
+        height: height,
+        fileId: fileId,
+        mimeType: mimeType,
+      );
+
+      _historyManager.push(_editorState.scene);
+      _applyResult(CompoundResult([
+        AddFileResult(fileId: fileId, file: imageFile),
+        AddElementResult(element),
+        SetSelectionResult({element.id}),
+      ]));
+    } catch (e) {
+      debugPrint('Image import error: $e');
+    }
+  }
+
   Future<void> _saveFile() async {
     try {
       if (!kIsWeb && _currentFilePath != null) {
@@ -579,6 +666,19 @@ class _CanvasPageState extends State<_CanvasPage> {
     }
   }
 
+  Map<String, ui.Image>? _resolveImages() {
+    final files = _editorState.scene.files;
+    if (files.isEmpty) return null;
+    final resolved = <String, ui.Image>{};
+    for (final entry in files.entries) {
+      final image = _imageCache.getImage(entry.key, entry.value);
+      if (image != null) {
+        resolved[entry.key] = image;
+      }
+    }
+    return resolved.isEmpty ? null : resolved;
+  }
+
   ToolContext get _toolContext => ToolContext(
     scene: _editorState.scene,
     viewport: _editorState.viewport,
@@ -647,6 +747,12 @@ class _CanvasPageState extends State<_CanvasPage> {
                 icon: const Icon(Icons.code),
                 onPressed: _exportSvg,
                 tooltip: 'Export SVG',
+              ),
+              const VerticalDivider(width: 16, indent: 12, endIndent: 12),
+              IconButton(
+                icon: const Icon(Icons.add_photo_alternate),
+                onPressed: _importImage,
+                tooltip: 'Import Image',
               ),
               const VerticalDivider(width: 16, indent: 12, endIndent: 12),
               for (final type in ToolType.values)
@@ -805,6 +911,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                             viewport: _editorState.viewport,
                             previewElement: _buildPreviewElement(toolOverlay),
                             editingElementId: _editingTextElementId,
+                            resolvedImages: _resolveImages(),
                           ),
                           foregroundPainter: InteractiveCanvasPainter(
                             viewport: _editorState.viewport,

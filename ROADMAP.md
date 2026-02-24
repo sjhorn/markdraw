@@ -484,11 +484,22 @@ markdraw/
 > **TDD checkpoint**: FrameElement with label, FrameUtils containment logic, .markdraw and Excalidraw serialization, frame rendering with clipping, FrameTool with F shortcut, SelectTool frame-aware move/delete/duplicate/paste. ~75 new tests, ~1260 total. Zero analyzer issues. ✅
 
 ### 6.3 Image Elements
-- [ ] Import image → create image element
-- [ ] Image stored as base64 in `.markdraw` files block (like frontmatter)
-- [ ] Image cropping
-- [ ] Image scaling with aspect ratio lock
-- [ ] **Tests**: Image round-trip, crop, scale
+- [x] `ImageElement` — element subclass with `fileId`, `mimeType`, `crop` (ImageCrop?), `imageScale`
+- [x] `ImageFile` — binary image data container, `ImageCrop` — normalized crop rectangle (0-1 range)
+- [x] Scene `files` map (`Map<String, ImageFile>`) with `addFile`/`removeFile`
+- [x] `.markdraw` serialization: `image id=X at X,Y size WxH file=X crop=X,Y,W,H scale=X` + ` ```files ` block with base64 data
+- [x] Excalidraw JSON codec: `fileId`, `scale`, `crop` on elements; `files` map with data URLs
+- [x] `ImageElementCache` — LRU cache (max 50) decoding `ImageFile` bytes → `dart:ui Image`
+- [x] `ElementRenderer` image rendering with crop support and placeholder
+- [x] SVG export: `<image>` tag with embedded data URI
+- [x] `AddFileResult` / `RemoveFileResult` — sealed class members for file store mutations
+- [x] Image import via file picker (aspect-ratio preserving, centered at viewport)
+- [x] Aspect-ratio resize: images default locked, Shift unlocks (inverted from normal shapes)
+- [x] File cleanup on delete: `RemoveFileResult` when no other elements reference the `fileId`
+- [x] Duplicate image reuses same `fileId` (shared file data)
+- [x] **Tests**: ~65 new tests — ImageElement/Crop/File (19), serialization (12), Excalidraw (8), rendering (7), import (10), SelectTool (7)
+
+> **TDD checkpoint**: ImageElement with file store, full serialization round-trip (.markdraw + Excalidraw JSON), rendering with cache and SVG export, import via file picker, aspect-ratio-locked resize, file cleanup on delete. ~1325 tests total. Zero analyzer issues. ✅
 
 ### 6.4 Elbow Arrows
 - [ ] Orthogonal routing — arrows that make 90° turns
@@ -625,6 +636,6 @@ For every feature:
 | **M3: Edit (80%)** | 3 | Full drawing interaction | Create, select, move, resize, connect, undo |
 | **M4: Text** | 4 | Inline text editing + bound text | Text in shapes, arrow labels |
 | **M5: Export** | 5 | PNG, SVG, clipboard, Excalidraw interop | 1112 tests, round-trip verified |
-| **M6: Advanced (100%)** | 6 | Groups, frames, images, elbow arrows | 6.1 grouping (1185), 6.2 frames (1260 tests) |
+| **M6: Advanced (100%)** | 6 | Groups, frames, images, elbow arrows | 6.1 grouping (1185), 6.2 frames (1260), 6.3 images (1325 tests) |
 | **M7: Ship** | 7 | All platforms polished | App store ready |
 | **M8: Grow** | 8 | Collaboration, AI, plugins | Post-launch iteration |
