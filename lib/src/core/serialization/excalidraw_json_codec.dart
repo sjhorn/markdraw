@@ -6,6 +6,7 @@ import '../elements/element.dart';
 import '../elements/element_id.dart';
 import '../elements/ellipse_element.dart';
 import '../elements/fill_style.dart';
+import '../elements/frame_element.dart';
 import '../elements/freedraw_element.dart';
 import '../elements/line_element.dart';
 import '../elements/rectangle_element.dart';
@@ -26,7 +27,6 @@ class ExcalidrawJsonCodec {
   // Unsupported Excalidraw element types that we skip with a warning.
   static const _unsupportedTypes = {
     'image',
-    'frame',
     'magicframe',
     'iframe',
     'embeddable',
@@ -97,7 +97,12 @@ class ExcalidrawJsonCodec {
 
   static Map<String, dynamic> _elementToJson(Element el) {
     final base = _baseToJson(el);
-    if (el is TextElement) {
+    if (el is FrameElement) {
+      return {
+        ...base,
+        'name': el.label,
+      };
+    } else if (el is TextElement) {
       return {
         ...base,
         'text': el.text,
@@ -295,6 +300,8 @@ class ExcalidrawJsonCodec {
         return _parseArrow(raw, index, warnings);
       case 'freedraw':
         return _parseFreedraw(raw);
+      case 'frame':
+        return _parseFrame(raw);
       default:
         warnings.add(
           ParseWarning(
@@ -547,6 +554,37 @@ class ExcalidrawJsonCodec {
       y: _double(raw, 'y'),
       width: _double(raw, 'width'),
       height: _double(raw, 'height'),
+      angle: _double(raw, 'angle'),
+      strokeColor: raw['strokeColor'] as String? ?? '#000000',
+      backgroundColor: raw['backgroundColor'] as String? ?? 'transparent',
+      fillStyle: _fillStyle(raw),
+      strokeWidth: _double(raw, 'strokeWidth', 2.0),
+      strokeStyle: _strokeStyle(raw),
+      roughness: _double(raw, 'roughness', 1.0),
+      opacity: _opacity(raw),
+      roundness: _roundness(raw),
+      seed: _int(raw, 'seed'),
+      version: _int(raw, 'version', 1),
+      versionNonce: _int(raw, 'versionNonce'),
+      isDeleted: raw['isDeleted'] as bool? ?? false,
+      groupIds: _groupIds(raw),
+      frameId: raw['frameId'] as String?,
+      boundElements: _boundElements(raw),
+      updated: _int(raw, 'updated'),
+      link: raw['link'] as String?,
+      locked: raw['locked'] as bool? ?? false,
+      index: raw['index'] as String?,
+    );
+  }
+
+  static FrameElement _parseFrame(Map<String, dynamic> raw) {
+    return FrameElement(
+      id: _id(raw),
+      x: _double(raw, 'x'),
+      y: _double(raw, 'y'),
+      width: _double(raw, 'width'),
+      height: _double(raw, 'height'),
+      label: raw['name'] as String? ?? 'Frame',
       angle: _double(raw, 'angle'),
       strokeColor: raw['strokeColor'] as String? ?? '#000000',
       backgroundColor: raw['backgroundColor'] as String? ?? 'transparent',

@@ -138,15 +138,12 @@ void main() {
           _baseElement(id: 'frame1', type: 'frame'),
         ]);
         final result = ExcalidrawJsonCodec.parse(json);
-        expect(result.value.allElements, hasLength(1));
-        expect(result.warnings, hasLength(2));
+        // rectangle and frame are supported; image is skipped
+        expect(result.value.allElements, hasLength(2));
+        expect(result.warnings, hasLength(1));
         expect(
           result.warnings[0].message,
           contains('image'),
-        );
-        expect(
-          result.warnings[1].message,
-          contains('frame'),
         );
       });
     });
