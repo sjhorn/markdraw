@@ -786,7 +786,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                       ),
                       if (shortcutForToolType(type) != null)
                         Positioned(
-                          right: -6,
+                          right: -8,
                           bottom: -4,
                           child: Text(
                             shortcutForToolType(type)!,
