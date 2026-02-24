@@ -51,6 +51,9 @@ class EditorState {
       SetClipboardResult(:final elements) => copyWith(
           clipboard: elements,
         ),
+      AddFileResult(:final fileId, :final file) => copyWith(
+          scene: scene.addFile(fileId, file),
+        ),
       CompoundResult(:final results) => results.fold(this,
           (state, r) => state.applyResult(r)),
     };

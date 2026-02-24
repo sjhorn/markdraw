@@ -1,5 +1,6 @@
 import '../core/elements/element.dart';
 import '../core/elements/element_id.dart';
+import '../core/elements/image_file.dart';
 import '../core/math/bounds.dart';
 import '../core/math/point.dart';
 import '../core/scene/scene.dart';
@@ -59,6 +60,13 @@ class SetClipboardResult extends ToolResult {
   SetClipboardResult(this.elements);
 }
 
+/// Add a file to the scene's file store.
+class AddFileResult extends ToolResult {
+  final String fileId;
+  final ImageFile file;
+  AddFileResult({required this.fileId, required this.file});
+}
+
 /// A read-only snapshot of the editor state, provided to tools for
 /// decision-making.
 class ToolContext {
@@ -99,6 +107,7 @@ bool isSceneChangingResult(ToolResult? result) {
     AddElementResult() => true,
     UpdateElementResult() => true,
     RemoveElementResult() => true,
+    AddFileResult() => true,
     CompoundResult(:final results) => results.any(isSceneChangingResult),
     SetSelectionResult() => false,
     UpdateViewportResult() => false,

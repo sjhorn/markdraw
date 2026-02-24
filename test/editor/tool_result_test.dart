@@ -110,6 +110,7 @@ void main() {
         CompoundResult() => 'compound',
         SwitchToolResult() => 'switch',
         SetClipboardResult() => 'clipboard',
+        AddFileResult() => 'addFile',
       };
       expect(description, 'add');
     });
