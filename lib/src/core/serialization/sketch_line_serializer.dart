@@ -5,6 +5,7 @@ import '../elements/ellipse_element.dart';
 import '../elements/fill_style.dart';
 import '../elements/frame_element.dart';
 import '../elements/freedraw_element.dart';
+import '../elements/image_element.dart';
 import '../elements/line_element.dart';
 import '../elements/rectangle_element.dart';
 import '../elements/stroke_style.dart';
@@ -26,6 +27,7 @@ class SketchLineSerializer {
       ArrowElement() => _serializeArrow(element, alias, aliasMap),
       LineElement() => _serializeLine(element, alias),
       FrameElement() => _serializeFrame(element, alias),
+      ImageElement() => _serializeImage(element, alias),
       RectangleElement() => _serializeShape('rect', element, alias),
       EllipseElement() => _serializeShape('ellipse', element, alias),
       DiamondElement() => _serializeShape('diamond', element, alias),
@@ -72,6 +74,25 @@ class SketchLineSerializer {
     _addId(parts, alias);
     _addPosition(parts, element.x, element.y);
     _addSize(parts, element.width, element.height);
+    _addCommonProperties(parts, element);
+    return parts.join(' ');
+  }
+
+  String _serializeImage(ImageElement element, String? alias) {
+    final parts = <String>['image'];
+    _addId(parts, alias);
+    _addPosition(parts, element.x, element.y);
+    _addSize(parts, element.width, element.height);
+    parts.add('file=${element.fileId}');
+    if (element.crop != null && !element.crop!.isFullImage) {
+      final c = element.crop!;
+      parts.add(
+        'crop=${_formatNum(c.x)},${_formatNum(c.y)},${_formatNum(c.width)},${_formatNum(c.height)}',
+      );
+    }
+    if (element.imageScale != 1.0) {
+      parts.add('scale=${_formatNum(element.imageScale)}');
+    }
     _addCommonProperties(parts, element);
     return parts.join(' ');
   }

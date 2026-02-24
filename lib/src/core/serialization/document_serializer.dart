@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../elements/text_element.dart';
 import 'document_section.dart';
 import 'markdraw_document.dart';
@@ -39,6 +41,15 @@ class DocumentSerializer {
         buffer.writeln();
         buffer.writeln();
       }
+    }
+
+    // Files block
+    if (doc.files.isNotEmpty) {
+      if (hasContent) {
+        buffer.writeln();
+        buffer.writeln();
+      }
+      _serializeFiles(buffer, doc);
     }
 
     return buffer.toString();
@@ -94,6 +105,15 @@ class DocumentSerializer {
       }
     }
 
+    buffer.write('```');
+  }
+
+  static void _serializeFiles(StringBuffer buffer, MarkdrawDocument doc) {
+    buffer.writeln('```files');
+    for (final entry in doc.files.entries) {
+      final b64 = base64Encode(entry.value.bytes);
+      buffer.writeln('${entry.key} ${entry.value.mimeType} $b64');
+    }
     buffer.write('```');
   }
 }

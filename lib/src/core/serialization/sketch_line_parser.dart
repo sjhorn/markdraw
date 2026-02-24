@@ -6,6 +6,8 @@ import '../elements/ellipse_element.dart';
 import '../elements/fill_style.dart';
 import '../elements/frame_element.dart';
 import '../elements/freedraw_element.dart';
+import '../elements/image_crop.dart';
+import '../elements/image_element.dart';
 import '../elements/line_element.dart';
 import '../elements/rectangle_element.dart';
 import '../elements/roundness.dart';
@@ -53,6 +55,7 @@ class SketchLineParser {
         'ellipse' => _parseShape(keyword, trimmed, lineNumber),
         'diamond' => _parseShape(keyword, trimmed, lineNumber),
         'frame' => _parseFrame(trimmed, lineNumber),
+        'image' => _parseImage(trimmed, lineNumber),
         'text' => _parseText(trimmed, lineNumber),
         'line' => _parseLine(trimmed, lineNumber),
         'arrow' => _parseArrow(trimmed, lineNumber),
@@ -256,6 +259,62 @@ class SketchLineParser {
       roughness: common.roughness,
       opacity: common.opacity,
       roundness: common.roundness,
+      angle: common.angle,
+      locked: common.locked,
+      seed: common.seed,
+      frameId: common.frameId,
+      groupIds: common.groupIds,
+    );
+
+    return ParseResult(value: element);
+  }
+
+  // ── Image parsing ──
+
+  ParseResult<Element?> _parseImage(String line, int lineNumber) {
+    final props = _PropertyBag(line, 'image');
+    final id = props.id;
+    final pos = props.position;
+    final size = props.size;
+    final common = props.commonProperties;
+    final fileId = props.namedString('file') ?? '';
+    final scaleVal = props.namedDouble('scale');
+    final cropStr = props.namedString('crop');
+
+    ImageCrop? crop;
+    if (cropStr != null) {
+      final parts = cropStr.split(',');
+      if (parts.length == 4) {
+        crop = ImageCrop(
+          x: double.parse(parts[0]),
+          y: double.parse(parts[1]),
+          width: double.parse(parts[2]),
+          height: double.parse(parts[3]),
+        );
+      }
+    }
+
+    final elementId = ElementId(id ?? _generateId());
+    if (id != null) {
+      aliases[id] = elementId.value;
+    }
+
+    final element = ImageElement(
+      id: elementId,
+      x: pos.$1,
+      y: pos.$2,
+      width: size.$1,
+      height: size.$2,
+      fileId: fileId,
+      crop: crop,
+      imageScale: scaleVal ?? 1.0,
+      strokeColor: common.strokeColor,
+      backgroundColor: common.backgroundColor,
+      fillStyle: common.fillStyle,
+      strokeWidth: common.strokeWidth,
+      strokeStyle: common.strokeStyle,
+      roughness: common.roughness,
+      opacity: common.opacity,
       angle: common.angle,
       locked: common.locked,
       seed: common.seed,

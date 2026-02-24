@@ -1,5 +1,9 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import '../elements/element.dart';
 import '../elements/element_id.dart';
+import '../elements/image_file.dart';
 import '../elements/text_element.dart';
 import 'document_section.dart';
 import 'frontmatter_parser.dart';
@@ -39,6 +43,7 @@ class DocumentParser {
 
     var i = 0;
     var proseBuffer = StringBuffer();
+    final files = <String, ImageFile>{};
 
     while (i < lines.length) {
       if (lines[i].trim() == '```sketch') {
@@ -61,6 +66,42 @@ class DocumentParser {
           allWarnings,
         );
         sections.add(SketchSection(sketchResult));
+      } else if (lines[i].trim() == '```files') {
+        // Flush prose
+        _flushProse(proseBuffer, sections);
+        proseBuffer = StringBuffer();
+
+        // Parse files block
+        i++;
+        while (i < lines.length && lines[i].trim() != '```') {
+          final fileLine = lines[i].trim();
+          if (fileLine.isNotEmpty) {
+            final spaceIdx = fileLine.indexOf(' ');
+            if (spaceIdx > 0) {
+              final fileId = fileLine.substring(0, spaceIdx);
+              final rest = fileLine.substring(spaceIdx + 1);
+              final spaceIdx2 = rest.indexOf(' ');
+              if (spaceIdx2 > 0) {
+                final mimeType = rest.substring(0, spaceIdx2);
+                final b64Data = rest.substring(spaceIdx2 + 1);
+                try {
+                  final bytes = base64Decode(b64Data);
+                  files[fileId] = ImageFile(
+                    mimeType: mimeType,
+                    bytes: Uint8List.fromList(bytes),
+                  );
+                } catch (_) {
+                  allWarnings.add(ParseWarning(
+                    line: i + 1,
+                    message: 'Invalid base64 data for file $fileId',
+                  ));
+                }
+              }
+            }
+          }
+          i++;
+        }
+        if (i < lines.length) i++; // skip closing ```
       } else {
         if (proseBuffer.isNotEmpty) proseBuffer.write('\n');
         proseBuffer.write(lines[i]);
@@ -109,6 +150,7 @@ class DocumentParser {
         settings: settings,
         sections: sections,
         aliases: Map.from(parser.aliases),
+        files: files,
       ),
       warnings: allWarnings,
     );
