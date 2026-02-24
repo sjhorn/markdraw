@@ -4,11 +4,11 @@
 /// file_picker bytes instead. Save uses a blob download.
 library;
 
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
-
 import 'dart:convert';
+import 'dart:js_interop';
 import 'dart:typed_data';
+
+import 'package:web/web.dart' as web;
 
 Future<String> readStringFromFile(String path) =>
     throw UnsupportedError('File read by path not supported on web');
@@ -23,20 +23,29 @@ Future<void> writeBytesToFile(String path, Uint8List bytes) =>
 /// Triggers a browser file download with the given filename and content.
 void downloadFile(String filename, String content) {
   final bytes = utf8.encode(content);
-  final blob = html.Blob([bytes], 'text/plain');
-  final url = html.Url.createObjectUrlFromBlob(blob);
-  html.AnchorElement(href: url)
-    ..setAttribute('download', filename)
-    ..click();
-  html.Url.revokeObjectUrl(url);
+  final blob = web.Blob(
+    [bytes.toJS].toJS,
+    web.BlobPropertyBag(type: 'text/plain'),
+  );
+  final url = web.URL.createObjectURL(blob);
+  final anchor = web.HTMLAnchorElement()
+    ..href = url
+    ..download = filename;
+  anchor.click();
+  web.URL.revokeObjectURL(url);
 }
 
 /// Triggers a browser file download with raw binary bytes.
-void downloadBytes(String filename, List<int> bytes, {String mimeType = 'application/octet-stream'}) {
-  final blob = html.Blob([bytes], mimeType);
-  final url = html.Url.createObjectUrlFromBlob(blob);
-  html.AnchorElement(href: url)
-    ..setAttribute('download', filename)
-    ..click();
-  html.Url.revokeObjectUrl(url);
+void downloadBytes(String filename, List<int> bytes,
+    {String mimeType = 'application/octet-stream'}) {
+  final blob = web.Blob(
+    [Uint8List.fromList(bytes).toJS].toJS,
+    web.BlobPropertyBag(type: mimeType),
+  );
+  final url = web.URL.createObjectURL(blob);
+  final anchor = web.HTMLAnchorElement()
+    ..href = url
+    ..download = filename;
+  anchor.click();
+  web.URL.revokeObjectURL(url);
 }
