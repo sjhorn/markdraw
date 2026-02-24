@@ -1075,6 +1075,10 @@ class _CanvasPageState extends State<_CanvasPage> {
               _buildSectionLabel('Roundness'),
               _buildRoundnessToggle(style.roundness),
             ],
+            if (style.hasArrows) ...[
+              const SizedBox(height: 8),
+              _buildElbowedToggle(style.elbowed),
+            ],
             if (style.hasText) ...[
               const SizedBox(height: 12),
               _buildSectionLabel('Font size'),
@@ -1223,6 +1227,22 @@ class _CanvasPageState extends State<_CanvasPage> {
                 results.length == 1 ? results.first : CompoundResult(results),
               );
             }
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildElbowedToggle(bool? current) {
+    return Row(
+      children: [
+        const Text('Elbowed', style: TextStyle(fontSize: 12)),
+        const Spacer(),
+        Switch(
+          value: current ?? false,
+          onChanged: (on) {
+            _historyManager.push(_editorState.scene);
+            _applyStyleChange(ElementStyle(hasArrows: true, elbowed: on));
           },
         ),
       ],

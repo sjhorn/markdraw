@@ -1,8 +1,11 @@
+import '../core/elements/arrow_element.dart';
 import '../core/elements/element.dart';
 import '../core/elements/fill_style.dart';
 import '../core/elements/roundness.dart';
 import '../core/elements/stroke_style.dart';
 import '../core/elements/text_element.dart';
+import '../core/math/elbow_routing.dart';
+import '../core/math/point.dart';
 import 'tool_result.dart';
 
 /// Represents the current (possibly mixed) style values for the property panel.
@@ -26,10 +29,16 @@ class ElementStyle {
   /// True if at least one selected element is a [TextElement].
   final bool hasText;
 
+  /// True if at least one selected element is an [ArrowElement].
+  final bool hasArrows;
+
   // Text-only properties (null if no text elements or mixed):
   final double? fontSize;
   final String? fontFamily;
   final TextAlign? textAlign;
+
+  // Arrow-only properties (null if no arrows or mixed):
+  final bool? elbowed;
 
   const ElementStyle({
     this.strokeColor,
@@ -42,9 +51,11 @@ class ElementStyle {
     this.roundness,
     this.hasRoundness = false,
     this.hasText = false,
+    this.hasArrows = false,
     this.fontSize,
     this.fontFamily,
     this.textAlign,
+    this.elbowed,
   });
 }
 
@@ -105,6 +116,20 @@ class PropertyPanelState {
       }
     }
 
+    // Arrow properties — only if at least one ArrowElement is present.
+    final arrowElements = elements.whereType<ArrowElement>().toList();
+    final hasArrows = arrowElements.isNotEmpty;
+    bool? elbowed;
+    if (hasArrows) {
+      elbowed = arrowElements.first.elbowed;
+      for (var i = 1; i < arrowElements.length; i++) {
+        if (arrowElements[i].elbowed != elbowed) {
+          elbowed = null;
+          break;
+        }
+      }
+    }
+
     // Text properties — only if at least one TextElement is present.
     final textElements =
         elements.whereType<TextElement>().toList();
@@ -139,9 +164,11 @@ class PropertyPanelState {
       roundness: roundness,
       hasRoundness: hasRoundness,
       hasText: hasText,
+      hasArrows: hasArrows,
       fontSize: fontSize,
       fontFamily: fontFamily,
       textAlign: textAlign,
+      elbowed: elbowed,
     );
   }
 
@@ -169,6 +196,34 @@ class PropertyPanelState {
             fontFamily: style.fontFamily,
             textAlign: style.textAlign,
           );
+        }
+      }
+
+      // Apply arrow-specific elbowed toggle
+      if (element is ArrowElement && style.elbowed != null) {
+        final arrow = element;
+        if (style.elbowed! && !arrow.elbowed) {
+          // Regular → elbowed: route points between first and last point
+          final absFirst = Point(arrow.x + arrow.points.first.x,
+              arrow.y + arrow.points.first.y);
+          final absLast = Point(
+              arrow.x + arrow.points.last.x, arrow.y + arrow.points.last.y);
+          final routed = ElbowRouting.route(start: absFirst, end: absLast);
+          // Convert back to relative points
+          final relPoints =
+              routed.map((p) => Point(p.x - arrow.x, p.y - arrow.y)).toList();
+          updated = arrow
+              .copyWithArrow(elbowed: true)
+              .copyWithLine(points: relPoints)
+              .copyWith(angle: 0);
+        } else if (!style.elbowed! && arrow.elbowed) {
+          // Elbowed → regular: simplify to just first and last point
+          final simplifiedPoints = [arrow.points.first, arrow.points.last];
+          updated = arrow
+              .copyWithArrow(elbowed: false)
+              .copyWithLine(points: simplifiedPoints);
+        } else {
+          updated = arrow.copyWithArrow(elbowed: style.elbowed);
         }
       }
 

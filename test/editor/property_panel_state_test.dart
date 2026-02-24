@@ -1,11 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:markdraw/src/core/elements/arrow_element.dart';
 import 'package:markdraw/src/core/elements/element_id.dart';
 import 'package:markdraw/src/core/elements/fill_style.dart';
+import 'package:markdraw/src/core/elements/line_element.dart';
 import 'package:markdraw/src/core/elements/rectangle_element.dart';
 import 'package:markdraw/src/core/elements/roundness.dart';
 import 'package:markdraw/src/core/elements/stroke_style.dart';
 import 'package:markdraw/src/core/elements/text_element.dart';
 import 'package:markdraw/src/core/elements/ellipse_element.dart';
+import 'package:markdraw/src/core/math/point.dart';
 import 'package:markdraw/src/editor/property_panel_state.dart';
 import 'package:markdraw/src/editor/tool_result.dart';
 
@@ -441,6 +444,113 @@ void main() {
       expect(updatedText.strokeColor, '#ff0000');
       expect(updatedText.fontSize, 28.0);
       expect(updatedText.text, 'Hello');
+    });
+  });
+
+  group('PropertyPanelState elbowed arrow', () {
+    final elbowArrow = ArrowElement(
+      id: const ElementId('ea1'),
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+      points: const [Point(0, 0), Point(0, 100), Point(100, 100)],
+      endArrowhead: Arrowhead.arrow,
+      elbowed: true,
+    );
+
+    final regularArrow = ArrowElement(
+      id: const ElementId('ra1'),
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+      points: const [Point(0, 0), Point(100, 100)],
+      endArrowhead: Arrowhead.arrow,
+    );
+
+    test('fromElements extracts elbowed=true', () {
+      final style = PropertyPanelState.fromElements([elbowArrow]);
+      expect(style.hasArrows, isTrue);
+      expect(style.elbowed, isTrue);
+    });
+
+    test('fromElements extracts elbowed=false', () {
+      final style = PropertyPanelState.fromElements([regularArrow]);
+      expect(style.hasArrows, isTrue);
+      expect(style.elbowed, isFalse);
+    });
+
+    test('fromElements returns null for mixed elbowed', () {
+      final style =
+          PropertyPanelState.fromElements([elbowArrow, regularArrow]);
+      expect(style.hasArrows, isTrue);
+      expect(style.elbowed, isNull);
+    });
+
+    test('fromElements returns hasArrows false for non-arrows', () {
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+      );
+      final style = PropertyPanelState.fromElements([rect]);
+      expect(style.hasArrows, isFalse);
+      expect(style.elbowed, isNull);
+    });
+
+    test('applyStyle regular to elbowed re-routes points', () {
+      final result = PropertyPanelState.applyStyle(
+        [regularArrow],
+        const ElementStyle(hasArrows: true, elbowed: true),
+      );
+      final updated = (result as UpdateElementResult).element as ArrowElement;
+      expect(updated.elbowed, isTrue);
+      // Should have more than 2 points (routed path)
+      expect(updated.points.length, greaterThan(2));
+      // First point and approximate last point preserved
+      expect(updated.points.first, const Point(0, 0));
+      expect(updated.angle, 0);
+    });
+
+    test('applyStyle elbowed to regular simplifies to 2 points', () {
+      final result = PropertyPanelState.applyStyle(
+        [elbowArrow],
+        const ElementStyle(hasArrows: true, elbowed: false),
+      );
+      final updated = (result as UpdateElementResult).element as ArrowElement;
+      expect(updated.elbowed, isFalse);
+      expect(updated.points.length, 2);
+      expect(updated.points.first, elbowArrow.points.first);
+      expect(updated.points.last, elbowArrow.points.last);
+    });
+
+    test('applyStyle elbowed on non-arrow is ignored', () {
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+      );
+      final result = PropertyPanelState.applyStyle(
+        [rect],
+        const ElementStyle(hasArrows: true, elbowed: true),
+      );
+      final updated = (result as UpdateElementResult).element;
+      // Should still be a rectangle, unchanged by elbowed
+      expect(updated, isA<RectangleElement>());
+    });
+
+    test('applyStyle elbowed with undo-compatible result', () {
+      // Verify result is an UpdateElementResult (can be pushed to undo stack)
+      final result = PropertyPanelState.applyStyle(
+        [regularArrow],
+        const ElementStyle(hasArrows: true, elbowed: true),
+      );
+      expect(result, isA<UpdateElementResult>());
     });
   });
 }

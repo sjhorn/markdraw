@@ -502,11 +502,21 @@ markdraw/
 > **TDD checkpoint**: ImageElement with file store, full serialization round-trip (.markdraw + Excalidraw JSON), rendering with cache and SVG export, import via file picker, aspect-ratio-locked resize, file cleanup on delete. ~1325 tests total. Zero analyzer issues. ✅
 
 ### 6.4 Elbow Arrows
-- [ ] Orthogonal routing — arrows that make 90° turns
-- [ ] Fixed segments that user can drag to reposition
-- [ ] Auto-routing around obstacles
-- [ ] `.markdraw` syntax: `arrow from A to B elbowed`
-- [ ] **Tests**: Elbow routing correctness, fixed segment persistence
+- [x] `elbowed: bool` field on `ArrowElement` (default false, no new element type)
+- [x] `ElbowRouting` stateless utility — Manhattan routing with padding, heading inference, simplification
+- [x] Binding-aware re-routing — `BindingUtils.updateBoundArrowEndpoints` computes headings from fixedPoints
+- [x] Clean (non-rough) rendering — crisp polyline with `lineTo` segments, arrowheads, dash/dot patterns
+- [x] SVG export: clean `<path>` with L commands for elbowed arrows
+- [x] `ArrowTool` elbowed creation — two-click workflow with real-time routed preview
+- [x] `.markdraw` serialization: `elbowed` flag on arrow lines, parsed via `hasFlag('elbowed')`
+- [x] Excalidraw JSON: `elbowed: true` field on arrow elements
+- [x] Clipboard copy/paste preserves elbowed flag
+- [x] SelectTool segment drag editing — horizontal segments move vertically, vertical segments move horizontally
+- [x] PropertyPanelState `elbowed` toggle — regular↔elbowed conversion with re-routing/simplification
+- [x] Example app: "Elbowed" switch in property panel when arrows are selected
+- [x] **Tests**: ~74 new tests — ElbowRouting (18), binding re-routing (10), rendering (10), ArrowTool (10), serialization (12), SelectTool segment drag (9), property panel (8)
+
+> **TDD checkpoint**: ElbowRouting with Manhattan routing, binding-aware re-routing, clean rendering + SVG, two-click creation, full serialization round-trip, segment drag editing, property panel toggle. ~1407 tests total. Zero analyzer issues. ✅
 
 ### 6.5 Libraries
 - [ ] Reusable element templates (shapes + groups)
@@ -636,6 +646,6 @@ For every feature:
 | **M3: Edit (80%)** | 3 | Full drawing interaction | Create, select, move, resize, connect, undo |
 | **M4: Text** | 4 | Inline text editing + bound text | Text in shapes, arrow labels |
 | **M5: Export** | 5 | PNG, SVG, clipboard, Excalidraw interop | 1112 tests, round-trip verified |
-| **M6: Advanced (100%)** | 6 | Groups, frames, images, elbow arrows | 6.1 grouping (1185), 6.2 frames (1260), 6.3 images (1325 tests) |
+| **M6: Advanced (100%)** | 6 | Groups, frames, images, elbow arrows | 6.1 grouping (1185), 6.2 frames (1260), 6.3 images (1325), 6.4 elbow arrows (~1407 tests) |
 | **M7: Ship** | 7 | All platforms polished | App store ready |
 | **M8: Grow** | 8 | Collaboration, AI, plugins | Post-launch iteration |
