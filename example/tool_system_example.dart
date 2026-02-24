@@ -467,10 +467,8 @@ class _CanvasPageState extends State<_CanvasPage> {
           dialogTitle: 'Export PNG',
           fileName: 'drawing.png',
           type: FileType.any,
-          bytes: bytes,
         );
         if (result != null) {
-          // On desktop, saveFile may not write bytes — write manually
           await writeBytesToFile(result, bytes);
         }
       }
@@ -494,15 +492,12 @@ class _CanvasPageState extends State<_CanvasPage> {
       if (kIsWeb) {
         downloadFile('drawing.svg', svg);
       } else {
-        final svgBytes = Uint8List.fromList(utf8.encode(svg));
         final result = await FilePicker.platform.saveFile(
           dialogTitle: 'Export SVG',
           fileName: 'drawing.svg',
           type: FileType.any,
-          bytes: svgBytes,
         );
         if (result != null) {
-          // On desktop, saveFile may not write bytes — write manually
           await writeStringToFile(result, svg);
         }
       }
@@ -611,15 +606,14 @@ class _CanvasPageState extends State<_CanvasPage> {
       if (kIsWeb) {
         downloadFile('drawing.markdraw', content);
       } else {
-        final bytes = Uint8List.fromList(utf8.encode(content));
         final result = await FilePicker.platform.saveFile(
           dialogTitle: 'Save drawing',
           fileName: 'drawing.markdraw',
           type: FileType.custom,
           allowedExtensions: ['markdraw', 'excalidraw'],
-          bytes: bytes,
         );
         if (result != null) {
+          await writeStringToFile(result, content);
           _currentFilePath = result;
         }
       }
