@@ -45,6 +45,12 @@ Then run:
 flutter pub get
 ```
 
+## Platform Notes
+
+The `ios/`, `android/`, `macos/`, `windows/`, and `linux/` directories are gitignored. After cloning, run `flutter create .` to regenerate them, then apply these manual changes:
+
+- **iOS**: Add `<key>UISupportsDocumentBrowser</key><true/>` to `ios/Runner/Info.plist` — required for file picker save dialogs to work correctly.
+
 ## Development
 
 ```bash
