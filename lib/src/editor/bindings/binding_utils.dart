@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import '../../core/elements/arrow_element.dart';
 import '../../core/elements/element.dart';
 import '../../core/elements/element_id.dart';
+import '../../core/math/elbow_routing.dart';
 import '../../core/math/point.dart';
 import '../../core/scene/scene.dart';
 
@@ -160,19 +161,36 @@ class BindingUtils {
 
     if (!changed) return arrow;
 
+    // For elbowed arrows, re-route the full path between endpoints
+    var routedPoints = absPoints;
+    if (arrow.elbowed) {
+      final startHeading = arrow.startBinding != null
+          ? ElbowRouting.headingFromFixedPoint(arrow.startBinding!.fixedPoint)
+          : null;
+      final endHeading = arrow.endBinding != null
+          ? ElbowRouting.headingFromFixedPoint(arrow.endBinding!.fixedPoint)
+          : null;
+      routedPoints = ElbowRouting.route(
+        start: absPoints.first,
+        end: absPoints.last,
+        startHeading: startHeading,
+        endHeading: endHeading,
+      );
+    }
+
     // Recalculate bounding box and relative points
-    var minX = absPoints.first.x;
-    var minY = absPoints.first.y;
-    var maxX = absPoints.first.x;
-    var maxY = absPoints.first.y;
-    for (final p in absPoints) {
+    var minX = routedPoints.first.x;
+    var minY = routedPoints.first.y;
+    var maxX = routedPoints.first.x;
+    var maxY = routedPoints.first.y;
+    for (final p in routedPoints) {
       minX = math.min(minX, p.x);
       minY = math.min(minY, p.y);
       maxX = math.max(maxX, p.x);
       maxY = math.max(maxY, p.y);
     }
 
-    final relPoints = absPoints.map((p) => Point(p.x - minX, p.y - minY)).toList();
+    final relPoints = routedPoints.map((p) => Point(p.x - minX, p.y - minY)).toList();
 
     return arrow.copyWithLine(points: relPoints).copyWith(
       x: minX,
