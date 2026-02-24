@@ -111,6 +111,7 @@ void main() {
         SwitchToolResult() => 'switch',
         SetClipboardResult() => 'clipboard',
         AddFileResult() => 'addFile',
+        RemoveFileResult() => 'removeFile',
       };
       expect(description, 'add');
     });

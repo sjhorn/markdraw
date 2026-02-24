@@ -54,6 +54,9 @@ class EditorState {
       AddFileResult(:final fileId, :final file) => copyWith(
           scene: scene.addFile(fileId, file),
         ),
+      RemoveFileResult(:final fileId) => copyWith(
+          scene: scene.removeFile(fileId),
+        ),
       CompoundResult(:final results) => results.fold(this,
           (state, r) => state.applyResult(r)),
     };

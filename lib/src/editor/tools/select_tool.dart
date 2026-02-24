@@ -6,6 +6,7 @@ import '../../core/elements/element.dart';
 import '../../core/elements/element_id.dart';
 import '../../core/elements/frame_element.dart';
 import '../../core/elements/freedraw_element.dart';
+import '../../core/elements/image_element.dart';
 import '../../core/elements/line_element.dart';
 import '../../core/elements/text_element.dart';
 import '../../core/groups/frame_utils.dart';
@@ -497,8 +498,14 @@ class SelectTool implements Tool {
       }
     }
 
-    // Shift for aspect ratio lock
-    if (_shiftDown) {
+    // Aspect ratio lock: images default to locked (Shift unlocks),
+    // other shapes default to unlocked (Shift locks).
+    final isImage = _hitElement is ImageElement ||
+        (_startElements != null &&
+            _startElements!.length == 1 &&
+            _startElements!.first is ImageElement);
+    final lockAspect = isImage ? !_shiftDown : _shiftDown;
+    if (lockAspect) {
       final origW = b.right - b.left;
       final origH = b.bottom - b.top;
       if (origW > 0 && origH > 0) {
@@ -937,6 +944,22 @@ class SelectTool implements Tool {
             if (!deletedIds.contains(child.id)) {
               results.add(UpdateElementResult(child));
             }
+          }
+        }
+      }
+
+      // Clean up orphaned image files
+      for (final elem in selectedElements) {
+        if (elem is ImageElement) {
+          final fileId = elem.fileId;
+          // Check if any other active element still references this fileId
+          final stillReferenced = context.scene.activeElements.any(
+            (e) => e is ImageElement &&
+                e.fileId == fileId &&
+                !deletedIds.contains(e.id),
+          );
+          if (!stillReferenced && context.scene.files.containsKey(fileId)) {
+            results.add(RemoveFileResult(fileId));
           }
         }
       }

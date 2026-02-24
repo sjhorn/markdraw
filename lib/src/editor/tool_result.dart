@@ -67,6 +67,12 @@ class AddFileResult extends ToolResult {
   AddFileResult({required this.fileId, required this.file});
 }
 
+/// Remove a file from the scene's file store.
+class RemoveFileResult extends ToolResult {
+  final String fileId;
+  RemoveFileResult(this.fileId);
+}
+
 /// A read-only snapshot of the editor state, provided to tools for
 /// decision-making.
 class ToolContext {
@@ -108,6 +114,7 @@ bool isSceneChangingResult(ToolResult? result) {
     UpdateElementResult() => true,
     RemoveElementResult() => true,
     AddFileResult() => true,
+    RemoveFileResult() => true,
     CompoundResult(:final results) => results.any(isSceneChangingResult),
     SetSelectionResult() => false,
     UpdateViewportResult() => false,

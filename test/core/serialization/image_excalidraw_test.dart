@@ -17,8 +17,8 @@ String _wrapElements(List<Map<String, dynamic>> elements,
     'version': 2,
     'source': 'test',
     'elements': elements,
-    'appState': {},
-    'files': files ?? {},
+    'appState': <String, dynamic>{},
+    'files': files ?? <String, dynamic>{},
   });
 }
 
@@ -58,8 +58,8 @@ Map<String, dynamic> _imageElement({
     'locked': false,
     'fileId': fileId,
     'status': 'saved',
-    if (scale != null) 'scale': scale,
-    if (crop != null) 'crop': crop,
+    'scale': ?scale,
+    'crop': ?crop,
   };
 }
 

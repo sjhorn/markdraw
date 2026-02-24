@@ -143,7 +143,7 @@ void main() {
       expect(moved.x, 50);
       expect(moved.y, 60);
       expect(moved, isA<ImageElement>());
-      final movedImg = moved as ImageElement;
+      final movedImg = moved;
       expect(movedImg.fileId, 'abc12345');
       expect(movedImg.mimeType, 'image/png');
       expect(movedImg.crop, const ImageCrop(x: 0.1, y: 0.2, width: 0.8, height: 0.6));
