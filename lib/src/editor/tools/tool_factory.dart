@@ -2,6 +2,7 @@ import '../tool_type.dart';
 import 'arrow_tool.dart';
 import 'diamond_tool.dart';
 import 'ellipse_tool.dart';
+import 'frame_tool.dart';
 import 'freedraw_tool.dart';
 import 'hand_tool.dart';
 import 'line_tool.dart';
@@ -22,5 +23,6 @@ Tool createTool(ToolType type) {
     ToolType.freedraw => FreedrawTool(),
     ToolType.text => TextTool(),
     ToolType.hand => HandTool(),
+    ToolType.frame => FrameTool(),
   };
 }

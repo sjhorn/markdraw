@@ -16,6 +16,7 @@ ToolType? toolTypeForKey(String key) {
     'p' => ToolType.freedraw,
     't' => ToolType.text,
     'h' => ToolType.hand,
+    'f' => ToolType.frame,
     _ => null,
   };
 }

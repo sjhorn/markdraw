@@ -1,6 +1,7 @@
 export 'arrow_tool.dart';
 export 'diamond_tool.dart';
 export 'ellipse_tool.dart';
+export 'frame_tool.dart';
 export 'freedraw_tool.dart';
 export 'hand_tool.dart';
 export 'line_tool.dart';

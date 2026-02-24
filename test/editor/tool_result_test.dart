@@ -11,8 +11,8 @@ import 'package:markdraw/src/rendering/viewport_state.dart';
 
 void main() {
   group('ToolType', () {
-    test('has all 9 values', () {
-      expect(ToolType.values.length, 9);
+    test('has all 10 values', () {
+      expect(ToolType.values.length, 10);
       expect(ToolType.values, containsAll([
         ToolType.select,
         ToolType.rectangle,
@@ -23,6 +23,7 @@ void main() {
         ToolType.freedraw,
         ToolType.text,
         ToolType.hand,
+        ToolType.frame,
       ]));
     });
   });

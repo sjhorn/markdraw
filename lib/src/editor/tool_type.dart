@@ -9,4 +9,5 @@ enum ToolType {
   freedraw,
   text,
   hand,
+  frame,
 }
