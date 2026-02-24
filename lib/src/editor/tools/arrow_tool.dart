@@ -6,6 +6,7 @@ import '../../core/elements/element.dart';
 import '../../core/elements/element_id.dart';
 import '../../core/elements/line_element.dart';
 import '../../core/math/bounds.dart';
+import '../../core/math/elbow_routing.dart';
 import '../../core/math/point.dart';
 import '../bindings/binding_utils.dart';
 import '../tool_result.dart';
@@ -14,12 +15,20 @@ import 'tool.dart';
 
 /// Tool for creating arrow elements by clicking to add points.
 /// Double-click or Enter finalizes the arrow.
+///
+/// When [elbowed] is true, creates two-click elbow (orthogonal) arrows
+/// that route via [ElbowRouting].
 class ArrowTool implements Tool {
   final List<Point> _points = [];
   Point? _previewPoint;
   PointBinding? _startBinding;
   PointBinding? _endBinding;
   Element? _bindTarget;
+
+  /// Whether to create elbowed (orthogonal) arrows.
+  bool elbowed;
+
+  ArrowTool({this.elbowed = false});
 
   @override
   ToolType get type => ToolType.arrow;
@@ -74,6 +83,11 @@ class ArrowTool implements Tool {
     _previewPoint = null;
     _bindTarget = null;
 
+    // Elbowed arrows finalize immediately on second click
+    if (elbowed && _points.length >= 2) {
+      return _finalize();
+    }
+
     if (isDoubleClick && _points.length >= 2) {
       return _finalize();
     }
@@ -104,13 +118,32 @@ class ArrowTool implements Tool {
   }
 
   ArrowElement _createArrow(List<Point> points) {
-    final minX = points.map((p) => p.x).reduce(math.min);
-    final minY = points.map((p) => p.y).reduce(math.min);
-    final maxX = points.map((p) => p.x).reduce(math.max);
-    final maxY = points.map((p) => p.y).reduce(math.max);
+    List<Point> routedPoints;
+    if (elbowed) {
+      // Route through orthogonal path
+      final startHeading = _startBinding != null
+          ? ElbowRouting.headingFromFixedPoint(_startBinding!.fixedPoint)
+          : null;
+      final endHeading = _endBinding != null
+          ? ElbowRouting.headingFromFixedPoint(_endBinding!.fixedPoint)
+          : null;
+      routedPoints = ElbowRouting.route(
+        start: points.first,
+        end: points.last,
+        startHeading: startHeading,
+        endHeading: endHeading,
+      );
+    } else {
+      routedPoints = points;
+    }
+
+    final minX = routedPoints.map((p) => p.x).reduce(math.min);
+    final minY = routedPoints.map((p) => p.y).reduce(math.min);
+    final maxX = routedPoints.map((p) => p.x).reduce(math.max);
+    final maxY = routedPoints.map((p) => p.y).reduce(math.max);
 
     final relativePoints =
-        points.map((p) => Point(p.x - minX, p.y - minY)).toList();
+        routedPoints.map((p) => Point(p.x - minX, p.y - minY)).toList();
 
     return ArrowElement(
       id: ElementId.generate(),
@@ -122,6 +155,7 @@ class ArrowTool implements Tool {
       endArrowhead: Arrowhead.arrow,
       startBinding: _startBinding,
       endBinding: _endBinding,
+      elbowed: elbowed,
     );
   }
 
@@ -132,6 +166,30 @@ class ArrowTool implements Tool {
     if (_previewPoint != null) {
       displayPoints.add(_previewPoint!);
     }
+
+    // For elbowed arrows, route the preview path
+    List<Point> overlayPoints;
+    if (elbowed && displayPoints.length >= 2) {
+      final startHeading = _startBinding != null
+          ? ElbowRouting.headingFromFixedPoint(_startBinding!.fixedPoint)
+          : null;
+      // Infer end heading from preview position
+      Heading? endHeading;
+      if (_bindTarget != null && _previewPoint != null) {
+        final fixedPoint = BindingUtils.computeFixedPoint(
+            _bindTarget!, _previewPoint!);
+        endHeading = ElbowRouting.headingFromFixedPoint(fixedPoint);
+      }
+      overlayPoints = ElbowRouting.route(
+        start: displayPoints.first,
+        end: displayPoints.last,
+        startHeading: startHeading,
+        endHeading: endHeading,
+      );
+    } else {
+      overlayPoints = displayPoints;
+    }
+
     Bounds? targetBounds;
     if (_bindTarget != null) {
       targetBounds = Bounds.fromLTWH(
@@ -142,7 +200,7 @@ class ArrowTool implements Tool {
       );
     }
     return ToolOverlay(
-      creationPoints: displayPoints,
+      creationPoints: overlayPoints,
       bindTargetBounds: targetBounds,
     );
   }
