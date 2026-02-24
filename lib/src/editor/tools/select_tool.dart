@@ -4,9 +4,11 @@ import 'dart:ui';
 import '../../core/elements/arrow_element.dart';
 import '../../core/elements/element.dart';
 import '../../core/elements/element_id.dart';
+import '../../core/elements/frame_element.dart';
 import '../../core/elements/freedraw_element.dart';
 import '../../core/elements/line_element.dart';
 import '../../core/elements/text_element.dart';
+import '../../core/groups/frame_utils.dart';
 import '../../core/groups/group_utils.dart';
 import '../../core/math/bounds.dart';
 import '../../core/math/point.dart';
@@ -250,10 +252,14 @@ class SelectTool implements Tool {
         updates.add(UpdateElementResult(moved));
         movedElements.add(moved);
       }
+      updates.addAll(_buildFrameChildMoveUpdates(
+          context.scene, movedElements, context.selectedIds));
       updates.addAll(_buildBoundArrowUpdates(
           context.scene, movedElements, context.selectedIds));
       updates.addAll(BoundTextUtils.updateBoundTextPositions(
           context.scene, movedElements));
+      updates.addAll(_buildFrameAssignmentUpdates(
+          context.scene, movedElements, context.selectedIds));
       return CompoundResult(updates);
     }
 
@@ -267,13 +273,20 @@ class SelectTool implements Tool {
           context.scene, [moved], context.selectedIds);
       final textUpdates = BoundTextUtils.updateBoundTextPositions(
           context.scene, [moved]);
-      if (arrowUpdates.isEmpty && textUpdates.isEmpty) {
+      final frameChildUpdates = _buildFrameChildMoveUpdates(
+          context.scene, [moved], context.selectedIds);
+      final frameAssignUpdates = _buildFrameAssignmentUpdates(
+          context.scene, [moved], context.selectedIds);
+      if (arrowUpdates.isEmpty && textUpdates.isEmpty &&
+          frameChildUpdates.isEmpty && frameAssignUpdates.isEmpty) {
         return UpdateElementResult(moved);
       }
       return CompoundResult([
         UpdateElementResult(moved),
+        ...frameChildUpdates,
         ...arrowUpdates,
         ...textUpdates,
+        ...frameAssignUpdates,
       ]);
     }
 
@@ -303,11 +316,17 @@ class SelectTool implements Tool {
         context.scene, [moved], {hit.id});
     final textUpdates = BoundTextUtils.updateBoundTextPositions(
         context.scene, [moved]);
+    final frameChildUpdates = _buildFrameChildMoveUpdates(
+        context.scene, [moved], {hit.id});
+    final frameAssignUpdates = _buildFrameAssignmentUpdates(
+        context.scene, [moved], {hit.id});
     return CompoundResult([
       SetSelectionResult({hit.id}),
       UpdateElementResult(moved),
+      ...frameChildUpdates,
       ...arrowUpdates,
       ...textUpdates,
+      ...frameAssignUpdates,
     ]);
   }
 
@@ -909,6 +928,19 @@ class SelectTool implements Tool {
         }
       }
 
+      // Release children of deleted frames
+      for (final elem in selectedElements) {
+        if (elem is FrameElement) {
+          final released =
+              FrameUtils.releaseFrameChildren(context.scene, elem.id);
+          for (final child in released) {
+            if (!deletedIds.contains(child.id)) {
+              results.add(UpdateElementResult(child));
+            }
+          }
+        }
+      }
+
       // Clear bindings on arrows that were bound to deleted elements
       final seen = <ElementId>{};
       for (final elem in selectedElements) {
@@ -1016,7 +1048,7 @@ class SelectTool implements Tool {
       {ToolContext? context}) {
     final results = <ToolResult>[];
     final newIds = <ElementId>{};
-    // Map old ID → new ID for reconnecting bound text
+    // Map old ID → new ID for reconnecting bound text and frameId
     final idMap = <String, ElementId>{};
     // Map old groupId → new groupId for independent duplicate groups
     final groupIdMap = <String, String>{};
@@ -1025,17 +1057,26 @@ class SelectTool implements Tool {
         groupIdMap.putIfAbsent(gid, () => ElementId.generate().value);
       }
     }
+    // First pass: generate new IDs for all elements
     for (final e in elements) {
-      final newId = ElementId.generate();
+      idMap[e.id.value] = ElementId.generate();
+    }
+    for (final e in elements) {
+      final newId = idMap[e.id.value]!;
       newIds.add(newId);
-      idMap[e.id.value] = newId;
       final remappedGroupIds =
           e.groupIds.map((gid) => groupIdMap[gid]!).toList();
+      // Remap frameId if the frame is also being duplicated
+      String? remappedFrameId = e.frameId;
+      if (e.frameId != null && idMap.containsKey(e.frameId)) {
+        remappedFrameId = idMap[e.frameId]!.value;
+      }
       results.add(AddElementResult(e.copyWith(
         id: newId,
         x: e.x + 10,
         y: e.y + 10,
         groupIds: remappedGroupIds,
+        frameId: remappedFrameId,
       )));
     }
     // Duplicate bound text for each element that has it
@@ -1083,17 +1124,26 @@ class SelectTool implements Tool {
         groupIdMap.putIfAbsent(gid, () => ElementId.generate().value);
       }
     }
+    // First pass: generate new IDs for all elements
     for (final e in clipboard) {
-      final newId = ElementId.generate();
+      idMap[e.id.value] = ElementId.generate();
+    }
+    for (final e in clipboard) {
+      final newId = idMap[e.id.value]!;
       newIds.add(newId);
-      idMap[e.id.value] = newId;
       final remappedGroupIds =
           e.groupIds.map((gid) => groupIdMap[gid]!).toList();
+      // Remap frameId if the frame is also being pasted
+      String? remappedFrameId = e.frameId;
+      if (e.frameId != null && idMap.containsKey(e.frameId)) {
+        remappedFrameId = idMap[e.frameId]!.value;
+      }
       results.add(AddElementResult(e.copyWith(
         id: newId,
         x: e.x + 10,
         y: e.y + 10,
         groupIds: remappedGroupIds,
+        frameId: remappedFrameId,
       )));
     }
     // Also paste bound text for clipboard elements
@@ -1126,6 +1176,8 @@ class SelectTool implements Tool {
       results.add(UpdateElementResult(moved));
       movedElements.add(moved);
     }
+    results.addAll(_buildFrameChildMoveUpdates(
+        context.scene, movedElements, context.selectedIds));
     results.addAll(_buildBoundArrowUpdates(
         context.scene, movedElements, context.selectedIds));
     results.addAll(BoundTextUtils.updateBoundTextPositions(
@@ -1259,6 +1311,86 @@ class SelectTool implements Tool {
         if (!identical(updated, arrow)) {
           results.add(UpdateElementResult(updated));
         }
+      }
+    }
+    return results;
+  }
+
+  /// Build UpdateElementResults that auto-assign or clear frameId for
+  /// [movedElements] based on whether they are inside a frame.
+  ///
+  /// Uses a temporary scene with the moved elements applied to check
+  /// containment against current frame positions.
+  List<ToolResult> _buildFrameAssignmentUpdates(
+    Scene scene,
+    List<Element> movedElements,
+    Set<ElementId> selectedIds,
+  ) {
+    // Build a temporary scene with the moved elements applied
+    var tempScene = scene;
+    for (final elem in movedElements) {
+      tempScene = tempScene.updateElement(elem);
+    }
+
+    final results = <ToolResult>[];
+    final seen = <ElementId>{};
+
+    for (final elem in movedElements) {
+      // Skip frames themselves — frames don't get assigned to other frames
+      if (elem is FrameElement) continue;
+      if (seen.contains(elem.id)) continue;
+      seen.add(elem.id);
+
+      // Look up the element in the temp scene to get its current position
+      final current = tempScene.getElementById(elem.id) ?? elem;
+      final containingFrame = FrameUtils.findContainingFrame(tempScene, current);
+
+      if (containingFrame != null) {
+        // Element is inside a frame
+        if (current.frameId != containingFrame.id.value) {
+          results.add(UpdateElementResult(
+            current.copyWith(frameId: containingFrame.id.value),
+          ));
+        }
+      } else {
+        // Element is not inside any frame — clear frameId if set
+        if (current.frameId != null) {
+          results.add(UpdateElementResult(
+            current.copyWith(clearFrameId: true),
+          ));
+        }
+      }
+    }
+    return results;
+  }
+
+  /// Build UpdateElementResults to move frame children along with the frame.
+  List<ToolResult> _buildFrameChildMoveUpdates(
+    Scene scene,
+    List<Element> movedElements,
+    Set<ElementId> selectedIds,
+  ) {
+    final results = <ToolResult>[];
+    final seen = <ElementId>{};
+
+    for (final elem in movedElements) {
+      if (elem is! FrameElement) continue;
+
+      // Find the original frame to compute delta
+      final original = scene.getElementById(elem.id);
+      if (original == null) continue;
+      final dx = elem.x - original.x;
+      final dy = elem.y - original.y;
+      if (dx == 0 && dy == 0) continue;
+
+      final children = FrameUtils.findFrameChildren(scene, elem.id);
+      for (final child in children) {
+        if (selectedIds.contains(child.id)) continue;
+        if (seen.contains(child.id)) continue;
+        seen.add(child.id);
+        results.add(UpdateElementResult(
+          child.copyWith(x: child.x + dx, y: child.y + dy),
+        ));
       }
     }
     return results;

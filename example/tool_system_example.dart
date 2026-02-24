@@ -1469,6 +1469,7 @@ class _CanvasPageState extends State<_CanvasPage> {
       ToolType.freedraw => Icons.draw,
       ToolType.text => Icons.text_fields,
       ToolType.hand => Icons.pan_tool,
+      ToolType.frame => Icons.crop_free,
     };
   }
 }

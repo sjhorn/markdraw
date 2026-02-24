@@ -74,7 +74,7 @@ void main() {
       );
       final copy = frame.copyWith(width: 200);
       expect(copy, isA<FrameElement>());
-      expect((copy as FrameElement).label, 'Test');
+      expect((copy).label, 'Test');
     });
 
     test('copyWithLabel changes only the label', () {
