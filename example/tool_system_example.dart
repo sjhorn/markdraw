@@ -934,6 +934,8 @@ class _CanvasPageState extends State<_CanvasPage> {
                             selection: _buildSelectionOverlay(),
                             marqueeRect: marqueeRect,
                             bindTargetBounds: toolOverlay?.bindTargetBounds,
+                            pointHandles: _buildPointHandles(),
+                            creationPoints: toolOverlay?.creationPoints,
                           ),
                           child: const SizedBox.expand(),
                         ),
@@ -1616,6 +1618,20 @@ class _CanvasPageState extends State<_CanvasPage> {
       }
       _applyResult(result);
     }
+  }
+
+  List<Point>? _buildPointHandles() {
+    if (_editorState.selectedIds.length != 1) return null;
+    final elem = _editorState.scene.getElementById(
+      _editorState.selectedIds.first,
+    );
+    if (elem == null) return null;
+    if (elem is LineElement) {
+      return elem.points
+          .map((p) => Point(elem.x + p.x, elem.y + p.y))
+          .toList();
+    }
+    return null;
   }
 
   markdraw.SelectionOverlay? _buildSelectionOverlay() {
