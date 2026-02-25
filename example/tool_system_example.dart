@@ -25,64 +25,10 @@ import 'package:flutter/services.dart';
 
 import 'dart:math' as math;
 
-import 'package:markdraw/src/core/history/history_manager.dart';
-import 'package:markdraw/src/core/io/document_format.dart';
-import 'package:markdraw/src/core/io/document_service.dart';
-import 'package:markdraw/src/core/io/scene_document_converter.dart';
-import 'package:markdraw/src/core/library/library_item.dart';
-import 'package:markdraw/src/core/library/library_utils.dart';
-import 'package:markdraw/src/core/serialization/clipboard_codec.dart';
-import 'package:markdraw/src/core/serialization/document_parser.dart';
-import 'package:markdraw/src/core/serialization/document_serializer.dart';
-import 'package:markdraw/src/core/serialization/excalidraw_json_codec.dart';
-import 'package:markdraw/src/core/serialization/excalidraw_lib_codec.dart';
-import 'package:markdraw/src/core/serialization/library_codec.dart';
-import 'package:markdraw/src/core/serialization/parse_result.dart';
-import 'package:markdraw/src/core/library/library_document.dart';
-import 'package:markdraw/src/editor/clipboard_service.dart';
-import 'package:markdraw/src/rendering/export/png_exporter.dart';
-import 'package:markdraw/src/rendering/export/svg_exporter.dart';
+import 'package:markdraw/markdraw.dart' as core show TextAlign;
+import 'package:markdraw/markdraw.dart' hide TextAlign;
 
 import 'file_io_stub.dart' if (dart.library.io) 'file_io_native.dart';
-import 'package:markdraw/src/core/elements/arrow_element.dart';
-import 'package:markdraw/src/core/elements/image_element.dart';
-import 'package:markdraw/src/core/elements/image_file.dart';
-import 'package:markdraw/src/rendering/image_cache.dart';
-import 'package:markdraw/src/core/elements/diamond_element.dart';
-import 'package:markdraw/src/core/elements/element.dart';
-import 'package:markdraw/src/core/elements/element_id.dart';
-import 'package:markdraw/src/core/elements/ellipse_element.dart';
-import 'package:markdraw/src/core/elements/freedraw_element.dart';
-import 'package:markdraw/src/core/elements/line_element.dart';
-import 'package:markdraw/src/core/elements/rectangle_element.dart';
-import 'package:markdraw/src/core/elements/text_element.dart' hide TextAlign;
-import 'package:markdraw/src/core/elements/text_element.dart'
-    as core
-    show TextAlign;
-import 'package:markdraw/src/core/math/point.dart';
-import 'package:markdraw/src/editor/bindings/arrow_label_utils.dart';
-import 'package:markdraw/src/editor/bindings/bound_text_utils.dart';
-import 'package:markdraw/src/editor/editor_state.dart';
-import 'package:markdraw/src/editor/tool_result.dart';
-import 'package:markdraw/src/editor/tool_type.dart';
-import 'package:markdraw/src/editor/tools/arrow_tool.dart';
-import 'package:markdraw/src/editor/tools/line_tool.dart';
-import 'package:markdraw/src/editor/tools/select_tool.dart';
-import 'package:markdraw/src/editor/tools/tool.dart';
-import 'package:markdraw/src/core/elements/fill_style.dart';
-import 'package:markdraw/src/core/elements/roundness.dart';
-import 'package:markdraw/src/core/elements/stroke_style.dart';
-import 'package:markdraw/src/editor/property_panel_state.dart';
-import 'package:markdraw/src/editor/tool_shortcuts.dart';
-import 'package:markdraw/src/editor/tools/tool_factory.dart';
-import 'package:markdraw/src/rendering/text_renderer.dart';
-import 'package:markdraw/src/rendering/interactive/interactive_canvas_painter.dart';
-import 'package:markdraw/src/rendering/interactive/selection_overlay.dart'
-    as markdraw;
-import 'package:markdraw/src/rendering/rough/rough_canvas_adapter.dart';
-import 'package:markdraw/src/rendering/static_canvas_painter.dart';
-import 'package:markdraw/src/rendering/viewport_state.dart';
-import 'package:markdraw/src/core/scene/scene.dart';
 
 void main() {
   runApp(const ToolSystemExampleApp());
@@ -1031,6 +977,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                   tooltip: '${type.name} (${shortcutForToolType(type)})',
                 ),
               ],
+              const SizedBox(width: 8),
             ],
           ),
           body: Row(
@@ -1871,14 +1818,14 @@ class _CanvasPageState extends State<_CanvasPage> {
     return null;
   }
 
-  markdraw.SelectionOverlay? _buildSelectionOverlay() {
+  SelectionOverlay? _buildSelectionOverlay() {
     if (_editorState.selectedIds.isEmpty) return null;
     final selected = _editorState.selectedIds
         .map((id) => _editorState.scene.getElementById(id))
         .whereType<Element>()
         .toList();
     if (selected.isEmpty) return null;
-    return markdraw.SelectionOverlay.fromElements(selected);
+    return SelectionOverlay.fromElements(selected);
   }
 
   Widget _iconWidgetFor(ToolType type, {Color? color}) {
