@@ -9,16 +9,7 @@ library;
 
 import 'package:flutter/material.dart' hide Element;
 
-import 'package:markdraw/src/core/elements/element.dart';
-import 'package:markdraw/src/core/elements/element_id.dart';
-import 'package:markdraw/src/core/elements/fill_style.dart';
-import 'package:markdraw/src/core/elements/line_element.dart';
-import 'package:markdraw/src/core/elements/stroke_style.dart';
-import 'package:markdraw/src/core/math/bounds.dart';
-import 'package:markdraw/src/core/math/point.dart';
-import 'package:markdraw/src/rendering/rough/draw_style.dart';
-import 'package:markdraw/src/rendering/rough/freedraw_renderer.dart';
-import 'package:markdraw/src/rendering/rough/rough_canvas_adapter.dart';
+import 'package:markdraw/markdraw.dart';
 
 void main() {
   runApp(const RoughDrawingExampleApp());
