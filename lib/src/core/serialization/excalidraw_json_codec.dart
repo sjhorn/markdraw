@@ -86,18 +86,8 @@ class ExcalidrawJsonCodec {
 
   /// Serializes a [MarkdrawDocument] to Excalidraw JSON format.
   static String serialize(MarkdrawDocument doc) {
-    final elements = doc.allElements.map(_elementToJson).toList();
-    final filesJson = <String, dynamic>{};
-    for (final entry in doc.files.entries) {
-      final dataUrl =
-          'data:${entry.value.mimeType};base64,${base64Encode(entry.value.bytes)}';
-      filesJson[entry.key] = {
-        'mimeType': entry.value.mimeType,
-        'id': entry.key,
-        'dataURL': dataUrl,
-        'created': DateTime.now().millisecondsSinceEpoch,
-      };
-    }
+    final elements = doc.allElements.map(elementToJson).toList();
+    final filesJson = filesToJson(doc.files);
     final result = {
       'type': 'excalidraw',
       'version': 2,
@@ -109,8 +99,9 @@ class ExcalidrawJsonCodec {
     return jsonEncode(result);
   }
 
-  static Map<String, dynamic> _elementToJson(Element el) {
-    final base = _baseToJson(el);
+  /// Converts a single [Element] to its Excalidraw JSON representation.
+  static Map<String, dynamic> elementToJson(Element el) {
+    final base = baseToJson(el);
     if (el is FrameElement) {
       return {
         ...base,
@@ -171,7 +162,8 @@ class ExcalidrawJsonCodec {
     return base;
   }
 
-  static Map<String, dynamic> _baseToJson(Element el) {
+  /// Converts the base properties of an [Element] to JSON.
+  static Map<String, dynamic> baseToJson(Element el) {
     return {
       'id': el.id.value,
       'type': el.type,
@@ -296,15 +288,30 @@ class ExcalidrawJsonCodec {
         continue;
       }
 
-      final element = _parseElement(raw, type, i, warnings);
+      final element = parseElement(raw, type, i, warnings);
       if (element != null) {
         elements.add(element);
       }
     }
 
-    // Parse files map
+    final files = parseFilesJson(decoded['files'], warnings);
+
+    return ParseResult(
+      value: MarkdrawDocument(
+        sections: [SketchSection(elements)],
+        files: files,
+      ),
+      warnings: warnings,
+    );
+  }
+
+  /// Parses an Excalidraw files JSON map into a [Map] of file ID to
+  /// [ImageFile].
+  static Map<String, ImageFile> parseFilesJson(
+    Object? filesJson,
+    List<ParseWarning> warnings,
+  ) {
     final files = <String, ImageFile>{};
-    final filesJson = decoded['files'];
     if (filesJson is Map<String, dynamic>) {
       for (final entry in filesJson.entries) {
         final fileData = entry.value;
@@ -313,7 +320,6 @@ class ExcalidrawJsonCodec {
           final mimeType = fileData['mimeType'] as String? ?? 'image/png';
           if (dataUrl != null) {
             try {
-              // Parse data URL: data:mime;base64,<data>
               final commaIdx = dataUrl.indexOf(',');
               if (commaIdx >= 0) {
                 final b64 = dataUrl.substring(commaIdx + 1);
@@ -333,17 +339,29 @@ class ExcalidrawJsonCodec {
         }
       }
     }
-
-    return ParseResult(
-      value: MarkdrawDocument(
-        sections: [SketchSection(elements)],
-        files: files,
-      ),
-      warnings: warnings,
-    );
+    return files;
   }
 
-  static Element? _parseElement(
+  /// Converts a files map to Excalidraw JSON format.
+  static Map<String, dynamic> filesToJson(Map<String, ImageFile> files) {
+    final result = <String, dynamic>{};
+    for (final entry in files.entries) {
+      final dataUrl =
+          'data:${entry.value.mimeType};base64,${base64Encode(entry.value.bytes)}';
+      result[entry.key] = {
+        'mimeType': entry.value.mimeType,
+        'id': entry.key,
+        'dataURL': dataUrl,
+        'created': DateTime.now().millisecondsSinceEpoch,
+      };
+    }
+    return result;
+  }
+
+  /// Parses a single element JSON object into an [Element].
+  ///
+  /// Returns null with a warning for unsupported types.
+  static Element? parseElement(
     Map<String, dynamic> raw,
     String type,
     int index,
