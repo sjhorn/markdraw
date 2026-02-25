@@ -5,4 +5,10 @@ enum DocumentFormat {
 
   /// The Excalidraw JSON format (.excalidraw or .json).
   excalidraw,
+
+  /// The .markdrawlib library format.
+  markdrawLibrary,
+
+  /// The Excalidraw library format (.excalidrawlib).
+  excalidrawLibrary,
 }

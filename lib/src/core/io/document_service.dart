@@ -1,6 +1,9 @@
+import '../library/library_document.dart';
 import '../serialization/document_parser.dart';
 import '../serialization/document_serializer.dart';
 import '../serialization/excalidraw_json_codec.dart';
+import '../serialization/excalidraw_lib_codec.dart';
+import '../serialization/library_codec.dart';
 import '../serialization/markdraw_document.dart';
 import '../serialization/parse_result.dart';
 import 'document_format.dart';
@@ -20,6 +23,8 @@ class DocumentService {
   /// Supported extensions:
   /// - `.markdraw` → [DocumentFormat.markdraw]
   /// - `.excalidraw`, `.json` → [DocumentFormat.excalidraw]
+  /// - `.markdrawlib` → [DocumentFormat.markdrawLibrary]
+  /// - `.excalidrawlib` → [DocumentFormat.excalidrawLibrary]
   ///
   /// Throws [ArgumentError] for unrecognized extensions.
   static DocumentFormat detectFormat(String path) {
@@ -34,6 +39,10 @@ class DocumentService {
       case 'excalidraw':
       case 'json':
         return DocumentFormat.excalidraw;
+      case 'markdrawlib':
+        return DocumentFormat.markdrawLibrary;
+      case 'excalidrawlib':
+        return DocumentFormat.excalidrawLibrary;
       default:
         throw ArgumentError('Unsupported file extension: .$ext');
     }
@@ -51,6 +60,11 @@ class DocumentService {
         return DocumentParser.parse(content);
       case DocumentFormat.excalidraw:
         return ExcalidrawJsonCodec.parse(content);
+      case DocumentFormat.markdrawLibrary:
+      case DocumentFormat.excalidrawLibrary:
+        throw ArgumentError(
+          'Use loadLibrary() for library files (.$format)',
+        );
     }
   }
 
@@ -69,6 +83,11 @@ class DocumentService {
         content = DocumentSerializer.serialize(doc);
       case DocumentFormat.excalidraw:
         content = ExcalidrawJsonCodec.serialize(doc);
+      case DocumentFormat.markdrawLibrary:
+      case DocumentFormat.excalidrawLibrary:
+        throw ArgumentError(
+          'Use saveLibrary() for library files (.$fmt)',
+        );
     }
     await writeFile(path, content);
   }
@@ -85,5 +104,48 @@ class DocumentService {
     final result = await load(inputPath);
     await save(result.value, outputPath);
     return result;
+  }
+
+  /// Loads a library file and parses it into a [LibraryDocument].
+  ///
+  /// Format is detected from the file extension.
+  Future<ParseResult<LibraryDocument>> loadLibrary(String path) async {
+    final format = detectFormat(path);
+    final content = await readFile(path);
+    switch (format) {
+      case DocumentFormat.markdrawLibrary:
+        return LibraryCodec.parse(content);
+      case DocumentFormat.excalidrawLibrary:
+        return ExcalidrawLibCodec.parse(content);
+      case DocumentFormat.markdraw:
+      case DocumentFormat.excalidraw:
+        throw ArgumentError(
+          'Use load() for document files (.$format)',
+        );
+    }
+  }
+
+  /// Serializes a library document and writes it to a file.
+  ///
+  /// Format is detected from the file extension unless [format] is provided.
+  Future<void> saveLibrary(
+    LibraryDocument doc,
+    String path, {
+    DocumentFormat? format,
+  }) async {
+    final fmt = format ?? detectFormat(path);
+    final String content;
+    switch (fmt) {
+      case DocumentFormat.markdrawLibrary:
+        content = LibraryCodec.serialize(doc);
+      case DocumentFormat.excalidrawLibrary:
+        content = ExcalidrawLibCodec.serialize(doc);
+      case DocumentFormat.markdraw:
+      case DocumentFormat.excalidraw:
+        throw ArgumentError(
+          'Use save() for document files (.$fmt)',
+        );
+    }
+    await writeFile(path, content);
   }
 }

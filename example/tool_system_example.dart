@@ -651,6 +651,9 @@ class _CanvasPageState extends State<_CanvasPage> {
       final parseResult = switch (format) {
         DocumentFormat.markdraw => DocumentParser.parse(content),
         DocumentFormat.excalidraw => ExcalidrawJsonCodec.parse(content),
+        DocumentFormat.markdrawLibrary ||
+        DocumentFormat.excalidrawLibrary =>
+          throw ArgumentError('Use Import Library for library files'),
       };
       final scene = SceneDocumentConverter.documentToScene(parseResult.value);
       _historyManager.clear();

@@ -4,6 +4,7 @@ export 'document_section.dart';
 export 'document_serializer.dart';
 export 'excalidraw_json_codec.dart';
 export 'excalidraw_lib_codec.dart';
+export 'library_codec.dart';
 export 'frontmatter_parser.dart';
 export 'markdraw_document.dart';
 export 'parse_result.dart';
