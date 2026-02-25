@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/math/size.dart';
+import 'package:markdraw/markdraw.dart';
 
 void main() {
   group('DrawSize', () {

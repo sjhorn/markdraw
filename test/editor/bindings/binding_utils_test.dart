@@ -1,12 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/elements/arrow_element.dart';
-import 'package:markdraw/src/core/elements/element.dart';
-import 'package:markdraw/src/core/elements/element_id.dart';
-import 'package:markdraw/src/core/elements/freedraw_element.dart';
-import 'package:markdraw/src/core/elements/line_element.dart';
-import 'package:markdraw/src/core/math/point.dart';
-import 'package:markdraw/src/core/scene/scene.dart';
-import 'package:markdraw/src/editor/bindings/binding_utils.dart';
+import 'package:markdraw/markdraw.dart';
 
 Element _rect({
   required String id,

@@ -1,11 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/elements/text_element.dart';
-import 'package:markdraw/src/core/math/point.dart';
-import 'package:markdraw/src/core/scene/scene.dart';
-import 'package:markdraw/src/editor/tool_result.dart';
-import 'package:markdraw/src/editor/tool_type.dart';
-import 'package:markdraw/src/editor/tools/text_tool.dart';
-import 'package:markdraw/src/rendering/viewport_state.dart';
+import 'package:markdraw/markdraw.dart';
 
 void main() {
   late TextTool tool;

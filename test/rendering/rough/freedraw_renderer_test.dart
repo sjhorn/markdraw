@@ -2,11 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:markdraw/src/core/math/point.dart';
-import 'package:markdraw/src/rendering/rough/draw_style.dart';
-import 'package:markdraw/src/rendering/rough/freedraw_renderer.dart';
-import 'package:markdraw/src/core/elements/fill_style.dart';
-import 'package:markdraw/src/core/elements/stroke_style.dart';
+import 'package:markdraw/markdraw.dart';
 
 DrawStyle _style({
   double strokeWidth = 2.0,

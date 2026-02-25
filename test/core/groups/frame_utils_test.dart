@@ -1,9 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/elements/element.dart';
-import 'package:markdraw/src/core/elements/element_id.dart';
-import 'package:markdraw/src/core/elements/frame_element.dart';
-import 'package:markdraw/src/core/groups/frame_utils.dart';
-import 'package:markdraw/src/core/scene/scene.dart';
+import 'package:markdraw/markdraw.dart';
 
 FrameElement _frame({
   required String id,

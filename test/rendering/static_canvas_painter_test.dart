@@ -1,22 +1,8 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/elements/arrow_element.dart';
-import 'package:markdraw/src/core/elements/diamond_element.dart';
-import 'package:markdraw/src/core/elements/element_id.dart';
-import 'package:markdraw/src/core/elements/ellipse_element.dart';
-import 'package:markdraw/src/core/elements/freedraw_element.dart';
-import 'package:markdraw/src/core/elements/line_element.dart';
-import 'package:markdraw/src/core/elements/rectangle_element.dart';
-import 'package:markdraw/src/core/elements/text_element.dart' as core
-    show TextElement;
-import 'package:markdraw/src/core/math/bounds.dart';
-import 'package:markdraw/src/core/math/point.dart';
-import 'package:markdraw/src/core/scene/scene.dart';
-import 'package:markdraw/src/rendering/rough/draw_style.dart';
-import 'package:markdraw/src/rendering/rough/rough_adapter.dart';
-import 'package:markdraw/src/rendering/static_canvas_painter.dart';
-import 'package:markdraw/src/rendering/viewport_state.dart';
+import 'package:markdraw/markdraw.dart' as core show TextElement;
+import 'package:markdraw/markdraw.dart' hide TextElement;
 
 /// Mock adapter that tracks call order.
 class MockRoughAdapter implements RoughAdapter {

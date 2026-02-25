@@ -2,16 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:markdraw/src/core/elements/element.dart';
-import 'package:markdraw/src/core/elements/element_id.dart';
-import 'package:markdraw/src/core/elements/fill_style.dart';
-import 'package:markdraw/src/core/elements/line_element.dart';
-import 'package:markdraw/src/core/elements/stroke_style.dart';
-import 'package:markdraw/src/core/math/bounds.dart';
-import 'package:markdraw/src/core/math/point.dart';
-import 'package:markdraw/src/rendering/rough/draw_style.dart';
-import 'package:markdraw/src/rendering/rough/rough_adapter.dart';
-import 'package:markdraw/src/rendering/rough/rough_canvas_adapter.dart';
+import 'package:markdraw/markdraw.dart';
 
 /// Creates a PictureRecorder + Canvas pair for testing.
 (PictureRecorder, Canvas) _makeCanvas() {

@@ -2,9 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:markdraw/src/core/elements/line_element.dart';
-import 'package:markdraw/src/core/math/point.dart';
-import 'package:markdraw/src/rendering/rough/arrowhead_renderer.dart';
+import 'package:markdraw/markdraw.dart';
 
 void main() {
   group('ArrowheadRenderer.directionAngle', () {

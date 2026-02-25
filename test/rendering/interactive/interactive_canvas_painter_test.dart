@@ -1,14 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/elements/element_id.dart';
-import 'package:markdraw/src/core/elements/rectangle_element.dart';
-import 'package:markdraw/src/core/math/bounds.dart';
-import 'package:markdraw/src/core/math/point.dart';
-import 'package:markdraw/src/rendering/interactive/interactive_canvas_painter.dart';
-import 'package:markdraw/src/rendering/interactive/selection_overlay.dart';
-import 'package:markdraw/src/rendering/interactive/snap_line.dart';
-import 'package:markdraw/src/rendering/viewport_state.dart';
+import 'package:markdraw/markdraw.dart';
 
 (PictureRecorder, Canvas) _makeCanvas() {
   final recorder = PictureRecorder();

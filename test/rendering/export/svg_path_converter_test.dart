@@ -1,9 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/elements/line_element.dart';
-import 'package:markdraw/src/core/math/point.dart';
-import 'package:markdraw/src/rendering/export/svg_path_converter.dart';
+import 'package:markdraw/markdraw.dart';
 import 'package:rough_flutter/rough_flutter.dart';
 
 void main() {

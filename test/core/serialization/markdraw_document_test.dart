@@ -1,11 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/elements/element_id.dart';
-import 'package:markdraw/src/core/elements/ellipse_element.dart';
-import 'package:markdraw/src/core/elements/rectangle_element.dart';
-import 'package:markdraw/src/core/elements/text_element.dart';
-import 'package:markdraw/src/core/serialization/canvas_settings.dart';
-import 'package:markdraw/src/core/serialization/document_section.dart';
-import 'package:markdraw/src/core/serialization/markdraw_document.dart';
+import 'package:markdraw/markdraw.dart';
 
 void main() {
   group('MarkdrawDocument', () {

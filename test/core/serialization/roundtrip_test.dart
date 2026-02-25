@@ -1,24 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/elements/element.dart';
-import 'package:markdraw/src/core/elements/arrow_element.dart';
-import 'package:markdraw/src/core/elements/diamond_element.dart';
-import 'package:markdraw/src/core/elements/element_id.dart';
-import 'package:markdraw/src/core/elements/ellipse_element.dart';
-import 'package:markdraw/src/core/elements/fill_style.dart';
-import 'package:markdraw/src/core/elements/freedraw_element.dart';
-import 'package:markdraw/src/core/elements/line_element.dart';
-import 'package:markdraw/src/core/elements/rectangle_element.dart';
-import 'package:markdraw/src/core/elements/roundness.dart';
-import 'package:markdraw/src/core/elements/stroke_style.dart';
-import 'package:markdraw/src/core/elements/text_element.dart';
-import 'package:markdraw/src/core/math/point.dart';
-import 'package:markdraw/src/core/serialization/canvas_settings.dart';
-import 'package:markdraw/src/core/serialization/document_parser.dart';
-import 'package:markdraw/src/core/serialization/document_section.dart';
-import 'package:markdraw/src/core/serialization/document_serializer.dart';
-import 'package:markdraw/src/core/serialization/markdraw_document.dart';
-import 'package:markdraw/src/core/serialization/sketch_line_parser.dart';
-import 'package:markdraw/src/core/serialization/sketch_line_serializer.dart';
+import 'package:markdraw/markdraw.dart';
 
 void main() {
   group('Sketch line round-trip (serialize → parse)', () {

@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/serialization/canvas_settings.dart';
-import 'package:markdraw/src/core/serialization/frontmatter_parser.dart';
+import 'package:markdraw/markdraw.dart';
 
 void main() {
   group('FrontmatterParser', () {

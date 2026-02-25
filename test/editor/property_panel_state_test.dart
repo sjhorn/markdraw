@@ -1,16 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/elements/arrow_element.dart';
-import 'package:markdraw/src/core/elements/element_id.dart';
-import 'package:markdraw/src/core/elements/fill_style.dart';
-import 'package:markdraw/src/core/elements/line_element.dart';
-import 'package:markdraw/src/core/elements/rectangle_element.dart';
-import 'package:markdraw/src/core/elements/roundness.dart';
-import 'package:markdraw/src/core/elements/stroke_style.dart';
-import 'package:markdraw/src/core/elements/text_element.dart';
-import 'package:markdraw/src/core/elements/ellipse_element.dart';
-import 'package:markdraw/src/core/math/point.dart';
-import 'package:markdraw/src/editor/property_panel_state.dart';
-import 'package:markdraw/src/editor/tool_result.dart';
+import 'package:markdraw/markdraw.dart';
 
 void main() {
   group('PropertyPanelState.fromElements', () {

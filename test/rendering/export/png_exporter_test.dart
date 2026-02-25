@@ -1,16 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/elements/element_id.dart';
-import 'package:markdraw/src/core/elements/rectangle_element.dart';
-import 'package:markdraw/src/core/elements/ellipse_element.dart';
-import 'package:markdraw/src/core/elements/diamond_element.dart';
-import 'package:markdraw/src/core/elements/line_element.dart';
-import 'package:markdraw/src/core/elements/text_element.dart';
-import 'package:markdraw/src/core/math/point.dart';
-import 'package:markdraw/src/core/scene/scene.dart';
-import 'package:markdraw/src/rendering/export/png_exporter.dart';
-import 'package:markdraw/src/rendering/rough/rough_canvas_adapter.dart';
+import 'package:markdraw/markdraw.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

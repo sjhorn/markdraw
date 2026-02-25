@@ -1,16 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/elements/arrow_element.dart';
-import 'package:markdraw/src/core/elements/diamond_element.dart';
-import 'package:markdraw/src/core/elements/element_id.dart';
-import 'package:markdraw/src/core/elements/ellipse_element.dart';
-import 'package:markdraw/src/core/elements/freedraw_element.dart';
-import 'package:markdraw/src/core/elements/line_element.dart';
-import 'package:markdraw/src/core/elements/rectangle_element.dart';
-import 'package:markdraw/src/core/elements/text_element.dart';
-import 'package:markdraw/src/core/math/point.dart';
-import 'package:markdraw/src/core/scene/scene.dart';
-import 'package:markdraw/src/editor/bindings/bound_text_utils.dart';
-import 'package:markdraw/src/editor/tool_result.dart';
+import 'package:markdraw/markdraw.dart';
 
 void main() {
   group('BoundTextUtils', () {

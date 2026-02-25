@@ -1,11 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/elements/element_id.dart';
-import 'package:markdraw/src/core/elements/frame_element.dart';
-import 'package:markdraw/src/core/elements/rectangle_element.dart';
-import 'package:markdraw/src/core/scene/scene.dart';
-import 'package:markdraw/src/rendering/export/export_bounds.dart';
-import 'package:markdraw/src/rendering/export/svg_element_renderer.dart';
-import 'package:markdraw/src/rendering/export/svg_exporter.dart';
+import 'package:markdraw/markdraw.dart';
 
 void main() {
   group('SvgElementRenderer — frame', () {

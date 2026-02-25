@@ -1,16 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/elements/arrow_element.dart';
-import 'package:markdraw/src/core/elements/element_id.dart';
-import 'package:markdraw/src/core/elements/line_element.dart';
-import 'package:markdraw/src/core/math/point.dart';
-import 'package:markdraw/src/core/serialization/clipboard_codec.dart';
-import 'package:markdraw/src/core/serialization/document_section.dart';
-import 'package:markdraw/src/core/serialization/excalidraw_json_codec.dart';
-import 'package:markdraw/src/core/serialization/markdraw_document.dart';
-import 'package:markdraw/src/core/serialization/sketch_line_parser.dart';
-import 'package:markdraw/src/core/serialization/sketch_line_serializer.dart';
+import 'package:markdraw/markdraw.dart';
 
 ArrowElement _elbowArrow({
   String id = 'a1',

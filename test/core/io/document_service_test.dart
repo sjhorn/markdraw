@@ -1,18 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/elements/arrow_element.dart';
-import 'package:markdraw/src/core/elements/diamond_element.dart';
-import 'package:markdraw/src/core/elements/element.dart';
-import 'package:markdraw/src/core/elements/element_id.dart';
-import 'package:markdraw/src/core/elements/ellipse_element.dart';
-import 'package:markdraw/src/core/elements/freedraw_element.dart';
-import 'package:markdraw/src/core/elements/rectangle_element.dart';
-import 'package:markdraw/src/core/elements/text_element.dart';
-import 'package:markdraw/src/core/io/document_format.dart';
-import 'package:markdraw/src/core/io/document_service.dart';
-import 'package:markdraw/src/core/serialization/document_section.dart';
-import 'package:markdraw/src/core/serialization/markdraw_document.dart';
+import 'package:markdraw/markdraw.dart';
 
 /// In-memory file system for testing.
 Map<String, String> _createFileSystem([Map<String, String>? initial]) {

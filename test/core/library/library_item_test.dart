@@ -1,11 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/elements/element_id.dart';
-import 'package:markdraw/src/core/elements/image_file.dart';
-import 'package:markdraw/src/core/elements/rectangle_element.dart';
-import 'package:markdraw/src/core/library/library_document.dart';
-import 'package:markdraw/src/core/library/library_item.dart';
+import 'package:markdraw/markdraw.dart';
 
 void main() {
   group('LibraryItem', () {

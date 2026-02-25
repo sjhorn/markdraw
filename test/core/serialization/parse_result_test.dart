@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/serialization/parse_result.dart';
+import 'package:markdraw/markdraw.dart';
 
 void main() {
   group('ParseWarning', () {

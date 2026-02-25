@@ -1,10 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/elements/element.dart';
-import 'package:markdraw/src/core/elements/element_id.dart';
-import 'package:markdraw/src/core/elements/rectangle_element.dart';
-import 'package:markdraw/src/core/elements/text_element.dart';
-import 'package:markdraw/src/core/serialization/clipboard_codec.dart';
-import 'package:markdraw/src/editor/clipboard_service.dart';
+import 'package:markdraw/markdraw.dart';
 
 /// A mock clipboard service for testing.
 class MockClipboardService implements ClipboardService {

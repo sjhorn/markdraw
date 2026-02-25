@@ -1,8 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/math/bounds.dart';
-import 'package:markdraw/src/rendering/viewport_state.dart';
+import 'package:markdraw/markdraw.dart';
 
 void main() {
   group('ViewportState', () {

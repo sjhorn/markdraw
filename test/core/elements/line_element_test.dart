@@ -1,7 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/elements/element_id.dart';
-import 'package:markdraw/src/core/elements/line_element.dart';
-import 'package:markdraw/src/core/math/point.dart';
+import 'package:markdraw/markdraw.dart';
 
 void main() {
   group('LineElement', () {

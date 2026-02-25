@@ -2,14 +2,7 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/elements/element_id.dart';
-import 'package:markdraw/src/core/elements/image_element.dart';
-import 'package:markdraw/src/core/elements/image_file.dart';
-import 'package:markdraw/src/core/scene/scene.dart';
-import 'package:markdraw/src/editor/editor_state.dart';
-import 'package:markdraw/src/editor/tool_result.dart';
-import 'package:markdraw/src/editor/tool_type.dart';
-import 'package:markdraw/src/rendering/viewport_state.dart';
+import 'package:markdraw/markdraw.dart';
 
 /// Computes a deterministic fileId from image bytes (SHA-1 first 8 hex chars).
 String computeFileId(Uint8List bytes) {

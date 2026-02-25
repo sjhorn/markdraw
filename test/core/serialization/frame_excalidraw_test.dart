@@ -1,12 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/elements/element_id.dart';
-import 'package:markdraw/src/core/elements/frame_element.dart';
-import 'package:markdraw/src/core/elements/rectangle_element.dart';
-import 'package:markdraw/src/core/serialization/excalidraw_json_codec.dart';
-import 'package:markdraw/src/core/serialization/document_section.dart';
-import 'package:markdraw/src/core/serialization/markdraw_document.dart';
+import 'package:markdraw/markdraw.dart';
 
 void main() {
   group('ExcalidrawJsonCodec — Frame support', () {

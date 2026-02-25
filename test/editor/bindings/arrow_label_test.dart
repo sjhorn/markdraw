@@ -1,8 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/elements/arrow_element.dart';
-import 'package:markdraw/src/core/elements/element_id.dart';
-import 'package:markdraw/src/core/math/point.dart';
-import 'package:markdraw/src/editor/bindings/arrow_label_utils.dart';
+import 'package:markdraw/markdraw.dart';
 
 ArrowElement _arrow({
   double x = 0,

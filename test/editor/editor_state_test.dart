@@ -1,13 +1,6 @@
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/elements/element_id.dart';
-import 'package:markdraw/src/core/elements/ellipse_element.dart';
-import 'package:markdraw/src/core/elements/rectangle_element.dart';
-import 'package:markdraw/src/core/scene/scene.dart';
-import 'package:markdraw/src/editor/editor_state.dart';
-import 'package:markdraw/src/editor/tool_result.dart';
-import 'package:markdraw/src/editor/tool_type.dart';
-import 'package:markdraw/src/rendering/viewport_state.dart';
+import 'package:markdraw/markdraw.dart';
 
 void main() {
   group('EditorState', () {

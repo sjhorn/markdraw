@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/math/elbow_routing.dart';
-import 'package:markdraw/src/core/math/point.dart';
+import 'package:markdraw/markdraw.dart';
 
 void main() {
   group('ElbowRouting', () {

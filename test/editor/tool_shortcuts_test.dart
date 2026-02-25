@@ -1,5 +1,4 @@
-import 'package:markdraw/src/editor/tool_shortcuts.dart';
-import 'package:markdraw/src/editor/tool_type.dart';
+import 'package:markdraw/markdraw.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

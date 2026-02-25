@@ -1,16 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/elements/arrow_element.dart';
-import 'package:markdraw/src/core/elements/element_id.dart';
-import 'package:markdraw/src/core/elements/line_element.dart';
-import 'package:markdraw/src/core/elements/stroke_style.dart';
-import 'package:markdraw/src/core/math/bounds.dart';
-import 'package:markdraw/src/core/math/point.dart';
-import 'package:markdraw/src/rendering/element_renderer.dart';
-import 'package:markdraw/src/rendering/export/svg_element_renderer.dart';
-import 'package:markdraw/src/rendering/rough/draw_style.dart';
-import 'package:markdraw/src/rendering/rough/rough_adapter.dart';
+import 'package:markdraw/markdraw.dart';
 
 /// Mock RoughAdapter that records calls.
 class _MockAdapter implements RoughAdapter {

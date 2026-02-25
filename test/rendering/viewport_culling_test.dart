@@ -1,13 +1,8 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:markdraw/src/core/elements/element_id.dart';
-import 'package:markdraw/src/core/elements/ellipse_element.dart';
-import 'package:markdraw/src/core/elements/rectangle_element.dart';
-import 'package:markdraw/src/core/elements/text_element.dart' as core
-    show TextElement;
-import 'package:markdraw/src/rendering/viewport_culling.dart';
-import 'package:markdraw/src/rendering/viewport_state.dart';
+import 'package:markdraw/markdraw.dart' as core show TextElement;
+import 'package:markdraw/markdraw.dart' hide TextElement;
 
 void main() {
   group('cullElements', () {
