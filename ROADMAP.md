@@ -519,11 +519,17 @@ markdraw/
 > **TDD checkpoint**: ElbowRouting with Manhattan routing, binding-aware re-routing, clean rendering + SVG, two-click creation, full serialization round-trip, segment drag editing, property panel toggle. ~1407 tests total. Zero analyzer issues. ✅
 
 ### 6.5 Libraries
-- [ ] Reusable element templates (shapes + groups)
-- [ ] Save to / load from library
-- [ ] Drag from library panel onto canvas
-- [ ] `.markdrawlib` format for library files
-- [ ] **Tests**: Library CRUD, instantiation
+- [x] `LibraryItem` and `LibraryDocument` immutable models
+- [x] `ExcalidrawLibCodec` — parse v1+v2 `.excalidrawlib` JSON, serialize v2
+- [x] `ExcalidrawJsonCodec` — expose `elementToJson`, `parseElement`, `parseFilesJson`, `filesToJson` as public helpers
+- [x] `LibraryCodec` — `.markdrawlib` format with `---` item dividers, reuses `.markdraw` sketch blocks
+- [x] `DocumentFormat.markdrawLibrary` / `.excalidrawLibrary` enum values
+- [x] `DocumentService.loadLibrary` / `saveLibrary` methods
+- [x] `LibraryUtils` stateless utility — `createFromElements` (normalize positions, collect bound text + files) and `instantiate` (fresh IDs, remap groupIds/frameIds/boundElements/containerId/bindings, center placement)
+- [x] Example app: library panel with add-to-library, click-to-place, import/export, delete
+- [x] **Tests**: ~61 new tests — LibraryItem model (6), ExcalidrawLibCodec (17), LibraryCodec + DocumentService (17), LibraryUtils (13), integration (8)
+
+> **TDD checkpoint**: Full library support with immutable models, dual-format codec, create/instantiate with ID remapping, example app panel. ~1468 tests total. Zero analyzer issues.
 
 ### 6.6 Locking
 - [ ] Lock element to prevent editing

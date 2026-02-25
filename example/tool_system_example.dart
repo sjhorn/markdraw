@@ -29,10 +29,16 @@ import 'package:markdraw/src/core/history/history_manager.dart';
 import 'package:markdraw/src/core/io/document_format.dart';
 import 'package:markdraw/src/core/io/document_service.dart';
 import 'package:markdraw/src/core/io/scene_document_converter.dart';
+import 'package:markdraw/src/core/library/library_item.dart';
+import 'package:markdraw/src/core/library/library_utils.dart';
 import 'package:markdraw/src/core/serialization/clipboard_codec.dart';
 import 'package:markdraw/src/core/serialization/document_parser.dart';
 import 'package:markdraw/src/core/serialization/document_serializer.dart';
 import 'package:markdraw/src/core/serialization/excalidraw_json_codec.dart';
+import 'package:markdraw/src/core/serialization/excalidraw_lib_codec.dart';
+import 'package:markdraw/src/core/serialization/library_codec.dart';
+import 'package:markdraw/src/core/serialization/parse_result.dart';
+import 'package:markdraw/src/core/library/library_document.dart';
 import 'package:markdraw/src/editor/clipboard_service.dart';
 import 'package:markdraw/src/rendering/export/png_exporter.dart';
 import 'package:markdraw/src/rendering/export/svg_exporter.dart';
@@ -112,6 +118,8 @@ class _CanvasPageState extends State<_CanvasPage> {
   final ClipboardService _clipboardService = const FlutterClipboardService();
   final _imageCache = ImageElementCache();
   String? _currentFilePath;
+  List<LibraryItem> _libraryItems = [];
+  bool _showLibraryPanel = false;
 
   // Drag coalescing: capture scene before drag, push once on pointer up
   Scene? _sceneBeforeDrag;
@@ -585,6 +593,215 @@ class _CanvasPageState extends State<_CanvasPage> {
     }
   }
 
+  void _addToLibrary() {
+    final selected = _selectedElements;
+    if (selected.isEmpty) return;
+
+    final name = 'Item ${_libraryItems.length + 1}';
+    final item = LibraryUtils.createFromElements(
+      elements: selected,
+      name: name,
+      allSceneElements: _editorState.scene.activeElements,
+      sceneFiles: _editorState.scene.files,
+    );
+    setState(() {
+      _libraryItems = [..._libraryItems, item];
+      _showLibraryPanel = true;
+    });
+  }
+
+  void _placeLibraryItem(LibraryItem item) {
+    final renderBox = context.findRenderObject() as RenderBox?;
+    final screenSize = renderBox?.size ?? const Size(800, 600);
+    final centerScene = _editorState.viewport.screenToScene(
+      Offset(screenSize.width / 2, screenSize.height / 2),
+    );
+    final position = Point(centerScene.dx, centerScene.dy);
+
+    _historyManager.push(_editorState.scene);
+    _applyResult(LibraryUtils.instantiate(item: item, position: position));
+  }
+
+  void _removeLibraryItem(String id) {
+    setState(() {
+      _libraryItems = _libraryItems.where((i) => i.id != id).toList();
+    });
+  }
+
+  Future<void> _importLibrary() async {
+    try {
+      final file = await FilePicker.platform.pickFiles(
+        dialogTitle: 'Import Library',
+        type: FileType.custom,
+        allowedExtensions: ['excalidrawlib', 'markdrawlib'],
+        withData: kIsWeb,
+      );
+      if (file == null || file.files.isEmpty) return;
+      final picked = file.files.first;
+
+      final String content;
+      if (kIsWeb && picked.bytes != null) {
+        content = utf8.decode(picked.bytes!);
+      } else if (picked.path != null) {
+        content = await readStringFromFile(picked.path!);
+      } else {
+        return;
+      }
+
+      final format = DocumentService.detectFormat(picked.name);
+      final ParseResult<LibraryDocument> result;
+      switch (format) {
+        case DocumentFormat.markdrawLibrary:
+          result = LibraryCodec.parse(content);
+        case DocumentFormat.excalidrawLibrary:
+          result = ExcalidrawLibCodec.parse(content);
+        case DocumentFormat.markdraw:
+        case DocumentFormat.excalidraw:
+          debugPrint('Not a library file');
+          return;
+      }
+
+      setState(() {
+        _libraryItems = [..._libraryItems, ...result.value.items];
+        _showLibraryPanel = true;
+      });
+    } catch (e) {
+      debugPrint('Library import error: $e');
+    }
+  }
+
+  Future<void> _exportLibrary() async {
+    if (_libraryItems.isEmpty) return;
+    try {
+      final doc = LibraryDocument(items: _libraryItems);
+      final content = ExcalidrawLibCodec.serialize(doc);
+
+      if (kIsWeb) {
+        downloadFile('library.excalidrawlib', content);
+      } else {
+        final result = await FilePicker.platform.saveFile(
+          dialogTitle: 'Export Library',
+          fileName: 'library.excalidrawlib',
+          allowedExtensions: ['excalidrawlib', 'markdrawlib'],
+          type: FileType.custom,
+        );
+        if (result != null) {
+          final format = DocumentService.detectFormat(result);
+          final String output;
+          switch (format) {
+            case DocumentFormat.excalidrawLibrary:
+              output = ExcalidrawLibCodec.serialize(doc);
+            case DocumentFormat.markdrawLibrary:
+              output = LibraryCodec.serialize(doc);
+            default:
+              output = ExcalidrawLibCodec.serialize(doc);
+          }
+          await writeStringToFile(result, output);
+        }
+      }
+    } catch (e) {
+      debugPrint('Library export error: $e');
+    }
+  }
+
+  Widget _buildLibraryPanel() {
+    return Container(
+      width: 200,
+      decoration: BoxDecoration(
+        border: Border(left: BorderSide(color: Colors.grey.shade300)),
+        color: Colors.grey.shade50,
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+            ),
+            child: Row(
+              children: [
+                const Text('Library',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.file_upload, size: 18),
+                  onPressed: _importLibrary,
+                  tooltip: 'Import Library',
+                  constraints: const BoxConstraints(),
+                  padding: const EdgeInsets.all(4),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.file_download, size: 18),
+                  onPressed: _libraryItems.isEmpty ? null : _exportLibrary,
+                  tooltip: 'Export Library',
+                  constraints: const BoxConstraints(),
+                  padding: const EdgeInsets.all(4),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 18),
+                  onPressed: () => setState(() => _showLibraryPanel = false),
+                  tooltip: 'Close',
+                  constraints: const BoxConstraints(),
+                  padding: const EdgeInsets.all(4),
+                ),
+              ],
+            ),
+          ),
+          if (_selectedElements.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.add, size: 16),
+                  label: const Text('Add to Library'),
+                  onPressed: _addToLibrary,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                  ),
+                ),
+              ),
+            ),
+          Expanded(
+            child: _libraryItems.isEmpty
+                ? const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Text(
+                        'No library items.\nSelect elements and click "Add to Library".',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey, fontSize: 12),
+                      ),
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: _libraryItems.length,
+                    itemBuilder: (context, index) {
+                      final item = _libraryItems[index];
+                      return ListTile(
+                        dense: true,
+                        title: Text(item.name, style: const TextStyle(fontSize: 13)),
+                        subtitle: Text(
+                          '${item.elements.length} element${item.elements.length == 1 ? '' : 's'}',
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                        onTap: () => _placeLibraryItem(item),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete, size: 16),
+                          onPressed: () => _removeLibraryItem(item.id),
+                          tooltip: 'Remove',
+                          constraints: const BoxConstraints(),
+                          padding: const EdgeInsets.all(4),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _saveFile() async {
     try {
       if (!kIsWeb && _currentFilePath != null) {
@@ -747,6 +964,15 @@ class _CanvasPageState extends State<_CanvasPage> {
                 icon: const Icon(Icons.code),
                 onPressed: _exportSvg,
                 tooltip: 'Export SVG',
+              ),
+              IconButton(
+                icon: Icon(
+                  Icons.library_books,
+                  color: _showLibraryPanel ? Colors.blue : null,
+                ),
+                onPressed: () =>
+                    setState(() => _showLibraryPanel = !_showLibraryPanel),
+                tooltip: 'Library',
               ),
               const VerticalDivider(width: 16, indent: 12, endIndent: 12),
               for (final type in ToolType.values) ...[
@@ -952,6 +1178,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                 ),
               ),
               if (_selectedElements.isNotEmpty) _buildPropertyPanel(),
+              if (_showLibraryPanel) _buildLibraryPanel(),
             ],
           ),
         ),
