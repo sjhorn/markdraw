@@ -1,4 +1,5 @@
 export 'canvas_settings.dart';
+export 'clipboard_codec.dart';
 export 'document_parser.dart';
 export 'document_section.dart';
 export 'document_serializer.dart';
