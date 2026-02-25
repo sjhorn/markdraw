@@ -1,8 +1,8 @@
 import 'dart:ui';
 
-import '../core/elements/element.dart';
-import '../core/elements/text_element.dart' as core show TextElement;
-import '../core/math/bounds.dart';
+import '../core/elements/elements.dart' as core show TextElement;
+import '../core/elements/elements.dart' hide TextElement;
+import '../core/math/math.dart';
 import 'viewport_state.dart';
 
 /// Filters [elements] to those whose bounding box intersects the visible

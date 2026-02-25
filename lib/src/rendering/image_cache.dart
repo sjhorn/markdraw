@@ -1,6 +1,6 @@
 import 'dart:ui' as ui;
 
-import '../core/elements/image_file.dart';
+import '../core/elements/elements.dart';
 
 /// Decodes [ImageFile] bytes to [ui.Image] and caches results by fileId.
 ///

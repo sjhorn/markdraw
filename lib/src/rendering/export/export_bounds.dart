@@ -1,8 +1,6 @@
-import '../../core/elements/element.dart';
-import '../../core/elements/element_id.dart';
-import '../../core/elements/text_element.dart';
-import '../../core/math/bounds.dart';
-import '../../core/scene/scene.dart';
+import '../../core/elements/elements.dart';
+import '../../core/math/math.dart';
+import '../../core/scene/scene_exports.dart';
 
 /// Computes bounding rect for export from full scene or selected subset.
 class ExportBounds {

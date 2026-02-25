@@ -2,8 +2,8 @@ import 'dart:math' as math;
 
 import 'package:rough_flutter/rough_flutter.dart';
 
-import '../../core/elements/line_element.dart';
-import '../../core/math/point.dart';
+import '../../core/elements/elements.dart';
+import '../../core/math/math.dart';
 
 /// Converts rough_flutter operations and geometry to SVG path `d` attribute strings.
 class SvgPathConverter {

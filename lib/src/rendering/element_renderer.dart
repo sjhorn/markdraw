@@ -1,14 +1,8 @@
 import 'dart:ui';
 
-import '../core/math/point.dart';
-import '../core/elements/arrow_element.dart';
-import '../core/elements/element.dart' as core;
-import '../core/elements/frame_element.dart';
-import '../core/elements/freedraw_element.dart';
-import '../core/elements/image_element.dart';
-import '../core/elements/line_element.dart';
-import '../core/elements/text_element.dart' as core show TextElement;
-import '../core/math/bounds.dart';
+import '../core/elements/elements.dart' as core show Element, TextElement;
+import '../core/elements/elements.dart' hide Element, TextElement;
+import '../core/math/math.dart';
 import 'rough/draw_style.dart';
 import 'rough/rough_adapter.dart';
 import 'text_renderer.dart';

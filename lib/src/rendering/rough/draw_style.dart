@@ -1,10 +1,8 @@
 import 'package:flutter/painting.dart';
 import 'package:rough_flutter/rough_flutter.dart';
 
-import '../../core/elements/element.dart' as core;
-import '../../core/elements/fill_style.dart' as core;
-import '../../core/elements/roundness.dart';
-import '../../core/elements/stroke_style.dart' as core;
+import '../../core/elements/elements.dart' as core show Element, FillStyle, StrokeStyle;
+import '../../core/elements/elements.dart' hide Element, FillStyle, StrokeStyle;
 
 /// Maps core [Element] string-based properties to Flutter/rough_flutter types.
 ///

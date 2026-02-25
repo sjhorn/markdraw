@@ -1,8 +1,7 @@
 import 'package:flutter/foundation.dart';
 
-import '../../core/elements/element.dart';
-import '../../core/math/bounds.dart';
-import '../../core/math/point.dart';
+import '../../core/elements/elements.dart';
+import '../../core/math/math.dart';
 import 'handle.dart';
 
 /// The gap (in scene units) between the top-center handle and the rotation

@@ -1,8 +1,7 @@
 import 'dart:ui';
 
-import '../../core/elements/line_element.dart';
-import '../../core/math/bounds.dart';
-import '../../core/math/point.dart';
+import '../../core/elements/elements.dart';
+import '../../core/math/math.dart';
 import 'draw_style.dart';
 
 /// Abstracts rough-style drawing behind a clean API.

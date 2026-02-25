@@ -1,12 +1,9 @@
 import 'dart:convert';
 
-import '../../core/elements/arrow_element.dart';
-import '../../core/elements/element_id.dart';
-import '../../core/elements/frame_element.dart';
-import '../../core/elements/text_element.dart';
-import '../../core/io/scene_document_converter.dart';
-import '../../core/scene/scene.dart';
-import '../../core/serialization/document_serializer.dart';
+import '../../core/elements/elements.dart';
+import '../../core/io/io.dart';
+import '../../core/scene/scene_exports.dart';
+import '../../core/serialization/serialization.dart';
 import 'export_bounds.dart';
 import 'svg_element_renderer.dart';
 

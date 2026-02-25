@@ -1,14 +1,9 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
-import '../../core/elements/arrow_element.dart';
-import '../../core/elements/element.dart';
-import '../../core/elements/element_id.dart';
-import '../../core/elements/line_element.dart';
-import '../../core/math/bounds.dart';
-import '../../core/math/elbow_routing.dart';
-import '../../core/math/point.dart';
-import '../bindings/binding_utils.dart';
+import '../../core/elements/elements.dart';
+import '../../core/math/math.dart';
+import '../bindings/bindings.dart';
 import '../tool_result.dart';
 import '../tool_type.dart';
 import 'tool.dart';

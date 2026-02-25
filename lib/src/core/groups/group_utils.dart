@@ -1,6 +1,5 @@
-import '../elements/element.dart';
-import '../elements/element_id.dart';
-import '../scene/scene.dart';
+import '../elements/elements.dart';
+import '../scene/scene_exports.dart';
 
 /// Stateless utility methods for element grouping logic.
 ///

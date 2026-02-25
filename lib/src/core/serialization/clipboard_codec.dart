@@ -1,4 +1,4 @@
-import '../elements/element.dart';
+import '../elements/elements.dart';
 import 'document_parser.dart';
 import 'document_section.dart';
 import 'document_serializer.dart';

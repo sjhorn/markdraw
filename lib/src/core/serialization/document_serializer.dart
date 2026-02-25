@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import '../elements/text_element.dart';
+import '../elements/elements.dart';
 import 'document_section.dart';
 import 'markdraw_document.dart';
 import 'sketch_line_serializer.dart';

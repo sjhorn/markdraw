@@ -2,8 +2,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 
-import '../../core/math/bounds.dart';
-import '../../core/math/point.dart';
+import '../../core/math/math.dart';
 import '../viewport_state.dart';
 import 'handle.dart';
 import 'selection_overlay.dart';

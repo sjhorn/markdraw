@@ -1,9 +1,5 @@
-import '../elements/element.dart';
-import '../elements/element_id.dart';
-import '../elements/image_file.dart';
-import '../elements/text_element.dart';
-import '../math/bounds.dart';
-import '../math/point.dart';
+import '../elements/elements.dart';
+import '../math/math.dart';
 
 /// An immutable collection of drawing elements with CRUD operations.
 class Scene {

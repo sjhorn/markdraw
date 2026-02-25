@@ -1,7 +1,5 @@
-import '../elements/element.dart';
-import '../elements/image_file.dart';
-import '../library/library_document.dart';
-import '../library/library_item.dart';
+import '../elements/elements.dart';
+import '../library/library.dart';
 import 'document_parser.dart';
 import 'document_section.dart';
 import 'document_serializer.dart';

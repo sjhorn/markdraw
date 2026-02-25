@@ -1,5 +1,4 @@
-import '../elements/element.dart';
-import '../elements/image_file.dart';
+import '../elements/elements.dart';
 import 'canvas_settings.dart';
 import 'document_section.dart';
 

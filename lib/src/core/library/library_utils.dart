@@ -1,11 +1,6 @@
-import '../elements/arrow_element.dart';
-import '../elements/element.dart';
-import '../elements/element_id.dart';
-import '../elements/image_element.dart';
-import '../elements/image_file.dart';
-import '../elements/text_element.dart';
-import '../../editor/tool_result.dart';
-import '../math/point.dart';
+import '../../editor/editor.dart';
+import '../elements/elements.dart';
+import '../math/math.dart';
 import 'library_item.dart';
 
 /// Stateless utility methods for creating and instantiating library items.

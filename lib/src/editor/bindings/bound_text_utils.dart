@@ -1,7 +1,5 @@
-import '../../core/elements/element.dart';
-import '../../core/elements/element_id.dart';
-import '../../core/elements/text_element.dart';
-import '../../core/scene/scene.dart';
+import '../../core/elements/elements.dart';
+import '../../core/scene/scene_exports.dart';
 import '../tool_result.dart';
 
 /// Types that can contain bound text.

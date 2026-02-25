@@ -2,7 +2,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/painting.dart';
 
-import '../core/elements/text_element.dart' as core;
+import '../core/elements/elements.dart' as core show TextAlign, TextElement;
 
 /// Renders text elements using Flutter's [TextPainter].
 ///

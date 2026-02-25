@@ -1,6 +1,5 @@
-import '../scene/scene.dart';
-import '../serialization/document_section.dart';
-import '../serialization/markdraw_document.dart';
+import '../scene/scene_exports.dart';
+import '../serialization/serialization.dart';
 
 /// Bridges [Scene] and [MarkdrawDocument] for file I/O integration.
 class SceneDocumentConverter {

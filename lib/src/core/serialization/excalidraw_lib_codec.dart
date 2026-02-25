@@ -1,10 +1,7 @@
 import 'dart:convert';
 
-import '../elements/element.dart';
-import '../elements/image_element.dart';
-import '../elements/image_file.dart';
-import '../library/library_document.dart';
-import '../library/library_item.dart';
+import '../elements/elements.dart';
+import '../library/library.dart';
 import 'excalidraw_json_codec.dart';
 import 'parse_result.dart';
 

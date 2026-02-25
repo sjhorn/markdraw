@@ -1,6 +1,5 @@
-import '../core/elements/element.dart';
-import '../core/elements/element_id.dart';
-import '../core/scene/scene.dart';
+import '../core/elements/elements.dart';
+import '../core/scene/scene_exports.dart';
 import '../rendering/viewport_state.dart';
 import 'tool_result.dart';
 import 'tool_type.dart';

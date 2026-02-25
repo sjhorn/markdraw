@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
-import '../../core/elements/line_element.dart';
-import '../../core/math/point.dart';
+import '../../core/elements/elements.dart';
+import '../../core/math/math.dart';
 
 /// Renders arrowhead shapes (arrow, triangle, bar, dot) at line endpoints.
 class ArrowheadRenderer {

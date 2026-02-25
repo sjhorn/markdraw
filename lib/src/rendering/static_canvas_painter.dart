@@ -3,13 +3,10 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/rendering.dart';
 
-import '../core/elements/arrow_element.dart';
-import '../core/elements/element.dart';
-import '../core/elements/element_id.dart';
-import '../core/elements/frame_element.dart';
-import '../core/elements/text_element.dart' as core show TextElement;
-import '../core/math/point.dart';
-import '../core/scene/scene.dart';
+import '../core/elements/elements.dart' as core show TextElement;
+import '../core/elements/elements.dart' hide TextElement;
+import '../core/math/math.dart';
+import '../core/scene/scene_exports.dart';
 import 'element_renderer.dart';
 import 'rough/rough_adapter.dart';
 import 'text_renderer.dart';

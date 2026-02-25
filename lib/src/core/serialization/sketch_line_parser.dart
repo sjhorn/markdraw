@@ -1,19 +1,5 @@
-import '../elements/arrow_element.dart';
-import '../elements/diamond_element.dart';
-import '../elements/element.dart';
-import '../elements/element_id.dart';
-import '../elements/ellipse_element.dart';
-import '../elements/fill_style.dart';
-import '../elements/frame_element.dart';
-import '../elements/freedraw_element.dart';
-import '../elements/image_crop.dart';
-import '../elements/image_element.dart';
-import '../elements/line_element.dart';
-import '../elements/rectangle_element.dart';
-import '../elements/roundness.dart';
-import '../elements/stroke_style.dart';
-import '../elements/text_element.dart';
-import '../math/point.dart';
+import '../elements/elements.dart';
+import '../math/math.dart';
 import 'parse_result.dart';
 
 /// A pending arrow binding to be resolved after all elements are parsed.

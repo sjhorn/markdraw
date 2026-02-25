@@ -3,19 +3,9 @@ import 'dart:math' as math;
 
 import 'package:rough_flutter/rough_flutter.dart';
 
-import '../../core/elements/arrow_element.dart';
-import '../../core/elements/element.dart';
-import '../../core/elements/frame_element.dart';
-import '../../core/elements/freedraw_element.dart';
-import '../../core/elements/image_element.dart';
-import '../../core/elements/image_file.dart';
-import '../../core/elements/line_element.dart';
-import '../../core/elements/stroke_style.dart';
-import '../../core/elements/text_element.dart';
-import '../../core/math/bounds.dart';
-import '../../core/math/point.dart';
-import '../rough/arrowhead_renderer.dart';
-import '../rough/draw_style.dart';
+import '../../core/elements/elements.dart';
+import '../../core/math/math.dart';
+import '../rough/rough.dart';
 import 'svg_path_converter.dart';
 
 /// Renders a single element to SVG markup.

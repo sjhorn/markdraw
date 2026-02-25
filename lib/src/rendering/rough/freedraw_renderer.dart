@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import '../../core/math/point.dart';
+import '../../core/math/math.dart';
 import 'draw_style.dart';
 
 /// Renders freehand drawing paths with smooth Bezier interpolation.

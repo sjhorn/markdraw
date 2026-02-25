@@ -1,7 +1,5 @@
-import '../elements/element.dart';
-import '../elements/element_id.dart';
-import '../elements/frame_element.dart';
-import '../scene/scene.dart';
+import '../elements/elements.dart';
+import '../scene/scene_exports.dart';
 
 /// Stateless utility methods for frame containment logic.
 ///

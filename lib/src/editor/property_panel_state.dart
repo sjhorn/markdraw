@@ -1,11 +1,5 @@
-import '../core/elements/arrow_element.dart';
-import '../core/elements/element.dart';
-import '../core/elements/fill_style.dart';
-import '../core/elements/roundness.dart';
-import '../core/elements/stroke_style.dart';
-import '../core/elements/text_element.dart';
-import '../core/math/elbow_routing.dart';
-import '../core/math/point.dart';
+import '../core/elements/elements.dart';
+import '../core/math/math.dart';
 import 'tool_result.dart';
 
 /// Represents the current (possibly mixed) style values for the property panel.

@@ -1,4 +1,4 @@
-import '../../core/math/point.dart';
+import '../../core/math/math.dart';
 
 /// The type of resize or rotation handle on a selection overlay.
 enum HandleType {

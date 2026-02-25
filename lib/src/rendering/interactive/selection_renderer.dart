@@ -1,7 +1,6 @@
 import 'dart:ui';
 
-import '../../core/math/bounds.dart';
-import '../../core/math/point.dart';
+import '../../core/math/math.dart';
 import 'handle.dart';
 import 'snap_line.dart';
 

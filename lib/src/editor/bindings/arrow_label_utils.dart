@@ -1,6 +1,6 @@
 
-import '../../core/elements/arrow_element.dart';
-import '../../core/math/point.dart';
+import '../../core/elements/elements.dart';
+import '../../core/math/math.dart';
 
 /// Offset above the arrow line for label positioning.
 const double _labelOffset = 20.0;

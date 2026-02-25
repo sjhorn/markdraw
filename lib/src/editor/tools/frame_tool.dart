@@ -1,10 +1,8 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
-import '../../core/elements/element_id.dart';
-import '../../core/elements/frame_element.dart';
-import '../../core/math/bounds.dart';
-import '../../core/math/point.dart';
+import '../../core/elements/elements.dart';
+import '../../core/math/math.dart';
 import '../tool_result.dart';
 import '../tool_type.dart';
 import 'tool.dart';

@@ -1,4 +1,4 @@
-import '../elements/element.dart';
+import '../elements/elements.dart';
 
 /// A section of a .markdraw document — either prose markdown or a sketch block.
 sealed class DocumentSection {

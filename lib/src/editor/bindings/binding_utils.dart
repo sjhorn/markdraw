@@ -1,11 +1,8 @@
 import 'dart:math' as math;
 
-import '../../core/elements/arrow_element.dart';
-import '../../core/elements/element.dart';
-import '../../core/elements/element_id.dart';
-import '../../core/math/elbow_routing.dart';
-import '../../core/math/point.dart';
-import '../../core/scene/scene.dart';
+import '../../core/elements/elements.dart';
+import '../../core/math/math.dart';
+import '../../core/scene/scene_exports.dart';
 
 /// Snap radius for binding detection (in scene units).
 const double bindingSnapRadius = 20.0;

@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
-import '../core/math/bounds.dart';
+import '../core/math/math.dart';
 
 /// An immutable value object representing viewport pan and zoom state.
 ///

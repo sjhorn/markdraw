@@ -2,10 +2,9 @@ import 'dart:ui';
 
 import 'package:rough_flutter/rough_flutter.dart';
 
-import '../../core/elements/line_element.dart';
-import '../../core/elements/stroke_style.dart' as core;
-import '../../core/math/bounds.dart';
-import '../../core/math/point.dart';
+import '../../core/elements/elements.dart' as core show StrokeStyle;
+import '../../core/elements/elements.dart' hide StrokeStyle;
+import '../../core/math/math.dart';
 import 'arrowhead_renderer.dart';
 import 'draw_style.dart';
 import 'freedraw_renderer.dart';
@@ -27,16 +26,15 @@ class RoughCanvasAdapter implements RoughAdapter {
       bounds.size.width,
       bounds.size.height,
     );
-    // Clip fill to shape bounds so hachure/crosshatch don't overshoot
-    canvas.save();
-    canvas.clipRect(Rect.fromLTWH(
+    // Clip fill to shape bounds so hachure/crosshatch don't overshoot,
+    // then draw stroke unclipped so it renders at full width.
+    final clipRect = Rect.fromLTWH(
       bounds.left,
       bounds.top,
       bounds.size.width,
       bounds.size.height,
-    ));
-    _drawRough(canvas, drawable, style);
-    canvas.restore();
+    );
+    _drawClippedFillThenStroke(canvas, drawable, style, clipRect: clipRect);
   }
 
   @override
@@ -61,7 +59,15 @@ class RoughCanvasAdapter implements RoughAdapter {
     final bottom = PointD(bounds.center.x, bounds.bottom);
     final left = PointD(bounds.left, bounds.center.y);
     final drawable = generator.polygon([top, right, bottom, left]);
-    _drawRough(canvas, drawable, style);
+    // Clip fill to diamond shape so hachure/crosshatch don't overshoot,
+    // then draw stroke unclipped so it renders at full width.
+    final clip = Path()
+      ..moveTo(bounds.center.x, bounds.top)
+      ..lineTo(bounds.right, bounds.center.y)
+      ..lineTo(bounds.center.x, bounds.bottom)
+      ..lineTo(bounds.left, bounds.center.y)
+      ..close();
+    _drawClippedFillThenStroke(canvas, drawable, style, clipPath: clip);
   }
 
   @override
@@ -187,6 +193,46 @@ class RoughCanvasAdapter implements RoughAdapter {
     DrawStyle style,
   ) {
     FreedrawRenderer.draw(canvas, points, style);
+  }
+
+  /// Draws fill clipped to [clipRect] or [clipPath], then draws stroke
+  /// unclipped so it renders at full width.
+  void _drawClippedFillThenStroke(
+    Canvas canvas,
+    Drawable drawable,
+    DrawStyle style, {
+    Rect? clipRect,
+    Path? clipPath,
+  }) {
+    final fillPaint = style.toFillPaint();
+
+    // Draw fill inside clip region
+    canvas.save();
+    if (clipRect != null) {
+      canvas.clipRect(clipRect);
+    } else if (clipPath != null) {
+      canvas.clipPath(clipPath);
+    }
+    _drawFillOnly(canvas, drawable, fillPaint);
+    canvas.restore();
+
+    // Draw stroke without clipping
+    if (style.strokeStyle == core.StrokeStyle.solid) {
+      _drawStrokeOnly(canvas, drawable, style);
+    } else {
+      _drawDashedStroke(canvas, drawable, style);
+    }
+  }
+
+  /// Draws only the stroke (outline) portion of a rough drawable.
+  void _drawStrokeOnly(Canvas canvas, Drawable drawable, DrawStyle style) {
+    final strokePaint = style.toStrokePaint();
+    for (final opSet in drawable.sets) {
+      if (opSet.type == OpSetType.path) {
+        final path = _opsToPath(opSet);
+        canvas.drawPath(path, strokePaint);
+      }
+    }
   }
 
   /// Renders a rough_flutter [Drawable] onto [canvas] with the given [style].

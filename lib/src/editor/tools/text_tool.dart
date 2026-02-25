@@ -1,8 +1,7 @@
 import 'dart:ui';
 
-import '../../core/elements/element_id.dart';
-import '../../core/elements/text_element.dart';
-import '../../core/math/point.dart';
+import '../../core/elements/elements.dart';
+import '../../core/math/math.dart';
 import '../tool_result.dart';
 import '../tool_type.dart';
 import 'tool.dart';

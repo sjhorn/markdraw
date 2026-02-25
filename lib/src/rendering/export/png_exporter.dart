@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 import 'dart:ui';
 
-import '../../core/elements/element_id.dart';
-import '../../core/scene/scene.dart';
+import '../../core/elements/elements.dart';
+import '../../core/scene/scene_exports.dart';
 import '../rough/rough_adapter.dart';
 import '../static_canvas_painter.dart';
 import '../viewport_state.dart';

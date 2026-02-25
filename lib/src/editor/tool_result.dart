@@ -1,9 +1,6 @@
-import '../core/elements/element.dart';
-import '../core/elements/element_id.dart';
-import '../core/elements/image_file.dart';
-import '../core/math/bounds.dart';
-import '../core/math/point.dart';
-import '../core/scene/scene.dart';
+import '../core/elements/elements.dart';
+import '../core/math/math.dart';
+import '../core/scene/scene_exports.dart';
 import '../rendering/viewport_state.dart';
 import 'tool_type.dart';
 

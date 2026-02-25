@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import '../../core/elements/stroke_style.dart';
+import '../../core/elements/elements.dart';
 
 /// Utility for converting paths into dashed or dotted patterns.
 class PathDashUtility {

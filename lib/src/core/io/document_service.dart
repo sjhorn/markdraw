@@ -1,11 +1,5 @@
-import '../library/library_document.dart';
-import '../serialization/document_parser.dart';
-import '../serialization/document_serializer.dart';
-import '../serialization/excalidraw_json_codec.dart';
-import '../serialization/excalidraw_lib_codec.dart';
-import '../serialization/library_codec.dart';
-import '../serialization/markdraw_document.dart';
-import '../serialization/parse_result.dart';
+import '../library/library.dart';
+import '../serialization/serialization.dart';
 import 'document_format.dart';
 
 /// Platform-agnostic service for loading and saving markdraw documents.

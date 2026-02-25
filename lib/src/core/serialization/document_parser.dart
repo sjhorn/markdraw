@@ -1,10 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import '../elements/element.dart';
-import '../elements/element_id.dart';
-import '../elements/image_file.dart';
-import '../elements/text_element.dart';
+import '../elements/elements.dart';
 import 'document_section.dart';
 import 'frontmatter_parser.dart';
 import 'markdraw_document.dart';
