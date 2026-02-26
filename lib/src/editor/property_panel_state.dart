@@ -34,6 +34,9 @@ class ElementStyle {
   // Arrow-only properties (null if no arrows or mixed):
   final bool? elbowed;
 
+  // Lock state (null if mixed):
+  final bool? locked;
+
   const ElementStyle({
     this.strokeColor,
     this.backgroundColor,
@@ -50,6 +53,7 @@ class ElementStyle {
     this.fontFamily,
     this.textAlign,
     this.elbowed,
+    this.locked,
   });
 }
 
@@ -147,6 +151,15 @@ class PropertyPanelState {
       }
     }
 
+    // Locked property
+    bool? locked = first.locked;
+    for (var i = 1; i < elements.length; i++) {
+      if (locked != null && elements[i].locked != locked) {
+        locked = null;
+        break;
+      }
+    }
+
     return ElementStyle(
       strokeColor: strokeColor,
       backgroundColor: backgroundColor,
@@ -163,6 +176,7 @@ class PropertyPanelState {
       fontFamily: fontFamily,
       textAlign: textAlign,
       elbowed: elbowed,
+      locked: locked,
     );
   }
 
@@ -243,6 +257,7 @@ class PropertyPanelState {
         opacity: style.opacity,
         roundness: style.roundness,
         clearRoundness: style.roundness == null && style.hasRoundness,
+        locked: style.locked,
       );
 
       results.add(UpdateElementResult(updated));

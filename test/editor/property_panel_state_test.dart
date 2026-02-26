@@ -542,4 +542,80 @@ void main() {
       expect(result, isA<UpdateElementResult>());
     });
   });
+
+  group('PropertyPanelState locked property', () {
+    test('fromElements with all locked returns locked == true', () {
+      final e1 = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+        locked: true,
+      );
+      final e2 = RectangleElement(
+        id: const ElementId('r2'),
+        x: 50, y: 50, width: 100, height: 100,
+        locked: true,
+      );
+      final style = PropertyPanelState.fromElements([e1, e2]);
+      expect(style.locked, isTrue);
+    });
+
+    test('fromElements with all unlocked returns locked == false', () {
+      final e1 = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+      );
+      final e2 = RectangleElement(
+        id: const ElementId('r2'),
+        x: 50, y: 50, width: 100, height: 100,
+      );
+      final style = PropertyPanelState.fromElements([e1, e2]);
+      expect(style.locked, isFalse);
+    });
+
+    test('fromElements with mixed returns locked == null', () {
+      final e1 = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+        locked: true,
+      );
+      final e2 = RectangleElement(
+        id: const ElementId('r2'),
+        x: 50, y: 50, width: 100, height: 100,
+      );
+      final style = PropertyPanelState.fromElements([e1, e2]);
+      expect(style.locked, isNull);
+    });
+
+    test('fromElements empty returns locked == null', () {
+      final style = PropertyPanelState.fromElements([]);
+      expect(style.locked, isNull);
+    });
+
+    test('applyStyle with locked: true updates elements', () {
+      final e = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+      );
+      final result = PropertyPanelState.applyStyle(
+        [e],
+        const ElementStyle(locked: true),
+      );
+      final updated = (result as UpdateElementResult).element;
+      expect(updated.locked, isTrue);
+    });
+
+    test('applyStyle with locked: false updates elements', () {
+      final e = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+        locked: true,
+      );
+      final result = PropertyPanelState.applyStyle(
+        [e],
+        const ElementStyle(locked: false),
+      );
+      final updated = (result as UpdateElementResult).element;
+      expect(updated.locked, isFalse);
+    });
+  });
 }
