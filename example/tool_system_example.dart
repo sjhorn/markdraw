@@ -977,6 +977,36 @@ class _CanvasPageState extends State<_CanvasPage> {
                   tooltip: '${type.name} (${shortcutForToolType(type)})',
                 ),
               ],
+              const VerticalDivider(width: 16, indent: 12, endIndent: 12),
+              IconButton(
+                icon: Icon(
+                  _selectedElements.any((e) => e.locked)
+                      ? Icons.lock
+                      : Icons.lock_open,
+                  color: _selectedElements.isNotEmpty &&
+                          _selectedElements.every((e) => e.locked)
+                      ? Colors.orange
+                      : null,
+                ),
+                onPressed: _selectedElements.isNotEmpty
+                    ? () {
+                        _historyManager.push(_editorState.scene);
+                        final elements = _selectedElements;
+                        final allLocked =
+                            elements.every((e) => e.locked);
+                        final results = <ToolResult>[
+                          for (final e in elements)
+                            UpdateElementResult(
+                                e.copyWith(locked: !allLocked)),
+                        ];
+                        if (!allLocked) {
+                          results.add(SetSelectionResult({}));
+                        }
+                        _applyResult(CompoundResult(results));
+                      }
+                    : null,
+                tooltip: 'Lock/Unlock (Ctrl+Shift+L)',
+              ),
               const SizedBox(width: 8),
             ],
           ),
