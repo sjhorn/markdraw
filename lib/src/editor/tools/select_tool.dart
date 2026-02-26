@@ -124,7 +124,7 @@ class SelectTool implements Tool {
       }
     }
 
-    // 3. Element body hit-test
+    // 3. Element body hit-test (getElementAtPoint already skips locked)
     _hitElement = context.scene.getElementAtPoint(point);
     return null;
   }
@@ -357,6 +357,8 @@ class SelectTool implements Tool {
 
     final selected = <ElementId>{};
     for (final e in context.scene.activeElements) {
+      // Skip locked elements
+      if (e.locked) continue;
       // Skip bound text — users interact with the parent shape
       if (e is TextElement && e.containerId != null) continue;
       final eBounds = Bounds.fromLTWH(e.x, e.y, e.width, e.height);
@@ -987,15 +989,18 @@ class SelectTool implements Tool {
     // Delete/Backspace
     if (key == 'Delete' || key == 'Backspace') {
       if (selectedElements.isEmpty) return null;
+      final deletable =
+          selectedElements.where((e) => !e.locked).toList();
+      if (deletable.isEmpty) return null;
       final results = <ToolResult>[
-        for (final e in selectedElements) RemoveElementResult(e.id),
+        for (final e in deletable) RemoveElementResult(e.id),
         SetSelectionResult({}),
       ];
       final deletedIds =
-          selectedElements.map((e) => e.id).toSet();
+          deletable.map((e) => e.id).toSet();
 
       // Cascade: delete bound text children, and clean parent boundElements
-      for (final elem in selectedElements) {
+      for (final elem in deletable) {
         // If this is a container/arrow, delete its bound text
         final boundText = context.scene.findBoundText(elem.id);
         if (boundText != null && !deletedIds.contains(boundText.id)) {
@@ -1020,7 +1025,7 @@ class SelectTool implements Tool {
       }
 
       // Release children of deleted frames
-      for (final elem in selectedElements) {
+      for (final elem in deletable) {
         if (elem is FrameElement) {
           final released =
               FrameUtils.releaseFrameChildren(context.scene, elem.id);
@@ -1033,7 +1038,7 @@ class SelectTool implements Tool {
       }
 
       // Clean up orphaned image files
-      for (final elem in selectedElements) {
+      for (final elem in deletable) {
         if (elem is ImageElement) {
           final fileId = elem.fileId;
           // Check if any other active element still references this fileId
@@ -1050,7 +1055,7 @@ class SelectTool implements Tool {
 
       // Clear bindings on arrows that were bound to deleted elements
       final seen = <ElementId>{};
-      for (final elem in selectedElements) {
+      for (final elem in deletable) {
         final arrows = BindingUtils.findBoundArrows(context.scene, elem.id);
         for (final arrow in arrows) {
           if (deletedIds.contains(arrow.id)) continue;
@@ -1106,9 +1111,25 @@ class SelectTool implements Tool {
       return CompoundResult(results);
     }
 
-    // Ctrl+A: Select all (skip bound text)
+    // Ctrl+Shift+L: Toggle lock
+    if (ctrl && shift && (key == 'l' || key == 'L')) {
+      if (selectedElements.isEmpty) return null;
+      final allLocked = selectedElements.every((e) => e.locked);
+      final results = <ToolResult>[
+        for (final e in selectedElements)
+          UpdateElementResult(e.copyWith(locked: !allLocked)),
+      ];
+      // Locking clears selection; unlocking keeps it
+      if (!allLocked) {
+        results.add(SetSelectionResult({}));
+      }
+      return CompoundResult(results);
+    }
+
+    // Ctrl+A: Select all (skip bound text and locked)
     if (ctrl && (key == 'a' || key == 'A')) {
       final allIds = context.scene.activeElements
+          .where((e) => !e.locked)
           .where((e) => e is! TextElement || e.containerId == null)
           .map((e) => e.id)
           .toSet();
@@ -1127,12 +1148,15 @@ class SelectTool implements Tool {
       return _pasteElements(context.clipboard, context: context);
     }
 
-    // Ctrl+X: Cut
+    // Ctrl+X: Cut (copy all, remove only unlocked)
     if (ctrl && (key == 'x' || key == 'X')) {
       if (selectedElements.isEmpty) return null;
+      final cuttable =
+          selectedElements.where((e) => !e.locked).toList();
+      if (cuttable.isEmpty) return null;
       final results = <ToolResult>[
-        SetClipboardResult(List.of(selectedElements)),
-        for (final e in selectedElements) RemoveElementResult(e.id),
+        SetClipboardResult(List.of(cuttable)),
+        for (final e in cuttable) RemoveElementResult(e.id),
         SetSelectionResult({}),
       ];
       return CompoundResult(results);
@@ -1143,6 +1167,7 @@ class SelectTool implements Tool {
     if (key == 'ArrowLeft' || key == 'ArrowRight' ||
         key == 'ArrowUp' || key == 'ArrowDown') {
       if (selectedElements.isEmpty) return null;
+      if (selectedElements.any((e) => e.locked)) return null;
       final dx = key == 'ArrowLeft' ? -nudge : key == 'ArrowRight' ? nudge : 0.0;
       final dy = key == 'ArrowUp' ? -nudge : key == 'ArrowDown' ? nudge : 0.0;
       return _nudgeElements(selectedElements, dx, dy, context);

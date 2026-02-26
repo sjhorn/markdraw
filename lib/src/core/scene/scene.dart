@@ -121,6 +121,8 @@ class Scene {
     // Iterate in reverse to find topmost (highest index) first.
     for (var i = ordered.length - 1; i >= 0; i--) {
       final e = ordered[i];
+      // Skip locked elements — they are invisible to hit-testing
+      if (e.locked) continue;
       // Skip bound text — users interact with the parent shape
       if (e is TextElement && e.containerId != null) continue;
       final bounds = Bounds.fromLTWH(e.x, e.y, e.width, e.height);
