@@ -13,11 +13,13 @@ class SelectionOverlay {
   final Bounds bounds;
   final List<Handle> handles;
   final double angle;
+  final bool isLocked;
 
   const SelectionOverlay({
     required this.bounds,
     required this.handles,
     this.angle = 0.0,
+    this.isLocked = false,
   });
 
   /// Creates a [SelectionOverlay] from a list of selected elements.
@@ -40,11 +42,13 @@ class SelectionOverlay {
     }
 
     final angle = elements.length == 1 ? elements.first.angle : 0.0;
+    final isLocked = elements.every((e) => e.locked);
 
     return SelectionOverlay(
       bounds: union,
       handles: computeHandles(union),
       angle: angle,
+      isLocked: isLocked,
     );
   }
 
@@ -79,10 +83,12 @@ class SelectionOverlay {
       other is SelectionOverlay &&
           bounds == other.bounds &&
           angle == other.angle &&
+          isLocked == other.isLocked &&
           listEquals(handles, other.handles);
 
   @override
-  int get hashCode => Object.hash(bounds, angle, Object.hashAll(handles));
+  int get hashCode =>
+      Object.hash(bounds, angle, isLocked, Object.hashAll(handles));
 
   @override
   String toString() => 'SelectionOverlay($bounds, angle=$angle)';

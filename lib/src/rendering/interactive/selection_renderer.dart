@@ -24,6 +24,7 @@ class SelectionRenderer {
   static const _marqueeFillColor = Color(0x114A90D9);
   static const _snapLineColor = Color(0xFFE03131);
   static const _snapLineStrokeWidth = 1.0;
+  static const _lockedSelectionColor = Color(0xFFCED4DA);
   static const _creationPreviewColor = Color(0xFF4A90D9);
   static const _creationPreviewStrokeWidth = 1.5;
 
@@ -34,6 +35,23 @@ class SelectionRenderer {
   static void drawSelectionBox(Canvas canvas, Bounds bounds) {
     final paint = Paint()
       ..color = _selectionColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = _selectionStrokeWidth;
+
+    final rect = Rect.fromLTWH(
+      bounds.left,
+      bounds.top,
+      bounds.size.width,
+      bounds.size.height,
+    );
+
+    _drawDashedRect(canvas, rect, paint);
+  }
+
+  /// Draws a gray dashed selection bounding box for locked elements.
+  static void drawLockedSelectionBox(Canvas canvas, Bounds bounds) {
+    final paint = Paint()
+      ..color = _lockedSelectionColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = _selectionStrokeWidth;
 

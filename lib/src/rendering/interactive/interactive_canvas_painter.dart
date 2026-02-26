@@ -65,22 +65,26 @@ class InteractiveCanvasPainter extends CustomPainter {
         canvas.translate(-center.x, -center.y);
       }
 
-      SelectionRenderer.drawSelectionBox(canvas, selection!.bounds);
-      SelectionRenderer.drawHandles(canvas, selection!.handles);
+      if (selection!.isLocked) {
+        SelectionRenderer.drawLockedSelectionBox(canvas, selection!.bounds);
+      } else {
+        SelectionRenderer.drawSelectionBox(canvas, selection!.bounds);
+        SelectionRenderer.drawHandles(canvas, selection!.handles);
 
-      // Draw rotation handle
-      final rotationHandle = selection!.handles
-          .where((h) => h.type == HandleType.rotation)
-          .firstOrNull;
-      final topCenterHandle = selection!.handles
-          .where((h) => h.type == HandleType.topCenter)
-          .firstOrNull;
-      if (rotationHandle != null && topCenterHandle != null) {
-        SelectionRenderer.drawRotationHandle(
-          canvas,
-          rotationHandle.position,
-          topCenterHandle.position,
-        );
+        // Draw rotation handle
+        final rotationHandle = selection!.handles
+            .where((h) => h.type == HandleType.rotation)
+            .firstOrNull;
+        final topCenterHandle = selection!.handles
+            .where((h) => h.type == HandleType.topCenter)
+            .firstOrNull;
+        if (rotationHandle != null && topCenterHandle != null) {
+          SelectionRenderer.drawRotationHandle(
+            canvas,
+            rotationHandle.position,
+            topCenterHandle.position,
+          );
+        }
       }
 
       if (hasAngle) {
