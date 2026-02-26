@@ -1260,6 +1260,8 @@ class _CanvasPageState extends State<_CanvasPage> {
               const SizedBox(height: 8),
               _buildElbowedToggle(style.elbowed),
             ],
+            const SizedBox(height: 12),
+            _buildLockToggle(style.locked),
             if (style.hasText) ...[
               const SizedBox(height: 12),
               _buildSectionLabel('Font size'),
@@ -1424,6 +1426,39 @@ class _CanvasPageState extends State<_CanvasPage> {
           onChanged: (on) {
             _historyManager.push(_editorState.scene);
             _applyStyleChange(ElementStyle(hasArrows: true, elbowed: on));
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLockToggle(bool? current) {
+    return Row(
+      children: [
+        Icon(
+          current == true ? Icons.lock : Icons.lock_open,
+          size: 16,
+          color: Colors.grey.shade700,
+        ),
+        const SizedBox(width: 4),
+        const Text('Locked', style: TextStyle(fontSize: 12)),
+        const Spacer(),
+        Switch(
+          value: current ?? false,
+          onChanged: (on) {
+            _historyManager.push(_editorState.scene);
+            final elements = _selectedElements;
+            if (elements.isEmpty) return;
+            final results = <ToolResult>[
+              for (final e in elements)
+                UpdateElementResult(e.copyWith(locked: on)),
+            ];
+            if (on) {
+              results.add(SetSelectionResult({}));
+            }
+            _applyResult(
+              results.length == 1 ? results.first : CompoundResult(results),
+            );
           },
         ),
       ],
