@@ -77,8 +77,12 @@ class SelectTool implements Tool {
 
     final selectedElements = _getSelectedElements(context);
 
+    // Skip handle hit-tests if all selected elements are locked
+    final allLocked = selectedElements.isNotEmpty &&
+        selectedElements.every((e) => e.locked);
+
     // 1. Point/segment handle hit-test (line/arrow only, single selection)
-    if (selectedElements.length == 1) {
+    if (selectedElements.length == 1 && !allLocked) {
       final elem = selectedElements.first;
 
       // For elbowed arrows, check segment hit before point hit
@@ -109,7 +113,7 @@ class SelectTool implements Tool {
     }
 
     // 2. Resize/rotation handle hit-test
-    if (selectedElements.isNotEmpty) {
+    if (selectedElements.isNotEmpty && !allLocked) {
       final handleType = _hitTestHandle(point, selectedElements);
       if (handleType != null) {
         if (handleType == HandleType.rotation) {
@@ -124,7 +128,7 @@ class SelectTool implements Tool {
       }
     }
 
-    // 3. Element body hit-test (getElementAtPoint already skips locked)
+    // 3. Element body hit-test
     _hitElement = context.scene.getElementAtPoint(point);
     return null;
   }
@@ -146,6 +150,10 @@ class SelectTool implements Tool {
       if (_dragMode == _DragMode.none) {
         if (_hitElement == null) {
           _dragMode = _DragMode.marquee;
+        } else if (_hitElement!.locked) {
+          // Locked elements can be selected but not moved
+          _dragMode = _DragMode.none;
+          _isDragging = false;
         } else {
           _dragMode = _DragMode.move;
           _captureStartStateForMove(context);
@@ -357,8 +365,6 @@ class SelectTool implements Tool {
 
     final selected = <ElementId>{};
     for (final e in context.scene.activeElements) {
-      // Skip locked elements
-      if (e.locked) continue;
       // Skip bound text — users interact with the parent shape
       if (e is TextElement && e.containerId != null) continue;
       final eBounds = Bounds.fromLTWH(e.x, e.y, e.width, e.height);
@@ -1126,10 +1132,9 @@ class SelectTool implements Tool {
       return CompoundResult(results);
     }
 
-    // Ctrl+A: Select all (skip bound text and locked)
+    // Ctrl+A: Select all (skip bound text)
     if (ctrl && (key == 'a' || key == 'A')) {
       final allIds = context.scene.activeElements
-          .where((e) => !e.locked)
           .where((e) => e is! TextElement || e.containerId == null)
           .map((e) => e.id)
           .toSet();

@@ -51,29 +51,15 @@ void main() {
   }
 
   group('SelectTool — locked element selection', () {
-    test('click on locked element does not select it', () {
+    test('click on locked element selects it', () {
       final ctx = contextWith(elements: [lockedRect]);
       tool.onPointerDown(const Point(50, 30), ctx);
       final result = tool.onPointerUp(const Point(50, 30), ctx);
       expect(result, isA<SetSelectionResult>());
-      expect((result! as SetSelectionResult).selectedIds, isEmpty);
+      expect((result! as SetSelectionResult).selectedIds, {lockedRect.id});
     });
 
-    test('click on unlocked element below locked selects unlocked', () {
-      // Both occupy the same space; unlocked added first (lower z-order),
-      // locked added second (higher z-order). Click should skip locked
-      // and select unlocked.
-      final ctx = contextWith(elements: [unlockedRect, lockedRect]);
-      tool.onPointerDown(const Point(50, 30), ctx);
-      final result = tool.onPointerUp(const Point(50, 30), ctx);
-      expect(result, isA<SetSelectionResult>());
-      expect(
-        (result! as SetSelectionResult).selectedIds,
-        {unlockedRect.id},
-      );
-    });
-
-    test('marquee around locked + unlocked selects only unlocked', () {
+    test('marquee includes locked elements', () {
       final ctx = contextWith(elements: [lockedRect, unlockedRect2]);
       // Marquee that covers both elements
       tool.onPointerDown(const Point(0, 0), ctx);
@@ -82,39 +68,45 @@ void main() {
       expect(result, isA<SetSelectionResult>());
       final ids = (result! as SetSelectionResult).selectedIds;
       expect(ids, contains(unlockedRect2.id));
-      expect(ids, isNot(contains(lockedRect.id)));
+      expect(ids, contains(lockedRect.id));
     });
 
-    test('Ctrl+A excludes locked elements', () {
+    test('Ctrl+A includes locked elements', () {
       final ctx = contextWith(elements: [lockedRect, unlockedRect2]);
       final result = tool.onKeyEvent('a', ctrl: true, context: ctx);
       expect(result, isA<SetSelectionResult>());
       final ids = (result! as SetSelectionResult).selectedIds;
       expect(ids, contains(unlockedRect2.id));
-      expect(ids, isNot(contains(lockedRect.id)));
+      expect(ids, contains(lockedRect.id));
     });
 
-    test('shift+click on locked element does not toggle', () {
+    test('shift+click on locked element toggles selection', () {
       final ctx = contextWith(
         elements: [lockedRect, unlockedRect2],
         selectedIds: {unlockedRect2.id},
       );
-      // Shift+click on locked element — selection should not change
+      // Shift+click on locked element — should add it to selection
       tool.onPointerDown(const Point(50, 30), ctx, shift: true);
       final result = tool.onPointerUp(const Point(50, 30), ctx);
-      // Should clear selection (click on empty, since locked is skipped)
       expect(result, isA<SetSelectionResult>());
-      expect((result! as SetSelectionResult).selectedIds, isEmpty);
+      final ids = (result! as SetSelectionResult).selectedIds;
+      expect(ids, contains(lockedRect.id));
+      expect(ids, contains(unlockedRect2.id));
     });
 
-    test('dragging on canvas starting over locked element starts marquee', () {
-      final ctx = contextWith(elements: [lockedRect]);
+    test('dragging locked element does not move it', () {
+      final ctx = contextWith(
+        elements: [lockedRect],
+        selectedIds: {lockedRect.id},
+      );
       tool.onPointerDown(const Point(50, 30), ctx);
       // Drag far enough to trigger drag mode
-      tool.onPointerMove(const Point(200, 200), ctx);
+      final moveResult = tool.onPointerMove(const Point(200, 200), ctx);
+      // Should return null (no move applied)
+      expect(moveResult, isNull);
+      // Should NOT have a marquee overlay either
       final overlay = tool.overlay;
-      // Should be a marquee, not a move
-      expect(overlay?.marqueeRect, isNotNull);
+      expect(overlay?.marqueeRect, isNull);
     });
   });
 
@@ -166,7 +158,7 @@ void main() {
       // Only unlocked should be removed
       expect(removeResults.length, 1);
       expect(removeResults.first.id, unlockedRect2.id);
-      // Clipboard should contain all selected (both locked and unlocked)
+      // Clipboard should contain only unlocked
       final clipResults = compound.results
           .whereType<SetClipboardResult>()
           .toList();
@@ -192,6 +184,21 @@ void main() {
           tool.onKeyEvent('ArrowRight', ctrl: false, context: ctx);
       expect(result, isNull);
     });
+
+    test('resize handles not hit-testable on locked elements', () {
+      // Select a locked element, then click where a handle would be
+      final ctx = contextWith(
+        elements: [lockedRect],
+        selectedIds: {lockedRect.id},
+      );
+      // Top-left corner handle position
+      tool.onPointerDown(const Point(10, 10), ctx);
+      // Drag to resize
+      tool.onPointerMove(const Point(5, 5), ctx);
+      final result = tool.onPointerUp(const Point(5, 5), ctx);
+      // Should select the element (click), NOT resize
+      expect(result, isA<SetSelectionResult>());
+    });
   });
 
   group('SelectTool — Ctrl+Shift+L lock toggle', () {
@@ -204,7 +211,6 @@ void main() {
           tool.onKeyEvent('l', ctrl: true, shift: true, context: ctx);
       expect(result, isA<CompoundResult>());
       final compound = result! as CompoundResult;
-      // Should have UpdateElementResults setting locked=true
       final updates = compound.results
           .whereType<UpdateElementResult>()
           .toList();
@@ -257,18 +263,7 @@ void main() {
           tool.onKeyEvent('l', ctrl: true, shift: true, context: ctx);
       expect(result, isA<CompoundResult>());
       final compound = result! as CompoundResult;
-      // Mixed: anyLocked = true, so toggle to unlocked (anyLocked → !anyLocked = false → unlock)
-      // Wait — plan says: mixed → toggles all to locked, clears selection
-      // But the logic is: anyLocked = true → !anyLocked = false → set locked: false (unlock)
-      // Let me re-read the plan: "mixed locked/unlocked → toggles all to locked"
-      // That means if any are unlocked, lock all. So the logic should be:
-      // anyUnlocked → lock all. Or: allLocked → unlock, else lock.
-      // The plan's code: anyLocked = selectedElements.any((e) => e.locked)
-      //   locked: !anyLocked → if anyLocked is true, locked = false (unlock)
-      // That contradicts the test expectation. Let me check Excalidraw behavior:
-      // Excalidraw toggles based on "any unlocked → lock all, all locked → unlock"
-      // So the condition should be: anyUnlocked, not anyLocked.
-      // Let's match the test expectation: mixed → lock all
+      // Mixed: not allLocked → lock all, clear selection
       final updates = compound.results
           .whereType<UpdateElementResult>()
           .toList();
@@ -312,20 +307,12 @@ void main() {
   });
 
   group('Scene.getElementAtPoint — locked elements', () {
-    test('skips locked elements', () {
+    test('returns locked element (selectable)', () {
       var scene = Scene();
-      scene = scene.addElement(lockedRect);
-      final hit = scene.getElementAtPoint(const Point(50, 30));
-      expect(hit, isNull);
-    });
-
-    test('returns unlocked element below locked', () {
-      var scene = Scene();
-      scene = scene.addElement(unlockedRect);
       scene = scene.addElement(lockedRect);
       final hit = scene.getElementAtPoint(const Point(50, 30));
       expect(hit, isNotNull);
-      expect(hit!.id, unlockedRect.id);
+      expect(hit!.id, lockedRect.id);
     });
   });
 }
