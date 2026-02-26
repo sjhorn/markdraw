@@ -532,10 +532,18 @@ markdraw/
 > **TDD checkpoint**: Full library support with immutable models, dual-format codec, create/instantiate with ID remapping, example app panel. ~1468 tests total. Zero analyzer issues.
 
 ### 6.6 Locking
-- [ ] Lock element to prevent editing
-- [ ] Visual indicator (lock icon)
-- [ ] `.markdraw` syntax: `rect "Fixed" ... locked`
-- [ ] **Tests**: Locked elements resist selection, move, delete
+- [x] Locked elements skip hit-testing, click selection, marquee, and Ctrl+A
+- [x] Locked elements block delete, cut, and nudge transforms
+- [x] Copy and duplicate allowed — duplicates retain lock status
+- [x] Ctrl+Shift+L toggle: lock (clears selection) / unlock (keeps selection)
+- [x] `PropertyPanelState` — `locked` field in `ElementStyle` (null if mixed)
+- [x] Gray dashed selection box for locked elements (no resize/rotation handles)
+- [x] Lock toggle in example app property panel
+- [x] `.markdraw` serialization: `locked` flag *(already implemented in Phase 0)*
+- [x] Excalidraw JSON: `locked` field *(already implemented in Phase 1.3)*
+- [x] **Tests**: ~25 new tests — SelectTool locking (19), PropertyPanelState (6)
+
+> **TDD checkpoint**: Element locking interaction logic complete. Locked elements invisible to selection/transforms, Ctrl+Shift+L toggle, gray selection indicator, property panel control. ~1493 tests total. Zero analyzer issues. ✅
 
 ---
 
@@ -652,6 +660,6 @@ For every feature:
 | **M3: Edit (80%)** | 3 | Full drawing interaction | Create, select, move, resize, connect, undo |
 | **M4: Text** | 4 | Inline text editing + bound text | Text in shapes, arrow labels |
 | **M5: Export** | 5 | PNG, SVG, clipboard, Excalidraw interop | 1112 tests, round-trip verified |
-| **M6: Advanced (100%)** | 6 | Groups, frames, images, elbow arrows | 6.1 grouping (1185), 6.2 frames (1260), 6.3 images (1325), 6.4 elbow arrows (~1407 tests) |
+| **M6: Advanced (100%)** | 6 | Groups, frames, images, elbow arrows, libraries, locking | 6.1 grouping (1185), 6.2 frames (1260), 6.3 images (1325), 6.4 elbow arrows (1407), 6.5 libraries (1468), 6.6 locking (1493) |
 | **M7: Ship** | 7 | All platforms polished | App store ready |
 | **M8: Grow** | 8 | Collaboration, AI, plugins | Post-launch iteration |
