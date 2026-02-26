@@ -1125,10 +1125,6 @@ class SelectTool implements Tool {
         for (final e in selectedElements)
           UpdateElementResult(e.copyWith(locked: !allLocked)),
       ];
-      // Locking clears selection; unlocking keeps it
-      if (!allLocked) {
-        results.add(SetSelectionResult({}));
-      }
       return CompoundResult(results);
     }
 

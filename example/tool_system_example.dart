@@ -66,6 +66,7 @@ class _CanvasPageState extends State<_CanvasPage> {
   String? _currentFilePath;
   List<LibraryItem> _libraryItems = [];
   bool _showLibraryPanel = false;
+  bool _toolLocked = false;
 
   // Drag coalescing: capture scene before drag, push once on pointer up
   Scene? _sceneBeforeDrag;
@@ -980,32 +981,21 @@ class _CanvasPageState extends State<_CanvasPage> {
               const VerticalDivider(width: 16, indent: 12, endIndent: 12),
               IconButton(
                 icon: Icon(
-                  _selectedElements.any((e) => e.locked)
-                      ? Icons.lock
-                      : Icons.lock_open,
-                  color: _selectedElements.isNotEmpty &&
-                          _selectedElements.every((e) => e.locked)
-                      ? Colors.orange
-                      : null,
+                  _toolLocked ? Icons.lock : Icons.lock_open,
+                  color: _toolLocked ? Colors.blue : null,
                 ),
-                onPressed: _selectedElements.isNotEmpty
-                    ? () {
-                        _historyManager.push(_editorState.scene);
-                        final elements = _selectedElements;
-                        final allLocked =
-                            elements.every((e) => e.locked);
-                        final results = <ToolResult>[
-                          for (final e in elements)
-                            UpdateElementResult(
-                                e.copyWith(locked: !allLocked)),
-                        ];
-                        if (!allLocked) {
-                          results.add(SetSelectionResult({}));
-                        }
-                        _applyResult(CompoundResult(results));
-                      }
-                    : null,
-                tooltip: 'Lock/Unlock (Ctrl+Shift+L)',
+                onPressed: () {
+                  setState(() {
+                    _toolLocked = !_toolLocked;
+                    _editorState = _editorState.copyWith(
+                      toolLocked: _toolLocked,
+                    );
+                    if (!_toolLocked) {
+                      _switchTool(ToolType.select);
+                    }
+                  });
+                },
+                tooltip: 'Keep tool active (Q)',
               ),
               const SizedBox(width: 8),
             ],
@@ -1242,6 +1232,7 @@ class _CanvasPageState extends State<_CanvasPage> {
     if (elements.isEmpty) return const SizedBox.shrink();
 
     final style = PropertyPanelState.fromElements(elements);
+    final isLocked = style.locked == true;
 
     return SizedBox(
       width: 240,
@@ -1253,56 +1244,68 @@ class _CanvasPageState extends State<_CanvasPage> {
         child: ListView(
           padding: const EdgeInsets.all(12),
           children: [
-            _buildSectionLabel('Stroke'),
-            _buildColorRow(
-              selected: style.strokeColor,
-              onSelect: (c) => _applyStyleChange(ElementStyle(strokeColor: c)),
-            ),
-            const SizedBox(height: 8),
-            _buildSectionLabel('Background'),
-            _buildColorRow(
-              selected: style.backgroundColor,
-              includeTransparent: true,
-              onSelect: (c) =>
-                  _applyStyleChange(ElementStyle(backgroundColor: c)),
-            ),
-            const SizedBox(height: 8),
-            _buildSectionLabel('Stroke width'),
-            _buildStrokeWidthRow(style.strokeWidth),
-            const SizedBox(height: 8),
-            _buildSectionLabel('Stroke style'),
-            _buildStrokeStyleRow(style.strokeStyle),
-            const SizedBox(height: 8),
-            _buildSectionLabel('Fill style'),
-            _buildFillStyleRow(style.fillStyle),
-            const SizedBox(height: 8),
-            _buildSectionLabel('Roughness'),
-            _buildRoughnessSlider(style.roughness),
-            const SizedBox(height: 8),
-            _buildSectionLabel('Opacity'),
-            _buildOpacitySlider(style.opacity),
-            if (style.hasRoundness) ...[
-              const SizedBox(height: 8),
-              _buildSectionLabel('Roundness'),
-              _buildRoundnessToggle(style.roundness),
-            ],
-            if (style.hasArrows) ...[
-              const SizedBox(height: 8),
-              _buildElbowedToggle(style.elbowed),
-            ],
-            const SizedBox(height: 12),
             _buildLockToggle(style.locked),
-            if (style.hasText) ...[
-              const SizedBox(height: 12),
-              _buildSectionLabel('Font size'),
-              _buildFontSizeRow(style.fontSize),
-              const SizedBox(height: 8),
-              _buildSectionLabel('Font family'),
-              _buildFontFamilyRow(style.fontFamily),
-              const SizedBox(height: 8),
-              _buildSectionLabel('Text align'),
-              _buildTextAlignRow(style.textAlign),
-            ],
+            const SizedBox(height: 12),
+            IgnorePointer(
+              ignoring: isLocked,
+              child: Opacity(
+                opacity: isLocked ? 0.4 : 1.0,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionLabel('Stroke'),
+                    _buildColorRow(
+                      selected: style.strokeColor,
+                      onSelect: (c) =>
+                          _applyStyleChange(ElementStyle(strokeColor: c)),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildSectionLabel('Background'),
+                    _buildColorRow(
+                      selected: style.backgroundColor,
+                      includeTransparent: true,
+                      onSelect: (c) =>
+                          _applyStyleChange(ElementStyle(backgroundColor: c)),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildSectionLabel('Stroke width'),
+                    _buildStrokeWidthRow(style.strokeWidth),
+                    const SizedBox(height: 8),
+                    _buildSectionLabel('Stroke style'),
+                    _buildStrokeStyleRow(style.strokeStyle),
+                    const SizedBox(height: 8),
+                    _buildSectionLabel('Fill style'),
+                    _buildFillStyleRow(style.fillStyle),
+                    const SizedBox(height: 8),
+                    _buildSectionLabel('Roughness'),
+                    _buildRoughnessSlider(style.roughness),
+                    const SizedBox(height: 8),
+                    _buildSectionLabel('Opacity'),
+                    _buildOpacitySlider(style.opacity),
+                    if (style.hasRoundness) ...[
+                      const SizedBox(height: 8),
+                      _buildSectionLabel('Roundness'),
+                      _buildRoundnessToggle(style.roundness),
+                    ],
+                    if (style.hasArrows) ...[
+                      const SizedBox(height: 8),
+                      _buildElbowedToggle(style.elbowed),
+                    ],
+                    if (style.hasText) ...[
+                      const SizedBox(height: 12),
+                      _buildSectionLabel('Font size'),
+                      _buildFontSizeRow(style.fontSize),
+                      const SizedBox(height: 8),
+                      _buildSectionLabel('Font family'),
+                      _buildFontFamilyRow(style.fontFamily),
+                      const SizedBox(height: 8),
+                      _buildSectionLabel('Text align'),
+                      _buildTextAlignRow(style.textAlign),
+                    ],
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -1483,9 +1486,6 @@ class _CanvasPageState extends State<_CanvasPage> {
               for (final e in elements)
                 UpdateElementResult(e.copyWith(locked: on)),
             ];
-            if (on) {
-              results.add(SetSelectionResult({}));
-            }
             _applyResult(
               results.length == 1 ? results.first : CompoundResult(results),
             );
@@ -1810,6 +1810,18 @@ class _CanvasPageState extends State<_CanvasPage> {
     }
     if (ctrl && key == LogicalKeyboardKey.keyO) {
       _openFile();
+      return;
+    }
+
+    // Tool lock toggle (Q, no modifiers)
+    if (!ctrl && !shift && key == LogicalKeyboardKey.keyQ) {
+      setState(() {
+        _toolLocked = !_toolLocked;
+        _editorState = _editorState.copyWith(toolLocked: _toolLocked);
+        if (!_toolLocked) {
+          _switchTool(ToolType.select);
+        }
+      });
       return;
     }
 

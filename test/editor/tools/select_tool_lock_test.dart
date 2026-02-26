@@ -202,7 +202,7 @@ void main() {
   });
 
   group('SelectTool — Ctrl+Shift+L lock toggle', () {
-    test('Ctrl+Shift+L locks selected elements and clears selection', () {
+    test('Ctrl+Shift+L locks selected elements and keeps selection', () {
       final ctx = contextWith(
         elements: [unlockedRect, unlockedRect2],
         selectedIds: {unlockedRect.id, unlockedRect2.id},
@@ -218,12 +218,11 @@ void main() {
       for (final u in updates) {
         expect(u.element.locked, isTrue);
       }
-      // Should clear selection
+      // Should keep selection (locked overlay shown)
       final selectionResults = compound.results
           .whereType<SetSelectionResult>()
           .toList();
-      expect(selectionResults.length, 1);
-      expect(selectionResults.first.selectedIds, isEmpty);
+      expect(selectionResults, isEmpty);
     });
 
     test('Ctrl+Shift+L unlocks locked elements and keeps selection', () {
@@ -254,7 +253,7 @@ void main() {
       expect(result, isNull);
     });
 
-    test('Ctrl+Shift+L with mixed locks all and clears selection', () {
+    test('Ctrl+Shift+L with mixed locks all and keeps selection', () {
       final ctx = contextWith(
         elements: [lockedRect, unlockedRect2],
         selectedIds: {lockedRect.id, unlockedRect2.id},
@@ -263,7 +262,7 @@ void main() {
           tool.onKeyEvent('l', ctrl: true, shift: true, context: ctx);
       expect(result, isA<CompoundResult>());
       final compound = result! as CompoundResult;
-      // Mixed: not allLocked → lock all, clear selection
+      // Mixed: not allLocked → lock all, keep selection
       final updates = compound.results
           .whereType<UpdateElementResult>()
           .toList();
@@ -274,8 +273,7 @@ void main() {
       final selectionResults = compound.results
           .whereType<SetSelectionResult>()
           .toList();
-      expect(selectionResults.length, 1);
-      expect(selectionResults.first.selectedIds, isEmpty);
+      expect(selectionResults, isEmpty);
     });
   });
 

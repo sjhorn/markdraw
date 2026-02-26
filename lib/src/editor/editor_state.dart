@@ -14,6 +14,7 @@ class EditorState {
   final Set<ElementId> selectedIds;
   final ToolType activeToolType;
   final List<Element> clipboard;
+  final bool toolLocked;
 
   EditorState({
     required this.scene,
@@ -21,6 +22,7 @@ class EditorState {
     required this.selectedIds,
     required this.activeToolType,
     this.clipboard = const [],
+    this.toolLocked = false,
   });
 
   /// Applies a [ToolResult] to produce a new [EditorState].
@@ -44,9 +46,10 @@ class EditorState {
       UpdateViewportResult(:final viewport) => copyWith(
           viewport: viewport,
         ),
-      SwitchToolResult(:final toolType) => copyWith(
-          activeToolType: toolType,
-        ),
+      SwitchToolResult(:final toolType) => toolLocked &&
+              toolType == ToolType.select
+          ? this
+          : copyWith(activeToolType: toolType),
       SetClipboardResult(:final elements) => copyWith(
           clipboard: elements,
         ),
@@ -68,6 +71,7 @@ class EditorState {
     Set<ElementId>? selectedIds,
     ToolType? activeToolType,
     List<Element>? clipboard,
+    bool? toolLocked,
   }) {
     return EditorState(
       scene: scene ?? this.scene,
@@ -75,6 +79,7 @@ class EditorState {
       selectedIds: selectedIds ?? this.selectedIds,
       activeToolType: activeToolType ?? this.activeToolType,
       clipboard: clipboard ?? this.clipboard,
+      toolLocked: toolLocked ?? this.toolLocked,
     );
   }
 }

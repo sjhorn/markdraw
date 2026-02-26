@@ -255,5 +255,39 @@ void main() {
       expect(newState.clipboard, hasLength(1));
       expect(newState.scene.elements.length, 1);
     });
+
+    group('toolLocked', () {
+      test('defaults to false', () {
+        expect(state.toolLocked, isFalse);
+      });
+
+      test('suppresses SwitchToolResult to select when toolLocked is true',
+          () {
+        state = state.copyWith(
+          activeToolType: ToolType.rectangle,
+          toolLocked: true,
+        );
+        final newState =
+            state.applyResult(SwitchToolResult(ToolType.select));
+        expect(newState.activeToolType, ToolType.rectangle);
+      });
+
+      test('allows SwitchToolResult to select when toolLocked is false', () {
+        state = state.copyWith(activeToolType: ToolType.rectangle);
+        final newState =
+            state.applyResult(SwitchToolResult(ToolType.select));
+        expect(newState.activeToolType, ToolType.select);
+      });
+
+      test('allows non-select SwitchToolResult when toolLocked is true', () {
+        state = state.copyWith(
+          activeToolType: ToolType.rectangle,
+          toolLocked: true,
+        );
+        final newState =
+            state.applyResult(SwitchToolResult(ToolType.hand));
+        expect(newState.activeToolType, ToolType.hand);
+      });
+    });
   });
 }
