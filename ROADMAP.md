@@ -260,6 +260,9 @@ markdraw/
 - [x] **Tests**: Verify handle positions, snap line calculations
 - [x] Point handles for line/arrow vertex editing
 - [x] ArrowElement.copyWithLine preserves arrow type
+- [x] Hide bounding box for 2-point lines/arrows — only show point handles (matches Excalidraw)
+- [x] Hide bounding box for elbow arrows
+- [x] `SelectionOverlay.showBoundingBox` flag controls bounding box and resize/rotation handle visibility
 
 > **TDD checkpoint**: InteractiveCanvasPainter renders selection boxes, handles (resize + rotation + point), hover highlights, marquee, snap lines, creation previews. Handles follow rotation. Interactive example with move, resize, rotate, point drag. ~50 new tests, 557 total. Zero analyzer issues. ✅
 
@@ -289,8 +292,8 @@ markdraw/
 - [x] `RectangleTool` — drag to create rectangle
 - [x] `EllipseTool` — drag to create ellipse
 - [x] `DiamondTool` — drag to create diamond
-- [x] `LineTool` — click-to-add-point, double-click or Enter to finalize
-- [x] `ArrowTool` — like LineTool but creates ArrowElement with endArrowhead
+- [x] `LineTool` — click-to-add-point, double-click or Enter to finalize; drag-to-draw creates 2-point line in one gesture
+- [x] `ArrowTool` — like LineTool but creates ArrowElement with endArrowhead; drag-to-draw with binding support
 - [x] `FreedrawTool` — continuous path recording with simulatePressure
 - [x] `TextTool` — click to place text element
 - [x] `HandTool` (pan) — drag to scroll viewport via screen-space delta
@@ -305,7 +308,7 @@ markdraw/
 - [x] Single-element resize via 8 directional handles with minimum 10×10 constraint
 - [x] Shift+resize for aspect ratio lock
 - [x] Single-element rotation with Shift for 15° snap increments
-- [x] Line/arrow point dragging with bounding box recalculation
+- [x] Line/arrow point dragging with bounding box recalculation (rotation-aware normalization)
 - [x] Multi-element move — same delta applied to all selected
 - [x] Multi-element resize — proportional scaling from union bounds
 - [x] Multi-element rotate — each element rotates around union center
@@ -543,7 +546,7 @@ markdraw/
 - [x] Excalidraw JSON: `locked` field *(already implemented in Phase 1.3)*
 - [x] **Tests**: ~25 new tests — SelectTool locking (19), PropertyPanelState (6)
 
-> **TDD checkpoint**: Element locking interaction logic complete. Locked elements invisible to selection/transforms, Ctrl+Shift+L toggle, gray selection indicator, property panel control. ~1493 tests total. Zero analyzer issues. ✅
+> **TDD checkpoint**: Element locking interaction logic complete. Locked elements invisible to selection/transforms, Ctrl+Shift+L toggle, gray selection indicator, property panel control. Drag-to-draw for Line/Arrow tools. Rotated point handle rendering, hit-testing, and drag fixes. Hidden bounding box for 2-point lines/arrows. ~1515 tests total. Zero analyzer issues. ✅
 
 ---
 
@@ -552,10 +555,20 @@ markdraw/
 > Goal: Production quality on all platforms.
 
 ### 7.1 Responsive Layout
-- [ ] Adaptive toolbar (horizontal on desktop, bottom sheet on mobile)
-- [ ] Property panel as side panel (desktop) or bottom sheet (mobile)
-- [ ] Touch-optimized handles (larger touch targets on mobile)
-- [ ] Keyboard shortcut hints (desktop only)
+- [x] `InteractionMode` enum (pointer/touch) threaded through rendering and hit-testing
+- [x] Mode-aware handle sizes: 20px touch vs 8px pointer (SelectionRenderer)
+- [x] Mode-aware hit radii: 22px touch vs 8px pointer (SelectTool)
+- [x] Mode-aware selection padding: 12px touch vs 6px pointer (SelectionOverlay)
+- [x] InteractiveCanvasPainter passes mode to all draw calls
+- [x] ToolContext carries interactionMode (default pointer for backward compatibility)
+- [x] LayoutBuilder breakpoint at 600px (compact vs desktop)
+- [x] Compact: bottom toolbar with 48x48 touch targets (no shortcut badges)
+- [x] Compact: modal bottom sheet for menu, property panel, library
+- [x] Compact: properties button (tune icon) when elements selected
+- [x] Desktop: existing floating toolbar, side panels, keyboard shortcut hints
+- [x] **Tests**: ~43 new tests — InteractionMode sizes, hit radii, padding, painter, ToolContext backward compat
+
+> **TDD checkpoint**: InteractionMode enum with mode-aware rendering (handles, padding, hit radii). Responsive example app with LayoutBuilder breakpoint, compact bottom toolbar (48px touch targets), modal bottom sheets for properties/menu/library. ~1536 tests total. Zero analyzer issues. ✅
 
 ### 7.2 Performance
 - [ ] Element render caching (only re-render changed elements)
@@ -660,6 +673,6 @@ For every feature:
 | **M3: Edit (80%)** | 3 | Full drawing interaction | Create, select, move, resize, connect, undo |
 | **M4: Text** | 4 | Inline text editing + bound text | Text in shapes, arrow labels |
 | **M5: Export** | 5 | PNG, SVG, clipboard, Excalidraw interop | 1112 tests, round-trip verified |
-| **M6: Advanced (100%)** | 6 | Groups, frames, images, elbow arrows, libraries, locking | 6.1 grouping (1185), 6.2 frames (1260), 6.3 images (1325), 6.4 elbow arrows (1407), 6.5 libraries (1468), 6.6 locking (1493) |
-| **M7: Ship** | 7 | All platforms polished | App store ready |
+| **M6: Advanced (100%)** | 6 | Groups, frames, images, elbow arrows, libraries, locking | 6.1 grouping (1185), 6.2 frames (1260), 6.3 images (1325), 6.4 elbow arrows (1407), 6.5 libraries (1468), 6.6 locking (1515) |
+| **M7: Ship** | 7 | All platforms polished | 7.1 responsive layout (1536) |
 | **M8: Grow** | 8 | Collaboration, AI, plugins | Post-launch iteration |

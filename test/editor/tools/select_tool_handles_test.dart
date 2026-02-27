@@ -807,4 +807,82 @@ void main() {
       expect(vis1.y, closeTo(200, 1.0));
     });
   });
+
+  group('Touch mode hit radii', () {
+    ToolContext touchContextWith({
+      List<Element> elements = const [],
+      Set<ElementId> selectedIds = const {},
+    }) {
+      var scene = Scene();
+      for (final e in elements) {
+        scene = scene.addElement(e);
+      }
+      return ToolContext(
+        scene: scene,
+        viewport: const ViewportState(),
+        selectedIds: selectedIds,
+        interactionMode: InteractionMode.touch,
+      );
+    }
+
+    test('ToolContext defaults to pointer mode', () {
+      final ctx = contextWith(elements: [], selectedIds: {});
+      expect(ctx.interactionMode, InteractionMode.pointer);
+    });
+
+    test('ToolContext accepts touch mode', () {
+      final ctx = touchContextWith(elements: [], selectedIds: {});
+      expect(ctx.interactionMode, InteractionMode.touch);
+    });
+
+    test('touch mode: handle hit radius is larger (22px vs 8px)', () {
+      // In pointer mode, a click 15px from handle center misses (8px radius)
+      // In touch mode, it should hit (22px radius)
+      final touchCtx = touchContextWith(
+        elements: [rect1],
+        selectedIds: {rect1.id},
+      );
+
+      // bottomRight handle at (306, 206) in pointer mode.
+      // Click 15px away — should miss in pointer but hit in touch.
+      // Touch mode uses 12px padding, so handle is at (312, 212).
+      // Click at (312 + 15, 212) = (327, 212): within 22px radius.
+      tool.onPointerDown(const Point(327, 212), touchCtx);
+      final touchResult = tool.onPointerMove(const Point(347, 232), touchCtx);
+      expect(touchResult, isA<UpdateElementResult>());
+    });
+
+    test('touch mode: point handle hit radius is larger', () {
+      final touchCtx = touchContextWith(
+        elements: [line1],
+        selectedIds: {line1.id},
+      );
+      // Second point absolute position: (150, 150)
+      // Click 15px away — within 22px touch radius
+      tool.onPointerDown(const Point(165, 150), touchCtx);
+      final result = tool.onPointerMove(const Point(175, 160), touchCtx);
+      expect(result, isA<UpdateElementResult>());
+    });
+
+    test('pointer mode: 15px from handle does not hit', () {
+      final ctx = contextWith(
+        elements: [rect1],
+        selectedIds: {rect1.id},
+      );
+      // bottomRight handle at (306, 206) in pointer mode
+      // Click 15px away: at (321, 206) — outside 8px radius
+      tool.onPointerDown(const Point(321, 206), ctx);
+      // Should not start resize — should try to select or start marquee
+      final result = tool.onPointerMove(const Point(341, 226), ctx);
+      // In pointer mode, missing the handle means this is a move (element drag)
+      // or marquee, not a resize. The result would not produce a single
+      // UpdateElementResult with changed width/height.
+      if (result is UpdateElementResult) {
+        final updated = result.element;
+        // If it's a move, size stays the same (not a resize)
+        expect(updated.width, rect1.width);
+        expect(updated.height, rect1.height);
+      }
+    });
+  });
 }

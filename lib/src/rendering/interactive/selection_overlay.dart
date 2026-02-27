@@ -3,12 +3,21 @@ import 'package:flutter/foundation.dart';
 import '../../core/elements/elements.dart';
 import '../../core/math/math.dart';
 import 'handle.dart';
+import 'interaction_mode.dart';
 
 /// The gap (in scene units) between the top-center handle and the rotation
 /// handle above it.
 const double _rotationHandleGap = 20.0;
 
 /// Padding (in scene units) between element bounds and the selection box.
+///
+/// Returns a larger padding in [InteractionMode.touch] for easier touch
+/// targeting.
+double selectionPaddingFor(InteractionMode mode) =>
+    mode == InteractionMode.touch ? 12.0 : 6.0;
+
+/// Padding for [InteractionMode.pointer] — kept as a convenience constant
+/// for backward compatibility.
 const double selectionPadding = 6.0;
 
 /// Extra handle offset (in scene units) for line/arrow/diamond elements.
@@ -42,7 +51,10 @@ class SelectionOverlay {
   /// Returns `null` if the list is empty.
   /// For a single element, the angle is preserved from the element.
   /// For multiple elements, the angle defaults to 0.
-  static SelectionOverlay? fromElements(List<Element> elements) {
+  static SelectionOverlay? fromElements(
+    List<Element> elements, {
+    InteractionMode mode = InteractionMode.pointer,
+  }) {
     if (elements.isEmpty) return null;
 
     Bounds union = Bounds.fromLTWH(
@@ -64,7 +76,7 @@ class SelectionOverlay {
     final needsExpanded =
         elements.any((e) => _expandedHandleTypes.contains(e.type));
     final handlePad =
-        selectionPadding + (needsExpanded ? _expandedHandleExtra : 0.0);
+        selectionPaddingFor(mode) + (needsExpanded ? _expandedHandleExtra : 0.0);
     final handleBounds = Bounds.fromLTWH(
       union.left - handlePad,
       union.top - handlePad,

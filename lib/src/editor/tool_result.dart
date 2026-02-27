@@ -1,6 +1,7 @@
 import '../core/elements/elements.dart';
 import '../core/math/math.dart';
 import '../core/scene/scene_exports.dart';
+import '../rendering/interactive/interaction_mode.dart';
 import '../rendering/viewport_state.dart';
 import 'tool_type.dart';
 
@@ -77,12 +78,14 @@ class ToolContext {
   final ViewportState viewport;
   final Set<ElementId> selectedIds;
   final List<Element> clipboard;
+  final InteractionMode interactionMode;
 
   ToolContext({
     required this.scene,
     required this.viewport,
     required Set<ElementId> selectedIds,
     this.clipboard = const [],
+    this.interactionMode = InteractionMode.pointer,
   }) : selectedIds = Set.unmodifiable(selectedIds);
 }
 

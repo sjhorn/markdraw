@@ -266,4 +266,55 @@ void main() {
       expect(overlay!.showBoundingBox, isFalse);
     });
   });
+
+  group('InteractionMode-aware padding', () {
+    test('selectionPaddingFor returns 6.0 for pointer mode', () {
+      expect(selectionPaddingFor(InteractionMode.pointer), 6.0);
+    });
+
+    test('selectionPaddingFor returns 12.0 for touch mode', () {
+      expect(selectionPaddingFor(InteractionMode.touch), 12.0);
+    });
+
+    test('fromElements uses pointer padding by default', () {
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 100,
+      );
+
+      final overlay = SelectionOverlay.fromElements([rect]);
+      final handles = overlay!.handles;
+      final byType = {for (final h in handles) h.type: h.position};
+
+      // Pointer padding: 6px. Handles at bounds ± 6.
+      expect(byType[HandleType.topLeft], const Point(94, 94));
+      expect(byType[HandleType.bottomRight], const Point(306, 206));
+    });
+
+    test('fromElements uses touch padding when mode is touch', () {
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 100,
+      );
+
+      final overlay = SelectionOverlay.fromElements([rect],
+          mode: InteractionMode.touch);
+      final handles = overlay!.handles;
+      final byType = {for (final h in handles) h.type: h.position};
+
+      // Touch padding: 12px. Handles at bounds ± 12.
+      expect(byType[HandleType.topLeft], const Point(88, 88));
+      expect(byType[HandleType.bottomRight], const Point(312, 212));
+    });
+
+    test('backward compat: selectionPadding const equals pointer value', () {
+      expect(selectionPadding, selectionPaddingFor(InteractionMode.pointer));
+    });
+  });
 }

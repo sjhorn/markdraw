@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import '../../core/math/math.dart';
 import 'handle.dart';
+import 'interaction_mode.dart';
 import 'selection_overlay.dart';
 import 'snap_line.dart';
 
@@ -16,10 +17,16 @@ class SelectionRenderer {
 
   static const _selectionColor = Color(0xFF4A90D9);
   static const _selectionStrokeWidth = 1.5;
-  static const _handleSize = 8.0;
   static const _handleStrokeWidth = 1.5;
-  static const _rotationHandleRadius = 4.0;
   static const _hoverColor = Color(0x224A90D9);
+
+  /// Visual handle size in scene units, scaled for touch.
+  static double handleSize(InteractionMode mode) =>
+      mode == InteractionMode.touch ? 20.0 : 8.0;
+
+  /// Visual rotation handle radius in scene units, scaled for touch.
+  static double rotationHandleRadius(InteractionMode mode) =>
+      mode == InteractionMode.touch ? 10.0 : 4.0;
   static const _marqueeColor = Color(0xFF4A90D9);
   static const _marqueeStrokeWidth = 1.0;
   static const _marqueeFillColor = Color(0x114A90D9);
@@ -33,17 +40,22 @@ class SelectionRenderer {
   ///
   /// The caller is responsible for applying any rotation transform to the
   /// canvas before calling this method.
-  static void drawSelectionBox(Canvas canvas, Bounds bounds) {
+  static void drawSelectionBox(
+    Canvas canvas,
+    Bounds bounds, {
+    InteractionMode mode = InteractionMode.pointer,
+  }) {
     final paint = Paint()
       ..color = _selectionColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = _selectionStrokeWidth;
 
+    final pad = selectionPaddingFor(mode);
     final rect = Rect.fromLTWH(
-      bounds.left - selectionPadding,
-      bounds.top - selectionPadding,
-      bounds.size.width + selectionPadding * 2,
-      bounds.size.height + selectionPadding * 2,
+      bounds.left - pad,
+      bounds.top - pad,
+      bounds.size.width + pad * 2,
+      bounds.size.height + pad * 2,
     );
 
     canvas.drawRect(rect, paint);
@@ -53,7 +65,11 @@ class SelectionRenderer {
   ///
   /// Resize handles are small filled squares; the rotation handle is
   /// drawn separately via [drawRotationHandle].
-  static void drawHandles(Canvas canvas, List<Handle> handles) {
+  static void drawHandles(
+    Canvas canvas,
+    List<Handle> handles, {
+    InteractionMode mode = InteractionMode.pointer,
+  }) {
     final fillPaint = Paint()
       ..color = const Color(0xFFFFFFFF)
       ..style = PaintingStyle.fill;
@@ -63,13 +79,14 @@ class SelectionRenderer {
       ..style = PaintingStyle.stroke
       ..strokeWidth = _handleStrokeWidth;
 
+    final size = handleSize(mode);
     for (final handle in handles) {
       if (handle.type == HandleType.rotation) continue;
 
       final rect = Rect.fromCenter(
         center: Offset(handle.position.x, handle.position.y),
-        width: _handleSize,
-        height: _handleSize,
+        width: size,
+        height: size,
       );
       canvas.drawRect(rect, fillPaint);
       canvas.drawRect(rect, strokePaint);
@@ -79,7 +96,11 @@ class SelectionRenderer {
   /// Draws the rotation handle: a line from [topCenter] to [rotationPos]
   /// and a small circle at [rotationPos].
   static void drawRotationHandle(
-      Canvas canvas, Point rotationPos, Point topCenter) {
+    Canvas canvas,
+    Point rotationPos,
+    Point topCenter, {
+    InteractionMode mode = InteractionMode.pointer,
+  }) {
     final linePaint = Paint()
       ..color = _selectionColor
       ..style = PaintingStyle.stroke
@@ -100,14 +121,15 @@ class SelectionRenderer {
       ..style = PaintingStyle.stroke
       ..strokeWidth = _handleStrokeWidth;
 
+    final radius = rotationHandleRadius(mode);
     canvas.drawCircle(
       Offset(rotationPos.x, rotationPos.y),
-      _rotationHandleRadius,
+      radius,
       fillPaint,
     );
     canvas.drawCircle(
       Offset(rotationPos.x, rotationPos.y),
-      _rotationHandleRadius,
+      radius,
       strokePaint,
     );
   }
@@ -172,7 +194,11 @@ class SelectionRenderer {
   /// Draws circular point handles at each position in [points].
   ///
   /// Used for line/arrow endpoint editing — each point is a draggable vertex.
-  static void drawPointHandles(Canvas canvas, List<Point> points) {
+  static void drawPointHandles(
+    Canvas canvas,
+    List<Point> points, {
+    InteractionMode mode = InteractionMode.pointer,
+  }) {
     final fillPaint = Paint()
       ..color = const Color(0xFFFFFFFF)
       ..style = PaintingStyle.fill;
@@ -182,10 +208,11 @@ class SelectionRenderer {
       ..style = PaintingStyle.stroke
       ..strokeWidth = _handleStrokeWidth;
 
+    final radius = handleSize(mode) / 2;
     for (final point in points) {
       final center = Offset(point.x, point.y);
-      canvas.drawCircle(center, _handleSize / 2, fillPaint);
-      canvas.drawCircle(center, _handleSize / 2, strokePaint);
+      canvas.drawCircle(center, radius, fillPaint);
+      canvas.drawCircle(center, radius, strokePaint);
     }
   }
 

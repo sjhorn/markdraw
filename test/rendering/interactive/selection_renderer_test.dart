@@ -201,4 +201,84 @@ void main() {
       );
     });
   });
+
+  group('InteractionMode-aware sizes', () {
+    test('handleSize returns 8.0 for pointer mode', () {
+      expect(SelectionRenderer.handleSize(InteractionMode.pointer), 8.0);
+    });
+
+    test('handleSize returns 20.0 for touch mode', () {
+      expect(SelectionRenderer.handleSize(InteractionMode.touch), 20.0);
+    });
+
+    test('rotationHandleRadius returns 4.0 for pointer mode', () {
+      expect(
+          SelectionRenderer.rotationHandleRadius(InteractionMode.pointer), 4.0);
+    });
+
+    test('rotationHandleRadius returns 10.0 for touch mode', () {
+      expect(
+          SelectionRenderer.rotationHandleRadius(InteractionMode.touch), 10.0);
+    });
+
+    test('drawHandles with touch mode does not throw', () {
+      final (recorder, canvas) = _makeCanvas();
+      final bounds = Bounds.fromLTWH(100, 100, 200, 150);
+      final handles = SelectionOverlay.computeHandles(bounds);
+
+      expect(
+        () {
+          SelectionRenderer.drawHandles(canvas, handles,
+              mode: InteractionMode.touch);
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
+    test('drawRotationHandle with touch mode does not throw', () {
+      final (recorder, canvas) = _makeCanvas();
+
+      expect(
+        () {
+          SelectionRenderer.drawRotationHandle(
+            canvas,
+            const Point(200, 80),
+            const Point(200, 100),
+            mode: InteractionMode.touch,
+          );
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
+    test('drawPointHandles with touch mode does not throw', () {
+      final (recorder, canvas) = _makeCanvas();
+      final points = [const Point(10, 20), const Point(100, 200)];
+
+      expect(
+        () {
+          SelectionRenderer.drawPointHandles(canvas, points,
+              mode: InteractionMode.touch);
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
+    test('drawSelectionBox with touch mode does not throw', () {
+      final (recorder, canvas) = _makeCanvas();
+      final bounds = Bounds.fromLTWH(100, 100, 200, 150);
+
+      expect(
+        () {
+          SelectionRenderer.drawSelectionBox(canvas, bounds,
+              mode: InteractionMode.touch);
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+  });
 }

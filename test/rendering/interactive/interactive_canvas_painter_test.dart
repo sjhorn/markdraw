@@ -440,5 +440,59 @@ void main() {
         returnsNormally,
       );
     });
+
+    test('accepts InteractionMode and defaults to pointer', () {
+      const painter = InteractiveCanvasPainter(
+        viewport: ViewportState(),
+      );
+      expect(painter.interactionMode, InteractionMode.pointer);
+    });
+
+    test('paints with touch InteractionMode', () {
+      final (recorder, canvas) = _makeCanvas();
+      final element = RectangleElement(
+        id: const ElementId('r1'),
+        x: 100, y: 100, width: 200, height: 150,
+      );
+      final overlay = SelectionOverlay.fromElements([element],
+          mode: InteractionMode.touch);
+
+      final painter = InteractiveCanvasPainter(
+        viewport: const ViewportState(),
+        interactionMode: InteractionMode.touch,
+        selection: overlay,
+        pointHandles: const [Point(100, 100), Point(300, 250)],
+      );
+
+      expect(
+        () {
+          painter.paint(canvas, const Size(800, 600));
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
+    test('shouldRepaint returns true when interactionMode changes', () {
+      final overlay = SelectionOverlay.fromElements([
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 0, y: 0, width: 100, height: 100,
+        ),
+      ]);
+
+      final p1 = InteractiveCanvasPainter(
+        viewport: const ViewportState(),
+        interactionMode: InteractionMode.pointer,
+        selection: overlay,
+      );
+      final p2 = InteractiveCanvasPainter(
+        viewport: const ViewportState(),
+        interactionMode: InteractionMode.touch,
+        selection: overlay,
+      );
+
+      expect(p2.shouldRepaint(p1), isTrue);
+    });
   });
 }

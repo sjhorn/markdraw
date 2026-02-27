@@ -67,6 +67,7 @@ class _CanvasPageState extends State<_CanvasPage> {
   List<LibraryItem> _libraryItems = [];
   bool _showLibraryPanel = false;
   bool _toolLocked = false;
+  bool _isCompact = false;
 
   // Drag coalescing: capture scene before drag, push once on pointer up
   Scene? _sceneBeforeDrag;
@@ -861,11 +862,15 @@ class _CanvasPageState extends State<_CanvasPage> {
     return resolved.isEmpty ? null : resolved;
   }
 
+  InteractionMode get _interactionMode =>
+      _isCompact ? InteractionMode.touch : InteractionMode.pointer;
+
   ToolContext get _toolContext => ToolContext(
     scene: _editorState.scene,
     viewport: _editorState.viewport,
     selectedIds: _editorState.selectedIds,
     clipboard: _editorState.clipboard,
+    interactionMode: _interactionMode,
   );
 
   Point _toScene(Offset screenPos) {
@@ -901,184 +906,223 @@ class _CanvasPageState extends State<_CanvasPage> {
           return KeyEventResult.ignored;
         },
         child: Scaffold(
-          body: Stack(
-            children: [
-              // Full-bleed canvas + property/library panels
-              Row(
-                children: [
-                  Expanded(
-                    child: MouseRegion(
-                      cursor: _cursorForTool,
-                      child: Stack(
-                        children: [
-                          Listener(
-                            onPointerHover: (event) {
-                              final point = _toScene(event.localPosition);
-                              _activeTool.onPointerMove(point, _toolContext);
-                              setState(() {});
-                            },
-                            onPointerDown: (event) {
-                              _keyboardFocusNode.requestFocus();
-                              if (_editingTextElementId != null) {
-                                _commitTextEditing();
-                              }
-                              _sceneBeforeDrag = _editorState.scene;
-                              final point = _toScene(event.localPosition);
-                              final shift =
-                                  event.buttons == kSecondaryMouseButton;
-                              if (_activeTool is SelectTool) {
-                                _applyResult(
-                                  (_activeTool as SelectTool).onPointerDown(
-                                    point,
-                                    _toolContext,
-                                    shift: shift,
-                                  ),
-                                );
-                              } else {
-                                _applyResult(
-                                  _activeTool.onPointerDown(
-                                    point,
-                                    _toolContext,
-                                  ),
-                                );
-                              }
-                            },
-                            onPointerMove: (event) {
-                              final point = _toScene(event.localPosition);
-                              final delta = event.delta;
-                              _applyResult(
-                                _activeTool.onPointerMove(
-                                  point,
-                                  _toolContext,
-                                  screenDelta: Offset(delta.dx, delta.dy),
-                                ),
-                              );
-                              setState(() {});
-                            },
-                            onPointerUp: (event) {
-                              final point = _toScene(event.localPosition);
-                              final now = DateTime.now();
-                              final isDoubleClick =
-                                  _lastPointerUpTime != null &&
-                                  now
-                                          .difference(_lastPointerUpTime!)
-                                          .inMilliseconds <
-                                      300;
-                              _lastPointerUpTime = now;
-
-                              if (_activeTool is LineTool) {
-                                _applyResult(
-                                  (_activeTool as LineTool).onPointerUp(
-                                    point,
-                                    _toolContext,
-                                    isDoubleClick: isDoubleClick,
-                                  ),
-                                );
-                              } else if (_activeTool is ArrowTool) {
-                                _applyResult(
-                                  (_activeTool as ArrowTool).onPointerUp(
-                                    point,
-                                    _toolContext,
-                                    isDoubleClick: isDoubleClick,
-                                  ),
-                                );
-                              } else {
-                                _applyResult(
-                                  _activeTool.onPointerUp(point, _toolContext),
-                                );
-                              }
-
-                              // Double-click dispatch for text editing
-                              if (isDoubleClick &&
-                                  _activeTool is SelectTool &&
-                                  _editingTextElementId == null) {
-                                final hit =
-                                    _editorState.scene.getElementAtPoint(
-                                      point,
-                                    );
-                                if (hit is TextElement) {
-                                  _startTextEditingExisting(hit);
-                                } else if (hit != null &&
-                                    BoundTextUtils.isTextContainer(hit)) {
-                                  _startBoundTextEditing(hit);
-                                } else if (hit is ArrowElement) {
-                                  _startArrowLabelEditing(hit);
-                                }
-                              }
-
-                              if (_sceneBeforeDrag != null &&
-                                  !identical(
-                                    _editorState.scene,
-                                    _sceneBeforeDrag,
-                                  )) {
-                                _historyManager.push(_sceneBeforeDrag!);
-                              }
-                              _sceneBeforeDrag = null;
-                            },
-                            onPointerSignal: (event) {
-                              if (event is PointerScrollEvent) {
-                                final factor =
-                                    event.scrollDelta.dy < 0 ? 1.1 : 0.9;
-                                final newViewport =
-                                    _editorState.viewport.zoomAt(
-                                      factor,
-                                      event.localPosition,
-                                    );
-                                _applyResult(
-                                  UpdateViewportResult(newViewport),
-                                );
-                              }
-                            },
-                            child: CustomPaint(
-                              painter: StaticCanvasPainter(
-                                scene: _editorState.scene,
-                                adapter: _adapter,
-                                viewport: _editorState.viewport,
-                                previewElement:
-                                    _buildPreviewElement(toolOverlay),
-                                editingElementId: _editingTextElementId,
-                                resolvedImages: _resolveImages(),
-                              ),
-                              foregroundPainter: InteractiveCanvasPainter(
-                                viewport: _editorState.viewport,
-                                selection: _isDraggingPointHandle()
-                                    ? null
-                                    : _buildSelectionOverlay(),
-                                marqueeRect: marqueeRect,
-                                bindTargetBounds:
-                                    toolOverlay?.bindTargetBounds,
-                                pointHandles: _buildPointHandles(),
-                                creationPoints: toolOverlay?.creationPoints,
-                              ),
-                              child: const SizedBox.expand(),
-                            ),
-                          ),
-                          if (_editingTextElementId != null)
-                            _buildTextEditingOverlay(),
-                        ],
-                      ),
-                    ),
-                  ),
-                  if (_selectedElements.isNotEmpty) _buildPropertyPanel(),
-                  if (_showLibraryPanel) _buildLibraryPanel(),
-                ],
-              ),
-              // Floating toolbar — centered at top
-              Positioned(
-                top: 12,
-                left: 0,
-                right: 0,
-                child: Center(child: _buildToolbar()),
-              ),
-              // Hamburger menu — top-left
-              Positioned(
-                top: 12,
-                left: 12,
-                child: _buildHamburgerMenu(),
-              ),
-            ],
+          body: LayoutBuilder(
+            builder: (context, constraints) {
+              final isCompact = constraints.maxWidth < 600;
+              if (isCompact != _isCompact) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) setState(() => _isCompact = isCompact);
+                });
+              }
+              return _buildBody(toolOverlay, marqueeRect);
+            },
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildBody(ToolOverlay? toolOverlay, Rect? marqueeRect) {
+    return Stack(
+      children: [
+        // Full-bleed canvas + desktop panels
+        Row(
+          children: [
+            Expanded(child: _buildCanvas(toolOverlay, marqueeRect)),
+            if (!_isCompact && _selectedElements.isNotEmpty)
+              _buildPropertyPanel(),
+            if (!_isCompact && _showLibraryPanel) _buildLibraryPanel(),
+          ],
+        ),
+        // Toolbar
+        if (_isCompact)
+          Positioned(
+            bottom: 12,
+            left: 0,
+            right: 0,
+            child: Center(child: _buildCompactToolbar()),
+          )
+        else ...[
+          Positioned(
+            top: 12,
+            left: 0,
+            right: 0,
+            child: Center(child: _buildToolbar()),
+          ),
+          Positioned(
+            top: 12,
+            left: 12,
+            child: _buildHamburgerMenu(),
+          ),
+        ],
+        // Compact menu button — top-left
+        if (_isCompact)
+          Positioned(
+            top: 12,
+            left: 12,
+            child: _buildCompactMenuButton(),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildCanvas(ToolOverlay? toolOverlay, Rect? marqueeRect) {
+    return MouseRegion(
+      cursor: _cursorForTool,
+      child: Stack(
+        children: [
+          Listener(
+            onPointerHover: (event) {
+              final point = _toScene(event.localPosition);
+              _activeTool.onPointerMove(point, _toolContext);
+              setState(() {});
+            },
+            onPointerDown: (event) {
+              _keyboardFocusNode.requestFocus();
+              if (_editingTextElementId != null) {
+                _commitTextEditing();
+              }
+              _sceneBeforeDrag = _editorState.scene;
+              final point = _toScene(event.localPosition);
+              final shift = event.buttons == kSecondaryMouseButton;
+              if (_activeTool is SelectTool) {
+                _applyResult(
+                  (_activeTool as SelectTool).onPointerDown(
+                    point,
+                    _toolContext,
+                    shift: shift,
+                  ),
+                );
+              } else {
+                _applyResult(
+                  _activeTool.onPointerDown(
+                    point,
+                    _toolContext,
+                  ),
+                );
+              }
+            },
+            onPointerMove: (event) {
+              final point = _toScene(event.localPosition);
+              final delta = event.delta;
+              _applyResult(
+                _activeTool.onPointerMove(
+                  point,
+                  _toolContext,
+                  screenDelta: Offset(delta.dx, delta.dy),
+                ),
+              );
+              setState(() {});
+            },
+            onPointerUp: (event) {
+              final point = _toScene(event.localPosition);
+              final now = DateTime.now();
+              final isDoubleClick =
+                  _lastPointerUpTime != null &&
+                  now
+                          .difference(_lastPointerUpTime!)
+                          .inMilliseconds <
+                      300;
+              _lastPointerUpTime = now;
+
+              if (_activeTool is LineTool) {
+                _applyResult(
+                  (_activeTool as LineTool).onPointerUp(
+                    point,
+                    _toolContext,
+                    isDoubleClick: isDoubleClick,
+                  ),
+                );
+              } else if (_activeTool is ArrowTool) {
+                _applyResult(
+                  (_activeTool as ArrowTool).onPointerUp(
+                    point,
+                    _toolContext,
+                    isDoubleClick: isDoubleClick,
+                  ),
+                );
+              } else {
+                _applyResult(
+                  _activeTool.onPointerUp(point, _toolContext),
+                );
+              }
+
+              // Double-click dispatch for text editing
+              if (isDoubleClick &&
+                  _activeTool is SelectTool &&
+                  _editingTextElementId == null) {
+                final hit =
+                    _editorState.scene.getElementAtPoint(
+                      point,
+                    );
+                if (hit is TextElement) {
+                  _startTextEditingExisting(hit);
+                } else if (hit != null &&
+                    BoundTextUtils.isTextContainer(hit)) {
+                  _startBoundTextEditing(hit);
+                } else if (hit is ArrowElement) {
+                  _startArrowLabelEditing(hit);
+                }
+              }
+
+              if (_sceneBeforeDrag != null &&
+                  !identical(
+                    _editorState.scene,
+                    _sceneBeforeDrag,
+                  )) {
+                _historyManager.push(_sceneBeforeDrag!);
+              }
+              _sceneBeforeDrag = null;
+            },
+            onPointerSignal: (event) {
+              if (event is PointerScrollEvent) {
+                final factor =
+                    event.scrollDelta.dy < 0 ? 1.1 : 0.9;
+                final newViewport =
+                    _editorState.viewport.zoomAt(
+                      factor,
+                      event.localPosition,
+                    );
+                _applyResult(
+                  UpdateViewportResult(newViewport),
+                );
+              }
+            },
+            child: CustomPaint(
+              painter: StaticCanvasPainter(
+                scene: _editorState.scene,
+                adapter: _adapter,
+                viewport: _editorState.viewport,
+                previewElement:
+                    _buildPreviewElement(toolOverlay),
+                editingElementId: _editingTextElementId,
+                resolvedImages: _resolveImages(),
+              ),
+              foregroundPainter: InteractiveCanvasPainter(
+                viewport: _editorState.viewport,
+                interactionMode: _interactionMode,
+                selection: _isDraggingPointHandle()
+                    ? null
+                    : _buildSelectionOverlay(),
+                marqueeRect: marqueeRect,
+                bindTargetBounds:
+                    toolOverlay?.bindTargetBounds,
+                pointHandles: _buildPointHandles(),
+                creationPoints: toolOverlay?.creationPoints,
+              ),
+              child: const SizedBox.expand(),
+            ),
+          ),
+          if (_editingTextElementId != null)
+            _buildTextEditingOverlay(),
+          // Compact property panel as bottom sheet trigger
+          if (_isCompact && _selectedElements.isNotEmpty)
+            Positioned(
+              bottom: 72,
+              right: 12,
+              child: _buildCompactPropertyButton(),
+            ),
+        ],
       ),
     );
   }
@@ -1304,6 +1348,383 @@ class _CanvasPageState extends State<_CanvasPage> {
             isActive: _toolLocked,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCompactToolbar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.17),
+            blurRadius: 1,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 3,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 14,
+            offset: const Offset(0, 7),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _compactToolbarButton(
+            icon: Icons.undo,
+            tooltip: 'Undo',
+            onPressed: _undo,
+          ),
+          _compactToolbarButton(
+            icon: Icons.redo,
+            tooltip: 'Redo',
+            onPressed: _redo,
+          ),
+          _toolbarDivider(),
+          for (final type in ToolType.values)
+            _compactToolbarButton(
+              iconWidget: _iconWidgetFor(
+                type,
+                color: _editorState.activeToolType == type
+                    ? Colors.blue
+                    : Colors.grey.shade700,
+                size: 24,
+              ),
+              tooltip: type.name,
+              onPressed: () => _switchTool(type),
+              isActive: _editorState.activeToolType == type,
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _compactToolbarButton({
+    IconData? icon,
+    Widget? iconWidget,
+    required String tooltip,
+    required VoidCallback onPressed,
+    bool isActive = false,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: isActive ? Colors.blue.shade50 : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: onPressed,
+          child: SizedBox(
+            width: 48,
+            height: 48,
+            child: Center(
+              child: iconWidget ??
+                  Icon(
+                    icon,
+                    size: 24,
+                    color: isActive ? Colors.blue : Colors.grey.shade700,
+                  ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompactMenuButton() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.17),
+            blurRadius: 1,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 3,
+          ),
+        ],
+      ),
+      child: IconButton(
+        icon: const Icon(Icons.menu, size: 24),
+        tooltip: 'Menu',
+        constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+        onPressed: () => _showCompactMenu(),
+      ),
+    );
+  }
+
+  void _showCompactMenu() {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            _compactMenuItem(Icons.folder_open, 'Open', () {
+              Navigator.pop(ctx);
+              _openFile();
+            }),
+            _compactMenuItem(Icons.save, 'Save', () {
+              Navigator.pop(ctx);
+              _saveFile();
+            }),
+            _compactMenuItem(Icons.save_as, 'Save As', () {
+              Navigator.pop(ctx);
+              _saveFileAs();
+            }),
+            const Divider(),
+            _compactMenuItem(Icons.image, 'Export PNG', () {
+              Navigator.pop(ctx);
+              _exportPng();
+            }),
+            _compactMenuItem(Icons.code, 'Export SVG', () {
+              Navigator.pop(ctx);
+              _exportSvg();
+            }),
+            const Divider(),
+            _compactMenuItem(Icons.add_photo_alternate, 'Import Image', () {
+              Navigator.pop(ctx);
+              _importImage();
+            }),
+            _compactMenuItem(Icons.library_books, 'Library', () {
+              Navigator.pop(ctx);
+              _showCompactLibrary();
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  ListTile _compactMenuItem(IconData icon, String label, VoidCallback onTap) {
+    return ListTile(
+      leading: Icon(icon, size: 22),
+      title: Text(label),
+      onTap: onTap,
+    );
+  }
+
+  Widget _buildCompactPropertyButton() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.17),
+            blurRadius: 1,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 3,
+          ),
+        ],
+      ),
+      child: IconButton(
+        icon: const Icon(Icons.tune, size: 22),
+        tooltip: 'Properties',
+        constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+        onPressed: () => _showCompactPropertyPanel(),
+      ),
+    );
+  }
+
+  void _showCompactPropertyPanel() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.35,
+        minChildSize: 0.15,
+        maxChildSize: 0.7,
+        expand: false,
+        builder: (ctx, scrollController) {
+          final elements = _selectedElements;
+          if (elements.isEmpty) return const SizedBox.shrink();
+          final style = PropertyPanelState.fromElements(elements);
+          final isLocked = style.locked == true;
+
+          return Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            child: ListView(
+              controller: scrollController,
+              padding: const EdgeInsets.all(16),
+              children: [
+                Center(
+                  child: Container(
+                    width: 32,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                _buildLockToggle(style.locked),
+                const SizedBox(height: 12),
+                IgnorePointer(
+                  ignoring: isLocked,
+                  child: Opacity(
+                    opacity: isLocked ? 0.4 : 1.0,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionLabel('Stroke'),
+                        _buildColorRow(
+                          selected: style.strokeColor,
+                          onSelect: (c) =>
+                              _applyStyleChange(ElementStyle(strokeColor: c)),
+                        ),
+                        const SizedBox(height: 8),
+                        _buildSectionLabel('Background'),
+                        _buildColorRow(
+                          selected: style.backgroundColor,
+                          includeTransparent: true,
+                          onSelect: (c) => _applyStyleChange(
+                              ElementStyle(backgroundColor: c)),
+                        ),
+                        const SizedBox(height: 8),
+                        _buildSectionLabel('Stroke width'),
+                        _buildStrokeWidthRow(style.strokeWidth),
+                        const SizedBox(height: 8),
+                        _buildSectionLabel('Fill style'),
+                        _buildFillStyleRow(style.fillStyle),
+                        const SizedBox(height: 8),
+                        _buildSectionLabel('Opacity'),
+                        _buildOpacitySlider(style.opacity),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showCompactLibrary() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.4,
+        minChildSize: 0.2,
+        maxChildSize: 0.7,
+        expand: false,
+        builder: (ctx, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          child: Column(
+            children: [
+              Center(
+                child: Container(
+                  width: 32,
+                  height: 4,
+                  margin: const EdgeInsets.only(top: 12, bottom: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    const Text('Library',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16)),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.file_upload, size: 20),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        _importLibrary();
+                      },
+                      tooltip: 'Import Library',
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.file_download, size: 20),
+                      onPressed: _libraryItems.isEmpty
+                          ? null
+                          : () {
+                              Navigator.pop(ctx);
+                              _exportLibrary();
+                            },
+                      tooltip: 'Export Library',
+                    ),
+                  ],
+                ),
+              ),
+              if (_selectedElements.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.add, size: 16),
+                      label: const Text('Add to Library'),
+                      onPressed: () {
+                        _addToLibrary();
+                        Navigator.pop(ctx);
+                      },
+                    ),
+                  ),
+                ),
+              Expanded(
+                child: _libraryItems.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'No library items.',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      )
+                    : ListView.builder(
+                        controller: scrollController,
+                        itemCount: _libraryItems.length,
+                        itemBuilder: (context, index) {
+                          final item = _libraryItems[index];
+                          return ListTile(
+                            title: Text(item.name),
+                            subtitle: Text(
+                                '${item.elements.length} element${item.elements.length == 1 ? '' : 's'}'),
+                            onTap: () {
+                              _placeLibraryItem(item);
+                              Navigator.pop(ctx);
+                            },
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete, size: 18),
+                              onPressed: () {
+                                _removeLibraryItem(item.id);
+                                Navigator.pop(ctx);
+                              },
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -2059,7 +2480,7 @@ class _CanvasPageState extends State<_CanvasPage> {
         .whereType<Element>()
         .toList();
     if (selected.isEmpty) return null;
-    return SelectionOverlay.fromElements(selected);
+    return SelectionOverlay.fromElements(selected, mode: _interactionMode);
   }
 
   Widget _iconWidgetFor(ToolType type, {Color? color, double? size}) {

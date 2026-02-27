@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import '../../core/math/math.dart';
 import '../viewport_state.dart';
 import 'handle.dart';
+import 'interaction_mode.dart';
 import 'selection_overlay.dart';
 import 'selection_renderer.dart';
 import 'snap_line.dart';
@@ -19,6 +20,7 @@ import 'snap_line.dart';
 /// All inputs are data — no gesture handling occurs here.
 class InteractiveCanvasPainter extends CustomPainter {
   final ViewportState viewport;
+  final InteractionMode interactionMode;
   final SelectionOverlay? selection;
   final Bounds? hoveredBounds;
   final List<SnapLine> snapLines;
@@ -30,6 +32,7 @@ class InteractiveCanvasPainter extends CustomPainter {
 
   const InteractiveCanvasPainter({
     required this.viewport,
+    this.interactionMode = InteractionMode.pointer,
     this.selection,
     this.hoveredBounds,
     this.snapLines = const [],
@@ -66,12 +69,14 @@ class InteractiveCanvasPainter extends CustomPainter {
       }
 
       if (selection!.showBoundingBox) {
-        SelectionRenderer.drawSelectionBox(canvas, selection!.bounds);
+        SelectionRenderer.drawSelectionBox(canvas, selection!.bounds,
+            mode: interactionMode);
       }
 
       if (!selection!.isLocked) {
         if (selection!.showBoundingBox) {
-          SelectionRenderer.drawHandles(canvas, selection!.handles);
+          SelectionRenderer.drawHandles(canvas, selection!.handles,
+              mode: interactionMode);
 
           // Draw rotation handle
           final rotationHandle = selection!.handles
@@ -85,6 +90,7 @@ class InteractiveCanvasPainter extends CustomPainter {
               canvas,
               rotationHandle.position,
               topCenterHandle.position,
+              mode: interactionMode,
             );
           }
         }
@@ -92,7 +98,8 @@ class InteractiveCanvasPainter extends CustomPainter {
         // Point handles (for line/arrow vertex editing) — drawn in the
         // same rotated canvas space so they follow the element's rotation.
         if (pointHandles != null && pointHandles!.isNotEmpty) {
-          SelectionRenderer.drawPointHandles(canvas, pointHandles!);
+          SelectionRenderer.drawPointHandles(canvas, pointHandles!,
+              mode: interactionMode);
         }
       }
 
@@ -132,6 +139,7 @@ class InteractiveCanvasPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant InteractiveCanvasPainter oldDelegate) {
     return viewport != oldDelegate.viewport ||
+        interactionMode != oldDelegate.interactionMode ||
         selection != oldDelegate.selection ||
         hoveredBounds != oldDelegate.hoveredBounds ||
         marqueeRect != oldDelegate.marqueeRect ||

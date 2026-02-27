@@ -14,8 +14,9 @@ import 'tool.dart';
 /// Minimum drag distance to distinguish a drag from a click.
 const double _clickThreshold = 3.0;
 
-/// Hit-test radius for handles (in scene units).
-const double _handleHitRadius = 8.0;
+/// Hit-test radius for handles (in scene units), scaled for interaction mode.
+double _handleHitRadius(InteractionMode mode) =>
+    mode == InteractionMode.touch ? 22.0 : 8.0;
 
 /// Minimum element size enforced during resize.
 const double _minSize = 10.0;
@@ -87,7 +88,8 @@ class SelectTool implements Tool {
 
       // For elbowed arrows, check segment hit before point hit
       if (elem is ArrowElement && elem.elbowed) {
-        final segIndex = _hitTestSegment(point, elem);
+        final segIndex =
+            _hitTestSegment(point, elem, context.interactionMode);
         if (segIndex != null) {
           _dragMode = _DragMode.dragSegment;
           _activeSegmentIndex = segIndex;
@@ -99,7 +101,8 @@ class SelectTool implements Tool {
         }
       }
 
-      final pointIndex = _hitTestPointHandle(point, elem);
+      final pointIndex =
+          _hitTestPointHandle(point, elem, context.interactionMode);
       if (pointIndex != null) {
         _dragMode = _DragMode.dragPoint;
         _activePointIndex = pointIndex;
@@ -114,7 +117,8 @@ class SelectTool implements Tool {
 
     // 2. Resize/rotation handle hit-test
     if (selectedElements.isNotEmpty && !allLocked) {
-      final handleType = _hitTestHandle(point, selectedElements);
+      final handleType =
+          _hitTestHandle(point, selectedElements, context.interactionMode);
       if (handleType != null) {
         if (handleType == HandleType.rotation) {
           _dragMode = _DragMode.rotate;
@@ -395,7 +399,8 @@ class SelectTool implements Tool {
   // --- Handle hit-testing ---
 
   /// Hit-test for point handles on a line/arrow element.
-  int? _hitTestPointHandle(Point scenePoint, Element element) {
+  int? _hitTestPointHandle(
+      Point scenePoint, Element element, InteractionMode mode) {
     if (element is! LineElement) return null;
     // Transform scene point into the element's local (unrotated) space
     final center = Point(
@@ -403,12 +408,13 @@ class SelectTool implements Tool {
       element.y + element.height / 2,
     );
     final localPoint = _unrotatePoint(scenePoint, center, element.angle);
+    final radius = _handleHitRadius(mode);
     for (var i = 0; i < element.points.length; i++) {
       final absPoint = Point(
         element.x + element.points[i].x,
         element.y + element.points[i].y,
       );
-      if (absPoint.distanceTo(localPoint) <= _handleHitRadius) {
+      if (absPoint.distanceTo(localPoint) <= radius) {
         return i;
       }
     }
@@ -416,8 +422,9 @@ class SelectTool implements Tool {
   }
 
   /// Hit-test for resize/rotation handles on selected elements.
-  HandleType? _hitTestHandle(Point scenePoint, List<Element> elements) {
-    final overlay = SelectionOverlay.fromElements(elements);
+  HandleType? _hitTestHandle(
+      Point scenePoint, List<Element> elements, InteractionMode mode) {
+    final overlay = SelectionOverlay.fromElements(elements, mode: mode);
     if (overlay == null || !overlay.showBoundingBox) return null;
 
     // Transform scene point into the selection's local space (undo rotation)
@@ -427,8 +434,9 @@ class SelectTool implements Tool {
       overlay.angle,
     );
 
+    final radius = _handleHitRadius(mode);
     for (final handle in overlay.handles) {
-      if (handle.position.distanceTo(localPoint) <= _handleHitRadius) {
+      if (handle.position.distanceTo(localPoint) <= radius) {
         return handle.type;
       }
     }
@@ -906,7 +914,8 @@ class SelectTool implements Tool {
 
   /// Hit-test for segment proximity on an elbowed arrow.
   /// Returns the segment index (0-based) or null.
-  int? _hitTestSegment(Point scenePoint, ArrowElement arrow) {
+  int? _hitTestSegment(
+      Point scenePoint, ArrowElement arrow, InteractionMode mode) {
     final points = arrow.points;
     if (points.length < 2) return null;
 
@@ -917,11 +926,12 @@ class SelectTool implements Tool {
     );
     final localPoint = _unrotatePoint(scenePoint, center, arrow.angle);
 
+    final radius = _handleHitRadius(mode);
     for (var i = 0; i < points.length - 1; i++) {
       final a = Point(arrow.x + points[i].x, arrow.y + points[i].y);
       final b = Point(arrow.x + points[i + 1].x, arrow.y + points[i + 1].y);
       final dist = _distToSegment(localPoint, a, b);
-      if (dist <= _handleHitRadius) {
+      if (dist <= radius) {
         return i;
       }
     }
