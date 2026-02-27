@@ -1578,8 +1578,6 @@ class _CanvasPageState extends State<_CanvasPage> {
                     ),
                   ),
                 ),
-                _buildLockToggle(style.locked),
-                const SizedBox(height: 12),
                 IgnorePointer(
                   ignoring: isLocked,
                   child: Opacity(
@@ -1614,6 +1612,8 @@ class _CanvasPageState extends State<_CanvasPage> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 12),
+                _buildLockToggle(style.locked),
               ],
             ),
           );
@@ -1836,8 +1836,6 @@ class _CanvasPageState extends State<_CanvasPage> {
         child: ListView(
           padding: const EdgeInsets.all(12),
           children: [
-            _buildLockToggle(style.locked),
-            const SizedBox(height: 12),
             IgnorePointer(
               ignoring: isLocked,
               child: Opacity(
@@ -1898,6 +1896,8 @@ class _CanvasPageState extends State<_CanvasPage> {
                 ),
               ),
             ),
+            const SizedBox(height: 12),
+            _buildLockToggle(style.locked),
           ],
         ),
       ),
