@@ -130,6 +130,24 @@ class _CanvasPageState extends State<_CanvasPage> {
     _keyboardFocusNode.requestFocus();
   }
 
+  void _undo() {
+    final undone = _historyManager.undo(_editorState.scene);
+    if (undone != null) {
+      setState(() {
+        _editorState = _editorState.copyWith(scene: undone);
+      });
+    }
+  }
+
+  void _redo() {
+    final redone = _historyManager.redo(_editorState.scene);
+    if (redone != null) {
+      setState(() {
+        _editorState = _editorState.copyWith(scene: redone);
+      });
+    }
+  }
+
   void _applyResult(ToolResult? result) {
     if (result == null) return;
 
@@ -883,271 +901,454 @@ class _CanvasPageState extends State<_CanvasPage> {
           return KeyEventResult.ignored;
         },
         child: Scaffold(
-          appBar: AppBar(
-            title: const Text('Markdraw'),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.folder_open),
-                onPressed: _openFile,
-                tooltip: 'Open (Ctrl+O)',
-              ),
-              IconButton(
-                icon: const Icon(Icons.save),
-                onPressed: _saveFile,
-                tooltip: 'Save (Ctrl+S)',
-              ),
-              IconButton(
-                icon: const Icon(Icons.save_as),
-                onPressed: _saveFileAs,
-                tooltip: 'Save As (Ctrl+Shift+S)',
-              ),
-              const VerticalDivider(width: 16, indent: 12, endIndent: 12),
-              IconButton(
-                icon: const Icon(Icons.image),
-                onPressed: _exportPng,
-                tooltip: 'Export PNG (Ctrl+Shift+E)',
-              ),
-              IconButton(
-                icon: const Icon(Icons.code),
-                onPressed: _exportSvg,
-                tooltip: 'Export SVG',
-              ),
-              IconButton(
-                icon: Icon(
-                  Icons.library_books,
-                  color: _showLibraryPanel ? Colors.blue : null,
-                ),
-                onPressed: () =>
-                    setState(() => _showLibraryPanel = !_showLibraryPanel),
-                tooltip: 'Library',
-              ),
-              const VerticalDivider(width: 16, indent: 12, endIndent: 12),
-              for (final type in ToolType.values) ...[
-                // Insert image import button at position 9 (after text)
-                if (type == ToolType.frame)
-                  IconButton(
-                    icon: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        const Icon(Icons.add_photo_alternate),
-                        Positioned(
-                          right: -8,
-                          bottom: -4,
-                          child: Text(
-                            '9',
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey.shade400,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    onPressed: _importImage,
-                    tooltip: 'Import Image (9)',
-                  ),
-                IconButton(
-                  icon: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      _iconWidgetFor(
-                        type,
-                        color: _editorState.activeToolType == type
-                            ? Colors.blue
-                            : null,
-                      ),
-                      if (shortcutForToolType(type) != null)
-                        Positioned(
-                          right: -8,
-                          bottom: -4,
-                          child: Text(
-                            shortcutForToolType(type)!,
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                              color: _editorState.activeToolType == type
-                                  ? Colors.blue.shade300
-                                  : Colors.grey.shade400,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  onPressed: () => _switchTool(type),
-                  tooltip: '${type.name} (${shortcutForToolType(type)})',
-                ),
-              ],
-              const VerticalDivider(width: 16, indent: 12, endIndent: 12),
-              IconButton(
-                icon: Icon(
-                  _toolLocked ? Icons.lock : Icons.lock_open,
-                  color: _toolLocked ? Colors.blue : null,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _toolLocked = !_toolLocked;
-                    _editorState = _editorState.copyWith(
-                      toolLocked: _toolLocked,
-                    );
-                    if (!_toolLocked) {
-                      _switchTool(ToolType.select);
-                    }
-                  });
-                },
-                tooltip: 'Keep tool active (Q)',
-              ),
-              const SizedBox(width: 8),
-            ],
-          ),
-          body: Row(
+          body: Stack(
             children: [
-              Expanded(
-                child: MouseRegion(
-                  cursor: _cursorForTool,
-                  child: Stack(
-                    children: [
-                      Listener(
-                        onPointerHover: (event) {
-                          final point = _toScene(event.localPosition);
-                          _activeTool.onPointerMove(point, _toolContext);
-                          setState(() {});
-                        },
-                        onPointerDown: (event) {
-                          _keyboardFocusNode.requestFocus();
-                          if (_editingTextElementId != null) {
-                            _commitTextEditing();
-                          }
-                          _sceneBeforeDrag = _editorState.scene;
-                          final point = _toScene(event.localPosition);
-                          final shift = event.buttons == kSecondaryMouseButton;
-                          if (_activeTool is SelectTool) {
-                            _applyResult(
-                              (_activeTool as SelectTool).onPointerDown(
-                                point,
-                                _toolContext,
-                                shift: shift,
+              // Full-bleed canvas + property/library panels
+              Row(
+                children: [
+                  Expanded(
+                    child: MouseRegion(
+                      cursor: _cursorForTool,
+                      child: Stack(
+                        children: [
+                          Listener(
+                            onPointerHover: (event) {
+                              final point = _toScene(event.localPosition);
+                              _activeTool.onPointerMove(point, _toolContext);
+                              setState(() {});
+                            },
+                            onPointerDown: (event) {
+                              _keyboardFocusNode.requestFocus();
+                              if (_editingTextElementId != null) {
+                                _commitTextEditing();
+                              }
+                              _sceneBeforeDrag = _editorState.scene;
+                              final point = _toScene(event.localPosition);
+                              final shift =
+                                  event.buttons == kSecondaryMouseButton;
+                              if (_activeTool is SelectTool) {
+                                _applyResult(
+                                  (_activeTool as SelectTool).onPointerDown(
+                                    point,
+                                    _toolContext,
+                                    shift: shift,
+                                  ),
+                                );
+                              } else {
+                                _applyResult(
+                                  _activeTool.onPointerDown(
+                                    point,
+                                    _toolContext,
+                                  ),
+                                );
+                              }
+                            },
+                            onPointerMove: (event) {
+                              final point = _toScene(event.localPosition);
+                              final delta = event.delta;
+                              _applyResult(
+                                _activeTool.onPointerMove(
+                                  point,
+                                  _toolContext,
+                                  screenDelta: Offset(delta.dx, delta.dy),
+                                ),
+                              );
+                              setState(() {});
+                            },
+                            onPointerUp: (event) {
+                              final point = _toScene(event.localPosition);
+                              final now = DateTime.now();
+                              final isDoubleClick =
+                                  _lastPointerUpTime != null &&
+                                  now
+                                          .difference(_lastPointerUpTime!)
+                                          .inMilliseconds <
+                                      300;
+                              _lastPointerUpTime = now;
+
+                              if (_activeTool is LineTool) {
+                                _applyResult(
+                                  (_activeTool as LineTool).onPointerUp(
+                                    point,
+                                    _toolContext,
+                                    isDoubleClick: isDoubleClick,
+                                  ),
+                                );
+                              } else if (_activeTool is ArrowTool) {
+                                _applyResult(
+                                  (_activeTool as ArrowTool).onPointerUp(
+                                    point,
+                                    _toolContext,
+                                    isDoubleClick: isDoubleClick,
+                                  ),
+                                );
+                              } else {
+                                _applyResult(
+                                  _activeTool.onPointerUp(point, _toolContext),
+                                );
+                              }
+
+                              // Double-click dispatch for text editing
+                              if (isDoubleClick &&
+                                  _activeTool is SelectTool &&
+                                  _editingTextElementId == null) {
+                                final hit =
+                                    _editorState.scene.getElementAtPoint(
+                                      point,
+                                    );
+                                if (hit is TextElement) {
+                                  _startTextEditingExisting(hit);
+                                } else if (hit != null &&
+                                    BoundTextUtils.isTextContainer(hit)) {
+                                  _startBoundTextEditing(hit);
+                                } else if (hit is ArrowElement) {
+                                  _startArrowLabelEditing(hit);
+                                }
+                              }
+
+                              if (_sceneBeforeDrag != null &&
+                                  !identical(
+                                    _editorState.scene,
+                                    _sceneBeforeDrag,
+                                  )) {
+                                _historyManager.push(_sceneBeforeDrag!);
+                              }
+                              _sceneBeforeDrag = null;
+                            },
+                            onPointerSignal: (event) {
+                              if (event is PointerScrollEvent) {
+                                final factor =
+                                    event.scrollDelta.dy < 0 ? 1.1 : 0.9;
+                                final newViewport =
+                                    _editorState.viewport.zoomAt(
+                                      factor,
+                                      event.localPosition,
+                                    );
+                                _applyResult(
+                                  UpdateViewportResult(newViewport),
+                                );
+                              }
+                            },
+                            child: CustomPaint(
+                              painter: StaticCanvasPainter(
+                                scene: _editorState.scene,
+                                adapter: _adapter,
+                                viewport: _editorState.viewport,
+                                previewElement:
+                                    _buildPreviewElement(toolOverlay),
+                                editingElementId: _editingTextElementId,
+                                resolvedImages: _resolveImages(),
                               ),
-                            );
-                          } else {
-                            _applyResult(
-                              _activeTool.onPointerDown(point, _toolContext),
-                            );
-                          }
-                        },
-                        onPointerMove: (event) {
-                          final point = _toScene(event.localPosition);
-                          final delta = event.delta;
-                          _applyResult(
-                            _activeTool.onPointerMove(
-                              point,
-                              _toolContext,
-                              screenDelta: Offset(delta.dx, delta.dy),
+                              foregroundPainter: InteractiveCanvasPainter(
+                                viewport: _editorState.viewport,
+                                selection: _isDraggingPointHandle()
+                                    ? null
+                                    : _buildSelectionOverlay(),
+                                marqueeRect: marqueeRect,
+                                bindTargetBounds:
+                                    toolOverlay?.bindTargetBounds,
+                                pointHandles: _buildPointHandles(),
+                                creationPoints: toolOverlay?.creationPoints,
+                              ),
+                              child: const SizedBox.expand(),
                             ),
-                          );
-                          setState(() {});
-                        },
-                        onPointerUp: (event) {
-                          final point = _toScene(event.localPosition);
-                          final now = DateTime.now();
-                          final isDoubleClick =
-                              _lastPointerUpTime != null &&
-                              now
-                                      .difference(_lastPointerUpTime!)
-                                      .inMilliseconds <
-                                  300;
-                          _lastPointerUpTime = now;
-
-                          if (_activeTool is LineTool) {
-                            _applyResult(
-                              (_activeTool as LineTool).onPointerUp(
-                                point,
-                                _toolContext,
-                                isDoubleClick: isDoubleClick,
-                              ),
-                            );
-                          } else if (_activeTool is ArrowTool) {
-                            _applyResult(
-                              (_activeTool as ArrowTool).onPointerUp(
-                                point,
-                                _toolContext,
-                                isDoubleClick: isDoubleClick,
-                              ),
-                            );
-                          } else {
-                            _applyResult(
-                              _activeTool.onPointerUp(point, _toolContext),
-                            );
-                          }
-
-                          // Double-click dispatch for text editing
-                          if (isDoubleClick &&
-                              _activeTool is SelectTool &&
-                              _editingTextElementId == null) {
-                            final hit = _editorState.scene.getElementAtPoint(
-                              point,
-                            );
-                            if (hit is TextElement) {
-                              _startTextEditingExisting(hit);
-                            } else if (hit != null &&
-                                BoundTextUtils.isTextContainer(hit)) {
-                              _startBoundTextEditing(hit);
-                            } else if (hit is ArrowElement) {
-                              _startArrowLabelEditing(hit);
-                            }
-                          }
-
-                          if (_sceneBeforeDrag != null &&
-                              !identical(
-                                _editorState.scene,
-                                _sceneBeforeDrag,
-                              )) {
-                            _historyManager.push(_sceneBeforeDrag!);
-                          }
-                          _sceneBeforeDrag = null;
-                        },
-                        onPointerSignal: (event) {
-                          if (event is PointerScrollEvent) {
-                            final factor = event.scrollDelta.dy < 0 ? 1.1 : 0.9;
-                            final newViewport = _editorState.viewport.zoomAt(
-                              factor,
-                              event.localPosition,
-                            );
-                            _applyResult(UpdateViewportResult(newViewport));
-                          }
-                        },
-                        child: CustomPaint(
-                          painter: StaticCanvasPainter(
-                            scene: _editorState.scene,
-                            adapter: _adapter,
-                            viewport: _editorState.viewport,
-                            previewElement: _buildPreviewElement(toolOverlay),
-                            editingElementId: _editingTextElementId,
-                            resolvedImages: _resolveImages(),
                           ),
-                          foregroundPainter: InteractiveCanvasPainter(
-                            viewport: _editorState.viewport,
-                            selection: _isDraggingPointHandle()
-                                ? null
-                                : _buildSelectionOverlay(),
-                            marqueeRect: marqueeRect,
-                            bindTargetBounds: toolOverlay?.bindTargetBounds,
-                            pointHandles: _buildPointHandles(),
-                            creationPoints: toolOverlay?.creationPoints,
-                          ),
-                          child: const SizedBox.expand(),
-                        ),
+                          if (_editingTextElementId != null)
+                            _buildTextEditingOverlay(),
+                        ],
                       ),
-                      if (_editingTextElementId != null)
-                        _buildTextEditingOverlay(),
-                    ],
+                    ),
                   ),
-                ),
+                  if (_selectedElements.isNotEmpty) _buildPropertyPanel(),
+                  if (_showLibraryPanel) _buildLibraryPanel(),
+                ],
               ),
-              if (_selectedElements.isNotEmpty) _buildPropertyPanel(),
-              if (_showLibraryPanel) _buildLibraryPanel(),
+              // Floating toolbar — centered at top
+              Positioned(
+                top: 12,
+                left: 0,
+                right: 0,
+                child: Center(child: _buildToolbar()),
+              ),
+              // Hamburger menu — top-left
+              Positioned(
+                top: 12,
+                left: 12,
+                child: _buildHamburgerMenu(),
+              ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHamburgerMenu() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.17),
+            blurRadius: 1,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 3,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 14,
+            offset: const Offset(0, 7),
+          ),
+        ],
+      ),
+      child: PopupMenuButton<String>(
+        icon: const Icon(Icons.menu, size: 20),
+        tooltip: 'Menu',
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+        onSelected: (value) {
+          switch (value) {
+            case 'open':
+              _openFile();
+            case 'save':
+              _saveFile();
+            case 'save_as':
+              _saveFileAs();
+            case 'export_png':
+              _exportPng();
+            case 'export_svg':
+              _exportSvg();
+            case 'library':
+              setState(() => _showLibraryPanel = !_showLibraryPanel);
+            case 'import_image':
+              _importImage();
+          }
+        },
+        itemBuilder: (context) => [
+          _menuItem('open', Icons.folder_open, 'Open', 'Ctrl+O'),
+          _menuItem('save', Icons.save, 'Save', 'Ctrl+S'),
+          _menuItem('save_as', Icons.save_as, 'Save As', 'Ctrl+Shift+S'),
+          const PopupMenuDivider(),
+          _menuItem(
+            'export_png',
+            Icons.image,
+            'Export PNG',
+            'Ctrl+Shift+E',
+          ),
+          _menuItem('export_svg', Icons.code, 'Export SVG', null),
+          const PopupMenuDivider(),
+          PopupMenuItem<String>(
+            value: 'library',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.library_books,
+                  size: 18,
+                  color: _showLibraryPanel ? Colors.blue : Colors.grey.shade700,
+                ),
+                const SizedBox(width: 12),
+                const Expanded(child: Text('Library')),
+                if (_showLibraryPanel)
+                  const Icon(Icons.check, size: 16, color: Colors.blue),
+              ],
+            ),
+          ),
+          _menuItem(
+            'import_image',
+            Icons.add_photo_alternate,
+            'Import Image',
+            '9',
+          ),
+        ],
+      ),
+    );
+  }
+
+  PopupMenuItem<String> _menuItem(
+    String value,
+    IconData icon,
+    String label,
+    String? shortcut,
+  ) {
+    return PopupMenuItem<String>(
+      value: value,
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: Colors.grey.shade700),
+          const SizedBox(width: 12),
+          Expanded(child: Text(label)),
+          if (shortcut != null)
+            Text(
+              shortcut,
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToolbar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.17),
+            blurRadius: 1,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 3,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 14,
+            offset: const Offset(0, 7),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Undo / Redo
+          _toolbarButton(
+            icon: Icons.undo,
+            tooltip: 'Undo (Ctrl+Z)',
+            onPressed: _undo,
+          ),
+          _toolbarButton(
+            icon: Icons.redo,
+            tooltip: 'Redo (Ctrl+Shift+Z)',
+            onPressed: _redo,
+          ),
+          _toolbarDivider(),
+          // Tool buttons
+          for (final type in ToolType.values) ...[
+            if (type == ToolType.frame)
+              _toolbarButton(
+                iconWidget: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Icon(Icons.add_photo_alternate, size: 20),
+                    Positioned(
+                      right: -6,
+                      bottom: -3,
+                      child: Text(
+                        '9',
+                        style: TextStyle(
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey.shade400,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                tooltip: 'Import Image (9)',
+                onPressed: _importImage,
+              ),
+            _toolbarButton(
+              iconWidget: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  _iconWidgetFor(
+                    type,
+                    color: _editorState.activeToolType == type
+                        ? Colors.blue
+                        : Colors.grey.shade700,
+                    size: 20,
+                  ),
+                  if (shortcutForToolType(type) != null)
+                    Positioned(
+                      right: -6,
+                      bottom: -3,
+                      child: Text(
+                        shortcutForToolType(type)!,
+                        style: TextStyle(
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                          color: _editorState.activeToolType == type
+                              ? Colors.blue.shade300
+                              : Colors.grey.shade400,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              tooltip: '${type.name} (${shortcutForToolType(type)})',
+              onPressed: () => _switchTool(type),
+              isActive: _editorState.activeToolType == type,
+            ),
+          ],
+          _toolbarDivider(),
+          // Tool lock
+          _toolbarButton(
+            icon: _toolLocked ? Icons.lock : Icons.lock_open,
+            tooltip: 'Keep tool active (Q)',
+            onPressed: () {
+              setState(() {
+                _toolLocked = !_toolLocked;
+                _editorState = _editorState.copyWith(
+                  toolLocked: _toolLocked,
+                );
+                if (!_toolLocked) {
+                  _switchTool(ToolType.select);
+                }
+              });
+            },
+            isActive: _toolLocked,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _toolbarButton({
+    IconData? icon,
+    Widget? iconWidget,
+    required String tooltip,
+    required VoidCallback onPressed,
+    bool isActive = false,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: isActive ? Colors.blue.shade50 : Colors.transparent,
+        borderRadius: BorderRadius.circular(6),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(6),
+          onTap: onPressed,
+          child: SizedBox(
+            width: 32,
+            height: 32,
+            child: Center(
+              child: iconWidget ??
+                  Icon(
+                    icon,
+                    size: 20,
+                    color: isActive ? Colors.blue : Colors.grey.shade700,
+                  ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _toolbarDivider() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: SizedBox(
+        height: 20,
+        child: VerticalDivider(
+          width: 1,
+          thickness: 1,
+          color: Colors.grey.shade300,
         ),
       ),
     );
@@ -1160,26 +1361,9 @@ class _CanvasPageState extends State<_CanvasPage> {
     const SingleActivator(LogicalKeyboardKey.keyS, meta: true, shift: true):
         _saveFileAs,
     const SingleActivator(LogicalKeyboardKey.keyO, meta: true): _openFile,
-    const SingleActivator(LogicalKeyboardKey.keyZ, meta: true): () {
-      final undone = _historyManager.undo(_editorState.scene);
-      if (undone != null) {
-        setState(() {
-          _editorState = _editorState.copyWith(scene: undone);
-        });
-      }
-    },
-    const SingleActivator(
-      LogicalKeyboardKey.keyZ,
-      meta: true,
-      shift: true,
-    ): () {
-      final redone = _historyManager.redo(_editorState.scene);
-      if (redone != null) {
-        setState(() {
-          _editorState = _editorState.copyWith(scene: redone);
-        });
-      }
-    },
+    const SingleActivator(LogicalKeyboardKey.keyZ, meta: true): _undo,
+    const SingleActivator(LogicalKeyboardKey.keyZ, meta: true, shift: true):
+        _redo,
     const SingleActivator(LogicalKeyboardKey.keyE, meta: true, shift: true):
         _exportPng,
     // Ctrl variants for non-macOS platforms
@@ -1189,26 +1373,9 @@ class _CanvasPageState extends State<_CanvasPage> {
     const SingleActivator(LogicalKeyboardKey.keyO, control: true): _openFile,
     const SingleActivator(LogicalKeyboardKey.keyE, control: true, shift: true):
         _exportPng,
-    const SingleActivator(LogicalKeyboardKey.keyZ, control: true): () {
-      final undone = _historyManager.undo(_editorState.scene);
-      if (undone != null) {
-        setState(() {
-          _editorState = _editorState.copyWith(scene: undone);
-        });
-      }
-    },
-    const SingleActivator(
-      LogicalKeyboardKey.keyZ,
-      control: true,
-      shift: true,
-    ): () {
-      final redone = _historyManager.redo(_editorState.scene);
-      if (redone != null) {
-        setState(() {
-          _editorState = _editorState.copyWith(scene: redone);
-        });
-      }
-    },
+    const SingleActivator(LogicalKeyboardKey.keyZ, control: true): _undo,
+    const SingleActivator(LogicalKeyboardKey.keyZ, control: true, shift: true):
+        _redo,
   };
 
   List<Element> get _selectedElements {
@@ -1782,19 +1949,9 @@ class _CanvasPageState extends State<_CanvasPage> {
     // Undo/redo shortcuts (intercept before tool dispatch)
     if (ctrl && key == LogicalKeyboardKey.keyZ) {
       if (shift) {
-        final redone = _historyManager.redo(_editorState.scene);
-        if (redone != null) {
-          setState(() {
-            _editorState = _editorState.copyWith(scene: redone);
-          });
-        }
+        _redo();
       } else {
-        final undone = _historyManager.undo(_editorState.scene);
-        if (undone != null) {
-          setState(() {
-            _editorState = _editorState.copyWith(scene: undone);
-          });
-        }
+        _undo();
       }
       return;
     }
@@ -1905,14 +2062,15 @@ class _CanvasPageState extends State<_CanvasPage> {
     return SelectionOverlay.fromElements(selected);
   }
 
-  Widget _iconWidgetFor(ToolType type, {Color? color}) {
+  Widget _iconWidgetFor(ToolType type, {Color? color, double? size}) {
+    final s = size ?? 24;
     if (type == ToolType.diamond) {
       return CustomPaint(
-        size: const Size(24, 24),
+        size: Size(s, s),
         painter: _DiamondIconPainter(color: color ?? Colors.grey.shade800),
       );
     }
-    return Icon(_iconFor(type), color: color);
+    return Icon(_iconFor(type), color: color, size: s);
   }
 
   IconData _iconFor(ToolType type) {
