@@ -189,5 +189,81 @@ void main() {
       expect(a, equals(b));
       expect(a, isNot(equals(c)));
     });
+
+    test('showBoundingBox is false for 2-point line', () {
+      final line = LineElement(
+        id: const ElementId('l1'),
+        x: 0, y: 0, width: 100, height: 100,
+        points: [const Point(0, 0), const Point(100, 100)],
+      );
+      final overlay = SelectionOverlay.fromElements([line]);
+      expect(overlay!.showBoundingBox, isFalse);
+    });
+
+    test('showBoundingBox is false for 2-point arrow', () {
+      final arrow = ArrowElement(
+        id: const ElementId('a1'),
+        x: 0, y: 0, width: 100, height: 0,
+        points: [const Point(0, 0), const Point(100, 0)],
+        endArrowhead: Arrowhead.arrow,
+      );
+      final overlay = SelectionOverlay.fromElements([arrow]);
+      expect(overlay!.showBoundingBox, isFalse);
+    });
+
+    test('showBoundingBox is true for multi-point line', () {
+      final line = LineElement(
+        id: const ElementId('l1'),
+        x: 0, y: 0, width: 100, height: 100,
+        points: [
+          const Point(0, 0),
+          const Point(50, 100),
+          const Point(100, 0),
+        ],
+      );
+      final overlay = SelectionOverlay.fromElements([line]);
+      expect(overlay!.showBoundingBox, isTrue);
+    });
+
+    test('showBoundingBox is true for rectangle', () {
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+      );
+      final overlay = SelectionOverlay.fromElements([rect]);
+      expect(overlay!.showBoundingBox, isTrue);
+    });
+
+    test('showBoundingBox is true for multiple elements including 2-point line',
+        () {
+      final line = LineElement(
+        id: const ElementId('l1'),
+        x: 0, y: 0, width: 100, height: 100,
+        points: [const Point(0, 0), const Point(100, 100)],
+      );
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 200, y: 200, width: 50, height: 50,
+      );
+      final overlay = SelectionOverlay.fromElements([line, rect]);
+      expect(overlay!.showBoundingBox, isTrue);
+    });
+
+    test('showBoundingBox is false for elbow arrow', () {
+      final arrow = ArrowElement(
+        id: const ElementId('ea1'),
+        x: 0, y: 0, width: 200, height: 100,
+        points: [
+          const Point(0, 0),
+          const Point(100, 0),
+          const Point(100, 100),
+          const Point(200, 100),
+        ],
+        endArrowhead: Arrowhead.arrow,
+        elbowed: true,
+      );
+      final overlay = SelectionOverlay.fromElements([arrow]);
+      expect(overlay!.showBoundingBox, isFalse);
+    });
   });
 }

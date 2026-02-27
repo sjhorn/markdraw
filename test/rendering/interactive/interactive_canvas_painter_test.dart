@@ -195,6 +195,32 @@ void main() {
       );
     });
 
+    test('draws only point handles when showBoundingBox is false', () {
+      final (recorder, canvas) = _makeCanvas();
+      final line = LineElement(
+        id: const ElementId('l1'),
+        x: 0, y: 0, width: 200, height: 0,
+        points: [const Point(0, 0), const Point(200, 0)],
+      );
+      final overlay = SelectionOverlay.fromElements([line]);
+      // 2-point line should have showBoundingBox=false
+      expect(overlay!.showBoundingBox, isFalse);
+
+      final painter = InteractiveCanvasPainter(
+        viewport: const ViewportState(),
+        selection: overlay,
+        pointHandles: const [Point(0, 0), Point(200, 0)],
+      );
+
+      expect(
+        () {
+          painter.paint(canvas, const Size(800, 600));
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
     test('draws point handles with rotated selection', () {
       final (recorder, canvas) = _makeCanvas();
       final line = LineElement(

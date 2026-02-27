@@ -418,7 +418,7 @@ class SelectTool implements Tool {
   /// Hit-test for resize/rotation handles on selected elements.
   HandleType? _hitTestHandle(Point scenePoint, List<Element> elements) {
     final overlay = SelectionOverlay.fromElements(elements);
-    if (overlay == null) return null;
+    if (overlay == null || !overlay.showBoundingBox) return null;
 
     // Transform scene point into the selection's local space (undo rotation)
     final localPoint = _unrotatePoint(

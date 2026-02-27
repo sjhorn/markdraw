@@ -536,14 +536,26 @@ void main() {
 
   group('Line/Arrow resize scales points', () {
     test('resize line via middleRight scales points proportionally', () {
-      final ctx = contextWith(
-        elements: [line1],
-        selectedIds: {line1.id},
+      // Use 3-point line (2-point lines have no bounding box handles)
+      final multiLine = LineElement(
+        id: const ElementId('ml1'),
+        x: 50,
+        y: 50,
+        width: 100,
+        height: 100,
+        points: [
+          const Point(0, 0),
+          const Point(50, 100),
+          const Point(100, 100),
+        ],
       );
-      // line1 at (50,50) size 100x100, points [(0,0), (100,100)]
+      final ctx = contextWith(
+        elements: [multiLine],
+        selectedIds: {multiLine.id},
+      );
       // middleRight handle at (166, 100) — padded 16px from element edge
       tool.onPointerDown(const Point(166, 100), ctx);
-      // Drag to (216, 100) → new width=150, height=100 (middleRight only changes width)
+      // Drag to (216, 100) → new width=150
       final result = tool.onPointerMove(const Point(216, 100), ctx);
       expect(result, isA<UpdateElementResult>());
       final updated = (result! as UpdateElementResult).element as LineElement;
@@ -551,19 +563,25 @@ void main() {
       expect(updated.width, 150);
       expect(updated.height, 100);
       expect(updated.points[0], const Point(0, 0));
-      expect(updated.points[1].x, closeTo(150, 0.1));
+      expect(updated.points[1].x, closeTo(75, 0.1));
       expect(updated.points[1].y, closeTo(100, 0.1));
+      expect(updated.points[2].x, closeTo(150, 0.1));
+      expect(updated.points[2].y, closeTo(100, 0.1));
     });
 
     test('resize arrow via middleRight scales points proportionally', () {
-      // Arrow with non-zero dimensions, endpoints not at handles
+      // Use 3-point arrow (2-point arrows have no bounding box handles)
       final arrow = ArrowElement(
         id: const ElementId('a2'),
         x: 100,
         y: 100,
         width: 100,
         height: 50,
-        points: [const Point(0, 0), const Point(100, 50)],
+        points: [
+          const Point(0, 0),
+          const Point(50, 25),
+          const Point(100, 50),
+        ],
         endArrowhead: Arrowhead.arrow,
       );
       final ctx = contextWith(
@@ -572,7 +590,7 @@ void main() {
       );
       // middleRight handle at (216, 125) — padded 16px from element edge
       tool.onPointerDown(const Point(216, 125), ctx);
-      // Drag to (266, 125) → new width=150, height=50
+      // Drag to (266, 125) → new width=150
       final result = tool.onPointerMove(const Point(266, 125), ctx);
       expect(result, isA<UpdateElementResult>());
       final updated = (result! as UpdateElementResult).element as ArrowElement;
@@ -580,18 +598,32 @@ void main() {
       expect(updated.height, 50);
       // Points should scale x by 1.5, y unchanged
       expect(updated.points[0], const Point(0, 0));
-      expect(updated.points[1].x, closeTo(150, 0.1));
-      expect(updated.points[1].y, closeTo(50, 0.1));
+      expect(updated.points[1].x, closeTo(75, 0.1));
+      expect(updated.points[1].y, closeTo(25, 0.1));
+      expect(updated.points[2].x, closeTo(150, 0.1));
+      expect(updated.points[2].y, closeTo(50, 0.1));
       // Arrow-specific fields preserved
       expect(updated.endArrowhead, Arrowhead.arrow);
     });
 
     test('resize line via bottomCenter scales only y of points', () {
-      final ctx = contextWith(
-        elements: [line1],
-        selectedIds: {line1.id},
+      // Use 3-point line (2-point lines have no bounding box handles)
+      final multiLine = LineElement(
+        id: const ElementId('ml2'),
+        x: 50,
+        y: 50,
+        width: 100,
+        height: 100,
+        points: [
+          const Point(0, 0),
+          const Point(50, 100),
+          const Point(100, 100),
+        ],
       );
-      // line1 at (50,50) size 100x100
+      final ctx = contextWith(
+        elements: [multiLine],
+        selectedIds: {multiLine.id},
+      );
       // bottomCenter handle at (100, 166) — padded 16px from element edge
       tool.onPointerDown(const Point(100, 166), ctx);
       // Drag to (100, 216) → height 100→150
@@ -602,8 +634,10 @@ void main() {
       expect(updated.height, 150);
       // scaleX=1.0, scaleY=1.5
       expect(updated.points[0], const Point(0, 0));
-      expect(updated.points[1].x, closeTo(100, 0.1));
+      expect(updated.points[1].x, closeTo(50, 0.1));
       expect(updated.points[1].y, closeTo(150, 0.1));
+      expect(updated.points[2].x, closeTo(100, 0.1));
+      expect(updated.points[2].y, closeTo(150, 0.1));
     });
 
     test('resize freedraw via middleRight scales points proportionally', () {

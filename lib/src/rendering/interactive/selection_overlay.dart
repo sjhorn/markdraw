@@ -8,6 +8,16 @@ import 'handle.dart';
 /// handle above it.
 const double _rotationHandleGap = 20.0;
 
+/// Padding (in scene units) between element bounds and the selection box.
+const double selectionPadding = 6.0;
+
+/// Extra handle offset (in scene units) for line/arrow/diamond elements.
+/// These elements are thin or pointy, so handles are pushed further out.
+const double _expandedHandleExtra = 10.0;
+
+/// Element types whose handles sit further from the selection box.
+const _expandedHandleTypes = {'line', 'arrow', 'diamond'};
+
 /// Describes the selection UI to draw: bounding box, handles, and rotation.
 class SelectionOverlay {
   final Bounds bounds;
@@ -15,11 +25,16 @@ class SelectionOverlay {
   final double angle;
   final bool isLocked;
 
+  /// Whether to draw the bounding box and resize/rotation handles.
+  /// False for 2-point lines/arrows and elbow arrows (only point handles shown).
+  final bool showBoundingBox;
+
   const SelectionOverlay({
     required this.bounds,
     required this.handles,
     this.angle = 0.0,
     this.isLocked = false,
+    this.showBoundingBox = true,
   });
 
   /// Creates a [SelectionOverlay] from a list of selected elements.
@@ -44,11 +59,40 @@ class SelectionOverlay {
     final angle = elements.length == 1 ? elements.first.angle : 0.0;
     final isLocked = elements.every((e) => e.locked);
 
+    // Handles sit on the selection box for shapes, further out for
+    // lines/arrows/diamonds.
+    final needsExpanded =
+        elements.any((e) => _expandedHandleTypes.contains(e.type));
+    final handlePad =
+        selectionPadding + (needsExpanded ? _expandedHandleExtra : 0.0);
+    final handleBounds = Bounds.fromLTWH(
+      union.left - handlePad,
+      union.top - handlePad,
+      union.size.width + handlePad * 2,
+      union.size.height + handlePad * 2,
+    );
+
+    // Hide bounding box for single 2-point lines/arrows and elbow arrows,
+    // matching Excalidraw behavior — only point handles are needed.
+    var showBoundingBox = true;
+    if (elements.length == 1) {
+      final e = elements.first;
+      if (e is LineElement) {
+        if (e.points.length <= 2) {
+          showBoundingBox = false;
+        }
+        if (e is ArrowElement && e.elbowed) {
+          showBoundingBox = false;
+        }
+      }
+    }
+
     return SelectionOverlay(
       bounds: union,
-      handles: computeHandles(union),
+      handles: computeHandles(handleBounds),
       angle: angle,
       isLocked: isLocked,
+      showBoundingBox: showBoundingBox,
     );
   }
 
@@ -84,11 +128,13 @@ class SelectionOverlay {
           bounds == other.bounds &&
           angle == other.angle &&
           isLocked == other.isLocked &&
+          showBoundingBox == other.showBoundingBox &&
           listEquals(handles, other.handles);
 
   @override
   int get hashCode =>
-      Object.hash(bounds, angle, isLocked, Object.hashAll(handles));
+      Object.hash(bounds, angle, isLocked, showBoundingBox,
+          Object.hashAll(handles));
 
   @override
   String toString() => 'SelectionOverlay($bounds, angle=$angle)';
