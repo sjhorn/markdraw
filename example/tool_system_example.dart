@@ -1354,7 +1354,8 @@ class _CanvasPageState extends State<_CanvasPage> {
 
   Widget _buildCompactToolbar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -1374,34 +1375,37 @@ class _CanvasPageState extends State<_CanvasPage> {
           ),
         ],
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _compactToolbarButton(
-            icon: Icons.undo,
-            tooltip: 'Undo',
-            onPressed: _undo,
-          ),
-          _compactToolbarButton(
-            icon: Icons.redo,
-            tooltip: 'Redo',
-            onPressed: _redo,
-          ),
-          _toolbarDivider(),
-          for (final type in ToolType.values)
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
             _compactToolbarButton(
-              iconWidget: _iconWidgetFor(
-                type,
-                color: _editorState.activeToolType == type
-                    ? Colors.blue
-                    : Colors.grey.shade700,
-                size: 24,
-              ),
-              tooltip: type.name,
-              onPressed: () => _switchTool(type),
-              isActive: _editorState.activeToolType == type,
+              icon: Icons.undo,
+              tooltip: 'Undo',
+              onPressed: _undo,
             ),
-        ],
+            _compactToolbarButton(
+              icon: Icons.redo,
+              tooltip: 'Redo',
+              onPressed: _redo,
+            ),
+            _toolbarDivider(),
+            for (final type in ToolType.values)
+              _compactToolbarButton(
+                iconWidget: _iconWidgetFor(
+                  type,
+                  color: _editorState.activeToolType == type
+                      ? Colors.blue
+                      : Colors.grey.shade700,
+                  size: 22,
+                ),
+                tooltip: type.name,
+                onPressed: () => _switchTool(type),
+                isActive: _editorState.activeToolType == type,
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -1422,13 +1426,13 @@ class _CanvasPageState extends State<_CanvasPage> {
           borderRadius: BorderRadius.circular(8),
           onTap: onPressed,
           child: SizedBox(
-            width: 48,
-            height: 48,
+            width: 44,
+            height: 44,
             child: Center(
               child: iconWidget ??
                   Icon(
                     icon,
-                    size: 24,
+                    size: 22,
                     color: isActive ? Colors.blue : Colors.grey.shade700,
                   ),
             ),
