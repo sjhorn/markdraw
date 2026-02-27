@@ -130,5 +130,68 @@ void main() {
     test('overlay is null before any click', () {
       expect(tool.overlay, isNull);
     });
+
+    group('drag-to-draw', () {
+      test('drag creates 2-point line in one gesture', () {
+        tool.onPointerDown(const Point(10, 20), context);
+        tool.onPointerMove(const Point(110, 120), context);
+        final result = tool.onPointerUp(const Point(110, 120), context);
+
+        expect(result, isA<CompoundResult>());
+        final compound = result! as CompoundResult;
+        expect(compound.results[0], isA<AddElementResult>());
+        final line =
+            (compound.results[0] as AddElementResult).element as LineElement;
+        expect(line.points, hasLength(2));
+        expect(line.points[0], const Point(0, 0));
+        expect(line.points[1], const Point(100, 100));
+        expect(line.x, 10);
+        expect(line.y, 20);
+        // Should also select and switch to select tool
+        expect(compound.results[1], isA<SetSelectionResult>());
+        expect((compound.results[2] as SwitchToolResult).toolType,
+            ToolType.select);
+      });
+
+      test('short drag (same point) stays in multi-click mode', () {
+        tool.onPointerDown(const Point(10, 20), context);
+        final result = tool.onPointerUp(const Point(10, 20), context);
+
+        expect(result, isNull);
+        // Should have one point and be in multi-click mode
+        expect(tool.overlay, isNotNull);
+        expect(tool.overlay!.creationPoints, hasLength(1));
+
+        // Can continue adding points via click
+        tool.onPointerDown(const Point(100, 100), context);
+        tool.onPointerUp(const Point(100, 100), context);
+        expect(tool.overlay!.creationPoints, hasLength(2));
+      });
+
+      test('drag shows preview during drag', () {
+        tool.onPointerDown(const Point(10, 20), context);
+        tool.onPointerMove(const Point(50, 60), context);
+
+        expect(tool.overlay, isNotNull);
+        expect(tool.overlay!.creationPoints, hasLength(2));
+        expect(tool.overlay!.creationPoints![0], const Point(10, 20));
+        expect(tool.overlay!.creationPoints![1], const Point(50, 60));
+      });
+
+      test('short drag with small movement stays in multi-click mode', () {
+        tool.onPointerDown(const Point(10, 20), context);
+        final result = tool.onPointerUp(const Point(11, 21), context);
+
+        // Distance ~1.41, below threshold of 2.0
+        expect(result, isNull);
+        expect(tool.overlay!.creationPoints, hasLength(1));
+      });
+
+      test('reset clears drag state', () {
+        tool.onPointerDown(const Point(10, 20), context);
+        tool.reset();
+        expect(tool.overlay, isNull);
+      });
+    });
   });
 }

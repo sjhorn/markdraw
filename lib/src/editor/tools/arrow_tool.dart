@@ -19,6 +19,8 @@ class ArrowTool implements Tool {
   PointBinding? _startBinding;
   PointBinding? _endBinding;
   Element? _bindTarget;
+  bool _isDragCreating = false;
+  Point? _dragOrigin;
 
   /// Whether to create elbowed (orthogonal) arrows.
   bool elbowed;
@@ -30,6 +32,27 @@ class ArrowTool implements Tool {
 
   @override
   ToolResult? onPointerDown(Point point, ToolContext context) {
+    if (_points.isEmpty) {
+      // Check for binding at start point
+      final target = BindingUtils.findBindTarget(context.scene, point);
+      Point snappedPoint = point;
+
+      if (target != null) {
+        final fixedPoint = BindingUtils.computeFixedPoint(target, point);
+        final binding = PointBinding(
+          elementId: target.id.value,
+          fixedPoint: fixedPoint,
+        );
+        snappedPoint = BindingUtils.resolveBindingPoint(target, binding);
+        _startBinding = binding;
+      } else {
+        _startBinding = null;
+      }
+
+      _points.add(snappedPoint);
+      _isDragCreating = true;
+      _dragOrigin = point;
+    }
     return null;
   }
 
@@ -47,7 +70,42 @@ class ArrowTool implements Tool {
   @override
   ToolResult? onPointerUp(Point point, ToolContext context,
       {bool isDoubleClick = false}) {
-    // Check for binding at this point
+    if (_isDragCreating) {
+      _isDragCreating = false;
+      final origin = _dragOrigin!;
+      _dragOrigin = null;
+      final dx = point.x - origin.x;
+      final dy = point.y - origin.y;
+      final distance = math.sqrt(dx * dx + dy * dy);
+      if (distance > 2.0) {
+        // Check for binding at end point
+        final target = BindingUtils.findBindTarget(context.scene, point);
+        Point snappedPoint = point;
+
+        if (target != null) {
+          final fixedPoint = BindingUtils.computeFixedPoint(target, point);
+          final binding = PointBinding(
+            elementId: target.id.value,
+            fixedPoint: fixedPoint,
+          );
+          snappedPoint = BindingUtils.resolveBindingPoint(target, binding);
+          _endBinding = binding;
+        } else {
+          _endBinding = null;
+        }
+
+        _points.add(snappedPoint);
+        _previewPoint = null;
+        _bindTarget = null;
+        return _finalize();
+      }
+      // Short drag — stay in multi-click mode (point already added on down)
+      _previewPoint = null;
+      _bindTarget = null;
+      return null;
+    }
+
+    // Multi-click mode: check for binding at this point
     final target = BindingUtils.findBindTarget(context.scene, point);
     Point snappedPoint = point;
 
@@ -58,20 +116,9 @@ class ArrowTool implements Tool {
         fixedPoint: fixedPoint,
       );
       snappedPoint = BindingUtils.resolveBindingPoint(target, binding);
-
-      if (_points.isEmpty) {
-        // This will be the first point (start)
-        _startBinding = binding;
-      } else {
-        // This will be the last point (end) — updated on each click
-        _endBinding = binding;
-      }
+      _endBinding = binding;
     } else {
-      if (_points.isEmpty) {
-        _startBinding = null;
-      } else {
-        _endBinding = null;
-      }
+      _endBinding = null;
     }
 
     _points.add(snappedPoint);
@@ -207,5 +254,7 @@ class ArrowTool implements Tool {
     _startBinding = null;
     _endBinding = null;
     _bindTarget = null;
+    _isDragCreating = false;
+    _dragOrigin = null;
   }
 }

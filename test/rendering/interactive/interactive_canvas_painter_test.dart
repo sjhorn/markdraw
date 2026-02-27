@@ -195,6 +195,31 @@ void main() {
       );
     });
 
+    test('draws point handles with rotated selection', () {
+      final (recorder, canvas) = _makeCanvas();
+      final line = LineElement(
+        id: const ElementId('l1'),
+        x: 100, y: 100, width: 200, height: 0,
+        angle: 0.5,
+        points: [const Point(0, 0), const Point(200, 0)],
+      );
+      final overlay = SelectionOverlay.fromElements([line]);
+
+      final painter = InteractiveCanvasPainter(
+        viewport: const ViewportState(),
+        selection: overlay,
+        pointHandles: const [Point(100, 100), Point(300, 100)],
+      );
+
+      expect(
+        () {
+          painter.paint(canvas, const Size(800, 600));
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
     test('shouldRepaint returns true when pointHandles change', () {
       const p1 = InteractiveCanvasPainter(
         viewport: ViewportState(),

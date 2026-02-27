@@ -65,10 +65,9 @@ class InteractiveCanvasPainter extends CustomPainter {
         canvas.translate(-center.x, -center.y);
       }
 
-      if (selection!.isLocked) {
-        SelectionRenderer.drawLockedSelectionBox(canvas, selection!.bounds);
-      } else {
-        SelectionRenderer.drawSelectionBox(canvas, selection!.bounds);
+      SelectionRenderer.drawSelectionBox(canvas, selection!.bounds);
+
+      if (!selection!.isLocked) {
         SelectionRenderer.drawHandles(canvas, selection!.handles);
 
         // Draw rotation handle
@@ -85,16 +84,17 @@ class InteractiveCanvasPainter extends CustomPainter {
             topCenterHandle.position,
           );
         }
+
+        // Point handles (for line/arrow vertex editing) — drawn in the
+        // same rotated canvas space so they follow the element's rotation.
+        if (pointHandles != null && pointHandles!.isNotEmpty) {
+          SelectionRenderer.drawPointHandles(canvas, pointHandles!);
+        }
       }
 
       if (hasAngle) {
         canvas.restore();
       }
-    }
-
-    // Point handles (for line/arrow vertex editing)
-    if (pointHandles != null && pointHandles!.isNotEmpty) {
-      SelectionRenderer.drawPointHandles(canvas, pointHandles!);
     }
 
     // Snap lines

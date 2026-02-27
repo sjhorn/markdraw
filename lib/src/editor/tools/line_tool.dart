@@ -9,15 +9,23 @@ import 'tool.dart';
 
 /// Tool for creating line elements by clicking to add points.
 /// Double-click or Enter finalizes the line.
+/// Press-and-drag creates a 2-point line in one gesture.
 class LineTool implements Tool {
   final List<Point> _points = [];
   Point? _previewPoint;
+  bool _isDragCreating = false;
+  Point? _dragOrigin;
 
   @override
   ToolType get type => ToolType.line;
 
   @override
   ToolResult? onPointerDown(Point point, ToolContext context) {
+    if (_points.isEmpty) {
+      _points.add(point);
+      _isDragCreating = true;
+      _dragOrigin = point;
+    }
     return null;
   }
 
@@ -34,6 +42,23 @@ class LineTool implements Tool {
   @override
   ToolResult? onPointerUp(Point point, ToolContext context,
       {bool isDoubleClick = false}) {
+    if (_isDragCreating) {
+      _isDragCreating = false;
+      final origin = _dragOrigin!;
+      _dragOrigin = null;
+      final dx = point.x - origin.x;
+      final dy = point.y - origin.y;
+      final distance = math.sqrt(dx * dx + dy * dy);
+      if (distance > 2.0) {
+        _points.add(point);
+        _previewPoint = null;
+        return _finalize();
+      }
+      // Short drag — stay in multi-click mode (point already added on down)
+      _previewPoint = null;
+      return null;
+    }
+
     _points.add(point);
     _previewPoint = null;
 
@@ -104,5 +129,7 @@ class LineTool implements Tool {
   void reset() {
     _points.clear();
     _previewPoint = null;
+    _isDragCreating = false;
+    _dragOrigin = null;
   }
 }

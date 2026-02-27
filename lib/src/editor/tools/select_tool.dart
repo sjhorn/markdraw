@@ -397,12 +397,18 @@ class SelectTool implements Tool {
   /// Hit-test for point handles on a line/arrow element.
   int? _hitTestPointHandle(Point scenePoint, Element element) {
     if (element is! LineElement) return null;
+    // Transform scene point into the element's local (unrotated) space
+    final center = Point(
+      element.x + element.width / 2,
+      element.y + element.height / 2,
+    );
+    final localPoint = _unrotatePoint(scenePoint, center, element.angle);
     for (var i = 0; i < element.points.length; i++) {
       final absPoint = Point(
         element.x + element.points[i].x,
         element.y + element.points[i].y,
       );
-      if (absPoint.distanceTo(scenePoint) <= _handleHitRadius) {
+      if (absPoint.distanceTo(localPoint) <= _handleHitRadius) {
         return i;
       }
     }
@@ -808,8 +814,18 @@ class SelectTool implements Tool {
       return null;
     }
 
-    final dx = current.x - down.x;
-    final dy = current.y - down.y;
+    // Scene-space delta — must be unrotated into element-local space
+    var dx = current.x - down.x;
+    var dy = current.y - down.y;
+    final angle = _hitElement!.angle;
+    if (angle != 0) {
+      final cos = math.cos(-angle);
+      final sin = math.sin(-angle);
+      final rdx = dx * cos - dy * sin;
+      final rdy = dx * sin + dy * cos;
+      dx = rdx;
+      dy = rdy;
+    }
 
     final startPts = _startPoints!;
     final oldPt = startPts[_activePointIndex!];
@@ -894,10 +910,17 @@ class SelectTool implements Tool {
     final points = arrow.points;
     if (points.length < 2) return null;
 
+    // Transform scene point into the element's local (unrotated) space
+    final center = Point(
+      arrow.x + arrow.width / 2,
+      arrow.y + arrow.height / 2,
+    );
+    final localPoint = _unrotatePoint(scenePoint, center, arrow.angle);
+
     for (var i = 0; i < points.length - 1; i++) {
       final a = Point(arrow.x + points[i].x, arrow.y + points[i].y);
       final b = Point(arrow.x + points[i + 1].x, arrow.y + points[i + 1].y);
-      final dist = _distToSegment(scenePoint, a, b);
+      final dist = _distToSegment(localPoint, a, b);
       if (dist <= _handleHitRadius) {
         return i;
       }
@@ -930,8 +953,18 @@ class SelectTool implements Tool {
     final segIdx = _activeSegmentIndex!;
     final startPts = _startPoints!;
 
-    final dx = current.x - down.x;
-    final dy = current.y - down.y;
+    // Scene-space delta — must be unrotated into element-local space
+    var dx = current.x - down.x;
+    var dy = current.y - down.y;
+    final angle = arrow.angle;
+    if (angle != 0) {
+      final cos = math.cos(-angle);
+      final sin = math.sin(-angle);
+      final rdx = dx * cos - dy * sin;
+      final rdy = dx * sin + dy * cos;
+      dx = rdx;
+      dy = rdy;
+    }
 
     final newPoints = List<Point>.from(startPts);
     final ptA = startPts[segIdx];
@@ -970,11 +1003,29 @@ class SelectTool implements Tool {
     }
     final normalized =
         points.map((p) => Point(p.x - minX, p.y - minY)).toList();
+
+    final newWidth = maxX - minX;
+    final newHeight = maxY - minY;
+
+    // For rotated elements, the local-space normalization offset (minX, minY)
+    // must be transformed to scene space, accounting for the shifting rotation
+    // center caused by bounding box changes.
+    double dx = minX;
+    double dy = minY;
+    if (elem.angle != 0) {
+      final c = math.cos(elem.angle);
+      final s = math.sin(elem.angle);
+      final dw = newWidth - elem.width;
+      final dh = newHeight - elem.height;
+      dx = minX * c - minY * s - (dw * (1 - c) + dh * s) / 2;
+      dy = minX * s + minY * c + (dw * s - dh * (1 - c)) / 2;
+    }
+
     return elem.copyWithLine(points: normalized).copyWith(
-      x: elem.x + minX,
-      y: elem.y + minY,
-      width: maxX - minX,
-      height: maxY - minY,
+      x: elem.x + dx,
+      y: elem.y + dy,
+      width: newWidth,
+      height: newHeight,
     );
   }
 
