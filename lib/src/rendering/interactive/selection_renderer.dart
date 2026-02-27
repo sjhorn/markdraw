@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import '../../core/math/math.dart';
 import 'handle.dart';
+import 'selection_overlay.dart';
 import 'snap_line.dart';
 
 /// Static utilities for drawing selection UI overlay elements.
@@ -24,11 +25,11 @@ class SelectionRenderer {
   static const _marqueeFillColor = Color(0x114A90D9);
   static const _snapLineColor = Color(0xFFE03131);
   static const _snapLineStrokeWidth = 1.0;
-  static const _lockedSelectionColor = Color(0xFFCED4DA);
   static const _creationPreviewColor = Color(0xFF4A90D9);
   static const _creationPreviewStrokeWidth = 1.5;
 
-  /// Draws a dashed selection bounding box around [bounds].
+  /// Draws a solid selection bounding box around [bounds], inflated by
+  /// [selectionPadding] so the box sits outside the element edges.
   ///
   /// The caller is responsible for applying any rotation transform to the
   /// canvas before calling this method.
@@ -39,30 +40,13 @@ class SelectionRenderer {
       ..strokeWidth = _selectionStrokeWidth;
 
     final rect = Rect.fromLTWH(
-      bounds.left,
-      bounds.top,
-      bounds.size.width,
-      bounds.size.height,
+      bounds.left - selectionPadding,
+      bounds.top - selectionPadding,
+      bounds.size.width + selectionPadding * 2,
+      bounds.size.height + selectionPadding * 2,
     );
 
-    _drawDashedRect(canvas, rect, paint);
-  }
-
-  /// Draws a gray dashed selection bounding box for locked elements.
-  static void drawLockedSelectionBox(Canvas canvas, Bounds bounds) {
-    final paint = Paint()
-      ..color = _lockedSelectionColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = _selectionStrokeWidth;
-
-    final rect = Rect.fromLTWH(
-      bounds.left,
-      bounds.top,
-      bounds.size.width,
-      bounds.size.height,
-    );
-
-    _drawDashedRect(canvas, rect, paint);
+    canvas.drawRect(rect, paint);
   }
 
   /// Draws resize handles at each handle position.

@@ -131,10 +131,10 @@ void main() {
         selectedIds: state.selectedIds,
       );
 
-      // Drag bottomRight handle (300, 200) → (350, 250)
-      selectTool.onPointerDown(const Point(300, 200), ctx);
-      selectTool.onPointerMove(const Point(350, 250), ctx);
-      final result = selectTool.onPointerUp(const Point(350, 250), ctx);
+      // Drag bottomRight handle (306, 206) → (356, 256) — padded 6px from element edge
+      selectTool.onPointerDown(const Point(306, 206), ctx);
+      selectTool.onPointerMove(const Point(356, 256), ctx);
+      final result = selectTool.onPointerUp(const Point(356, 256), ctx);
       state = state.applyResult(result);
 
       final resized = state.scene.getElementById(rect.id)!;

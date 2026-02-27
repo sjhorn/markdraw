@@ -195,9 +195,10 @@ void main() {
         selectedIds: {rect1.id, rect2.id},
       );
       // Union: 10,10 → 280,240 (270x230)
-      tool.onPointerDown(const Point(280, 240), ctx);
-      // Double the size: drag to (550, 470) → new union 540x460
-      final result = tool.onPointerMove(const Point(550, 470), ctx);
+      // bottomRight handle padded 6px from union edge
+      tool.onPointerDown(const Point(286, 246), ctx);
+      // Double the size: drag to (556, 476) → new union 540x460
+      final result = tool.onPointerMove(const Point(556, 476), ctx);
       expect(result, isA<CompoundResult>());
       final compound = result! as CompoundResult;
 
