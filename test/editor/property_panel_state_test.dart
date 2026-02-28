@@ -618,4 +618,136 @@ void main() {
       expect(updated.locked, isFalse);
     });
   });
+
+  group('PropertyPanelState arrowhead', () {
+    final lineWithArrows = LineElement(
+      id: const ElementId('l1'),
+      x: 0, y: 0, width: 100, height: 0,
+      points: const [Point(0, 0), Point(100, 0)],
+      startArrowhead: Arrowhead.bar,
+      endArrowhead: Arrowhead.triangle,
+    );
+
+    final lineNoArrows = LineElement(
+      id: const ElementId('l2'),
+      x: 0, y: 0, width: 100, height: 0,
+      points: const [Point(0, 0), Point(100, 0)],
+    );
+
+    final arrow = ArrowElement(
+      id: const ElementId('a1'),
+      x: 0, y: 0, width: 100, height: 0,
+      points: const [Point(0, 0), Point(100, 0)],
+      endArrowhead: Arrowhead.arrow,
+    );
+
+    test('fromElements single line with arrowheads', () {
+      final style = PropertyPanelState.fromElements([lineWithArrows]);
+      expect(style.hasLines, isTrue);
+      expect(style.startArrowhead, Arrowhead.bar);
+      expect(style.startArrowheadNone, isFalse);
+      expect(style.endArrowhead, Arrowhead.triangle);
+      expect(style.endArrowheadNone, isFalse);
+    });
+
+    test('fromElements single line without arrowheads', () {
+      final style = PropertyPanelState.fromElements([lineNoArrows]);
+      expect(style.hasLines, isTrue);
+      expect(style.startArrowhead, isNull);
+      expect(style.startArrowheadNone, isTrue);
+      expect(style.endArrowhead, isNull);
+      expect(style.endArrowheadNone, isTrue);
+    });
+
+    test('fromElements mixed arrowheads returns null', () {
+      final style =
+          PropertyPanelState.fromElements([lineWithArrows, lineNoArrows]);
+      expect(style.hasLines, isTrue);
+      expect(style.startArrowhead, isNull);
+      expect(style.startArrowheadNone, isFalse);
+      expect(style.endArrowhead, isNull);
+      expect(style.endArrowheadNone, isFalse);
+    });
+
+    test('fromElements matching arrowheads', () {
+      final l2 = LineElement(
+        id: const ElementId('l3'),
+        x: 0, y: 0, width: 50, height: 0,
+        points: const [Point(0, 0), Point(50, 0)],
+        startArrowhead: Arrowhead.bar,
+        endArrowhead: Arrowhead.triangle,
+      );
+      final style = PropertyPanelState.fromElements([lineWithArrows, l2]);
+      expect(style.startArrowhead, Arrowhead.bar);
+      expect(style.endArrowhead, Arrowhead.triangle);
+    });
+
+    test('fromElements arrow element contributes to hasLines', () {
+      final style = PropertyPanelState.fromElements([arrow]);
+      expect(style.hasLines, isTrue);
+      expect(style.endArrowhead, Arrowhead.arrow);
+      expect(style.startArrowhead, isNull);
+      expect(style.startArrowheadNone, isTrue);
+    });
+
+    test('fromElements non-line returns hasLines false', () {
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+      );
+      final style = PropertyPanelState.fromElements([rect]);
+      expect(style.hasLines, isFalse);
+    });
+
+    test('applyStyle sets start arrowhead on line', () {
+      final result = PropertyPanelState.applyStyle(
+        [lineNoArrows],
+        const ElementStyle(
+          hasLines: true,
+          startArrowhead: Arrowhead.dot,
+        ),
+      );
+      final updated = (result as UpdateElementResult).element as LineElement;
+      expect(updated.startArrowhead, Arrowhead.dot);
+      expect(updated.endArrowhead, isNull); // unchanged
+    });
+
+    test('applyStyle clears start arrowhead', () {
+      final result = PropertyPanelState.applyStyle(
+        [lineWithArrows],
+        const ElementStyle(hasLines: true, startArrowheadNone: true),
+      );
+      final updated = (result as UpdateElementResult).element as LineElement;
+      expect(updated.startArrowhead, isNull);
+      expect(updated.endArrowhead, Arrowhead.triangle); // unchanged
+    });
+
+    test('applyStyle sets end arrowhead on arrow', () {
+      final result = PropertyPanelState.applyStyle(
+        [arrow],
+        const ElementStyle(
+          hasLines: true,
+          endArrowhead: Arrowhead.triangle,
+        ),
+      );
+      final updated = (result as UpdateElementResult).element as ArrowElement;
+      expect(updated.endArrowhead, Arrowhead.triangle);
+    });
+
+    test('applyStyle arrowhead ignored on non-line', () {
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+      );
+      final result = PropertyPanelState.applyStyle(
+        [rect],
+        const ElementStyle(
+          hasLines: true,
+          startArrowhead: Arrowhead.arrow,
+        ),
+      );
+      final updated = (result as UpdateElementResult).element;
+      expect(updated, isA<RectangleElement>());
+    });
+  });
 }

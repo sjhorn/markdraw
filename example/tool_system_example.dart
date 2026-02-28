@@ -1107,6 +1107,8 @@ class _CanvasPageState extends State<_CanvasPage> {
                 marqueeRect: marqueeRect,
                 bindTargetBounds:
                     toolOverlay?.bindTargetBounds,
+                bindTargetAngle:
+                    toolOverlay?.bindTargetAngle ?? 0.0,
                 pointHandles: _buildPointHandles(),
                 creationPoints: toolOverlay?.creationPoints,
               ),
@@ -1603,15 +1605,79 @@ class _CanvasPageState extends State<_CanvasPage> {
                         _buildSectionLabel('Stroke width'),
                         _buildStrokeWidthRow(style.strokeWidth),
                         const SizedBox(height: 8),
+                        _buildSectionLabel('Stroke style'),
+                        _buildStrokeStyleRow(style.strokeStyle),
+                        const SizedBox(height: 8),
                         _buildSectionLabel('Fill style'),
                         _buildFillStyleRow(style.fillStyle),
                         const SizedBox(height: 8),
+                        _buildSectionLabel('Roughness'),
+                        _buildRoughnessSlider(style.roughness),
+                        const SizedBox(height: 8),
                         _buildSectionLabel('Opacity'),
                         _buildOpacitySlider(style.opacity),
+                        if (style.hasRoundness) ...[
+                          const SizedBox(height: 8),
+                          _buildSectionLabel('Roundness'),
+                          _buildRoundnessToggle(style.roundness),
+                        ],
+                        if (style.hasLines) ...[
+                          const SizedBox(height: 8),
+                          _buildArrowheadRow(
+                            label: 'Start arrowhead',
+                            current: style.startArrowhead,
+                            isNone: style.startArrowheadNone,
+                            onSelect: (a) {
+                              if (a == null) {
+                                _applyStyleChange(const ElementStyle(
+                                    hasLines: true,
+                                    startArrowheadNone: true));
+                              } else {
+                                _applyStyleChange(ElementStyle(
+                                    hasLines: true, startArrowhead: a));
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 4),
+                          _buildArrowheadRow(
+                            label: 'End arrowhead',
+                            current: style.endArrowhead,
+                            isNone: style.endArrowheadNone,
+                            onSelect: (a) {
+                              if (a == null) {
+                                _applyStyleChange(const ElementStyle(
+                                    hasLines: true, endArrowheadNone: true));
+                              } else {
+                                _applyStyleChange(ElementStyle(
+                                    hasLines: true, endArrowhead: a));
+                              }
+                            },
+                          ),
+                        ],
+                        if (style.hasArrows) ...[
+                          const SizedBox(height: 8),
+                          _buildElbowedToggle(style.elbowed),
+                        ],
+                        if (style.hasText) ...[
+                          const SizedBox(height: 12),
+                          _buildSectionLabel('Font size'),
+                          _buildFontSizeRow(style.fontSize),
+                          const SizedBox(height: 8),
+                          _buildSectionLabel('Font family'),
+                          _buildFontFamilyRow(style.fontFamily),
+                          const SizedBox(height: 8),
+                          _buildSectionLabel('Text align'),
+                          _buildTextAlignRow(style.textAlign),
+                        ],
                       ],
                     ),
                   ),
                 ),
+                const SizedBox(height: 12),
+                _buildSectionLabel('Layer order'),
+                _buildLayerButtons(),
+                const SizedBox(height: 8),
+                _buildAlignmentButtons(elements.length),
                 const SizedBox(height: 12),
                 _buildLockToggle(style.locked),
               ],
@@ -1877,6 +1943,38 @@ class _CanvasPageState extends State<_CanvasPage> {
                       _buildSectionLabel('Roundness'),
                       _buildRoundnessToggle(style.roundness),
                     ],
+                    if (style.hasLines) ...[
+                      const SizedBox(height: 8),
+                      _buildArrowheadRow(
+                        label: 'Start arrowhead',
+                        current: style.startArrowhead,
+                        isNone: style.startArrowheadNone,
+                        onSelect: (a) {
+                          if (a == null) {
+                            _applyStyleChange(const ElementStyle(
+                                hasLines: true, startArrowheadNone: true));
+                          } else {
+                            _applyStyleChange(ElementStyle(
+                                hasLines: true, startArrowhead: a));
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 4),
+                      _buildArrowheadRow(
+                        label: 'End arrowhead',
+                        current: style.endArrowhead,
+                        isNone: style.endArrowheadNone,
+                        onSelect: (a) {
+                          if (a == null) {
+                            _applyStyleChange(const ElementStyle(
+                                hasLines: true, endArrowheadNone: true));
+                          } else {
+                            _applyStyleChange(ElementStyle(
+                                hasLines: true, endArrowhead: a));
+                          }
+                        },
+                      ),
+                    ],
                     if (style.hasArrows) ...[
                       const SizedBox(height: 8),
                       _buildElbowedToggle(style.elbowed),
@@ -1896,6 +1994,11 @@ class _CanvasPageState extends State<_CanvasPage> {
                 ),
               ),
             ),
+            const SizedBox(height: 12),
+            _buildSectionLabel('Layer order'),
+            _buildLayerButtons(),
+            const SizedBox(height: 8),
+            _buildAlignmentButtons(elements.length),
             const SizedBox(height: 12),
             _buildLockToggle(style.locked),
           ],
@@ -2054,6 +2157,181 @@ class _CanvasPageState extends State<_CanvasPage> {
           },
         ),
       ],
+    );
+  }
+
+  Widget _buildArrowheadRow({
+    required String label,
+    required Arrowhead? current,
+    required bool isNone,
+    required void Function(Arrowhead?) onSelect,
+  }) {
+    const arrowheads = Arrowhead.values;
+    final labels = ['None', ...arrowheads.map((a) => a.name)];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionLabel(label),
+        _buildToggleRow(
+          count: labels.length,
+          labels: labels,
+          isSelected: (i) {
+            if (i == 0) return isNone;
+            return current == arrowheads[i - 1];
+          },
+          onTap: (i) {
+            if (i == 0) {
+              onSelect(null);
+            } else {
+              onSelect(arrowheads[i - 1]);
+            }
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLayerButtons() {
+    return Row(
+      children: [
+        Tooltip(
+          message: 'Send to back (Ctrl+Shift+[)',
+          child: IconButton(
+            icon: const Icon(Icons.vertical_align_bottom, size: 18),
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            padding: EdgeInsets.zero,
+            onPressed: () {
+              _historyManager.push(_editorState.scene);
+              final ids = _editorState.selectedIds;
+              final updated =
+                  LayerUtils.sendToBack(_editorState.scene, ids);
+              if (updated.isEmpty) return;
+              _applyResult(CompoundResult([
+                for (final e in updated) UpdateElementResult(e),
+              ]));
+            },
+          ),
+        ),
+        Tooltip(
+          message: 'Send backward (Ctrl+[)',
+          child: IconButton(
+            icon: const Icon(Icons.arrow_downward, size: 18),
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            padding: EdgeInsets.zero,
+            onPressed: () {
+              _historyManager.push(_editorState.scene);
+              final ids = _editorState.selectedIds;
+              final updated =
+                  LayerUtils.sendBackward(_editorState.scene, ids);
+              if (updated.isEmpty) return;
+              _applyResult(CompoundResult([
+                for (final e in updated) UpdateElementResult(e),
+              ]));
+            },
+          ),
+        ),
+        Tooltip(
+          message: 'Bring forward (Ctrl+])',
+          child: IconButton(
+            icon: const Icon(Icons.arrow_upward, size: 18),
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            padding: EdgeInsets.zero,
+            onPressed: () {
+              _historyManager.push(_editorState.scene);
+              final ids = _editorState.selectedIds;
+              final updated =
+                  LayerUtils.bringForward(_editorState.scene, ids);
+              if (updated.isEmpty) return;
+              _applyResult(CompoundResult([
+                for (final e in updated) UpdateElementResult(e),
+              ]));
+            },
+          ),
+        ),
+        Tooltip(
+          message: 'Bring to front (Ctrl+Shift+])',
+          child: IconButton(
+            icon: const Icon(Icons.vertical_align_top, size: 18),
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            padding: EdgeInsets.zero,
+            onPressed: () {
+              _historyManager.push(_editorState.scene);
+              final ids = _editorState.selectedIds;
+              final updated =
+                  LayerUtils.bringToFront(_editorState.scene, ids);
+              if (updated.isEmpty) return;
+              _applyResult(CompoundResult([
+                for (final e in updated) UpdateElementResult(e),
+              ]));
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAlignmentButtons(int selectedCount) {
+    if (selectedCount < 2) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionLabel('Align'),
+        Wrap(
+          spacing: 4,
+          children: [
+            _alignButton(Icons.align_horizontal_left, 'Align left',
+                AlignmentUtils.alignLeft),
+            _alignButton(Icons.align_horizontal_center, 'Align center H',
+                AlignmentUtils.alignCenterH),
+            _alignButton(Icons.align_horizontal_right, 'Align right',
+                AlignmentUtils.alignRight),
+            _alignButton(Icons.align_vertical_top, 'Align top',
+                AlignmentUtils.alignTop),
+            _alignButton(Icons.align_vertical_center, 'Align center V',
+                AlignmentUtils.alignCenterV),
+            _alignButton(Icons.align_vertical_bottom, 'Align bottom',
+                AlignmentUtils.alignBottom),
+          ],
+        ),
+        if (selectedCount >= 3) ...[
+          const SizedBox(height: 4),
+          _buildSectionLabel('Distribute'),
+          Wrap(
+            spacing: 4,
+            children: [
+              _alignButton(Icons.horizontal_distribute, 'Distribute H',
+                  AlignmentUtils.distributeH),
+              _alignButton(Icons.vertical_distribute, 'Distribute V',
+                  AlignmentUtils.distributeV),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _alignButton(
+    IconData icon,
+    String tooltip,
+    List<Element> Function(List<Element>) operation,
+  ) {
+    return Tooltip(
+      message: tooltip,
+      child: IconButton(
+        icon: Icon(icon, size: 18),
+        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+        padding: EdgeInsets.zero,
+        onPressed: () {
+          final elements = _selectedElements;
+          if (elements.isEmpty) return;
+          _historyManager.push(_editorState.scene);
+          final updated = operation(elements);
+          if (updated.isEmpty) return;
+          _applyResult(CompoundResult([
+            for (final e in updated) UpdateElementResult(e),
+          ]));
+        },
+      ),
     );
   }
 

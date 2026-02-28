@@ -2,10 +2,12 @@
 /// serialization.
 library;
 
+export 'src/core/alignment/alignment.dart';
 export 'src/core/elements/elements.dart';
 export 'src/core/groups/groups.dart';
 export 'src/core/history/history.dart';
 export 'src/core/io/io.dart';
+export 'src/core/layer/layer.dart';
 export 'src/core/library/library.dart';
 export 'src/core/math/math.dart';
 export 'src/core/scene/scene_exports.dart';

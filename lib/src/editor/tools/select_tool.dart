@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import '../../core/elements/elements.dart';
 import '../../core/groups/groups.dart';
+import '../../core/layer/layer_utils.dart';
 import '../../core/math/math.dart';
 import '../../core/scene/scene_exports.dart';
 import '../../rendering/interactive/interactive.dart';
@@ -1224,6 +1225,34 @@ class SelectTool implements Tool {
       return CompoundResult(results);
     }
 
+    // Ctrl+]: Bring forward / Ctrl+Shift+]: Bring to front
+    if (ctrl && key == ']') {
+      if (selectedElements.isEmpty) return null;
+      if (selectedElements.every((e) => e.locked)) return null;
+      final ids = selectedElements.map((e) => e.id).toSet();
+      final updated = shift
+          ? LayerUtils.bringToFront(context.scene, ids)
+          : LayerUtils.bringForward(context.scene, ids);
+      if (updated.isEmpty) return null;
+      return CompoundResult([
+        for (final e in updated) UpdateElementResult(e),
+      ]);
+    }
+
+    // Ctrl+[: Send backward / Ctrl+Shift+[: Send to back
+    if (ctrl && key == '[') {
+      if (selectedElements.isEmpty) return null;
+      if (selectedElements.every((e) => e.locked)) return null;
+      final ids = selectedElements.map((e) => e.id).toSet();
+      final updated = shift
+          ? LayerUtils.sendToBack(context.scene, ids)
+          : LayerUtils.sendBackward(context.scene, ids);
+      if (updated.isEmpty) return null;
+      return CompoundResult([
+        for (final e in updated) UpdateElementResult(e),
+      ]);
+    }
+
     // Arrow keys: Nudge
     final nudge = shift ? 10.0 : 1.0;
     if (key == 'ArrowLeft' || key == 'ArrowRight' ||
@@ -1391,6 +1420,7 @@ class SelectTool implements Tool {
           _bindTarget!.width,
           _bindTarget!.height,
         ),
+        bindTargetAngle: _bindTarget!.angle,
       );
     }
     if (_dragMode != _DragMode.marquee || !_isDragging) return null;

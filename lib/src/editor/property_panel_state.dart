@@ -34,6 +34,20 @@ class ElementStyle {
   // Arrow-only properties (null if no arrows or mixed):
   final bool? elbowed;
 
+  /// True if at least one selected element is a [LineElement] (including arrows).
+  final bool hasLines;
+
+  // Arrowhead properties (null = mixed across selected lines):
+  final Arrowhead? startArrowhead;
+
+  /// True when all selected lines have null startArrowhead.
+  final bool startArrowheadNone;
+
+  final Arrowhead? endArrowhead;
+
+  /// True when all selected lines have null endArrowhead.
+  final bool endArrowheadNone;
+
   // Lock state (null if mixed):
   final bool? locked;
 
@@ -49,6 +63,11 @@ class ElementStyle {
     this.hasRoundness = false,
     this.hasText = false,
     this.hasArrows = false,
+    this.hasLines = false,
+    this.startArrowhead,
+    this.startArrowheadNone = false,
+    this.endArrowhead,
+    this.endArrowheadNone = false,
     this.fontSize,
     this.fontFamily,
     this.textAlign,
@@ -128,6 +147,32 @@ class PropertyPanelState {
       }
     }
 
+    // Line/arrow arrowhead properties
+    final lineElements = elements.whereType<LineElement>().toList();
+    final hasLines = lineElements.isNotEmpty;
+    Arrowhead? startArrowhead;
+    bool startArrowheadNone = false;
+    Arrowhead? endArrowhead;
+    bool endArrowheadNone = false;
+    if (hasLines) {
+      final firstLine = lineElements.first;
+      startArrowhead = firstLine.startArrowhead;
+      startArrowheadNone = startArrowhead == null;
+      endArrowhead = firstLine.endArrowhead;
+      endArrowheadNone = endArrowhead == null;
+      for (var i = 1; i < lineElements.length; i++) {
+        final l = lineElements[i];
+        if (startArrowhead != l.startArrowhead) {
+          startArrowhead = null;
+          startArrowheadNone = false;
+        }
+        if (endArrowhead != l.endArrowhead) {
+          endArrowhead = null;
+          endArrowheadNone = false;
+        }
+      }
+    }
+
     // Text properties — only if at least one TextElement is present.
     final textElements =
         elements.whereType<TextElement>().toList();
@@ -172,6 +217,11 @@ class PropertyPanelState {
       hasRoundness: hasRoundness,
       hasText: hasText,
       hasArrows: hasArrows,
+      hasLines: hasLines,
+      startArrowhead: startArrowhead,
+      startArrowheadNone: startArrowheadNone,
+      endArrowhead: endArrowhead,
+      endArrowheadNone: endArrowheadNone,
       fontSize: fontSize,
       fontFamily: fontFamily,
       textAlign: textAlign,
@@ -244,6 +294,20 @@ class PropertyPanelState {
         } else {
           updated = arrow.copyWithArrow(elbowed: style.elbowed);
         }
+      }
+
+      // Apply arrowhead changes for line elements
+      if (element is LineElement &&
+          (style.startArrowhead != null ||
+           style.startArrowheadNone ||
+           style.endArrowhead != null ||
+           style.endArrowheadNone)) {
+        updated = (updated as LineElement).copyWithLine(
+          startArrowhead: style.startArrowhead,
+          clearStartArrowhead: style.startArrowheadNone,
+          endArrowhead: style.endArrowhead,
+          clearEndArrowhead: style.endArrowheadNone,
+        );
       }
 
       // Apply base properties

@@ -97,11 +97,16 @@ class ToolOverlay {
   final Bounds? marqueeRect;
   final Bounds? bindTargetBounds;
 
+  /// Rotation angle of the binding target element, so the indicator can be
+  /// drawn rotated to match.
+  final double bindTargetAngle;
+
   const ToolOverlay({
     this.creationBounds,
     this.creationPoints,
     this.marqueeRect,
     this.bindTargetBounds,
+    this.bindTargetAngle = 0.0,
   });
 }
 
