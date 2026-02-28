@@ -26,13 +26,14 @@ class RoughCanvasAdapter implements RoughAdapter {
       bounds.size.width,
       bounds.size.height,
     );
-    // Clip fill to shape bounds so hachure/crosshatch don't overshoot,
-    // then draw stroke unclipped so it renders at full width.
+    // Clip fill inset by half the stroke width so the background doesn't
+    // bleed past the visible stroke outline at large stroke widths.
+    final inset = style.strokeWidth / 2;
     final clipRect = Rect.fromLTWH(
-      bounds.left,
-      bounds.top,
-      bounds.size.width,
-      bounds.size.height,
+      bounds.left + inset,
+      bounds.top + inset,
+      bounds.size.width - inset * 2,
+      bounds.size.height - inset * 2,
     );
     _drawClippedFillThenStroke(canvas, drawable, style, clipRect: clipRect);
   }
@@ -59,13 +60,16 @@ class RoughCanvasAdapter implements RoughAdapter {
     final bottom = PointD(bounds.center.x, bounds.bottom);
     final left = PointD(bounds.left, bounds.center.y);
     final drawable = generator.polygon([top, right, bottom, left]);
-    // Clip fill to diamond shape so hachure/crosshatch don't overshoot,
-    // then draw stroke unclipped so it renders at full width.
+    // Clip fill inset by half the stroke width so the background doesn't
+    // bleed past the visible stroke outline at large stroke widths.
+    final inset = style.strokeWidth / 2;
+    final cx = bounds.center.x;
+    final cy = bounds.center.y;
     final clip = Path()
-      ..moveTo(bounds.center.x, bounds.top)
-      ..lineTo(bounds.right, bounds.center.y)
-      ..lineTo(bounds.center.x, bounds.bottom)
-      ..lineTo(bounds.left, bounds.center.y)
+      ..moveTo(cx, bounds.top + inset)
+      ..lineTo(bounds.right - inset, cy)
+      ..lineTo(cx, bounds.bottom - inset)
+      ..lineTo(bounds.left + inset, cy)
       ..close();
     _drawClippedFillThenStroke(canvas, drawable, style, clipPath: clip);
   }
