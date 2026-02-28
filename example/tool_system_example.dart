@@ -1609,24 +1609,37 @@ class _CanvasPageState extends State<_CanvasPage> {
                           quickPicks: _backgroundQuickPicks,
                         ),
                         const SizedBox(height: 8),
+                        _buildSectionLabel('Fill style'),
+                        _buildFillStyleRow(style.fillStyle),
+                        const SizedBox(height: 8),
                         _buildSectionLabel('Stroke width'),
                         _buildStrokeWidthRow(style.strokeWidth),
                         const SizedBox(height: 8),
                         _buildSectionLabel('Stroke style'),
                         _buildStrokeStyleRow(style.strokeStyle),
                         const SizedBox(height: 8),
-                        _buildSectionLabel('Fill style'),
-                        _buildFillStyleRow(style.fillStyle),
-                        const SizedBox(height: 8),
-                        _buildSectionLabel('Roughness'),
-                        _buildRoughnessSlider(style.roughness),
-                        const SizedBox(height: 8),
-                        _buildSectionLabel('Opacity'),
-                        _buildOpacitySlider(style.opacity),
+                        _buildSectionLabel('Sloppiness'),
+                        _buildRoughnessRow(style.roughness),
                         if (style.hasRoundness) ...[
                           const SizedBox(height: 8),
                           _buildSectionLabel('Roundness'),
-                          _buildRoundnessToggle(style.roundness),
+                          _buildRoundnessRow(style.roundness),
+                        ],
+                        if (style.hasArrows) ...[
+                          const SizedBox(height: 8),
+                          _buildSectionLabel('Arrow type'),
+                          _buildElbowedRow(style.elbowed),
+                        ],
+                        if (style.hasText) ...[
+                          const SizedBox(height: 12),
+                          _buildSectionLabel('Font family'),
+                          _buildFontFamilyRow(style.fontFamily),
+                          const SizedBox(height: 8),
+                          _buildSectionLabel('Font size'),
+                          _buildFontSizeRow(style.fontSize),
+                          const SizedBox(height: 8),
+                          _buildSectionLabel('Text align'),
+                          _buildTextAlignRow(style.textAlign),
                         ],
                         if (style.hasLines) ...[
                           const SizedBox(height: 8),
@@ -1661,21 +1674,9 @@ class _CanvasPageState extends State<_CanvasPage> {
                             },
                           ),
                         ],
-                        if (style.hasArrows) ...[
-                          const SizedBox(height: 8),
-                          _buildElbowedToggle(style.elbowed),
-                        ],
-                        if (style.hasText) ...[
-                          const SizedBox(height: 12),
-                          _buildSectionLabel('Font size'),
-                          _buildFontSizeRow(style.fontSize),
-                          const SizedBox(height: 8),
-                          _buildSectionLabel('Font family'),
-                          _buildFontFamilyRow(style.fontFamily),
-                          const SizedBox(height: 8),
-                          _buildSectionLabel('Text align'),
-                          _buildTextAlignRow(style.textAlign),
-                        ],
+                        const SizedBox(height: 8),
+                        _buildSectionLabel('Opacity'),
+                        _buildOpacitySlider(style.opacity),
                       ],
                     ),
                   ),
@@ -1948,24 +1949,37 @@ class _CanvasPageState extends State<_CanvasPage> {
                       quickPicks: _backgroundQuickPicks,
                     ),
                     const SizedBox(height: 8),
+                    _buildSectionLabel('Fill style'),
+                    _buildFillStyleRow(style.fillStyle),
+                    const SizedBox(height: 8),
                     _buildSectionLabel('Stroke width'),
                     _buildStrokeWidthRow(style.strokeWidth),
                     const SizedBox(height: 8),
                     _buildSectionLabel('Stroke style'),
                     _buildStrokeStyleRow(style.strokeStyle),
                     const SizedBox(height: 8),
-                    _buildSectionLabel('Fill style'),
-                    _buildFillStyleRow(style.fillStyle),
-                    const SizedBox(height: 8),
-                    _buildSectionLabel('Roughness'),
-                    _buildRoughnessSlider(style.roughness),
-                    const SizedBox(height: 8),
-                    _buildSectionLabel('Opacity'),
-                    _buildOpacitySlider(style.opacity),
+                    _buildSectionLabel('Sloppiness'),
+                    _buildRoughnessRow(style.roughness),
                     if (style.hasRoundness) ...[
                       const SizedBox(height: 8),
                       _buildSectionLabel('Roundness'),
-                      _buildRoundnessToggle(style.roundness),
+                      _buildRoundnessRow(style.roundness),
+                    ],
+                    if (style.hasArrows) ...[
+                      const SizedBox(height: 8),
+                      _buildSectionLabel('Arrow type'),
+                      _buildElbowedRow(style.elbowed),
+                    ],
+                    if (style.hasText) ...[
+                      const SizedBox(height: 12),
+                      _buildSectionLabel('Font family'),
+                      _buildFontFamilyRow(style.fontFamily),
+                      const SizedBox(height: 8),
+                      _buildSectionLabel('Font size'),
+                      _buildFontSizeRow(style.fontSize),
+                      const SizedBox(height: 8),
+                      _buildSectionLabel('Text align'),
+                      _buildTextAlignRow(style.textAlign),
                     ],
                     if (style.hasLines) ...[
                       const SizedBox(height: 8),
@@ -1999,21 +2013,9 @@ class _CanvasPageState extends State<_CanvasPage> {
                         },
                       ),
                     ],
-                    if (style.hasArrows) ...[
-                      const SizedBox(height: 8),
-                      _buildElbowedToggle(style.elbowed),
-                    ],
-                    if (style.hasText) ...[
-                      const SizedBox(height: 12),
-                      _buildSectionLabel('Font size'),
-                      _buildFontSizeRow(style.fontSize),
-                      const SizedBox(height: 8),
-                      _buildSectionLabel('Font family'),
-                      _buildFontFamilyRow(style.fontFamily),
-                      const SizedBox(height: 8),
-                      _buildSectionLabel('Text align'),
-                      _buildTextAlignRow(style.textAlign),
-                    ],
+                    const SizedBox(height: 8),
+                    _buildSectionLabel('Opacity'),
+                    _buildOpacitySlider(style.opacity),
                   ],
                 ),
               ),
@@ -2099,45 +2101,90 @@ class _CanvasPageState extends State<_CanvasPage> {
 
   Widget _buildStrokeWidthRow(double? current) {
     const widths = [1.0, 2.0, 4.0, 6.0];
-    const labels = ['Thin', 'Medium', 'Bold', 'Extra'];
-    return _buildToggleRow(
-      count: 4,
-      labels: labels,
-      isSelected: (i) => current == widths[i],
-      onTap: (i) => _applyStyleChange(ElementStyle(strokeWidth: widths[i])),
+    const displayWidths = [1.0, 2.0, 3.5, 5.0];
+    const tooltips = ['Thin', 'Medium', 'Bold', 'Extra bold'];
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      children: [
+        for (var i = 0; i < widths.length; i++)
+          _IconToggleChip(
+            isSelected: current == widths[i],
+            onTap: () =>
+                _applyStyleChange(ElementStyle(strokeWidth: widths[i])),
+            tooltip: tooltips[i],
+            child: CustomPaint(
+              size: const Size(20, 20),
+              painter: _StrokeWidthIcon(displayWidths[i]),
+            ),
+          ),
+      ],
     );
   }
 
   Widget _buildStrokeStyleRow(StrokeStyle? current) {
     const styles = StrokeStyle.values;
-    final labels = styles.map((s) => s.name).toList();
-    return _buildToggleRow(
-      count: styles.length,
-      labels: labels,
-      isSelected: (i) => current == styles[i],
-      onTap: (i) => _applyStyleChange(ElementStyle(strokeStyle: styles[i])),
+    final names = ['solid', 'dashed', 'dotted'];
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      children: [
+        for (var i = 0; i < styles.length; i++)
+          _IconToggleChip(
+            isSelected: current == styles[i],
+            onTap: () =>
+                _applyStyleChange(ElementStyle(strokeStyle: styles[i])),
+            tooltip: names[i],
+            child: CustomPaint(
+              size: const Size(20, 20),
+              painter: _StrokeStyleIcon(names[i]),
+            ),
+          ),
+      ],
     );
   }
 
   Widget _buildFillStyleRow(FillStyle? current) {
     const styles = FillStyle.values;
-    final labels = styles.map((s) => s.name).toList();
-    return _buildToggleRow(
-      count: styles.length,
-      labels: labels,
-      isSelected: (i) => current == styles[i],
-      onTap: (i) => _applyStyleChange(ElementStyle(fillStyle: styles[i])),
+    final names = ['solid', 'hachure', 'cross-hatch', 'zigzag'];
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      children: [
+        for (var i = 0; i < styles.length; i++)
+          _IconToggleChip(
+            isSelected: current == styles[i],
+            onTap: () =>
+                _applyStyleChange(ElementStyle(fillStyle: styles[i])),
+            tooltip: names[i],
+            child: CustomPaint(
+              size: const Size(20, 20),
+              painter: _FillStyleIcon(names[i]),
+            ),
+          ),
+      ],
     );
   }
 
-  Widget _buildRoughnessSlider(double? current) {
-    return Slider(
-      value: current ?? 1.0,
-      min: 0,
-      max: 3,
-      divisions: 6,
-      label: current != null ? current.toStringAsFixed(1) : 'mixed',
-      onChanged: (v) => _applyStyleChange(ElementStyle(roughness: v)),
+  Widget _buildRoughnessRow(double? current) {
+    const values = [0.0, 1.0, 3.0];
+    const tooltips = ['Architect', 'Artist', 'Cartoonist'];
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      children: [
+        for (var i = 0; i < values.length; i++)
+          _IconToggleChip(
+            isSelected: current == values[i],
+            onTap: () =>
+                _applyStyleChange(ElementStyle(roughness: values[i])),
+            tooltip: tooltips[i],
+            child: CustomPaint(
+              size: const Size(20, 20),
+              painter: _RoughnessIcon(values[i]),
+            ),
+          ),
+      ],
     );
   }
 
@@ -2152,56 +2199,98 @@ class _CanvasPageState extends State<_CanvasPage> {
     );
   }
 
-  Widget _buildRoundnessToggle(Roundness? current) {
-    final hasRoundness = current != null;
-    return Row(
+  Widget _buildRoundnessRow(Roundness? current) {
+    final isRound = current != null;
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
       children: [
-        const Text('Round corners', style: TextStyle(fontSize: 12)),
-        const Spacer(),
-        Switch(
-          value: hasRoundness,
-          onChanged: (on) {
-            if (on) {
-              _applyStyleChange(
-                const ElementStyle(
-                  roundness: Roundness.adaptive(value: 8),
-                  hasRoundness: true,
-                ),
-              );
-            } else {
-              // Clear roundness by applying with hasRoundness but null value
-              // We need a special approach — set a zero-value roundness to
-              // signal clearing. Use copyWith(clearRoundness: true) directly.
-              final elements = _selectedElements;
-              if (elements.isEmpty) return;
-              _historyManager.push(_editorState.scene);
-              final results = <ToolResult>[];
-              for (final e in elements) {
-                results.add(
-                  UpdateElementResult(e.copyWith(clearRoundness: true)),
-                );
-              }
-              _applyResult(
-                results.length == 1 ? results.first : CompoundResult(results),
+        _IconToggleChip(
+          isSelected: !isRound,
+          onTap: () {
+            final elements = _selectedElements;
+            if (elements.isEmpty) return;
+            _historyManager.push(_editorState.scene);
+            final results = <ToolResult>[];
+            for (final e in elements) {
+              results.add(
+                UpdateElementResult(e.copyWith(clearRoundness: true)),
               );
             }
+            _applyResult(
+              results.length == 1 ? results.first : CompoundResult(results),
+            );
           },
+          tooltip: 'Sharp',
+          child: CustomPaint(
+            size: const Size(20, 20),
+            painter: _RoundnessIcon(false),
+          ),
+        ),
+        _IconToggleChip(
+          isSelected: isRound,
+          onTap: () {
+            _applyStyleChange(
+              const ElementStyle(
+                roundness: Roundness.adaptive(value: 8),
+                hasRoundness: true,
+              ),
+            );
+          },
+          tooltip: 'Round',
+          child: CustomPaint(
+            size: const Size(20, 20),
+            painter: _RoundnessIcon(true),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildElbowedToggle(bool? current) {
-    return Row(
+  Widget _buildElbowedRow(bool? current) {
+    final isElbowed = current ?? false;
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
       children: [
-        const Text('Elbowed', style: TextStyle(fontSize: 12)),
-        const Spacer(),
-        Switch(
-          value: current ?? false,
-          onChanged: (on) {
+        _IconToggleChip(
+          isSelected: !isElbowed,
+          onTap: () {
             _historyManager.push(_editorState.scene);
-            _applyStyleChange(ElementStyle(hasArrows: true, elbowed: on));
+            _applyStyleChange(
+                const ElementStyle(hasArrows: true, elbowed: false));
           },
+          tooltip: 'Sharp',
+          child: CustomPaint(
+            size: const Size(20, 20),
+            painter: _ArrowTypeIcon('sharp'),
+          ),
+        ),
+        _IconToggleChip(
+          isSelected: false, // round is not a distinct mode currently
+          onTap: () {
+            _historyManager.push(_editorState.scene);
+            _applyStyleChange(
+                const ElementStyle(hasArrows: true, elbowed: false));
+          },
+          tooltip: 'Round',
+          child: CustomPaint(
+            size: const Size(20, 20),
+            painter: _ArrowTypeIcon('round'),
+          ),
+        ),
+        _IconToggleChip(
+          isSelected: isElbowed,
+          onTap: () {
+            _historyManager.push(_editorState.scene);
+            _applyStyleChange(
+                const ElementStyle(hasArrows: true, elbowed: true));
+          },
+          tooltip: 'Elbowed',
+          child: CustomPaint(
+            size: const Size(20, 20),
+            painter: _ArrowTypeIcon('elbow'),
+          ),
         ),
       ],
     );
@@ -3234,6 +3323,275 @@ class _ToggleChip extends StatelessWidget {
       ),
     );
   }
+}
+
+class _IconToggleChip extends StatelessWidget {
+  final Widget child;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final String? tooltip;
+
+  const _IconToggleChip({
+    required this.child,
+    required this.isSelected,
+    required this.onTap,
+    this.tooltip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    Widget chip = GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.blue.shade100 : Colors.white,
+          border: Border.all(
+            color: isSelected ? Colors.blue : Colors.grey.shade400,
+          ),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Center(child: child),
+      ),
+    );
+    if (tooltip != null) {
+      chip = Tooltip(message: tooltip!, child: chip);
+    }
+    return chip;
+  }
+}
+
+class _FillStyleIcon extends CustomPainter {
+  final String style;
+  _FillStyleIcon(this.style);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF1e1e1e)
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+    final rect = Rect.fromLTWH(3, 3, size.width - 6, size.height - 6);
+    canvas.drawRect(rect, paint);
+
+    final fillPaint = Paint()
+      ..color = const Color(0xFF1e1e1e)
+      ..strokeWidth = 1.0;
+    switch (style) {
+      case 'solid':
+        canvas.drawRect(rect, fillPaint..style = PaintingStyle.fill);
+      case 'hachure':
+        canvas.save();
+        canvas.clipRect(rect);
+        for (var x = -size.height; x < size.width; x += 4) {
+          canvas.drawLine(
+            Offset(rect.left + x, rect.bottom),
+            Offset(rect.left + x + rect.height, rect.top),
+            fillPaint..style = PaintingStyle.stroke,
+          );
+        }
+        canvas.restore();
+      case 'cross-hatch':
+        canvas.save();
+        canvas.clipRect(rect);
+        for (var x = -size.height; x < size.width; x += 4) {
+          canvas.drawLine(
+            Offset(rect.left + x, rect.bottom),
+            Offset(rect.left + x + rect.height, rect.top),
+            fillPaint..style = PaintingStyle.stroke,
+          );
+          canvas.drawLine(
+            Offset(rect.left + x, rect.top),
+            Offset(rect.left + x + rect.height, rect.bottom),
+            fillPaint..style = PaintingStyle.stroke,
+          );
+        }
+        canvas.restore();
+      case 'zigzag':
+        canvas.save();
+        canvas.clipRect(rect);
+        final path = Path();
+        for (var x = rect.left; x < rect.right; x += 6) {
+          path.moveTo(x, rect.top);
+          var y = rect.top;
+          var goRight = true;
+          while (y < rect.bottom) {
+            final nx = goRight ? x + 3 : x;
+            final ny = y + 3;
+            path.lineTo(nx, ny);
+            y = ny;
+            goRight = !goRight;
+          }
+        }
+        canvas.drawPath(path, fillPaint..style = PaintingStyle.stroke);
+        canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(_FillStyleIcon old) => old.style != style;
+}
+
+class _StrokeWidthIcon extends CustomPainter {
+  final double width;
+  _StrokeWidthIcon(this.width);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF1e1e1e)
+      ..strokeWidth = width
+      ..strokeCap = StrokeCap.round;
+    final y = size.height / 2;
+    canvas.drawLine(Offset(4, y), Offset(size.width - 4, y), paint);
+  }
+
+  @override
+  bool shouldRepaint(_StrokeWidthIcon old) => old.width != width;
+}
+
+class _StrokeStyleIcon extends CustomPainter {
+  final String style;
+  _StrokeStyleIcon(this.style);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF1e1e1e)
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+    final y = size.height / 2;
+    switch (style) {
+      case 'solid':
+        canvas.drawLine(Offset(4, y), Offset(size.width - 4, y), paint);
+      case 'dashed':
+        final path = Path();
+        var x = 4.0;
+        while (x < size.width - 4) {
+          path.moveTo(x, y);
+          path.lineTo(math.min(x + 5, size.width - 4), y);
+          x += 8;
+        }
+        canvas.drawPath(path, paint);
+      case 'dotted':
+        var x = 5.0;
+        while (x < size.width - 4) {
+          canvas.drawCircle(Offset(x, y), 1.0, paint..style = PaintingStyle.fill);
+          x += 5;
+        }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_StrokeStyleIcon old) => old.style != style;
+}
+
+class _RoughnessIcon extends CustomPainter {
+  final double roughness;
+  _RoughnessIcon(this.roughness);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF1e1e1e)
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+    final y = size.height / 2;
+    final path = Path();
+    path.moveTo(4, y);
+    if (roughness < 0.5) {
+      // Architect: clean straight line
+      path.lineTo(size.width - 4, y);
+    } else if (roughness < 2.0) {
+      // Artist: slightly wobbly
+      final w = size.width - 8;
+      for (var i = 0; i <= 8; i++) {
+        final t = i / 8.0;
+        final offset = math.sin(t * math.pi * 3) * 2.0;
+        path.lineTo(4 + w * t, y + offset);
+      }
+    } else {
+      // Cartoonist: very wobbly
+      final w = size.width - 8;
+      for (var i = 0; i <= 12; i++) {
+        final t = i / 12.0;
+        final offset = math.sin(t * math.pi * 5) * 3.5;
+        path.lineTo(4 + w * t, y + offset);
+      }
+    }
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_RoughnessIcon old) => old.roughness != roughness;
+}
+
+class _RoundnessIcon extends CustomPainter {
+  final bool rounded;
+  _RoundnessIcon(this.rounded);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF1e1e1e)
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+    final path = Path();
+    if (rounded) {
+      path.moveTo(size.width - 6, 6);
+      path.lineTo(size.width - 6, 12);
+      path.quadraticBezierTo(size.width - 6, size.height - 6, 12, size.height - 6);
+      path.lineTo(6, size.height - 6);
+    } else {
+      path.moveTo(size.width - 6, 6);
+      path.lineTo(size.width - 6, size.height - 6);
+      path.lineTo(6, size.height - 6);
+    }
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_RoundnessIcon old) => old.rounded != rounded;
+}
+
+class _ArrowTypeIcon extends CustomPainter {
+  final String type; // 'sharp', 'round', 'elbow'
+  _ArrowTypeIcon(this.type);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF1e1e1e)
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+    final path = Path();
+    switch (type) {
+      case 'sharp':
+        // Angled line from bottom-left to top-right via midpoint
+        path.moveTo(5, size.height - 5);
+        path.lineTo(size.width / 2, 8);
+        path.lineTo(size.width - 5, size.height - 5);
+      case 'round':
+        // Curved path
+        path.moveTo(5, size.height - 5);
+        path.quadraticBezierTo(size.width / 2, 2, size.width - 5, size.height - 5);
+      case 'elbow':
+        // Right-angle path
+        path.moveTo(5, size.height - 5);
+        path.lineTo(5, 8);
+        path.lineTo(size.width - 5, 8);
+        path.lineTo(size.width - 5, size.height - 5);
+    }
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_ArrowTypeIcon old) => old.type != type;
 }
 
 /// Delegate for [TextSelectionGestureDetectorBuilder] to enable text
