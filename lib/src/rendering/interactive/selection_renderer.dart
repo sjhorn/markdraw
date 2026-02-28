@@ -234,7 +234,11 @@ class SelectionRenderer {
   }
 
   /// Draws a green-tinted binding indicator around a target shape.
-  static void drawBindingIndicator(Canvas canvas, Bounds bounds) {
+  ///
+  /// When [angle] is non-zero the indicator is drawn rotated around the
+  /// element's center to match a rotated target.
+  static void drawBindingIndicator(
+      Canvas canvas, Bounds bounds, double angle) {
     final fillPaint = Paint()
       ..color = const Color(0x2200CC66)
       ..style = PaintingStyle.fill;
@@ -250,8 +254,22 @@ class SelectionRenderer {
       bounds.size.width,
       bounds.size.height,
     );
+
+    if (angle != 0) {
+      canvas.save();
+      final cx = bounds.left + bounds.size.width / 2;
+      final cy = bounds.top + bounds.size.height / 2;
+      canvas.translate(cx, cy);
+      canvas.rotate(angle);
+      canvas.translate(-cx, -cy);
+    }
+
     canvas.drawRect(rect, fillPaint);
     canvas.drawRect(rect, strokePaint);
+
+    if (angle != 0) {
+      canvas.restore();
+    }
   }
 
   /// Draws a creation preview shape (rectangle outline) from [bounds].

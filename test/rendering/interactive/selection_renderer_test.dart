@@ -194,7 +194,7 @@ void main() {
 
       expect(
         () {
-          SelectionRenderer.drawBindingIndicator(canvas, bounds);
+          SelectionRenderer.drawBindingIndicator(canvas, bounds, 0);
           recorder.endRecording();
         },
         returnsNormally,

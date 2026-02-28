@@ -460,4 +460,82 @@ void main() {
       expect(bound, hasLength(2));
     });
   });
+
+  group('rotation-aware binding', () {
+    // A 100x100 rect at (0,0) rotated 90 degrees.
+    // Center is (50, 50). After 90-degree rotation the visual corners are
+    // approximately: top-left=(100,0), top-right=(100,100), bottom-right=(0,100), bottom-left=(0,0)
+    // But the AABB is still x=0,y=0,w=100,h=100.
+    // A point at (110, 50) is outside the AABB but should be near the
+    // rotated right edge (which in unrotated space is the bottom edge).
+
+    Element rotatedRect() => Element(
+          id: const ElementId('rot'),
+          type: 'rectangle',
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+          angle: 1.5707963267948966, // pi/2 = 90 degrees
+        );
+
+    test('findBindTarget detects rotated element from rotated edge', () {
+      final rect = rotatedRect();
+      // Point near the visual right edge of the rotated rect.
+      // In world space, after 90° CW rotation around center (50,50):
+      //   The original top edge (y=0) rotates to the right side (x=100).
+      // Place point at (105, 50) — near the visual right edge.
+      final scene = Scene().addElement(rect);
+      final target = BindingUtils.findBindTarget(
+        scene,
+        const Point(105, 50),
+        snapRadius: 20,
+      );
+      expect(target, isNotNull);
+      expect(target!.id, const ElementId('rot'));
+    });
+
+    test('computeFixedPoint on rotated element projects to correct edge', () {
+      final rect = rotatedRect();
+      // Point at (105, 50) in world space. After rotating by -90° around (50,50):
+      //   local = (50, -5) approximately — near the top edge in local space.
+      final fp = BindingUtils.computeFixedPoint(rect, const Point(105, 50));
+      // In local space it's closest to the top edge (y=0), so fixedPoint.y ≈ 0
+      expect(fp.y, closeTo(0, 0.01));
+    });
+
+    test('resolveBindingPoint accounts for rotation', () {
+      final rect = rotatedRect();
+      // A fixedPoint of (0.5, 0.0) is the center of the top edge in local space.
+      // In local space: (50, 0). After rotating by +90° around center (50,50):
+      //   world = (100, 50).
+      const binding = PointBinding(
+        elementId: 'rot',
+        fixedPoint: Point(0.5, 0.0),
+      );
+      final resolved = BindingUtils.resolveBindingPoint(rect, binding);
+      expect(resolved.x, closeTo(100, 0.5));
+      expect(resolved.y, closeTo(50, 0.5));
+    });
+
+    test('computeFixedPoint round-trips with resolveBindingPoint on rotated element', () {
+      final rect = rotatedRect();
+      const scenePoint = Point(105, 50);
+      final fp = BindingUtils.computeFixedPoint(rect, scenePoint);
+      final binding = PointBinding(elementId: 'rot', fixedPoint: fp);
+      final resolved = BindingUtils.resolveBindingPoint(rect, binding);
+      // Should resolve to a point on the rotated element's edge, near (100, 50)
+      expect(resolved.x, closeTo(100, 1));
+      expect(resolved.y, closeTo(50, 1));
+    });
+
+    test('non-rotated element behavior unchanged', () {
+      final rect = _rect(id: 'r1', x: 50, y: 80, w: 120, h: 60);
+      const scenePoint = Point(50, 100);
+      final fp = BindingUtils.computeFixedPoint(rect, scenePoint);
+      final binding = PointBinding(elementId: 'r1', fixedPoint: fp);
+      final resolved = BindingUtils.resolveBindingPoint(rect, binding);
+      expect(resolved.x, closeTo(50, 0.5));
+    });
+  });
 }

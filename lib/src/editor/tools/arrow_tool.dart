@@ -233,6 +233,7 @@ class ArrowTool implements Tool {
     }
 
     Bounds? targetBounds;
+    double targetAngle = 0;
     if (_bindTarget != null) {
       targetBounds = Bounds.fromLTWH(
         _bindTarget!.x,
@@ -240,10 +241,12 @@ class ArrowTool implements Tool {
         _bindTarget!.width,
         _bindTarget!.height,
       );
+      targetAngle = _bindTarget!.angle;
     }
     return ToolOverlay(
       creationPoints: overlayPoints,
       bindTargetBounds: targetBounds,
+      bindTargetAngle: targetAngle,
     );
   }
 

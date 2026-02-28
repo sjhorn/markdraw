@@ -46,7 +46,13 @@ class BindingUtils {
 
   /// Project [scenePoint] onto the nearest bounding-box edge of [target],
   /// returning a normalized (0-1, 0-1) fixedPoint.
+  ///
+  /// Accounts for the target's rotation by transforming [scenePoint] into the
+  /// element's local coordinate space before projecting.
   static Point computeFixedPoint(Element target, Point scenePoint) {
+    // Transform into local (unrotated) space
+    final local = _toLocal(target, scenePoint);
+
     final left = target.x;
     final top = target.y;
     final right = target.x + target.width;
@@ -55,8 +61,8 @@ class BindingUtils {
     final h = target.height;
 
     // Clamp point to bounding box first
-    final cx = scenePoint.x.clamp(left, right);
-    final cy = scenePoint.y.clamp(top, bottom);
+    final cx = local.x.clamp(left, right);
+    final cy = local.y.clamp(top, bottom);
 
     // Distance to each edge from the (clamped or original) point
     final dLeft = (cx - left).abs();
@@ -65,16 +71,16 @@ class BindingUtils {
     final dBottom = (cy - bottom).abs();
 
     // For points outside the bounds, also consider distance to the actual edge
-    final distLeft = (scenePoint.x - left).abs();
-    final distRight = (scenePoint.x - right).abs();
-    final distTop = (scenePoint.y - top).abs();
-    final distBottom = (scenePoint.y - bottom).abs();
+    final distLeft = (local.x - left).abs();
+    final distRight = (local.x - right).abs();
+    final distTop = (local.y - top).abs();
+    final distBottom = (local.y - bottom).abs();
 
     // Use distance from original point for outside; from clamped for inside
-    final isInside = scenePoint.x >= left &&
-        scenePoint.x <= right &&
-        scenePoint.y >= top &&
-        scenePoint.y <= bottom;
+    final isInside = local.x >= left &&
+        local.x <= right &&
+        local.y >= top &&
+        local.y <= bottom;
 
     double edgeDistLeft, edgeDistRight, edgeDistTop, edgeDistBottom;
     if (isInside) {
@@ -83,10 +89,10 @@ class BindingUtils {
       edgeDistTop = dTop;
       edgeDistBottom = dBottom;
     } else {
-      edgeDistLeft = distLeft + (cy - scenePoint.y).abs();
-      edgeDistRight = distRight + (cy - scenePoint.y).abs();
-      edgeDistTop = distTop + (cx - scenePoint.x).abs();
-      edgeDistBottom = distBottom + (cx - scenePoint.x).abs();
+      edgeDistLeft = distLeft + (cy - local.y).abs();
+      edgeDistRight = distRight + (cy - local.y).abs();
+      edgeDistTop = distTop + (cx - local.x).abs();
+      edgeDistBottom = distBottom + (cx - local.x).abs();
     }
 
     final minDist = [edgeDistLeft, edgeDistRight, edgeDistTop, edgeDistBottom]
@@ -112,13 +118,17 @@ class BindingUtils {
   }
 
   /// Convert a fixedPoint binding back to a scene-space coordinate.
+  ///
+  /// The fixedPoint is in the element's local (unrotated) space. This method
+  /// maps it to world space, accounting for the target's rotation.
   static Point resolveBindingPoint(Element target, PointBinding binding) {
     final fx = binding.fixedPoint.x;
     final fy = binding.fixedPoint.y;
-    return Point(
+    final localPoint = Point(
       target.x + fx * target.width,
       target.y + fy * target.height,
     );
+    return _toWorld(target, localPoint);
   }
 
   /// Recompute arrow start/end points from current target positions.
@@ -211,31 +221,66 @@ class BindingUtils {
     return result;
   }
 
-  /// Minimum distance from [point] to the bounding-box edges of [element].
+  /// Minimum distance from [point] to the bounding-box edges of [element],
+  /// accounting for the element's rotation.
   static double _distanceToEdge(Element element, Point point) {
+    // Transform point into element's local (unrotated) coordinate space
+    final local = _toLocal(element, point);
+
     final left = element.x;
     final top = element.y;
     final right = element.x + element.width;
     final bottom = element.y + element.height;
 
     // Clamp to find nearest point on boundary
-    final cx = point.x.clamp(left, right);
-    final cy = point.y.clamp(top, bottom);
+    final cx = local.x.clamp(left, right);
+    final cy = local.y.clamp(top, bottom);
 
     // If inside, distance is to nearest edge
-    if (point.x >= left &&
-        point.x <= right &&
-        point.y >= top &&
-        point.y <= bottom) {
+    if (local.x >= left &&
+        local.x <= right &&
+        local.y >= top &&
+        local.y <= bottom) {
       return [
-        (point.x - left),
-        (right - point.x),
-        (point.y - top),
-        (bottom - point.y),
+        (local.x - left),
+        (right - local.x),
+        (local.y - top),
+        (bottom - local.y),
       ].reduce(math.min);
     }
 
     // Outside: distance to nearest point on boundary
-    return point.distanceTo(Point(cx, cy));
+    return local.distanceTo(Point(cx, cy));
+  }
+
+  /// Transform a world-space [point] into the element's local (unrotated)
+  /// coordinate space by rotating around the element's center by -angle.
+  static Point _toLocal(Element element, Point point) {
+    if (element.angle == 0) return point;
+    final cx = element.x + element.width / 2;
+    final cy = element.y + element.height / 2;
+    return _rotatePoint(point, cx, cy, -element.angle);
+  }
+
+  /// Transform a local-space [point] back to world space by rotating
+  /// around the element's center by +angle.
+  static Point _toWorld(Element element, Point point) {
+    if (element.angle == 0) return point;
+    final cx = element.x + element.width / 2;
+    final cy = element.y + element.height / 2;
+    return _rotatePoint(point, cx, cy, element.angle);
+  }
+
+  /// Rotate [point] around ([cx], [cy]) by [angle] radians.
+  static Point _rotatePoint(
+      Point point, double cx, double cy, double angle) {
+    final cosA = math.cos(angle);
+    final sinA = math.sin(angle);
+    final dx = point.x - cx;
+    final dy = point.y - cy;
+    return Point(
+      cx + dx * cosA - dy * sinA,
+      cy + dx * sinA + dy * cosA,
+    );
   }
 }
