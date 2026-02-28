@@ -929,8 +929,6 @@ class _CanvasPageState extends State<_CanvasPage> {
         Row(
           children: [
             Expanded(child: _buildCanvas(toolOverlay, marqueeRect)),
-            if (!_isCompact && _selectedElements.isNotEmpty)
-              _buildPropertyPanel(),
             if (!_isCompact && _showLibraryPanel) _buildLibraryPanel(),
           ],
         ),
@@ -955,6 +953,14 @@ class _CanvasPageState extends State<_CanvasPage> {
             child: _buildHamburgerMenu(),
           ),
         ],
+        // Floating property panel — desktop left side
+        if (!_isCompact && _selectedElements.isNotEmpty)
+          Positioned(
+            top: 60,
+            left: 12,
+            bottom: 12,
+            child: _buildPropertyPanel(),
+          ),
         // Compact menu button — top-left
         if (_isCompact)
           Positioned(
@@ -1892,13 +1898,29 @@ class _CanvasPageState extends State<_CanvasPage> {
     final style = PropertyPanelState.fromElements(elements);
     final isLocked = style.locked == true;
 
-    return SizedBox(
-      width: 240,
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border(left: BorderSide(color: Colors.grey.shade300)),
-          color: Colors.grey.shade50,
-        ),
+    return Container(
+      width: 220,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.17),
+            blurRadius: 1,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 3,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 14,
+            offset: const Offset(0, 7),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
         child: ListView(
           padding: const EdgeInsets.all(12),
           children: [
