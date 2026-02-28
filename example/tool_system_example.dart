@@ -1594,18 +1594,19 @@ class _CanvasPageState extends State<_CanvasPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildSectionLabel('Stroke'),
-                        _buildColorRow(
+                        _buildColorPickerRow(
                           selected: style.strokeColor,
                           onSelect: (c) =>
                               _applyStyleChange(ElementStyle(strokeColor: c)),
+                          quickPicks: _strokeQuickPicks,
                         ),
                         const SizedBox(height: 8),
                         _buildSectionLabel('Background'),
-                        _buildColorRow(
+                        _buildColorPickerRow(
                           selected: style.backgroundColor,
-                          includeTransparent: true,
                           onSelect: (c) => _applyStyleChange(
                               ElementStyle(backgroundColor: c)),
+                          quickPicks: _backgroundQuickPicks,
                         ),
                         const SizedBox(height: 8),
                         _buildSectionLabel('Stroke width'),
@@ -1932,18 +1933,19 @@ class _CanvasPageState extends State<_CanvasPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildSectionLabel('Stroke'),
-                    _buildColorRow(
+                    _buildColorPickerRow(
                       selected: style.strokeColor,
                       onSelect: (c) =>
                           _applyStyleChange(ElementStyle(strokeColor: c)),
+                      quickPicks: _strokeQuickPicks,
                     ),
                     const SizedBox(height: 8),
                     _buildSectionLabel('Background'),
-                    _buildColorRow(
+                    _buildColorPickerRow(
                       selected: style.backgroundColor,
-                      includeTransparent: true,
                       onSelect: (c) =>
                           _applyStyleChange(ElementStyle(backgroundColor: c)),
+                      quickPicks: _backgroundQuickPicks,
                     ),
                     const SizedBox(height: 8),
                     _buildSectionLabel('Stroke width'),
@@ -2043,31 +2045,54 @@ class _CanvasPageState extends State<_CanvasPage> {
     );
   }
 
-  static const _colorSwatches = [
-    '#000000',
-    '#e03131',
-    '#2f9e44',
-    '#1971c2',
-    '#f08c00',
-    '#6741d9',
+  // Excalidraw Open Color palette — stroke uses saturated, background uses pastel
+  static const _strokeQuickPicks = [
+    '#1e1e1e', // black
+    '#e03131', // red
+    '#40c057', // green
+    '#228be6', // blue
+    '#fab005', // yellow
   ];
 
-  Widget _buildColorRow({
+  static const _backgroundQuickPicks = [
+    'transparent',
+    '#ffc9c9', // red light
+    '#b2f2bb', // green light
+    '#a5d8ff', // blue light
+    '#ffec99', // yellow light
+  ];
+
+  Widget _buildColorPickerRow({
     required String? selected,
     required ValueChanged<String> onSelect,
-    bool includeTransparent = false,
+    required List<String> quickPicks,
   }) {
-    final colors = [if (includeTransparent) 'transparent', ..._colorSwatches];
-    return Wrap(
-      spacing: 4,
-      runSpacing: 4,
+    final isQuickPick = quickPicks.contains(selected);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        for (final c in colors)
-          _ColorSwatch(
-            color: c,
-            isSelected: selected == c,
-            onTap: () => onSelect(c),
+        for (final c in quickPicks)
+          Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: _ColorSwatch(
+              color: c,
+              isSelected: selected == c,
+              onTap: () => onSelect(c),
+            ),
           ),
+        // Vertical separator
+        Container(
+          width: 1,
+          height: 20,
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          color: Colors.grey.shade300,
+        ),
+        // Active-color button that opens the full palette popup
+        _ColorPickerButton(
+          color: selected ?? '#000000',
+          isActive: !isQuickPick,
+          onColorSelected: onSelect,
+        ),
       ],
     );
   }
@@ -2839,15 +2864,22 @@ class _ColorSwatch extends StatelessWidget {
   Widget build(BuildContext context) {
     final parsed = _parseColor(color);
     final isTransparent = color == 'transparent';
+    // Light colors get a gray outline for visibility (like Excalidraw)
+    final isLight =
+        !isTransparent && (parsed.r + parsed.g + parsed.b) > 1.8;
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 28,
-        height: 28,
+        width: 24,
+        height: 24,
         decoration: BoxDecoration(
           color: isTransparent ? Colors.white : parsed,
           border: Border.all(
-            color: isSelected ? Colors.blue : Colors.grey.shade400,
+            color: isSelected
+                ? Colors.blue
+                : (isLight || isTransparent)
+                    ? Colors.grey.shade400
+                    : Colors.transparent,
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(4),
@@ -2857,6 +2889,270 @@ class _ColorSwatch extends StatelessWidget {
             : null,
       ),
     );
+  }
+}
+
+/// The 6th swatch that shows the active color and opens a full palette popup.
+class _ColorPickerButton extends StatelessWidget {
+  final String color;
+  final bool isActive;
+  final ValueChanged<String> onColorSelected;
+
+  const _ColorPickerButton({
+    required this.color,
+    required this.isActive,
+    required this.onColorSelected,
+  });
+
+  static const _paletteColors = [
+    ['#f8f9fa', '#e9ecef', '#ced4da', '#868e96', '#343a40'],
+    ['#fff5f5', '#ffc9c9', '#ff8787', '#fa5252', '#e03131'],
+    ['#fff0f6', '#fcc2d7', '#f783ac', '#e64980', '#c2255c'],
+    ['#f8f0fc', '#eebefa', '#da77f2', '#be4bdb', '#9c36b5'],
+    ['#f3f0ff', '#d0bfff', '#9775fa', '#7950f2', '#6741d9'],
+    ['#e7f5ff', '#a5d8ff', '#4dabf7', '#228be6', '#1971c2'],
+    ['#e3fafc', '#99e9f2', '#3bc9db', '#15aabf', '#0c8599'],
+    ['#e6fcf5', '#96f2d7', '#38d9a9', '#12b886', '#099268'],
+    ['#ebfbee', '#b2f2bb', '#69db7c', '#40c057', '#2f9e44'],
+    ['#fff9db', '#ffec99', '#ffd43b', '#fab005', '#f08c00'],
+    ['#fff4e6', '#ffd8a8', '#ffa94d', '#fd7e14', '#e8590c'],
+    ['#f8f1ee', '#eaddd7', '#d2bab0', '#a18072', '#846358'],
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final parsed = _parseColor(color);
+    final isTransparent = color == 'transparent';
+    final isLight =
+        !isTransparent && (parsed.r + parsed.g + parsed.b) > 1.8;
+    return GestureDetector(
+      onTap: () => _showPalettePopup(context),
+      child: Container(
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          color: isTransparent ? Colors.white : parsed,
+          border: Border.all(
+            color: isActive
+                ? Colors.blue
+                : (isLight || isTransparent)
+                    ? Colors.grey.shade400
+                    : Colors.grey.shade300,
+            width: isActive ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: isTransparent
+            ? CustomPaint(painter: _DiagonalLinePainter())
+            : null,
+      ),
+    );
+  }
+
+  void _showPalettePopup(BuildContext context) {
+    final renderBox = context.findRenderObject() as RenderBox;
+    final offset = renderBox.localToGlobal(Offset.zero);
+    final overlay = Overlay.of(context);
+
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (ctx) => _ColorPaletteOverlay(
+        anchor: offset,
+        currentColor: color,
+        onSelect: (c) {
+          entry.remove();
+          onColorSelected(c);
+        },
+        onDismiss: () => entry.remove(),
+      ),
+    );
+    overlay.insert(entry);
+  }
+}
+
+/// Full-palette popup overlay with grid + transparent + hex input.
+class _ColorPaletteOverlay extends StatefulWidget {
+  final Offset anchor;
+  final String currentColor;
+  final ValueChanged<String> onSelect;
+  final VoidCallback onDismiss;
+
+  const _ColorPaletteOverlay({
+    required this.anchor,
+    required this.currentColor,
+    required this.onSelect,
+    required this.onDismiss,
+  });
+
+  @override
+  State<_ColorPaletteOverlay> createState() => _ColorPaletteOverlayState();
+}
+
+class _ColorPaletteOverlayState extends State<_ColorPaletteOverlay> {
+  late final TextEditingController _hexController;
+
+  @override
+  void initState() {
+    super.initState();
+    _hexController = TextEditingController(
+      text: widget.currentColor == 'transparent' ? '' : widget.currentColor,
+    );
+  }
+
+  @override
+  void dispose() {
+    _hexController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const swatchSize = 24.0;
+    const spacing = 3.0;
+    const cols = 5;
+    const rows = 12;
+    const popupWidth = cols * (swatchSize + spacing) + spacing + 24;
+    const popupHeight = (rows + 1) * (swatchSize + spacing) + spacing + 60;
+
+    // Position popup below the anchor button, clamped to screen
+    final screen = MediaQuery.of(context).size;
+    var left = widget.anchor.dx - popupWidth / 2 + 14;
+    var top = widget.anchor.dy + 34;
+    if (left + popupWidth > screen.width - 8) {
+      left = screen.width - popupWidth - 8;
+    }
+    if (left < 8) left = 8;
+    if (top + popupHeight > screen.height - 8) {
+      top = widget.anchor.dy - popupHeight - 4;
+    }
+
+    return Stack(
+      children: [
+        // Dismiss on tap outside
+        Positioned.fill(
+          child: GestureDetector(
+            onTap: widget.onDismiss,
+            behavior: HitTestBehavior.opaque,
+            child: const SizedBox.expand(),
+          ),
+        ),
+        Positioned(
+          left: left,
+          top: top,
+          child: Material(
+            elevation: 8,
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              width: popupWidth,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Transparent swatch
+                  GestureDetector(
+                    onTap: () => widget.onSelect('transparent'),
+                    child: Container(
+                      width: swatchSize,
+                      height: swatchSize,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(
+                          color: widget.currentColor == 'transparent'
+                              ? Colors.blue
+                              : Colors.grey.shade400,
+                          width:
+                              widget.currentColor == 'transparent' ? 2 : 1,
+                        ),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: CustomPaint(painter: _DiagonalLinePainter()),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  // Palette grid: 12 hue rows x 5 shades
+                  for (final row in _ColorPickerButton._paletteColors)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: spacing),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (final hex in row)
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(right: spacing),
+                              child: _buildGridSwatch(hex, swatchSize),
+                            ),
+                        ],
+                      ),
+                    ),
+                  const SizedBox(height: 4),
+                  // Hex input
+                  SizedBox(
+                    height: 32,
+                    child: TextField(
+                      controller: _hexController,
+                      decoration: InputDecoration(
+                        hintText: '#rrggbb',
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 6),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      style: const TextStyle(fontSize: 13),
+                      onSubmitted: (value) {
+                        final hex = value.trim();
+                        if (_isValidHex(hex)) {
+                          widget.onSelect(hex);
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGridSwatch(String hex, double size) {
+    final parsed = _parseColor(hex);
+    final isLight = (parsed.r + parsed.g + parsed.b) > 1.8;
+    final isSelected =
+        widget.currentColor.toLowerCase() == hex.toLowerCase();
+    return GestureDetector(
+      onTap: () => widget.onSelect(hex),
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: parsed,
+          border: Border.all(
+            color: isSelected
+                ? Colors.blue
+                : isLight
+                    ? Colors.grey.shade300
+                    : Colors.transparent,
+            width: isSelected ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(3),
+        ),
+      ),
+    );
+  }
+
+  bool _isValidHex(String value) {
+    final hex = value.startsWith('#') ? value.substring(1) : value;
+    if (hex.length != 6) return false;
+    return int.tryParse(hex, radix: 16) != null;
   }
 }
 
