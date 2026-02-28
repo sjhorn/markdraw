@@ -11,7 +11,7 @@ core.TextElement _text({
   double width = 200,
   double height = 40,
   double fontSize = 20,
-  String fontFamily = 'Virgil',
+  String fontFamily = 'Excalifont',
   core.TextAlign textAlign = core.TextAlign.left,
   double lineHeight = 1.25,
   String strokeColor = '#000000',

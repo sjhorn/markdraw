@@ -29,7 +29,7 @@ class TextElement extends Element {
     required super.height,
     required this.text,
     this.fontSize = 20.0,
-    this.fontFamily = 'Virgil',
+    this.fontFamily = 'Excalifont',
     this.textAlign = TextAlign.left,
     this.containerId,
     this.lineHeight = 1.25,

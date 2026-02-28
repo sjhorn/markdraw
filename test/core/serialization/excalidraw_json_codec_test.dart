@@ -391,7 +391,7 @@ void main() {
         final text = el as TextElement;
         expect(text.text, 'Hello World');
         expect(text.fontSize, 24.0);
-        expect(text.fontFamily, 'Virgil'); // fontFamily 1 → Virgil
+        expect(text.fontFamily, 'Virgil'); // fontFamily 1 → Virgil (explicit)
         expect(text.textAlign, TextAlign.center);
         expect(text.containerId, 'rect1');
         expect(text.lineHeight, 1.5);
@@ -436,7 +436,7 @@ void main() {
         ]);
         final result = ExcalidrawJsonCodec.parse(json);
         final el = result.value.allElements.first as TextElement;
-        expect(el.fontFamily, 'Virgil');
+        expect(el.fontFamily, 'Excalifont');
         expect(result.hasWarnings, isTrue);
         expect(result.warnings.first.message, contains('font family'));
       });

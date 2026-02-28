@@ -2400,7 +2400,7 @@ class _CanvasPageState extends State<_CanvasPage> {
   }
 
   Widget _buildFontFamilyRow(String? current) {
-    const families = ['Virgil', 'Helvetica', 'Cascadia'];
+    const families = ['Excalifont', 'Nunito', 'Lilita One', 'Virgil'];
     return _buildToggleRow(
       count: families.length,
       labels: families,
@@ -2564,7 +2564,7 @@ class _CanvasPageState extends State<_CanvasPage> {
     final zoom = _editorState.viewport.zoom;
     final textElem = element is TextElement ? element : null;
     final fontSize = (textElem?.fontSize ?? 20.0) * zoom;
-    final fontFamily = textElem?.fontFamily ?? 'Virgil';
+    final fontFamily = textElem?.fontFamily ?? 'Excalifont';
     final lineHeight = textElem?.lineHeight ?? 1.25;
     final textColor = _parseColor(element.strokeColor);
 
@@ -2600,11 +2600,13 @@ class _CanvasPageState extends State<_CanvasPage> {
                         focusNode: _textFocusNode,
                         autofocus: true,
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: fontSize,
-                          fontFamily: fontFamily,
-                          color: textColor,
-                          height: lineHeight,
+                        style: FontResolver.resolve(
+                          fontFamily,
+                          baseStyle: TextStyle(
+                            fontSize: fontSize,
+                            color: textColor,
+                            height: lineHeight,
+                          ),
                         ),
                         cursorColor: Colors.blue,
                         backgroundCursorColor: Colors.grey,
@@ -2643,11 +2645,13 @@ class _CanvasPageState extends State<_CanvasPage> {
                 controller: _textEditingController,
                 focusNode: _textFocusNode,
                 autofocus: true,
-                style: TextStyle(
-                  fontSize: fontSize,
-                  fontFamily: fontFamily,
-                  color: textColor,
-                  height: lineHeight,
+                style: FontResolver.resolve(
+                  fontFamily,
+                  baseStyle: TextStyle(
+                    fontSize: fontSize,
+                    color: textColor,
+                    height: lineHeight,
+                  ),
                 ),
                 cursorColor: Colors.blue,
                 backgroundCursorColor: Colors.grey,

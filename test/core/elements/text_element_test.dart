@@ -6,7 +6,7 @@ void main() {
     TextElement createText({
       String text = 'Hello',
       double fontSize = 20.0,
-      String fontFamily = 'Virgil',
+      String fontFamily = 'Excalifont',
       TextAlign textAlign = TextAlign.left,
       String? containerId,
       double lineHeight = 1.25,
@@ -33,7 +33,7 @@ void main() {
       expect(t.type, 'text');
       expect(t.text, 'Hello World');
       expect(t.fontSize, 20.0);
-      expect(t.fontFamily, 'Virgil');
+      expect(t.fontFamily, 'Excalifont');
       expect(t.textAlign, TextAlign.left);
       expect(t.lineHeight, 1.25);
       expect(t.autoResize, true);

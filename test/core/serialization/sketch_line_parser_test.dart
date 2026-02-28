@@ -144,11 +144,11 @@ void main() {
       expect(result.value!.strokeColor, '#d32f2f');
     });
 
-    test('text defaults to Virgil font and 20 size', () {
+    test('text defaults to Excalifont font and 20 size', () {
       final result = parser.parseLine('text "Hello" at 0,0 seed=1', 1);
       final text = result.value! as TextElement;
       expect(text.fontSize, 20);
-      expect(text.fontFamily, 'Virgil');
+      expect(text.fontFamily, 'Excalifont');
       expect(text.textAlign, TextAlign.left);
     });
   });

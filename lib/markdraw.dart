@@ -15,6 +15,7 @@ export 'src/core/serialization/serialization.dart';
 export 'src/editor/editor.dart';
 export 'src/rendering/element_renderer.dart';
 export 'src/rendering/export/export.dart';
+export 'src/rendering/font_resolver.dart';
 export 'src/rendering/image_cache.dart';
 export 'src/rendering/interactive/interactive.dart';
 export 'src/rendering/rough/rough.dart';

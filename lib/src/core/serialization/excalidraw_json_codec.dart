@@ -111,7 +111,7 @@ class ExcalidrawJsonCodec {
         ...base,
         'text': el.text,
         'fontSize': el.fontSize,
-        'fontFamily': fontFamilyToNumber[el.fontFamily] ?? 1,
+        'fontFamily': fontFamilyToNumber[el.fontFamily] ?? 5,
         'textAlign': el.textAlign.name,
         'containerId': el.containerId,
         'lineHeight': el.lineHeight,
@@ -476,16 +476,17 @@ class ExcalidrawJsonCodec {
     List<ParseWarning> warnings,
   ) {
     final num? familyNum = raw['fontFamily'] as num?;
-    if (familyNum == null) return 'Virgil';
+    if (familyNum == null) return 'Excalifont';
     final name = fontFamilyFromNumber[familyNum.toInt()];
     if (name != null) return name;
     warnings.add(
       ParseWarning(
         line: index,
-        message: 'Unknown font family ${familyNum.toInt()}, using Virgil',
+        message:
+            'Unknown font family ${familyNum.toInt()}, using Excalifont',
       ),
     );
-    return 'Virgil';
+    return 'Excalifont';
   }
 
   /// Maps an Excalidraw arrowhead string to our [Arrowhead] enum.

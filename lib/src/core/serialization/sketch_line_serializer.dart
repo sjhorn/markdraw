@@ -103,7 +103,7 @@ class SketchLineSerializer {
     if (element.fontSize != 20.0) {
       parts.add('size=${_formatNum(element.fontSize)}');
     }
-    if (element.fontFamily != 'Virgil') {
+    if (element.fontFamily != 'Excalifont') {
       parts.add('font=${element.fontFamily}');
     }
     if (element.textAlign != TextAlign.left) {

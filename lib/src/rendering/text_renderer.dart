@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/painting.dart';
 
 import '../core/elements/elements.dart' as core show TextAlign, TextElement;
+import 'font_resolver.dart';
 
 /// Renders text elements using Flutter's [TextPainter].
 ///
@@ -43,11 +44,13 @@ class TextRenderer {
     final color = _parseColor(element.strokeColor)
         .withValues(alpha: element.opacity);
 
-    final style = TextStyle(
-      color: color,
-      fontSize: element.fontSize,
-      fontFamily: element.fontFamily,
-      height: element.lineHeight,
+    final style = FontResolver.resolve(
+      element.fontFamily,
+      baseStyle: TextStyle(
+        color: color,
+        fontSize: element.fontSize,
+        height: element.lineHeight,
+      ),
     );
 
     return TextPainter(

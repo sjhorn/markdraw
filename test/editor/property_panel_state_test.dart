@@ -123,7 +123,7 @@ void main() {
         x: 0, y: 0, width: 100, height: 24,
         text: 'Hello',
         fontSize: 24.0,
-        fontFamily: 'Virgil',
+        fontFamily: 'Excalifont',
       );
       final t2 = TextElement(
         id: const ElementId('t2'),
@@ -341,7 +341,7 @@ void main() {
         x: 0, y: 0, width: 100, height: 24,
         text: 'Important text',
         fontSize: 20.0,
-        fontFamily: 'Virgil',
+        fontFamily: 'Excalifont',
       );
 
       final result = PropertyPanelState.applyStyle(
@@ -352,7 +352,7 @@ void main() {
       final updated = (result as UpdateElementResult).element as TextElement;
       expect(updated.text, 'Important text');
       expect(updated.fontSize, 20.0);
-      expect(updated.fontFamily, 'Virgil');
+      expect(updated.fontFamily, 'Excalifont');
       expect(updated.strokeColor, '#ff0000');
     });
 
@@ -379,7 +379,7 @@ void main() {
         id: const ElementId('t1'),
         x: 0, y: 0, width: 100, height: 24,
         text: 'Hello',
-        fontFamily: 'Virgil',
+        fontFamily: 'Excalifont',
         textAlign: TextAlign.left,
       );
 

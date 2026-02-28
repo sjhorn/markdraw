@@ -320,7 +320,7 @@ class SketchLineParser {
     final common = props.commonProperties;
     final text = props.quotedString;
     final fontSize = props.namedDouble('size') ?? 20.0;
-    final fontFamily = props.namedString('font') ?? 'Virgil';
+    final fontFamily = props.namedString('font') ?? 'Excalifont';
     final alignStr = props.namedString('align');
     final textAlign = _parseTextAlign(alignStr);
 

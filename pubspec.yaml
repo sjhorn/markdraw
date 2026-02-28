@@ -17,6 +17,7 @@ dependencies:
   file_picker: ^8.0.0
   crypto: ^3.0.3
   web: ^1.1.0
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:
@@ -27,3 +28,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  fonts:
+    - family: Excalifont
+      fonts:
+        - asset: fonts/Excalifont-Regular.ttf
+    - family: Virgil
+      fonts:
+        - asset: fonts/Virgil-Regular.ttf

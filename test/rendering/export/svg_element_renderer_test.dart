@@ -104,7 +104,7 @@ void main() {
         height: 24,
         text: 'Hello World',
         fontSize: 20,
-        fontFamily: 'Virgil',
+        fontFamily: 'Excalifont',
       );
       final svg = SvgElementRenderer.render(text);
       expect(svg, contains('<text'));
