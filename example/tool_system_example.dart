@@ -2697,7 +2697,10 @@ class _CanvasPageState extends State<_CanvasPage> {
         return Positioned(
           left: parentTopLeft.dx,
           top: parentTopLeft.dy,
-          child: SizedBox(
+          child: Transform.rotate(
+            angle: parent.angle,
+            alignment: Alignment.center,
+            child: SizedBox(
             width: parentW,
             height: parentH,
             child: Center(
@@ -2735,45 +2738,55 @@ class _CanvasPageState extends State<_CanvasPage> {
               ),
             ),
           ),
+          ),
         );
       }
     }
 
-    // Standalone text: position at element's top-left
-    final screenPos = _editorState.viewport.sceneToScreen(
-      Offset(element.x, element.y),
+    // Standalone text: position at element's center, rotate around center
+    final centerScene = Offset(
+      element.x + element.width / 2,
+      element.y + element.height / 2,
     );
+    final screenCenter = _editorState.viewport.sceneToScreen(centerScene);
 
     return Positioned(
-      left: screenPos.dx,
-      top: screenPos.dy,
-      child: IntrinsicWidth(
-        child:
-            TextSelectionGestureDetectorBuilder(
-              delegate: _TextSelectionDelegate(_editableTextKey),
-            ).buildGestureDetector(
-              behavior: HitTestBehavior.translucent,
-              child: EditableText(
-                key: _editableTextKey,
-                rendererIgnoresPointer: true,
-                controller: _textEditingController,
-                focusNode: _textFocusNode,
-                autofocus: true,
-                style: FontResolver.resolve(
-                  fontFamily,
-                  baseStyle: TextStyle(
-                    fontSize: fontSize,
-                    color: textColor,
-                    height: lineHeight,
+      left: screenCenter.dx,
+      top: screenCenter.dy,
+      child: FractionalTranslation(
+        translation: const Offset(-0.5, -0.5),
+        child: Transform.rotate(
+          angle: element.angle,
+          alignment: Alignment.center,
+          child: IntrinsicWidth(
+            child:
+                TextSelectionGestureDetectorBuilder(
+                  delegate: _TextSelectionDelegate(_editableTextKey),
+                ).buildGestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  child: EditableText(
+                    key: _editableTextKey,
+                    rendererIgnoresPointer: true,
+                    controller: _textEditingController,
+                    focusNode: _textFocusNode,
+                    autofocus: true,
+                    style: FontResolver.resolve(
+                      fontFamily,
+                      baseStyle: TextStyle(
+                        fontSize: fontSize,
+                        color: textColor,
+                        height: lineHeight,
+                      ),
+                    ),
+                    cursorColor: Colors.blue,
+                    backgroundCursorColor: Colors.grey,
+                    selectionColor: Colors.blue.shade300.withValues(alpha: 0.5),
+                    onChanged: (_) => _onTextChanged(),
+                    onSubmitted: (_) => _commitTextEditing(),
                   ),
                 ),
-                cursorColor: Colors.blue,
-                backgroundCursorColor: Colors.grey,
-                selectionColor: Colors.blue.shade300.withValues(alpha: 0.5),
-                onChanged: (_) => _onTextChanged(),
-                onSubmitted: (_) => _commitTextEditing(),
-              ),
-            ),
+          ),
+        ),
       ),
     );
   }
