@@ -2749,6 +2749,7 @@ class _CanvasPageState extends State<_CanvasPage> {
 
   /// Constructs a temporary preview element from the active tool's overlay
   /// data, so the StaticCanvasPainter renders it with the actual rough style.
+  /// Applies sticky default styles so the preview matches the final element.
   Element? _buildPreviewElement(ToolOverlay? overlay) {
     if (overlay == null) return null;
     final toolType = _editorState.activeToolType;
@@ -2758,10 +2759,12 @@ class _CanvasPageState extends State<_CanvasPage> {
     // hand-drawn jitter pattern to change every pointer-move.)
     const previewSeed = 42;
 
+    Element? element;
+
     // Shape tools: preview from creationBounds
     if (overlay.creationBounds != null) {
       final b = overlay.creationBounds!;
-      return switch (toolType) {
+      element = switch (toolType) {
         ToolType.rectangle => RectangleElement(
           id: previewId,
           x: b.left,
@@ -2791,7 +2794,9 @@ class _CanvasPageState extends State<_CanvasPage> {
     }
 
     // Line/arrow/freedraw tools: preview from creationPoints
-    if (overlay.creationPoints != null && overlay.creationPoints!.length >= 2) {
+    if (element == null &&
+        overlay.creationPoints != null &&
+        overlay.creationPoints!.length >= 2) {
       final pts = overlay.creationPoints!;
       final minX = pts.map((p) => p.x).reduce(math.min);
       final minY = pts.map((p) => p.y).reduce(math.min);
@@ -2799,7 +2804,7 @@ class _CanvasPageState extends State<_CanvasPage> {
       final maxY = pts.map((p) => p.y).reduce(math.max);
       final relPts = pts.map((p) => Point(p.x - minX, p.y - minY)).toList();
 
-      return switch (toolType) {
+      element = switch (toolType) {
         ToolType.line => LineElement(
           id: previewId,
           x: minX,
@@ -2832,7 +2837,8 @@ class _CanvasPageState extends State<_CanvasPage> {
       };
     }
 
-    return null;
+    // Apply sticky default styles so preview matches final element
+    return element != null ? _applyDefaultStyleToElement(element) : null;
   }
 
   void _onTextChanged() {
