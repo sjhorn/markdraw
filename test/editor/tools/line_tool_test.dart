@@ -131,6 +131,113 @@ void main() {
       expect(tool.overlay, isNull);
     });
 
+    group('closed polygon', () {
+      test('move near start with >= 3 points snaps preview and sets creationClosed', () {
+        // Click 3 points to form a triangle
+        tool.onPointerDown(const Point(0, 0), context);
+        tool.onPointerUp(const Point(0, 0), context);
+        tool.onPointerDown(const Point(100, 0), context);
+        tool.onPointerUp(const Point(100, 0), context);
+        tool.onPointerDown(const Point(50, 100), context);
+        tool.onPointerUp(const Point(50, 100), context);
+
+        // Move near start point (within 10px threshold)
+        tool.onPointerMove(const Point(3, 3), context);
+
+        expect(tool.overlay!.creationClosed, isTrue);
+        // Preview should snap to start point
+        expect(tool.overlay!.creationPoints!.last, const Point(0, 0));
+      });
+
+      test('move outside threshold does not snap', () {
+        tool.onPointerDown(const Point(0, 0), context);
+        tool.onPointerUp(const Point(0, 0), context);
+        tool.onPointerDown(const Point(100, 0), context);
+        tool.onPointerUp(const Point(100, 0), context);
+        tool.onPointerDown(const Point(50, 100), context);
+        tool.onPointerUp(const Point(50, 100), context);
+
+        // Move far from start
+        tool.onPointerMove(const Point(80, 50), context);
+
+        expect(tool.overlay!.creationClosed, isFalse);
+        expect(tool.overlay!.creationPoints!.last, const Point(80, 50));
+      });
+
+      test('need >= 3 points for close detection', () {
+        // Only 2 points
+        tool.onPointerDown(const Point(0, 0), context);
+        tool.onPointerUp(const Point(0, 0), context);
+        tool.onPointerDown(const Point(100, 0), context);
+        tool.onPointerUp(const Point(100, 0), context);
+
+        // Move near start
+        tool.onPointerMove(const Point(1, 1), context);
+
+        expect(tool.overlay!.creationClosed, isFalse);
+      });
+
+      test('click near start finalizes as closed with last==first', () {
+        tool.onPointerDown(const Point(0, 0), context);
+        tool.onPointerUp(const Point(0, 0), context);
+        tool.onPointerDown(const Point(100, 0), context);
+        tool.onPointerUp(const Point(100, 0), context);
+        tool.onPointerDown(const Point(50, 100), context);
+        tool.onPointerUp(const Point(50, 100), context);
+
+        // Move near start to trigger snap
+        tool.onPointerMove(const Point(3, 3), context);
+
+        // Click near start to finalize
+        tool.onPointerDown(const Point(3, 3), context);
+        final result = tool.onPointerUp(const Point(3, 3), context);
+
+        expect(result, isA<CompoundResult>());
+        final compound = result! as CompoundResult;
+        final addResult = compound.results[0] as AddElementResult;
+        final line = addResult.element as LineElement;
+        expect(line.closed, isTrue);
+        // Last point should equal first point (relative)
+        expect(line.points.last, line.points.first);
+      });
+
+      test('Enter does not auto-close', () {
+        tool.onPointerDown(const Point(0, 0), context);
+        tool.onPointerUp(const Point(0, 0), context);
+        tool.onPointerDown(const Point(100, 0), context);
+        tool.onPointerUp(const Point(100, 0), context);
+        tool.onPointerDown(const Point(50, 100), context);
+        tool.onPointerUp(const Point(50, 100), context);
+
+        final result = tool.onKeyEvent('Enter');
+        expect(result, isA<CompoundResult>());
+        final compound = result! as CompoundResult;
+        final addResult = compound.results[0] as AddElementResult;
+        final line = addResult.element as LineElement;
+        expect(line.closed, isFalse);
+      });
+
+      test('Escape does not auto-close', () {
+        tool.onPointerDown(const Point(0, 0), context);
+        tool.onPointerUp(const Point(0, 0), context);
+        tool.onPointerDown(const Point(100, 0), context);
+        tool.onPointerUp(const Point(100, 0), context);
+        tool.onPointerDown(const Point(50, 100), context);
+        tool.onPointerUp(const Point(50, 100), context);
+
+        // Move near start to trigger snap
+        tool.onPointerMove(const Point(3, 3), context);
+
+        // Escape should finalize as open (since >= 2 points)
+        final result = tool.onKeyEvent('Escape');
+        expect(result, isA<CompoundResult>());
+        final compound = result! as CompoundResult;
+        final addResult = compound.results[0] as AddElementResult;
+        final line = addResult.element as LineElement;
+        expect(line.closed, isFalse);
+      });
+    });
+
     group('drag-to-draw', () {
       test('drag creates 2-point line in one gesture', () {
         tool.onPointerDown(const Point(10, 20), context);

@@ -114,14 +114,20 @@ class SvgElementRenderer {
 
     if (absPoints.length < 2) return;
 
-    for (var i = 0; i < absPoints.length - 1; i++) {
-      final drawable = generator.line(
-        absPoints[i].x,
-        absPoints[i].y,
-        absPoints[i + 1].x,
-        absPoints[i + 1].y,
-      );
+    if (element.closed && absPoints.length >= 3) {
+      final roughPoints = absPoints.map((p) => PointD(p.x, p.y)).toList();
+      final drawable = generator.polygon(roughPoints);
       _drawableToSvg(buf, drawable, style, element);
+    } else {
+      for (var i = 0; i < absPoints.length - 1; i++) {
+        final drawable = generator.line(
+          absPoints[i].x,
+          absPoints[i].y,
+          absPoints[i + 1].x,
+          absPoints[i + 1].y,
+        );
+        _drawableToSvg(buf, drawable, style, element);
+      }
     }
   }
 

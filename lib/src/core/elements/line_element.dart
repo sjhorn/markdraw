@@ -18,6 +18,7 @@ class LineElement extends Element {
   final List<Point> points;
   final Arrowhead? startArrowhead;
   final Arrowhead? endArrowhead;
+  final bool closed;
 
   LineElement({
     required super.id,
@@ -28,6 +29,7 @@ class LineElement extends Element {
     required this.points,
     this.startArrowhead,
     this.endArrowhead,
+    this.closed = false,
     super.angle,
     super.strokeColor,
     super.backgroundColor,
@@ -58,6 +60,7 @@ class LineElement extends Element {
     bool clearStartArrowhead = false,
     Arrowhead? endArrowhead,
     bool clearEndArrowhead = false,
+    bool? closed,
   }) {
     return LineElement(
       id: id,
@@ -72,6 +75,7 @@ class LineElement extends Element {
           : (startArrowhead ?? this.startArrowhead),
       endArrowhead:
           clearEndArrowhead ? null : (endArrowhead ?? this.endArrowhead),
+      closed: closed ?? this.closed,
       angle: angle,
       strokeColor: strokeColor,
       backgroundColor: backgroundColor,
@@ -138,6 +142,7 @@ class LineElement extends Element {
       points: points,
       startArrowhead: startArrowhead,
       endArrowhead: endArrowhead,
+      closed: closed,
       angle: angle ?? this.angle,
       strokeColor: strokeColor ?? this.strokeColor,
       backgroundColor: backgroundColor ?? this.backgroundColor,

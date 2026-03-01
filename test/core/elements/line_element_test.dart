@@ -68,6 +68,62 @@ void main() {
       final l = createLine();
       expect(l.bumpVersion(), isA<LineElement>());
     });
+
+    group('closed', () {
+      test('defaults to false', () {
+        final l = createLine();
+        expect(l.closed, isFalse);
+      });
+
+      test('can be set to true via constructor', () {
+        final l = LineElement(
+          id: const ElementId('line-1'),
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+          points: const [Point(0, 0), Point(100, 0), Point(50, 100), Point(0, 0)],
+          closed: true,
+        );
+        expect(l.closed, isTrue);
+      });
+
+      test('copyWithLine sets closed', () {
+        final l = createLine();
+        final modified = l.copyWithLine(closed: true);
+        expect(modified.closed, isTrue);
+      });
+
+      test('copyWithLine preserves closed when not specified', () {
+        final l = LineElement(
+          id: const ElementId('line-1'),
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+          points: const [Point(0, 0), Point(100, 100)],
+          closed: true,
+        );
+        final modified = l.copyWithLine(
+          points: const [Point(0, 0), Point(50, 50)],
+        );
+        expect(modified.closed, isTrue);
+      });
+
+      test('copyWith preserves closed', () {
+        final l = LineElement(
+          id: const ElementId('line-1'),
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+          points: const [Point(0, 0), Point(100, 100)],
+          closed: true,
+        );
+        final modified = l.copyWith(x: 50.0);
+        expect(modified.closed, isTrue);
+      });
+    });
   });
 
   group('Arrowhead', () {

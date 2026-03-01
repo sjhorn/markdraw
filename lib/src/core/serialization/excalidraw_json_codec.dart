@@ -135,6 +135,7 @@ class ExcalidrawJsonCodec {
         'points': el.points.map((p) => [p.x, p.y]).toList(),
         'startArrowhead': el.startArrowhead?.name,
         'endArrowhead': el.endArrowhead?.name,
+        if (el.closed) 'polygon': true,
       };
     } else if (el is FreedrawElement) {
       return {
@@ -798,6 +799,7 @@ class ExcalidrawJsonCodec {
           _arrowhead(raw['startArrowhead'] as String?, index, warnings),
       endArrowhead:
           _arrowhead(raw['endArrowhead'] as String?, index, warnings),
+      closed: raw['polygon'] as bool? ?? false,
       angle: _double(raw, 'angle'),
       strokeColor: raw['strokeColor'] as String? ?? '#000000',
       backgroundColor: raw['backgroundColor'] as String? ?? 'transparent',

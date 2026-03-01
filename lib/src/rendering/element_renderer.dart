@@ -72,7 +72,11 @@ class ElementRenderer {
       case 'line':
         if (element is LineElement) {
           final absPoints = _absolutePoints(element.points, element.x, element.y);
-          adapter.drawLine(canvas, absPoints, style);
+          if (element.closed) {
+            adapter.drawPolygonLine(canvas, absPoints, style);
+          } else {
+            adapter.drawLine(canvas, absPoints, style);
+          }
         }
       case 'arrow':
         if (element is ArrowElement) {

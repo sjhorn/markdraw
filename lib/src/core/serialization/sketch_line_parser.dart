@@ -368,6 +368,7 @@ class SketchLineParser {
     final common = props.commonProperties;
     final startArrow = _parseArrowhead(props.namedString('start-arrow'));
     final endArrow = _parseArrowhead(props.namedString('end-arrow'));
+    final isClosed = props.hasFlag('closed');
 
     final elementId = ElementId(id ?? _generateId());
     if (id != null) {
@@ -385,6 +386,7 @@ class SketchLineParser {
       points: points,
       startArrowhead: startArrow,
       endArrowhead: endArrow,
+      closed: isClosed,
       strokeColor: common.strokeColor,
       backgroundColor: common.backgroundColor,
       fillStyle: common.fillStyle,

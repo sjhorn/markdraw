@@ -121,6 +121,9 @@ class SketchLineSerializer {
     _addId(parts, alias);
     _addPoints(parts, element.points);
     _addArrowheads(parts, element.startArrowhead, element.endArrowhead, false);
+    if (element.closed) {
+      parts.add('closed');
+    }
     _addCommonProperties(parts, element);
     return parts.join(' ');
   }

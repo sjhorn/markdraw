@@ -2813,6 +2813,7 @@ class _CanvasPageState extends State<_CanvasPage> {
           height: maxY - minY,
           points: relPts,
           seed: previewSeed,
+          closed: overlay.creationClosed,
         ),
         ToolType.arrow => ArrowElement(
           id: previewId,

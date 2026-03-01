@@ -21,6 +21,9 @@ abstract class RoughAdapter {
   /// Draws a line (open polyline) through the given points.
   void drawLine(Canvas canvas, List<Point> points, DrawStyle style);
 
+  /// Draws a closed polygon line with fill through the given points.
+  void drawPolygonLine(Canvas canvas, List<Point> points, DrawStyle style);
+
   /// Draws an arrow (line with arrowheads) through the given points.
   void drawArrow(
     Canvas canvas,

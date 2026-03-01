@@ -37,6 +37,12 @@ class MockRoughAdapter implements RoughAdapter {
   }
 
   @override
+  void drawPolygonLine(Canvas canvas, List<Point> points, DrawStyle style) {
+    calls.add('drawPolygonLine');
+    lastPoints = List.of(points);
+  }
+
+  @override
   void drawArrow(
     Canvas canvas,
     List<Point> points,
@@ -150,6 +156,29 @@ void main() {
       recorder.endRecording();
 
       expect(adapter.calls, ['drawLine']);
+    });
+
+    test('dispatches closed line to drawPolygonLine', () {
+      final (recorder, canvas) = _makeCanvas();
+      final element = LineElement(
+        id: ElementId.generate(),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        points: [
+          const Point(0, 0),
+          const Point(100, 0),
+          const Point(50, 100),
+          const Point(0, 0),
+        ],
+        closed: true,
+      );
+
+      ElementRenderer.render(canvas, element, adapter);
+      recorder.endRecording();
+
+      expect(adapter.calls, ['drawPolygonLine']);
     });
 
     test('dispatches arrow to drawArrow', () {

@@ -75,6 +75,24 @@ class RoughCanvasAdapter implements RoughAdapter {
   }
 
   @override
+  void drawPolygonLine(Canvas canvas, List<Point> points, DrawStyle style) {
+    if (points.length < 3) return;
+
+    final generator = style.toGenerator();
+    final roughPoints = points.map((p) => PointD(p.x, p.y)).toList();
+    final drawable = generator.polygon(roughPoints);
+
+    // Build clip path from points for fill clipping
+    final clip = Path();
+    clip.moveTo(points.first.x, points.first.y);
+    for (var i = 1; i < points.length; i++) {
+      clip.lineTo(points[i].x, points[i].y);
+    }
+    clip.close();
+    _drawClippedFillThenStroke(canvas, drawable, style, clipPath: clip);
+  }
+
+  @override
   void drawLine(Canvas canvas, List<Point> points, DrawStyle style) {
     if (points.length < 2) return;
 

@@ -101,12 +101,17 @@ class ToolOverlay {
   /// drawn rotated to match.
   final double bindTargetAngle;
 
+  /// True when the line tool detects proximity to the start point,
+  /// indicating the line will close into a polygon on finalization.
+  final bool creationClosed;
+
   const ToolOverlay({
     this.creationBounds,
     this.creationPoints,
     this.marqueeRect,
     this.bindTargetBounds,
     this.bindTargetAngle = 0.0,
+    this.creationClosed = false,
   });
 }
 

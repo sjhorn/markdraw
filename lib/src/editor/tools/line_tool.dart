@@ -10,11 +10,16 @@ import 'tool.dart';
 /// Tool for creating line elements by clicking to add points.
 /// Double-click or Enter finalizes the line.
 /// Press-and-drag creates a 2-point line in one gesture.
+/// When the cursor approaches the start point with ≥3 points, the line
+/// snaps closed to form a filled polygon.
 class LineTool implements Tool {
+  static const _closeThreshold = 10.0;
+
   final List<Point> _points = [];
   Point? _previewPoint;
   bool _isDragCreating = false;
   Point? _dragOrigin;
+  bool _isNearStart = false;
 
   @override
   ToolType get type => ToolType.line;
@@ -33,6 +38,19 @@ class LineTool implements Tool {
   ToolResult? onPointerMove(Point point, ToolContext context,
       {Offset? screenDelta}) {
     if (_points.isNotEmpty) {
+      // Check proximity to start point for close detection
+      if (_points.length >= 3) {
+        final start = _points.first;
+        final dx = point.x - start.x;
+        final dy = point.y - start.y;
+        final dist = math.sqrt(dx * dx + dy * dy);
+        if (dist <= _closeThreshold) {
+          _isNearStart = true;
+          _previewPoint = start;
+          return null;
+        }
+      }
+      _isNearStart = false;
       _previewPoint = point;
     }
     return null;
@@ -57,6 +75,13 @@ class LineTool implements Tool {
       // Short drag — stay in multi-click mode (point already added on down)
       _previewPoint = null;
       return null;
+    }
+
+    // Close the polygon if near start with enough points
+    if (_isNearStart && _points.length >= 3) {
+      _points.add(_points.first);
+      _previewPoint = null;
+      return _finalizeAsClosed();
     }
 
     _points.add(point);
@@ -90,9 +115,20 @@ class LineTool implements Tool {
     ]);
   }
 
+  ToolResult _finalizeAsClosed() {
+    final element = _createElement(_points, closed: true);
+    reset();
+    return CompoundResult([
+      AddElementResult(element),
+      SetSelectionResult({element.id}),
+      SwitchToolResult(ToolType.select),
+    ]);
+  }
+
   /// Creates the line element. Override in subclasses for different element types.
-  LineElement _createElement(List<Point> points) {
-    return _buildLineElement(points);
+  LineElement _createElement(List<Point> points, {bool closed = false}) {
+    final line = _buildLineElement(points);
+    return closed ? line.copyWithLine(closed: true) : line;
   }
 
   LineElement _buildLineElement(List<Point> points) {
@@ -122,7 +158,10 @@ class LineTool implements Tool {
     if (_previewPoint != null) {
       displayPoints.add(_previewPoint!);
     }
-    return ToolOverlay(creationPoints: displayPoints);
+    return ToolOverlay(
+      creationPoints: displayPoints,
+      creationClosed: _isNearStart && _points.length >= 3,
+    );
   }
 
   @override
@@ -131,5 +170,6 @@ class LineTool implements Tool {
     _previewPoint = null;
     _isDragCreating = false;
     _dragOrigin = null;
+    _isNearStart = false;
   }
 }

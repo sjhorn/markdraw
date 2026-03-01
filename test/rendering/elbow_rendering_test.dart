@@ -32,6 +32,12 @@ class _MockAdapter implements RoughAdapter {
   }
 
   @override
+  void drawPolygonLine(Canvas canvas, List<Point> points, DrawStyle style) {
+    calls.add('drawPolygonLine');
+    lastPoints = List.of(points);
+  }
+
+  @override
   void drawArrow(
     Canvas canvas,
     List<Point> points,
