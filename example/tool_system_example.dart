@@ -87,8 +87,8 @@ class _CanvasPageState extends State<_CanvasPage> {
   // Track whether we're editing an existing element vs a newly created one
   bool _isEditingExisting = false;
   String? _originalText;
-  // Guard to prevent focus-loss commit during style changes
-  bool _suppressFocusCommit = false;
+  // Deferred focus-loss commit — cancelled by property panel taps
+  bool _pendingFocusCommit = false;
 
   @override
   void initState() {
@@ -317,10 +317,15 @@ class _CanvasPageState extends State<_CanvasPage> {
   }
 
   void _onTextFocusChanged() {
-    if (!_textFocusNode.hasFocus &&
-        _editingTextElementId != null &&
-        !_suppressFocusCommit) {
-      _commitTextEditing();
+    if (!_textFocusNode.hasFocus && _editingTextElementId != null) {
+      // Defer commit to post-frame so property panel taps can cancel it
+      _pendingFocusCommit = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_pendingFocusCommit && _editingTextElementId != null) {
+          _commitTextEditing();
+        }
+        _pendingFocusCommit = false;
+      });
     }
   }
 
@@ -1911,7 +1916,7 @@ class _CanvasPageState extends State<_CanvasPage> {
     if (elements.isEmpty) return;
 
     final wasEditing = _editingTextElementId != null;
-    if (wasEditing) _suppressFocusCommit = true;
+    if (wasEditing) _pendingFocusCommit = false;
 
     _historyManager.push(_editorState.scene);
     final result = PropertyPanelState.applyStyle(elements, style);
@@ -1938,7 +1943,6 @@ class _CanvasPageState extends State<_CanvasPage> {
     // Re-request focus to the text editor after style change
     if (wasEditing) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _suppressFocusCommit = false;
         if (_editingTextElementId != null) {
           _textFocusNode.requestFocus();
         }
