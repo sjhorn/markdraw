@@ -36,7 +36,7 @@ ArrowElement _elbowArrow({
       points: points ?? const [Point(0, 0), Point(100, 100)],
       startBinding: startBinding,
       endBinding: endBinding,
-      elbowed: true,
+      arrowType: ArrowType.sharpElbow,
     );
 
 ArrowElement _regularArrow({

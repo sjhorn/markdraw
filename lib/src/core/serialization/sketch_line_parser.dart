@@ -435,7 +435,25 @@ class SketchLineParser {
 
     final bounds = _boundsFromPoints(points);
 
-    final isElbowed = props.hasFlag('elbowed');
+    // Parse arrow type: new 'arrow-type=' property first, legacy fallback second
+    final arrowTypeStr = props.namedString('arrow-type');
+    ArrowType arrowType;
+    if (arrowTypeStr != null) {
+      arrowType = switch (arrowTypeStr) {
+        'round' => ArrowType.round,
+        'sharp-elbow' => ArrowType.sharpElbow,
+        'round-elbow' => ArrowType.roundElbow,
+        _ => ArrowType.sharp,
+      };
+    } else if (props.hasFlag('elbowed')) {
+      // Legacy: 'elbowed' flag → sharpElbow
+      arrowType = ArrowType.sharpElbow;
+    } else if (common.roundness != null) {
+      // Legacy: 'rounded=X' on arrow → round
+      arrowType = ArrowType.round;
+    } else {
+      arrowType = ArrowType.sharp;
+    }
 
     final arrow = ArrowElement(
       id: elementId,
@@ -446,7 +464,7 @@ class SketchLineParser {
       points: points,
       startArrowhead: startArrow,
       endArrowhead: endArrow,
-      elbowed: isElbowed,
+      arrowType: arrowType,
       strokeColor: common.strokeColor,
       backgroundColor: common.backgroundColor,
       fillStyle: common.fillStyle,

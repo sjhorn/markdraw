@@ -182,7 +182,7 @@ class _CanvasPageState extends State<_CanvasPage> {
     }
     if (styled is ArrowElement) {
       styled = styled.copyWithArrow(
-        elbowed: _defaultStyle.elbowed,
+        arrowType: _defaultStyle.arrowType,
       );
     }
     return styled;
@@ -1174,6 +1174,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                 bindTargetAngle:
                     toolOverlay?.bindTargetAngle ?? 0.0,
                 pointHandles: _buildPointHandles(),
+                midpointHandles: _buildMidpointHandles(),
                 creationPoints: toolOverlay?.creationPoints,
               ),
               child: const SizedBox.expand(),
@@ -1698,7 +1699,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                         if (style.hasArrows) ...[
                           const SizedBox(height: 8),
                           _buildSectionLabel('Arrow type'),
-                          _buildElbowedRow(style.elbowed),
+                          _buildArrowTypeRow(style.arrowType),
                         ],
                         if (showFullTextProps) ...[
                           const SizedBox(height: 12),
@@ -1986,7 +1987,7 @@ class _CanvasPageState extends State<_CanvasPage> {
           : (style.endArrowhead ?? _defaultStyle.endArrowhead),
       endArrowheadNone: style.endArrowheadNone ||
           (style.endArrowhead == null && _defaultStyle.endArrowheadNone),
-      elbowed: style.elbowed ?? _defaultStyle.elbowed,
+      arrowType: style.arrowType ?? _defaultStyle.arrowType,
       roundness: style.roundness ?? _defaultStyle.roundness,
     );
 
@@ -2104,7 +2105,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                     if (style.hasArrows) ...[
                       const SizedBox(height: 8),
                       _buildSectionLabel('Arrow type'),
-                      _buildElbowedRow(style.elbowed),
+                      _buildArrowTypeRow(style.arrowType),
                     ],
                     if (showFullTextProps) ...[
                       const SizedBox(height: 12),
@@ -2391,51 +2392,35 @@ class _CanvasPageState extends State<_CanvasPage> {
     );
   }
 
-  Widget _buildElbowedRow(bool? current) {
-    final isElbowed = current ?? false;
+  Widget _buildArrowTypeRow(ArrowType? current) {
     return Wrap(
       spacing: 4,
       runSpacing: 4,
       children: [
-        _IconToggleChip(
-          isSelected: !isElbowed,
-          onTap: () {
-            _historyManager.push(_editorState.scene);
-            _applyStyleChange(
-                const ElementStyle(hasArrows: true, elbowed: false));
-          },
-          tooltip: 'Sharp',
-          child: CustomPaint(
-            size: const Size(20, 20),
-            painter: _ArrowTypeIcon('sharp'),
+        for (final type in ArrowType.values)
+          _IconToggleChip(
+            isSelected: current == type,
+            onTap: () {
+              _historyManager.push(_editorState.scene);
+              _applyStyleChange(
+                  ElementStyle(hasArrows: true, arrowType: type));
+            },
+            tooltip: switch (type) {
+              ArrowType.sharp => 'Sharp',
+              ArrowType.round => 'Round',
+              ArrowType.sharpElbow => 'Sharp Elbow',
+              ArrowType.roundElbow => 'Round Elbow',
+            },
+            child: CustomPaint(
+              size: const Size(20, 20),
+              painter: _ArrowTypeIcon(switch (type) {
+                ArrowType.sharp => 'sharp',
+                ArrowType.round => 'round',
+                ArrowType.sharpElbow => 'elbow',
+                ArrowType.roundElbow => 'round-elbow',
+              }),
+            ),
           ),
-        ),
-        _IconToggleChip(
-          isSelected: false, // round is not a distinct mode currently
-          onTap: () {
-            _historyManager.push(_editorState.scene);
-            _applyStyleChange(
-                const ElementStyle(hasArrows: true, elbowed: false));
-          },
-          tooltip: 'Round',
-          child: CustomPaint(
-            size: const Size(20, 20),
-            painter: _ArrowTypeIcon('round'),
-          ),
-        ),
-        _IconToggleChip(
-          isSelected: isElbowed,
-          onTap: () {
-            _historyManager.push(_editorState.scene);
-            _applyStyleChange(
-                const ElementStyle(hasArrows: true, elbowed: true));
-          },
-          tooltip: 'Elbowed',
-          child: CustomPaint(
-            size: const Size(20, 20),
-            painter: _ArrowTypeIcon('elbow'),
-          ),
-        ),
       ],
     );
   }
@@ -3117,6 +3102,29 @@ class _CanvasPageState extends State<_CanvasPage> {
     return null;
   }
 
+  List<Point>? _buildMidpointHandles() {
+    if (_editorState.selectedIds.length != 1) return null;
+    final elem = _editorState.scene.getElementById(
+      _editorState.selectedIds.first,
+    );
+    if (elem == null) return null;
+    if (elem is! LineElement) return null;
+    // Skip midpoint handles for elbow arrows
+    if (elem is ArrowElement && elem.elbowed) return null;
+    if (elem.points.length < 2) return null;
+
+    final midpoints = <Point>[];
+    for (var i = 0; i < elem.points.length - 1; i++) {
+      final a = elem.points[i];
+      final b = elem.points[i + 1];
+      midpoints.add(Point(
+        elem.x + (a.x + b.x) / 2,
+        elem.y + (a.y + b.y) / 2,
+      ));
+    }
+    return midpoints;
+  }
+
   SelectionOverlay? _buildSelectionOverlay() {
     if (_editorState.selectedIds.isEmpty) return null;
     final selected = _editorState.selectedIds
@@ -3781,7 +3789,7 @@ class _RoundnessIcon extends CustomPainter {
 }
 
 class _ArrowTypeIcon extends CustomPainter {
-  final String type; // 'sharp', 'round', 'elbow'
+  final String type; // 'sharp', 'round', 'elbow', 'round-elbow'
   _ArrowTypeIcon(this.type);
 
   @override
@@ -3807,6 +3815,14 @@ class _ArrowTypeIcon extends CustomPainter {
         path.moveTo(5, size.height - 5);
         path.lineTo(5, 8);
         path.lineTo(size.width - 5, 8);
+        path.lineTo(size.width - 5, size.height - 5);
+      case 'round-elbow':
+        // Right-angle path with rounded corners
+        path.moveTo(5, size.height - 5);
+        path.lineTo(5, 12);
+        path.quadraticBezierTo(5, 8, 9, 8);
+        path.lineTo(size.width - 9, 8);
+        path.quadraticBezierTo(size.width - 5, 8, size.width - 5, 12);
         path.lineTo(size.width - 5, size.height - 5);
     }
     canvas.drawPath(path, paint);

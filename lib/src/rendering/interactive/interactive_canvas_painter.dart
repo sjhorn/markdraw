@@ -28,6 +28,7 @@ class InteractiveCanvasPainter extends CustomPainter {
   final List<Point>? creationPoints;
   final Bounds? creationBounds;
   final List<Point>? pointHandles;
+  final List<Point>? midpointHandles;
   final Bounds? bindTargetBounds;
   final double bindTargetAngle;
 
@@ -41,6 +42,7 @@ class InteractiveCanvasPainter extends CustomPainter {
     this.creationPoints,
     this.creationBounds,
     this.pointHandles,
+    this.midpointHandles,
     this.bindTargetBounds,
     this.bindTargetAngle = 0.0,
   });
@@ -116,6 +118,12 @@ class InteractiveCanvasPainter extends CustomPainter {
           SelectionRenderer.drawPointHandles(canvas, pointHandles!,
               mode: interactionMode);
         }
+
+        // Midpoint handles (for inserting new points between vertices)
+        if (midpointHandles != null && midpointHandles!.isNotEmpty) {
+          SelectionRenderer.drawMidpointHandles(canvas, midpointHandles!,
+              mode: interactionMode);
+        }
       }
 
       if (hasAngle) {
@@ -164,6 +172,7 @@ class InteractiveCanvasPainter extends CustomPainter {
         bindTargetAngle != oldDelegate.bindTargetAngle ||
         !listEquals(snapLines, oldDelegate.snapLines) ||
         !listEquals(creationPoints, oldDelegate.creationPoints) ||
-        !listEquals(pointHandles, oldDelegate.pointHandles);
+        !listEquals(pointHandles, oldDelegate.pointHandles) ||
+        !listEquals(midpointHandles, oldDelegate.midpointHandles);
   }
 }

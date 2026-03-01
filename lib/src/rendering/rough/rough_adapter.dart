@@ -33,8 +33,29 @@ abstract class RoughAdapter {
     DrawStyle style,
   );
 
+  /// Draws a curved line (smooth Bezier curve) through the given points.
+  void drawCurvedLine(Canvas canvas, List<Point> points, DrawStyle style);
+
+  /// Draws a curved arrow (smooth Bezier curve with arrowheads) through the given points.
+  void drawCurvedArrow(
+    Canvas canvas,
+    List<Point> points,
+    Arrowhead? startArrowhead,
+    Arrowhead? endArrowhead,
+    DrawStyle style,
+  );
+
   /// Draws an elbow (orthogonal) arrow with clean straight lines.
   void drawElbowArrow(
+    Canvas canvas,
+    List<Point> points,
+    Arrowhead? startArrowhead,
+    Arrowhead? endArrowhead,
+    DrawStyle style,
+  );
+
+  /// Draws an elbow (orthogonal) arrow with rounded corners at bends.
+  void drawRoundElbowArrow(
     Canvas canvas,
     List<Point> points,
     Arrowhead? startArrowhead,

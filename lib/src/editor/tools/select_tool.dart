@@ -114,6 +114,26 @@ class SelectTool implements Tool {
         }
         return null;
       }
+
+      // Midpoint handle hit-test: insert a new point at the midpoint
+      final midIdx =
+          _hitTestMidpointHandle(point, elem, context.interactionMode);
+      if (midIdx != null) {
+        final line = elem as LineElement;
+        final a = line.points[midIdx];
+        final b = line.points[midIdx + 1];
+        final mid = Point((a.x + b.x) / 2, (a.y + b.y) / 2);
+        final newPoints = List<Point>.of(line.points)..insert(midIdx + 1, mid);
+        final updated = _normalizeLineElement(line, newPoints);
+
+        _dragMode = _DragMode.dragPoint;
+        _activePointIndex = midIdx + 1;
+        _hitElement = updated;
+        _startBounds = Bounds.fromLTWH(
+            updated.x, updated.y, updated.width, updated.height);
+        _startPoints = List.of((updated as LineElement).points);
+        return UpdateElementResult(updated);
+      }
     }
 
     // 2. Resize/rotation handle hit-test
@@ -416,6 +436,41 @@ class SelectTool implements Tool {
         element.y + element.points[i].y,
       );
       if (absPoint.distanceTo(localPoint) <= radius) {
+        return i;
+      }
+    }
+    return null;
+  }
+
+  /// Hit-test for midpoint handles between adjacent vertices.
+  ///
+  /// Returns the segment index (i.e. the index of the first point of the
+  /// segment) if the scene point is within hit radius of the midpoint.
+  /// Skipped for elbow arrows (they don't support midpoint insertion).
+  int? _hitTestMidpointHandle(
+      Point scenePoint, Element element, InteractionMode mode) {
+    if (element is! LineElement) return null;
+    if (element is ArrowElement && element.elbowed) return null;
+    if (element.points.length < 2) return null;
+
+    final center = Point(
+      element.x + element.width / 2,
+      element.y + element.height / 2,
+    );
+    final localPoint = _unrotatePoint(scenePoint, center, element.angle);
+    final radius = _handleHitRadius(mode);
+
+    for (var i = 0; i < element.points.length - 1; i++) {
+      final a = Point(
+        element.x + element.points[i].x,
+        element.y + element.points[i].y,
+      );
+      final b = Point(
+        element.x + element.points[i + 1].x,
+        element.y + element.points[i + 1].y,
+      );
+      final mid = Point((a.x + b.x) / 2, (a.y + b.y) / 2);
+      if (mid.distanceTo(localPoint) <= radius) {
         return i;
       }
     }

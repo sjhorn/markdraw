@@ -117,7 +117,7 @@ void main() {
         width: 100.0,
         height: 100.0,
         points: const [Point(0, 0), Point(100, 100)],
-        elbowed: true,
+        arrowType: ArrowType.sharpElbow,
       );
       final modified = a.copyWith(x: 50.0);
       expect(modified.elbowed, isTrue);
@@ -131,7 +131,7 @@ void main() {
         width: 100.0,
         height: 100.0,
         points: const [Point(0, 0), Point(100, 100)],
-        elbowed: true,
+        arrowType: ArrowType.sharpElbow,
       );
       final modified = a.copyWithLine(
         points: [const Point(10, 20), const Point(200, 300)],
@@ -142,7 +142,7 @@ void main() {
     test('copyWithArrow can change elbowed', () {
       final a = createArrow();
       expect(a.elbowed, isFalse);
-      final modified = a.copyWithArrow(elbowed: true);
+      final modified = a.copyWithArrow(arrowType: ArrowType.sharpElbow);
       expect(modified.elbowed, isTrue);
     });
   });

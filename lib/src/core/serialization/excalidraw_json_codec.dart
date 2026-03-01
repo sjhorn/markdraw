@@ -127,7 +127,7 @@ class ExcalidrawJsonCodec {
         'endArrowhead': el.endArrowhead?.name,
         'startBinding': _bindingToJson(el.startBinding),
         'endBinding': _bindingToJson(el.endBinding),
-        if (el.elbowed) 'elbowed': true,
+        if (el.arrowType.isElbow) 'elbowed': true,
       };
     } else if (el is LineElement) {
       return {
@@ -828,6 +828,20 @@ class ExcalidrawJsonCodec {
     int index,
     List<ParseWarning> warnings,
   ) {
+    // Derive ArrowType from elbowed + roundness combination
+    final isElbowed = raw['elbowed'] as bool? ?? false;
+    final hasRoundness = _roundness(raw) != null;
+    final ArrowType arrowType;
+    if (isElbowed && hasRoundness) {
+      arrowType = ArrowType.roundElbow;
+    } else if (isElbowed) {
+      arrowType = ArrowType.sharpElbow;
+    } else if (hasRoundness) {
+      arrowType = ArrowType.round;
+    } else {
+      arrowType = ArrowType.sharp;
+    }
+
     return ArrowElement(
       id: _id(raw),
       x: _double(raw, 'x'),
@@ -841,7 +855,7 @@ class ExcalidrawJsonCodec {
           _arrowhead(raw['endArrowhead'] as String?, index, warnings),
       startBinding: _binding(raw, 'startBinding'),
       endBinding: _binding(raw, 'endBinding'),
-      elbowed: raw['elbowed'] as bool? ?? false,
+      arrowType: arrowType,
       angle: _double(raw, 'angle'),
       strokeColor: raw['strokeColor'] as String? ?? '#000000',
       backgroundColor: raw['backgroundColor'] as String? ?? 'transparent',

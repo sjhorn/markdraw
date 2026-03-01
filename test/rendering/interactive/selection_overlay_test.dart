@@ -260,7 +260,7 @@ void main() {
           const Point(200, 100),
         ],
         endArrowhead: Arrowhead.arrow,
-        elbowed: true,
+        arrowType: ArrowType.sharpElbow,
       );
       final overlay = SelectionOverlay.fromElements([arrow]);
       expect(overlay!.showBoundingBox, isFalse);

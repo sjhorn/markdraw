@@ -11,8 +11,8 @@ import 'tool.dart';
 /// Tool for creating arrow elements by clicking to add points.
 /// Double-click or Enter finalizes the arrow.
 ///
-/// When [elbowed] is true, creates two-click elbow (orthogonal) arrows
-/// that route via [ElbowRouting].
+/// When [arrowType] is an elbow type, creates two-click elbow (orthogonal)
+/// arrows that route via [ElbowRouting].
 class ArrowTool implements Tool {
   final List<Point> _points = [];
   Point? _previewPoint;
@@ -22,10 +22,10 @@ class ArrowTool implements Tool {
   bool _isDragCreating = false;
   Point? _dragOrigin;
 
-  /// Whether to create elbowed (orthogonal) arrows.
-  bool elbowed;
+  /// The visual style of arrows created by this tool.
+  ArrowType arrowType;
 
-  ArrowTool({this.elbowed = false});
+  ArrowTool({this.arrowType = ArrowType.sharp});
 
   @override
   ToolType get type => ToolType.arrow;
@@ -125,8 +125,8 @@ class ArrowTool implements Tool {
     _previewPoint = null;
     _bindTarget = null;
 
-    // Elbowed arrows finalize immediately on second click
-    if (elbowed && _points.length >= 2) {
+    // Elbow arrows finalize immediately on second click
+    if (arrowType.isElbow && _points.length >= 2) {
       return _finalize();
     }
 
@@ -161,7 +161,7 @@ class ArrowTool implements Tool {
 
   ArrowElement _createArrow(List<Point> points) {
     List<Point> routedPoints;
-    if (elbowed) {
+    if (arrowType.isElbow) {
       // Route through orthogonal path
       final startHeading = _startBinding != null
           ? ElbowRouting.headingFromFixedPoint(_startBinding!.fixedPoint)
@@ -197,7 +197,7 @@ class ArrowTool implements Tool {
       endArrowhead: Arrowhead.arrow,
       startBinding: _startBinding,
       endBinding: _endBinding,
-      elbowed: elbowed,
+      arrowType: arrowType,
     );
   }
 
@@ -211,7 +211,7 @@ class ArrowTool implements Tool {
 
     // For elbowed arrows, route the preview path
     List<Point> overlayPoints;
-    if (elbowed && displayPoints.length >= 2) {
+    if (arrowType.isElbow && displayPoints.length >= 2) {
       final startHeading = _startBinding != null
           ? ElbowRouting.headingFromFixedPoint(_startBinding!.fixedPoint)
           : null;

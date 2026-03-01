@@ -175,6 +175,111 @@ void main() {
     });
   });
 
+  group('drawCurvedLine', () {
+    test('renders without error', () {
+      final (recorder, canvas) = _makeCanvas();
+      adapter.drawCurvedLine(
+        canvas,
+        [const Point(0, 0), const Point(50, 50), const Point(100, 0)],
+        _style(),
+      );
+      final picture = recorder.endRecording();
+      expect(picture, isNotNull);
+    });
+
+    test('two-point line renders without error', () {
+      final (recorder, canvas) = _makeCanvas();
+      adapter.drawCurvedLine(
+        canvas,
+        [const Point(0, 0), const Point(100, 100)],
+        _style(),
+      );
+      recorder.endRecording();
+    });
+
+    test('single point does not throw', () {
+      final (recorder, canvas) = _makeCanvas();
+      expect(
+        () => adapter.drawCurvedLine(canvas, [const Point(50, 50)], _style()),
+        returnsNormally,
+      );
+      recorder.endRecording();
+    });
+
+    test('empty points does not throw', () {
+      final (recorder, canvas) = _makeCanvas();
+      expect(
+        () => adapter.drawCurvedLine(canvas, [], _style()),
+        returnsNormally,
+      );
+      recorder.endRecording();
+    });
+
+    test('with dashed stroke does not throw', () {
+      final (recorder, canvas) = _makeCanvas();
+      expect(
+        () => adapter.drawCurvedLine(
+          canvas,
+          [const Point(0, 0), const Point(50, 50), const Point(100, 0)],
+          _style(strokeStyle: StrokeStyle.dashed),
+        ),
+        returnsNormally,
+      );
+      recorder.endRecording();
+    });
+  });
+
+  group('drawCurvedArrow', () {
+    test('renders with arrowheads', () {
+      final (recorder, canvas) = _makeCanvas();
+      adapter.drawCurvedArrow(
+        canvas,
+        [const Point(0, 0), const Point(50, 50), const Point(100, 0)],
+        Arrowhead.arrow,
+        Arrowhead.arrow,
+        _style(),
+      );
+      final picture = recorder.endRecording();
+      expect(picture, isNotNull);
+    });
+
+    test('renders with end arrowhead only', () {
+      final (recorder, canvas) = _makeCanvas();
+      adapter.drawCurvedArrow(
+        canvas,
+        [const Point(0, 0), const Point(50, 50), const Point(100, 0)],
+        null,
+        Arrowhead.triangle,
+        _style(),
+      );
+      recorder.endRecording();
+    });
+
+    test('renders without arrowheads', () {
+      final (recorder, canvas) = _makeCanvas();
+      adapter.drawCurvedArrow(
+        canvas,
+        [const Point(0, 0), const Point(50, 50), const Point(100, 0)],
+        null,
+        null,
+        _style(),
+      );
+      recorder.endRecording();
+    });
+
+    test('two-point arrow renders without error', () {
+      final (recorder, canvas) = _makeCanvas();
+      adapter.drawCurvedArrow(
+        canvas,
+        [const Point(0, 0), const Point(100, 0)],
+        null,
+        Arrowhead.arrow,
+        _style(),
+      );
+      recorder.endRecording();
+    });
+  });
+
   group('drawArrow', () {
     test('draws line with end arrowhead', () {
       final (recorder, canvas) = _makeCanvas();

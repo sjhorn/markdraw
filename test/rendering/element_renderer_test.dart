@@ -55,6 +55,24 @@ class MockRoughAdapter implements RoughAdapter {
   }
 
   @override
+  void drawCurvedLine(Canvas canvas, List<Point> points, DrawStyle style) {
+    calls.add('drawCurvedLine');
+    lastPoints = List.of(points);
+  }
+
+  @override
+  void drawCurvedArrow(
+    Canvas canvas,
+    List<Point> points,
+    Arrowhead? startArrowhead,
+    Arrowhead? endArrowhead,
+    DrawStyle style,
+  ) {
+    calls.add('drawCurvedArrow');
+    lastPoints = List.of(points);
+  }
+
+  @override
   void drawElbowArrow(
     Canvas canvas,
     List<Point> points,
@@ -64,6 +82,17 @@ class MockRoughAdapter implements RoughAdapter {
   ) {
     calls.add('drawElbowArrow');
     lastPoints = List.of(points);
+  }
+
+  @override
+  void drawRoundElbowArrow(
+    Canvas canvas,
+    List<Point> points,
+    Arrowhead? startArrowhead,
+    Arrowhead? endArrowhead,
+    DrawStyle style,
+  ) {
+    calls.add('drawRoundElbowArrow');
   }
 
   @override
@@ -375,6 +404,90 @@ void main() {
       expect(adapter.lastPoints![0], const Point(50, 75));
       expect(adapter.lastPoints![1], const Point(100, 125));
       expect(adapter.lastPoints![2], const Point(150, 75));
+    });
+
+    test('dispatches line with roundness to drawCurvedLine', () {
+      final (recorder, canvas) = _makeCanvas();
+      final element = LineElement(
+        id: ElementId.generate(),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 50,
+        points: [
+          const Point(0, 0),
+          const Point(50, 50),
+          const Point(100, 0),
+        ],
+        roundness: const Roundness.proportional(value: 32),
+      );
+
+      ElementRenderer.render(canvas, element, adapter);
+      recorder.endRecording();
+
+      expect(adapter.calls, ['drawCurvedLine']);
+    });
+
+    test('dispatches round arrow to drawCurvedArrow', () {
+      final (recorder, canvas) = _makeCanvas();
+      final element = ArrowElement(
+        id: ElementId.generate(),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 50,
+        points: [
+          const Point(0, 0),
+          const Point(50, 50),
+          const Point(100, 0),
+        ],
+        arrowType: ArrowType.round,
+        endArrowhead: Arrowhead.arrow,
+      );
+
+      ElementRenderer.render(canvas, element, adapter);
+      recorder.endRecording();
+
+      expect(adapter.calls, ['drawCurvedArrow']);
+    });
+
+    test('dispatches arrow without roundness to drawArrow', () {
+      final (recorder, canvas) = _makeCanvas();
+      final element = ArrowElement(
+        id: ElementId.generate(),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 0,
+        points: [const Point(0, 0), const Point(100, 0)],
+        endArrowhead: Arrowhead.arrow,
+      );
+
+      ElementRenderer.render(canvas, element, adapter);
+      recorder.endRecording();
+
+      expect(adapter.calls, ['drawArrow']);
+    });
+
+    test('dispatches elbowed arrow to drawElbowArrow over roundness', () {
+      final (recorder, canvas) = _makeCanvas();
+      final element = ArrowElement(
+        id: ElementId.generate(),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 0,
+        points: [const Point(0, 0), const Point(100, 0)],
+        arrowType: ArrowType.sharpElbow,
+        endArrowhead: Arrowhead.arrow,
+        roundness: const Roundness.proportional(value: 32),
+      );
+
+      ElementRenderer.render(canvas, element, adapter);
+      recorder.endRecording();
+
+      // Elbowed takes priority over roundness
+      expect(adapter.calls, ['drawElbowArrow']);
     });
 
     test('line at origin renders points unchanged', () {

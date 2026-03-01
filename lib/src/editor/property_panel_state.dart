@@ -40,7 +40,7 @@ class ElementStyle {
   final VerticalAlign? verticalAlign;
 
   // Arrow-only properties (null if no arrows or mixed):
-  final bool? elbowed;
+  final ArrowType? arrowType;
 
   /// True if at least one selected element is a [LineElement] (including arrows).
   final bool hasLines;
@@ -82,7 +82,7 @@ class ElementStyle {
     this.fontFamily,
     this.textAlign,
     this.verticalAlign,
-    this.elbowed,
+    this.arrowType,
     this.locked,
   });
 }
@@ -150,12 +150,12 @@ class PropertyPanelState {
     // Arrow properties — only if at least one ArrowElement is present.
     final arrowElements = elements.whereType<ArrowElement>().toList();
     final hasArrows = arrowElements.isNotEmpty;
-    bool? elbowed;
+    ArrowType? arrowType;
     if (hasArrows) {
-      elbowed = arrowElements.first.elbowed;
+      arrowType = arrowElements.first.arrowType;
       for (var i = 1; i < arrowElements.length; i++) {
-        if (arrowElements[i].elbowed != elbowed) {
-          elbowed = null;
+        if (arrowElements[i].arrowType != arrowType) {
+          arrowType = null;
           break;
         }
       }
@@ -292,7 +292,7 @@ class PropertyPanelState {
       fontFamily: fontFamily,
       textAlign: textAlign,
       verticalAlign: verticalAlign,
-      elbowed: elbowed,
+      arrowType: arrowType,
       locked: locked,
     );
   }
@@ -326,11 +326,14 @@ class PropertyPanelState {
         }
       }
 
-      // Apply arrow-specific elbowed toggle
-      if (element is ArrowElement && style.elbowed != null) {
+      // Apply arrow-specific arrowType change
+      if (element is ArrowElement && style.arrowType != null) {
         final arrow = element;
-        if (style.elbowed! && !arrow.elbowed) {
-          // Regular → elbowed: route points between first and last point
+        final newType = style.arrowType!;
+        final oldType = arrow.arrowType;
+
+        if (newType.isElbow && !oldType.isElbow) {
+          // Non-elbow → elbow: route points between first and last point
           final absFirst = Point(arrow.x + arrow.points.first.x,
               arrow.y + arrow.points.first.y);
           final absLast = Point(
@@ -350,18 +353,19 @@ class PropertyPanelState {
           final relPoints =
               routed.map((p) => Point(p.x - minX, p.y - minY)).toList();
           updated = arrow
-              .copyWithArrow(elbowed: true)
+              .copyWithArrow(arrowType: newType)
               .copyWithLine(points: relPoints)
               .copyWith(x: minX, y: minY, width: maxX - minX,
                   height: maxY - minY, angle: 0);
-        } else if (!style.elbowed! && arrow.elbowed) {
-          // Elbowed → regular: simplify to just first and last point
+        } else if (!newType.isElbow && oldType.isElbow) {
+          // Elbow → non-elbow: simplify to just first and last point
           final simplifiedPoints = [arrow.points.first, arrow.points.last];
           updated = arrow
-              .copyWithArrow(elbowed: false)
+              .copyWithArrow(arrowType: newType)
               .copyWithLine(points: simplifiedPoints);
         } else {
-          updated = arrow.copyWithArrow(elbowed: style.elbowed);
+          // Same category (sharp↔round or sharpElbow↔roundElbow): no point changes
+          updated = arrow.copyWithArrow(arrowType: newType);
         }
       }
 

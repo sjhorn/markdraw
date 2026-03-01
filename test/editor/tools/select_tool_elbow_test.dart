@@ -16,7 +16,7 @@ void main() {
     height: 100,
     points: const [Point(0, 0), Point(0, 100), Point(100, 100)],
     endArrowhead: Arrowhead.arrow,
-    elbowed: true,
+    arrowType: ArrowType.sharpElbow,
   );
 
   /// Regular (non-elbowed) arrow for regression tests.
@@ -49,7 +49,7 @@ void main() {
     height: 100,
     points: const [Point(0, 0), Point(0, 100), Point(100, 100)],
     endArrowhead: Arrowhead.arrow,
-    elbowed: true,
+    arrowType: ArrowType.sharpElbow,
     startBinding: const PointBinding(
       elementId: 'r1',
       fixedPoint: Point(1, 0.5),

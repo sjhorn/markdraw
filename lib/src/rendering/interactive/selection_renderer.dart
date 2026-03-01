@@ -279,6 +279,26 @@ class SelectionRenderer {
     }
   }
 
+  /// Draws semi-transparent blue circles at midpoint handle positions.
+  ///
+  /// Used between adjacent vertices on lines/arrows to indicate where
+  /// a new point can be inserted by dragging.
+  static void drawMidpointHandles(
+    Canvas canvas,
+    List<Point> midpoints, {
+    InteractionMode mode = InteractionMode.pointer,
+  }) {
+    final fillPaint = Paint()
+      ..color = const Color(0xB24A90D9)
+      ..style = PaintingStyle.fill;
+
+    final radius = handleSize(mode) / 2;
+    for (final point in midpoints) {
+      final center = Offset(point.x, point.y);
+      canvas.drawCircle(center, radius, fillPaint);
+    }
+  }
+
   /// Draws a creation preview line/arrow from a list of points.
   static void drawCreationPreviewLine(Canvas canvas, List<Point> points) {
     if (points.length < 2) return;

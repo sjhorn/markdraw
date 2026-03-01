@@ -156,13 +156,21 @@ class SketchLineSerializer {
       _addPoints(parts, element.points);
     }
 
-    if (element.elbowed) {
-      parts.add('elbowed');
+    // Emit arrow type (omit for default 'sharp')
+    switch (element.arrowType) {
+      case ArrowType.sharp:
+        break; // Default — omit
+      case ArrowType.round:
+        parts.add('arrow-type=round');
+      case ArrowType.sharpElbow:
+        parts.add('arrow-type=sharp-elbow');
+      case ArrowType.roundElbow:
+        parts.add('arrow-type=round-elbow');
     }
 
     // Arrow default endArrowhead is Arrowhead.arrow, so only emit non-defaults
     _addArrowheads(parts, element.startArrowhead, element.endArrowhead, true);
-    _addCommonProperties(parts, element);
+    _addCommonProperties(parts, element, isArrow: true);
     return parts.join(' ');
   }
 
@@ -224,7 +232,8 @@ class SketchLineSerializer {
     }
   }
 
-  void _addCommonProperties(List<String> parts, Element element) {
+  void _addCommonProperties(List<String> parts, Element element,
+      {bool isArrow = false}) {
     if (element.backgroundColor != 'transparent') {
       parts.add('fill=${element.backgroundColor}');
     }
@@ -246,7 +255,7 @@ class SketchLineSerializer {
     if (element.opacity != 1.0) {
       parts.add('opacity=${_formatNum(element.opacity)}');
     }
-    if (element.roundness != null) {
+    if (element.roundness != null && !isArrow) {
       parts.add('rounded=${_formatNum(element.roundness!.value)}');
     }
     if (element.angle != 0.0) {

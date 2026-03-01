@@ -45,6 +45,22 @@ class MockRoughAdapter implements RoughAdapter {
   }
 
   @override
+  void drawCurvedLine(Canvas canvas, List<Point> points, DrawStyle style) {
+    calls.add('curvedLine');
+  }
+
+  @override
+  void drawCurvedArrow(
+    Canvas canvas,
+    List<Point> points,
+    Arrowhead? startArrowhead,
+    Arrowhead? endArrowhead,
+    DrawStyle style,
+  ) {
+    calls.add('curvedArrow');
+  }
+
+  @override
   void drawElbowArrow(
     Canvas canvas,
     List<Point> points,
@@ -54,6 +70,10 @@ class MockRoughAdapter implements RoughAdapter {
   ) {
     calls.add('elbowArrow');
   }
+
+  @override
+  void drawRoundElbowArrow(Canvas canvas, List<Point> points,
+      Arrowhead? startArrowhead, Arrowhead? endArrowhead, DrawStyle style) {}
 
   @override
   void drawFreedraw(

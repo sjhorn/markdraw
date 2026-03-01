@@ -116,9 +116,10 @@ void main() {
         elements: [line1],
         selectedIds: {line1.id},
       );
-      tool.onPointerDown(const Point(350, 350), ctx);
-      tool.onPointerMove(const Point(370, 370), ctx);
-      final result = tool.onPointerUp(const Point(370, 370), ctx);
+      // Click near (but not at) the midpoint to avoid triggering midpoint insertion
+      tool.onPointerDown(const Point(330, 330), ctx);
+      tool.onPointerMove(const Point(350, 350), ctx);
+      final result = tool.onPointerUp(const Point(350, 350), ctx);
       expect(result, isA<UpdateElementResult>());
       final updated = (result! as UpdateElementResult).element;
       expect(updated.x, line1.x + 20);

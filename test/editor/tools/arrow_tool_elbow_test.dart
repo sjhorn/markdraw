@@ -21,8 +21,8 @@ Scene _sceneWithRect(String id, double x, double y,
 
 void main() {
   group('ArrowTool elbowed creation', () {
-    test('ArrowTool(elbowed: true) creates elbowed arrow', () {
-      final tool = ArrowTool(elbowed: true);
+    test('ArrowTool(arrowType: ArrowType.sharpElbow) creates elbowed arrow', () {
+      final tool = ArrowTool(arrowType: ArrowType.sharpElbow);
       final ctx = _context();
 
       tool.onPointerDown(const Point(0, 0), ctx);
@@ -39,7 +39,7 @@ void main() {
     });
 
     test('two-click creation with binding', () {
-      final tool = ArrowTool(elbowed: true);
+      final tool = ArrowTool(arrowType: ArrowType.sharpElbow);
       var scene = _sceneWithRect('r1', 0, 0);
       scene = scene.addElement(Element(
         id: const ElementId('r2'),
@@ -67,7 +67,7 @@ void main() {
     });
 
     test('two-click creation without binding', () {
-      final tool = ArrowTool(elbowed: true);
+      final tool = ArrowTool(arrowType: ArrowType.sharpElbow);
       final ctx = _context();
 
       tool.onPointerDown(const Point(50, 50), ctx);
@@ -84,7 +84,7 @@ void main() {
     });
 
     test('elbow preview shows routed path on move', () {
-      final tool = ArrowTool(elbowed: true);
+      final tool = ArrowTool(arrowType: ArrowType.sharpElbow);
       final ctx = _context();
 
       tool.onPointerDown(const Point(0, 0), ctx);
@@ -101,7 +101,7 @@ void main() {
     });
 
     test('elbowed arrow finalize routes correctly', () {
-      final tool = ArrowTool(elbowed: true);
+      final tool = ArrowTool(arrowType: ArrowType.sharpElbow);
       final ctx = _context();
 
       tool.onPointerDown(const Point(0, 0), ctx);
@@ -138,7 +138,7 @@ void main() {
     });
 
     test('Escape cancels elbow creation', () {
-      final tool = ArrowTool(elbowed: true);
+      final tool = ArrowTool(arrowType: ArrowType.sharpElbow);
       final ctx = _context();
 
       tool.onPointerDown(const Point(0, 0), ctx);
@@ -148,7 +148,7 @@ void main() {
     });
 
     test('Enter finalizes elbow creation', () {
-      final tool = ArrowTool(elbowed: true);
+      final tool = ArrowTool(arrowType: ArrowType.sharpElbow);
       final ctx = _context();
 
       tool.onPointerDown(const Point(0, 0), ctx);
@@ -161,11 +161,11 @@ void main() {
       expect(tool.overlay, isNull);
     });
 
-    test('elbowed setter works to toggle mode', () {
+    test('arrowType setter works to toggle mode', () {
       final tool = ArrowTool();
-      expect(tool.elbowed, isFalse);
-      tool.elbowed = true;
-      expect(tool.elbowed, isTrue);
+      expect(tool.arrowType, ArrowType.sharp);
+      tool.arrowType = ArrowType.sharpElbow;
+      expect(tool.arrowType, ArrowType.sharpElbow);
     });
   });
 }

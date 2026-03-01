@@ -52,6 +52,26 @@ class _MockAdapter implements RoughAdapter {
   }
 
   @override
+  void drawCurvedLine(Canvas canvas, List<Point> points, DrawStyle style) {
+    calls.add('drawCurvedLine');
+    lastPoints = List.of(points);
+  }
+
+  @override
+  void drawCurvedArrow(
+    Canvas canvas,
+    List<Point> points,
+    Arrowhead? startArrowhead,
+    Arrowhead? endArrowhead,
+    DrawStyle style,
+  ) {
+    calls.add('drawCurvedArrow');
+    lastPoints = List.of(points);
+    lastStartArrowhead = startArrowhead;
+    lastEndArrowhead = endArrowhead;
+  }
+
+  @override
   void drawElbowArrow(
     Canvas canvas,
     List<Point> points,
@@ -63,6 +83,18 @@ class _MockAdapter implements RoughAdapter {
     lastPoints = List.of(points);
     lastStartArrowhead = startArrowhead;
     lastEndArrowhead = endArrowhead;
+  }
+
+  @override
+  void drawRoundElbowArrow(
+    Canvas canvas,
+    List<Point> points,
+    Arrowhead? startArrowhead,
+    Arrowhead? endArrowhead,
+    DrawStyle style,
+  ) {
+    lastPoints = points;
+    calls.add('drawRoundElbowArrow');
   }
 
   @override
@@ -105,7 +137,7 @@ ArrowElement _elbowArrow({
       points: points ?? const [Point(0, 0), Point(0, 50), Point(100, 50)],
       startArrowhead: startArrowhead,
       endArrowhead: endArrowhead,
-      elbowed: true,
+      arrowType: ArrowType.sharpElbow,
       opacity: opacity,
       angle: angle,
       strokeStyle: strokeStyle,

@@ -19,7 +19,7 @@ ArrowElement _elbowArrow({
       endArrowhead: Arrowhead.arrow,
       startBinding: startBinding,
       endBinding: endBinding,
-      elbowed: true,
+      arrowType: ArrowType.sharpElbow,
     );
 
 ArrowElement _regularArrow({
@@ -43,22 +43,34 @@ void main() {
   group('.markdraw serialization', () {
     final serializer = SketchLineSerializer();
 
-    test('serialize elbowed arrow emits elbowed flag', () {
+    test('serialize elbowed arrow emits arrow-type=sharp-elbow', () {
       final arrow = _elbowArrow();
       final line = serializer.serialize(arrow, alias: 'a1');
 
-      expect(line, contains('elbowed'));
+      expect(line, contains('arrow-type=sharp-elbow'));
       expect(line, startsWith('arrow'));
     });
 
-    test('serialize non-elbowed arrow omits elbowed flag', () {
+    test('serialize non-elbowed arrow omits arrow-type', () {
       final arrow = _regularArrow();
       final line = serializer.serialize(arrow, alias: 'a2');
 
-      expect(line, isNot(contains('elbowed')));
+      expect(line, isNot(contains('arrow-type')));
     });
 
-    test('parse elbowed arrow', () {
+    test('parse arrow-type=sharp-elbow', () {
+      final parser = SketchLineParser();
+      const line =
+          'arrow id=a1 points=[[0,0],[0,50],[100,50]] arrow-type=sharp-elbow seed=1';
+      final result = parser.parseLine(line, 1);
+
+      expect(result.value, isA<ArrowElement>());
+      final arrow = result.value! as ArrowElement;
+      expect(arrow.elbowed, isTrue);
+      expect(arrow.arrowType, ArrowType.sharpElbow);
+    });
+
+    test('parse legacy elbowed flag', () {
       final parser = SketchLineParser();
       const line =
           'arrow id=a1 points=[[0,0],[0,50],[100,50]] elbowed seed=1';
@@ -67,6 +79,7 @@ void main() {
       expect(result.value, isA<ArrowElement>());
       final arrow = result.value! as ArrowElement;
       expect(arrow.elbowed, isTrue);
+      expect(arrow.arrowType, ArrowType.sharpElbow);
     });
 
     test('parse non-elbowed arrow', () {

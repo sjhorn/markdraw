@@ -74,6 +74,8 @@ class ElementRenderer {
           final absPoints = _absolutePoints(element.points, element.x, element.y);
           if (element.closed) {
             adapter.drawPolygonLine(canvas, absPoints, style);
+          } else if (element.roundness != null) {
+            adapter.drawCurvedLine(canvas, absPoints, style);
           } else {
             adapter.drawLine(canvas, absPoints, style);
           }
@@ -81,22 +83,39 @@ class ElementRenderer {
       case 'arrow':
         if (element is ArrowElement) {
           final absPoints = _absolutePoints(element.points, element.x, element.y);
-          if (element.elbowed) {
-            adapter.drawElbowArrow(
-              canvas,
-              absPoints,
-              element.startArrowhead,
-              element.endArrowhead,
-              style,
-            );
-          } else {
-            adapter.drawArrow(
-              canvas,
-              absPoints,
-              element.startArrowhead,
-              element.endArrowhead,
-              style,
-            );
+          switch (element.arrowType) {
+            case ArrowType.sharp:
+              adapter.drawArrow(
+                canvas,
+                absPoints,
+                element.startArrowhead,
+                element.endArrowhead,
+                style,
+              );
+            case ArrowType.round:
+              adapter.drawCurvedArrow(
+                canvas,
+                absPoints,
+                element.startArrowhead,
+                element.endArrowhead,
+                style,
+              );
+            case ArrowType.sharpElbow:
+              adapter.drawElbowArrow(
+                canvas,
+                absPoints,
+                element.startArrowhead,
+                element.endArrowhead,
+                style,
+              );
+            case ArrowType.roundElbow:
+              adapter.drawRoundElbowArrow(
+                canvas,
+                absPoints,
+                element.startArrowhead,
+                element.endArrowhead,
+                style,
+              );
           }
         }
       case 'freedraw':

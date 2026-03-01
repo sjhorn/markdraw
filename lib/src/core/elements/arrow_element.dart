@@ -1,4 +1,5 @@
 import '../math/point.dart';
+import 'arrow_type.dart';
 import 'element.dart';
 import 'element_id.dart';
 import 'fill_style.dart';
@@ -31,7 +32,10 @@ class PointBinding {
 class ArrowElement extends LineElement {
   final PointBinding? startBinding;
   final PointBinding? endBinding;
-  final bool elbowed;
+  final ArrowType arrowType;
+
+  /// Whether this arrow uses elbow (orthogonal) routing.
+  bool get elbowed => arrowType.isElbow;
 
   ArrowElement({
     required super.id,
@@ -45,7 +49,7 @@ class ArrowElement extends LineElement {
     super.closed,
     this.startBinding,
     this.endBinding,
-    this.elbowed = false,
+    this.arrowType = ArrowType.sharp,
     super.angle,
     super.strokeColor,
     super.backgroundColor,
@@ -74,7 +78,7 @@ class ArrowElement extends LineElement {
     bool clearStartBinding = false,
     PointBinding? endBinding,
     bool clearEndBinding = false,
-    bool? elbowed,
+    ArrowType? arrowType,
   }) {
     return ArrowElement(
       id: id,
@@ -88,7 +92,7 @@ class ArrowElement extends LineElement {
       startBinding:
           clearStartBinding ? null : (startBinding ?? this.startBinding),
       endBinding: clearEndBinding ? null : (endBinding ?? this.endBinding),
-      elbowed: elbowed ?? this.elbowed,
+      arrowType: arrowType ?? this.arrowType,
       closed: closed,
       angle: angle,
       strokeColor: strokeColor,
@@ -136,7 +140,7 @@ class ArrowElement extends LineElement {
           clearEndArrowhead ? null : (endArrowhead ?? this.endArrowhead),
       startBinding: startBinding,
       endBinding: endBinding,
-      elbowed: elbowed,
+      arrowType: arrowType,
       closed: closed ?? this.closed,
       angle: angle,
       strokeColor: strokeColor,
@@ -205,7 +209,7 @@ class ArrowElement extends LineElement {
       endArrowhead: endArrowhead,
       startBinding: startBinding,
       endBinding: endBinding,
-      elbowed: elbowed,
+      arrowType: arrowType,
       closed: closed,
       angle: angle ?? this.angle,
       strokeColor: strokeColor ?? this.strokeColor,

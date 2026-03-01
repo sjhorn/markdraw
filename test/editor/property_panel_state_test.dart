@@ -445,7 +445,7 @@ void main() {
       height: 100,
       points: const [Point(0, 0), Point(0, 100), Point(100, 100)],
       endArrowhead: Arrowhead.arrow,
-      elbowed: true,
+      arrowType: ArrowType.sharpElbow,
     );
 
     final regularArrow = ArrowElement(
@@ -458,23 +458,23 @@ void main() {
       endArrowhead: Arrowhead.arrow,
     );
 
-    test('fromElements extracts elbowed=true', () {
+    test('fromElements extracts arrowType=sharpElbow', () {
       final style = PropertyPanelState.fromElements([elbowArrow]);
       expect(style.hasArrows, isTrue);
-      expect(style.elbowed, isTrue);
+      expect(style.arrowType, ArrowType.sharpElbow);
     });
 
-    test('fromElements extracts elbowed=false', () {
+    test('fromElements extracts arrowType=sharp', () {
       final style = PropertyPanelState.fromElements([regularArrow]);
       expect(style.hasArrows, isTrue);
-      expect(style.elbowed, isFalse);
+      expect(style.arrowType, ArrowType.sharp);
     });
 
-    test('fromElements returns null for mixed elbowed', () {
+    test('fromElements returns null for mixed arrowType', () {
       final style =
           PropertyPanelState.fromElements([elbowArrow, regularArrow]);
       expect(style.hasArrows, isTrue);
-      expect(style.elbowed, isNull);
+      expect(style.arrowType, isNull);
     });
 
     test('fromElements returns hasArrows false for non-arrows', () {
@@ -487,13 +487,13 @@ void main() {
       );
       final style = PropertyPanelState.fromElements([rect]);
       expect(style.hasArrows, isFalse);
-      expect(style.elbowed, isNull);
+      expect(style.arrowType, isNull);
     });
 
     test('applyStyle regular to elbowed re-routes points', () {
       final result = PropertyPanelState.applyStyle(
         [regularArrow],
-        const ElementStyle(hasArrows: true, elbowed: true),
+        const ElementStyle(hasArrows: true, arrowType: ArrowType.sharpElbow),
       );
       final updated = (result as UpdateElementResult).element as ArrowElement;
       expect(updated.elbowed, isTrue);
@@ -507,7 +507,7 @@ void main() {
     test('applyStyle elbowed to regular simplifies to 2 points', () {
       final result = PropertyPanelState.applyStyle(
         [elbowArrow],
-        const ElementStyle(hasArrows: true, elbowed: false),
+        const ElementStyle(hasArrows: true, arrowType: ArrowType.sharp),
       );
       final updated = (result as UpdateElementResult).element as ArrowElement;
       expect(updated.elbowed, isFalse);
@@ -526,7 +526,7 @@ void main() {
       );
       final result = PropertyPanelState.applyStyle(
         [rect],
-        const ElementStyle(hasArrows: true, elbowed: true),
+        const ElementStyle(hasArrows: true, arrowType: ArrowType.sharpElbow),
       );
       final updated = (result as UpdateElementResult).element;
       // Should still be a rectangle, unchanged by elbowed
@@ -537,7 +537,7 @@ void main() {
       // Verify result is an UpdateElementResult (can be pushed to undo stack)
       final result = PropertyPanelState.applyStyle(
         [regularArrow],
-        const ElementStyle(hasArrows: true, elbowed: true),
+        const ElementStyle(hasArrows: true, arrowType: ArrowType.sharpElbow),
       );
       expect(result, isA<UpdateElementResult>());
     });
@@ -899,6 +899,87 @@ void main() {
       );
       final updated = (result as UpdateElementResult).element as ArrowElement;
       expect(updated.endArrowhead, Arrowhead.triangle);
+    });
+
+    test('fromElements extracts roundness from arrows', () {
+      final arrow = ArrowElement(
+        id: const ElementId('a1'),
+        x: 0, y: 0, width: 100, height: 0,
+        points: [const Point(0, 0), const Point(100, 0)],
+        roundness: const Roundness.proportional(value: 32),
+      );
+      final style = PropertyPanelState.fromElements([arrow]);
+      expect(style.roundness, const Roundness.proportional(value: 32));
+      expect(style.hasRoundness, isTrue);
+    });
+
+    test('fromElements hasRoundness false when no roundness', () {
+      final arrow = ArrowElement(
+        id: const ElementId('a1'),
+        x: 0, y: 0, width: 100, height: 0,
+        points: [const Point(0, 0), const Point(100, 0)],
+      );
+      final style = PropertyPanelState.fromElements([arrow]);
+      expect(style.roundness, isNull);
+      expect(style.hasRoundness, isFalse);
+    });
+
+    test('applyStyle sets roundness for curved arrow', () {
+      final arrow = ArrowElement(
+        id: const ElementId('a1'),
+        x: 0, y: 0, width: 100, height: 0,
+        points: [const Point(0, 0), const Point(100, 0)],
+      );
+      final result = PropertyPanelState.applyStyle(
+        [arrow],
+        const ElementStyle(
+          roundness: Roundness.proportional(value: 32),
+          hasRoundness: true,
+        ),
+      );
+      final updated = (result as UpdateElementResult).element as ArrowElement;
+      expect(updated.roundness, const Roundness.proportional(value: 32));
+    });
+
+    test('applyStyle clears roundness for sharp arrow', () {
+      final arrow = ArrowElement(
+        id: const ElementId('a1'),
+        x: 0, y: 0, width: 100, height: 0,
+        points: [const Point(0, 0), const Point(100, 0)],
+        roundness: const Roundness.proportional(value: 32),
+      );
+      final result = PropertyPanelState.applyStyle(
+        [arrow],
+        const ElementStyle(hasRoundness: true),
+      );
+      final updated = (result as UpdateElementResult).element as ArrowElement;
+      expect(updated.roundness, isNull);
+    });
+
+    test('applyStyle elbowed to curved simplifies points and sets roundness', () {
+      final arrow = ArrowElement(
+        id: const ElementId('a1'),
+        x: 0, y: 0, width: 100, height: 50,
+        points: [
+          const Point(0, 0),
+          const Point(50, 0),
+          const Point(50, 50),
+          const Point(100, 50),
+        ],
+        arrowType: ArrowType.sharpElbow,
+      );
+      final result = PropertyPanelState.applyStyle(
+        [arrow],
+        const ElementStyle(
+          arrowType: ArrowType.sharp,
+          roundness: Roundness.proportional(value: 32),
+          hasRoundness: true,
+        ),
+      );
+      final updated = (result as UpdateElementResult).element as ArrowElement;
+      expect(updated.elbowed, isFalse);
+      expect(updated.points.length, 2); // simplified to first and last
+      expect(updated.roundness, const Roundness.proportional(value: 32));
     });
 
     test('applyStyle arrowhead ignored on non-line', () {

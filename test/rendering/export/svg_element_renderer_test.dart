@@ -74,6 +74,48 @@ void main() {
       expect(svg.split('<path').length, greaterThan(2));
     });
 
+    test('renders curved arrow with Bezier path data', () {
+      final arrow = ArrowElement(
+        id: const ElementId('ca1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 50,
+        points: [
+          const Point(0, 0),
+          const Point(50, 50),
+          const Point(100, 0),
+        ],
+        endArrowhead: Arrowhead.arrow,
+        roundness: const Roundness.proportional(value: 32),
+        seed: 42,
+      );
+      final svg = SvgElementRenderer.render(arrow);
+      expect(svg, contains('<path'));
+      // Curved path should contain cubic Bezier commands
+      expect(svg, contains('C'));
+    });
+
+    test('renders curved line with Bezier path data', () {
+      final line = LineElement(
+        id: const ElementId('cl1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 50,
+        points: [
+          const Point(0, 0),
+          const Point(50, 50),
+          const Point(100, 0),
+        ],
+        roundness: const Roundness.proportional(value: 32),
+        seed: 42,
+      );
+      final svg = SvgElementRenderer.render(line);
+      expect(svg, contains('<path'));
+      expect(svg, contains('C'));
+    });
+
     test('renders freedraw with smooth path', () {
       final freedraw = FreedrawElement(
         id: const ElementId('f1'),

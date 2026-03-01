@@ -118,6 +118,14 @@ class SvgElementRenderer {
       final roughPoints = absPoints.map((p) => PointD(p.x, p.y)).toList();
       final drawable = generator.polygon(roughPoints);
       _drawableToSvg(buf, drawable, style, element);
+    } else if (element.roundness != null) {
+      final paddedPoints = [
+        PointD(absPoints.first.x, absPoints.first.y),
+        ...absPoints.map((p) => PointD(p.x, p.y)),
+        PointD(absPoints.last.x, absPoints.last.y),
+      ];
+      final drawable = generator.curvePath(paddedPoints);
+      _drawableToSvg(buf, drawable, style, element);
     } else {
       for (var i = 0; i < absPoints.length - 1; i++) {
         final drawable = generator.line(
@@ -136,10 +144,15 @@ class SvgElementRenderer {
 
     if (absPoints.length < 2) return;
 
-    if (element.elbowed) {
-      _renderElbowArrow(buf, element, absPoints);
-    } else {
-      _renderRoughArrow(buf, element, absPoints);
+    switch (element.arrowType) {
+      case ArrowType.sharp:
+        _renderRoughArrow(buf, element, absPoints);
+      case ArrowType.round:
+        _renderCurvedArrow(buf, element, absPoints);
+      case ArrowType.sharpElbow:
+        _renderElbowArrow(buf, element, absPoints);
+      case ArrowType.roundElbow:
+        _renderRoundElbowArrow(buf, element, absPoints);
     }
   }
 
@@ -158,6 +171,23 @@ class SvgElementRenderer {
       );
       _drawableToSvg(buf, drawable, style, element);
     }
+
+    _renderArrowheads(buf, element, absPoints);
+  }
+
+  static void _renderCurvedArrow(
+      StringBuffer buf, ArrowElement element, List<Point> absPoints) {
+    final style = DrawStyle.fromElement(element);
+    final generator = style.toGenerator();
+
+    // Pad points so curvePath passes through all user points
+    final paddedPoints = [
+      PointD(absPoints.first.x, absPoints.first.y),
+      ...absPoints.map((p) => PointD(p.x, p.y)),
+      PointD(absPoints.last.x, absPoints.last.y),
+    ];
+    final drawable = generator.curvePath(paddedPoints);
+    _drawableToSvg(buf, drawable, style, element);
 
     _renderArrowheads(buf, element, absPoints);
   }
@@ -182,6 +212,61 @@ class SvgElementRenderer {
     buf.write('/>');
 
     _renderArrowheads(buf, element, absPoints);
+  }
+
+  static void _renderRoundElbowArrow(
+      StringBuffer buf, ArrowElement element, List<Point> absPoints) {
+    // Build polyline path with Q (quadratic bezier) at corners
+    final d = StringBuffer();
+    d.write('M${_n(absPoints.first.x)},${_n(absPoints.first.y)}');
+
+    for (var i = 1; i < absPoints.length - 1; i++) {
+      final prev = absPoints[i - 1];
+      final curr = absPoints[i];
+      final next = absPoints[i + 1];
+
+      final segALen = _dist(prev, curr);
+      final segBLen = _dist(curr, next);
+      final radius = math.min(10.0, math.min(segALen, segBLen) / 2);
+
+      if (radius < 0.5) {
+        d.write(' L${_n(curr.x)},${_n(curr.y)}');
+        continue;
+      }
+
+      final dxA = (curr.x - prev.x) / segALen;
+      final dyA = (curr.y - prev.y) / segALen;
+      final dxB = (next.x - curr.x) / segBLen;
+      final dyB = (next.y - curr.y) / segBLen;
+
+      final arcStartX = curr.x - dxA * radius;
+      final arcStartY = curr.y - dyA * radius;
+      final arcEndX = curr.x + dxB * radius;
+      final arcEndY = curr.y + dyB * radius;
+
+      d.write(' L${_n(arcStartX)},${_n(arcStartY)}');
+      d.write(' Q${_n(curr.x)},${_n(curr.y)} ${_n(arcEndX)},${_n(arcEndY)}');
+    }
+
+    d.write(' L${_n(absPoints.last.x)},${_n(absPoints.last.y)}');
+
+    buf.write('<path d="$d" ');
+    buf.write('stroke="${element.strokeColor}" ');
+    buf.write('stroke-width="${_n(element.strokeWidth)}" ');
+    buf.write('fill="none"');
+    final dashArray = _dashArrayFor(element.strokeStyle);
+    if (dashArray != null) {
+      buf.write(' stroke-dasharray="$dashArray"');
+    }
+    buf.write('/>');
+
+    _renderArrowheads(buf, element, absPoints);
+  }
+
+  static double _dist(Point a, Point b) {
+    final dx = b.x - a.x;
+    final dy = b.y - a.y;
+    return math.sqrt(dx * dx + dy * dy);
   }
 
   static void _renderArrowheads(

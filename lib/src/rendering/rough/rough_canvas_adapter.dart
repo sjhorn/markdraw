@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:rough_flutter/rough_flutter.dart';
@@ -109,6 +110,64 @@ class RoughCanvasAdapter implements RoughAdapter {
   }
 
   @override
+  void drawCurvedLine(Canvas canvas, List<Point> points, DrawStyle style) {
+    if (points.length < 2) return;
+
+    final generator = style.toGenerator();
+    // Pad points so curvePath (which starts at points[1] and ends at
+    // points[n-2]) passes through all user points.
+    final paddedPoints = [
+      PointD(points.first.x, points.first.y),
+      ...points.map((p) => PointD(p.x, p.y)),
+      PointD(points.last.x, points.last.y),
+    ];
+    final drawable = generator.curvePath(paddedPoints);
+    _drawRough(canvas, drawable, style);
+  }
+
+  @override
+  void drawCurvedArrow(
+    Canvas canvas,
+    List<Point> points,
+    Arrowhead? startArrowhead,
+    Arrowhead? endArrowhead,
+    DrawStyle style,
+  ) {
+    // Draw the curved line portion
+    drawCurvedLine(canvas, points, style);
+
+    if (points.length < 2) return;
+
+    final paint = style.toStrokePaint();
+
+    // Draw start arrowhead
+    if (startArrowhead != null) {
+      final angle = ArrowheadRenderer.directionAngle(points, isStart: true);
+      ArrowheadRenderer.draw(
+        canvas,
+        startArrowhead,
+        points.first,
+        angle,
+        style.strokeWidth,
+        Paint()..color = paint.color..strokeWidth = paint.strokeWidth,
+      );
+    }
+
+    // Draw end arrowhead
+    if (endArrowhead != null) {
+      final angle = ArrowheadRenderer.directionAngle(points, isStart: false);
+      ArrowheadRenderer.draw(
+        canvas,
+        endArrowhead,
+        points.last,
+        angle,
+        style.strokeWidth,
+        Paint()..color = paint.color..strokeWidth = paint.strokeWidth,
+      );
+    }
+  }
+
+  @override
   void drawArrow(
     Canvas canvas,
     List<Point> points,
@@ -205,6 +264,102 @@ class RoughCanvasAdapter implements RoughAdapter {
       );
     }
   }
+
+  @override
+  void drawRoundElbowArrow(
+    Canvas canvas,
+    List<Point> points,
+    Arrowhead? startArrowhead,
+    Arrowhead? endArrowhead,
+    DrawStyle style,
+  ) {
+    if (points.length < 2) return;
+
+    // Build polyline path with rounded corners at interior vertices
+    final path = Path();
+    path.moveTo(points.first.x, points.first.y);
+
+    for (var i = 1; i < points.length - 1; i++) {
+      final prev = points[i - 1];
+      final curr = points[i];
+      final next = points[i + 1];
+
+      // Compute segment lengths
+      final segALen = _dist(prev, curr);
+      final segBLen = _dist(curr, next);
+      final radius = _min(10.0, _min(segALen, segBLen) / 2);
+
+      if (radius < 0.5) {
+        // Too short to round — just line to the corner
+        path.lineTo(curr.x, curr.y);
+        continue;
+      }
+
+      // Compute direction vectors
+      final dxA = (curr.x - prev.x) / segALen;
+      final dyA = (curr.y - prev.y) / segALen;
+      final dxB = (next.x - curr.x) / segBLen;
+      final dyB = (next.y - curr.y) / segBLen;
+
+      // Line to the start of the arc
+      final arcStartX = curr.x - dxA * radius;
+      final arcStartY = curr.y - dyA * radius;
+      path.lineTo(arcStartX, arcStartY);
+
+      // Quadratic bezier to the end of the arc (corner is control point)
+      final arcEndX = curr.x + dxB * radius;
+      final arcEndY = curr.y + dyB * radius;
+      path.quadraticBezierTo(curr.x, curr.y, arcEndX, arcEndY);
+    }
+
+    path.lineTo(points.last.x, points.last.y);
+
+    // Apply dash/dot pattern if needed
+    final strokePaint = style.toStrokePaint();
+    if (style.strokeStyle == core.StrokeStyle.solid) {
+      canvas.drawPath(path, strokePaint);
+    } else {
+      final dashedPath = PathDashUtility.dashPath(path, style.strokeStyle);
+      canvas.drawPath(dashedPath, strokePaint);
+    }
+
+    // Draw arrowheads
+    final paint = Paint()
+      ..color = strokePaint.color
+      ..strokeWidth = strokePaint.strokeWidth;
+
+    if (startArrowhead != null) {
+      final angle = ArrowheadRenderer.directionAngle(points, isStart: true);
+      ArrowheadRenderer.draw(
+        canvas,
+        startArrowhead,
+        points.first,
+        angle,
+        style.strokeWidth,
+        paint,
+      );
+    }
+
+    if (endArrowhead != null) {
+      final angle = ArrowheadRenderer.directionAngle(points, isStart: false);
+      ArrowheadRenderer.draw(
+        canvas,
+        endArrowhead,
+        points.last,
+        angle,
+        style.strokeWidth,
+        paint,
+      );
+    }
+  }
+
+  static double _dist(Point a, Point b) {
+    final dx = b.x - a.x;
+    final dy = b.y - a.y;
+    return math.sqrt(dx * dx + dy * dy);
+  }
+
+  static double _min(double a, double b) => a < b ? a : b;
 
   @override
   void drawFreedraw(
