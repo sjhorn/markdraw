@@ -87,7 +87,22 @@ class SelectTool implements Tool {
     if (selectedElements.length == 1 && !allLocked) {
       final elem = selectedElements.first;
 
-      // For elbowed arrows, check segment hit before point hit
+      // Point handle check first — always takes priority over segment drag
+      // so that endpoint handles support binding on elbowed arrows.
+      final pointIndex =
+          _hitTestPointHandle(point, elem, context.interactionMode);
+      if (pointIndex != null) {
+        _dragMode = _DragMode.dragPoint;
+        _activePointIndex = pointIndex;
+        _hitElement = elem;
+        _startBounds = Bounds.fromLTWH(elem.x, elem.y, elem.width, elem.height);
+        if (elem is LineElement) {
+          _startPoints = List.of(elem.points);
+        }
+        return null;
+      }
+
+      // For elbowed arrows, check segment hit after point handles
       if (elem is ArrowElement && elem.elbowed) {
         final segIndex =
             _hitTestSegment(point, elem, context.interactionMode);
@@ -100,19 +115,6 @@ class SelectTool implements Tool {
           _startPoints = List.of(elem.points);
           return null;
         }
-      }
-
-      final pointIndex =
-          _hitTestPointHandle(point, elem, context.interactionMode);
-      if (pointIndex != null) {
-        _dragMode = _DragMode.dragPoint;
-        _activePointIndex = pointIndex;
-        _hitElement = elem;
-        _startBounds = Bounds.fromLTWH(elem.x, elem.y, elem.width, elem.height);
-        if (elem is LineElement) {
-          _startPoints = List.of(elem.points);
-        }
-        return null;
       }
 
       // Midpoint handle hit-test: insert a new point at the midpoint
@@ -1039,14 +1041,31 @@ class SelectTool implements Tool {
     // Determine if segment is horizontal or vertical
     final isHorizontal = (ptA.y - ptB.y).abs() < 0.5;
 
+    // Move both endpoints by full (dx, dy), then cascade one level to
+    // adjacent points so all segments remain orthogonal.
+    newPoints[segIdx] = Point(ptA.x + dx, ptA.y + dy);
+    newPoints[segIdx + 1] = Point(ptB.x + dx, ptB.y + dy);
+
     if (isHorizontal) {
-      // Horizontal segment: drag vertically (change Y)
-      newPoints[segIdx] = Point(ptA.x, ptA.y + dy);
-      newPoints[segIdx + 1] = Point(ptB.x, ptB.y + dy);
+      // Adjacent segments are vertical — match their shared x coordinate.
+      if (segIdx > 0) {
+        final prev = startPts[segIdx - 1];
+        newPoints[segIdx - 1] = Point(prev.x + dx, prev.y);
+      }
+      if (segIdx + 2 < startPts.length) {
+        final next = startPts[segIdx + 2];
+        newPoints[segIdx + 2] = Point(next.x + dx, next.y);
+      }
     } else {
-      // Vertical segment: drag horizontally (change X)
-      newPoints[segIdx] = Point(ptA.x + dx, ptA.y);
-      newPoints[segIdx + 1] = Point(ptB.x + dx, ptB.y);
+      // Adjacent segments are horizontal — match their shared y coordinate.
+      if (segIdx > 0) {
+        final prev = startPts[segIdx - 1];
+        newPoints[segIdx - 1] = Point(prev.x, prev.y + dy);
+      }
+      if (segIdx + 2 < startPts.length) {
+        final next = startPts[segIdx + 2];
+        newPoints[segIdx + 2] = Point(next.x, next.y + dy);
+      }
     }
 
     return UpdateElementResult(_normalizeLineElement(arrow, newPoints));
