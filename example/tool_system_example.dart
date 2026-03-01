@@ -1012,7 +1012,7 @@ class _CanvasPageState extends State<_CanvasPage> {
           ),
         ],
         // Floating property panel — desktop left side
-        if (!_isCompact && _selectedElements.isNotEmpty)
+        if (!_isCompact && (_selectedElements.isNotEmpty || _isCreationTool))
           Positioned(
             top: 60,
             left: 12,
@@ -1993,7 +1993,10 @@ class _CanvasPageState extends State<_CanvasPage> {
     );
 
     final elements = _selectedElements;
-    if (elements.isEmpty) return;
+    if (elements.isEmpty) {
+      setState(() {});
+      return;
+    }
 
     _historyManager.push(_editorState.scene);
     final result = PropertyPanelState.applyStyle(elements, style);
@@ -2021,21 +2024,55 @@ class _CanvasPageState extends State<_CanvasPage> {
 
   Widget _buildPropertyPanel() {
     final elements = _selectedElements;
-    if (elements.isEmpty) return const SizedBox.shrink();
 
-    final boundText = <TextElement>[];
-    for (final e in elements) {
-      final bt = _editorState.scene.findBoundText(e.id);
-      if (bt != null) boundText.add(bt);
+    final ElementStyle style;
+    final bool isLocked;
+    final bool showFullTextProps;
+
+    if (elements.isNotEmpty) {
+      final boundText = <TextElement>[];
+      for (final e in elements) {
+        final bt = _editorState.scene.findBoundText(e.id);
+        if (bt != null) boundText.add(bt);
+      }
+      style = PropertyPanelState.fromElements(
+        elements,
+        boundTextElements: boundText,
+      );
+      isLocked = style.locked == true;
+      showFullTextProps = style.hasText &&
+          (!style.hasArrowBoundText || style.hasShapeBoundText ||
+          elements.whereType<TextElement>().isNotEmpty);
+    } else if (_isCreationTool) {
+      final toolType = _editorState.activeToolType;
+      style = ElementStyle(
+        strokeColor: _defaultStyle.strokeColor,
+        backgroundColor: _defaultStyle.backgroundColor,
+        strokeWidth: _defaultStyle.strokeWidth,
+        strokeStyle: _defaultStyle.strokeStyle,
+        fillStyle: _defaultStyle.fillStyle,
+        roughness: _defaultStyle.roughness,
+        opacity: _defaultStyle.opacity,
+        roundness: _defaultStyle.roundness,
+        hasRoundness: toolType == ToolType.rectangle,
+        hasText: toolType == ToolType.text,
+        hasLines: toolType == ToolType.line || toolType == ToolType.arrow,
+        hasArrows: toolType == ToolType.arrow,
+        startArrowhead: _defaultStyle.startArrowhead,
+        startArrowheadNone: _defaultStyle.startArrowheadNone,
+        endArrowhead: _defaultStyle.endArrowhead,
+        endArrowheadNone: _defaultStyle.endArrowheadNone,
+        fontSize: _defaultStyle.fontSize,
+        fontFamily: _defaultStyle.fontFamily,
+        textAlign: _defaultStyle.textAlign,
+        verticalAlign: _defaultStyle.verticalAlign,
+        arrowType: _defaultStyle.arrowType,
+      );
+      isLocked = false;
+      showFullTextProps = style.hasText;
+    } else {
+      return const SizedBox.shrink();
     }
-    final style = PropertyPanelState.fromElements(
-      elements,
-      boundTextElements: boundText,
-    );
-    final isLocked = style.locked == true;
-    final showFullTextProps = style.hasText &&
-        (!style.hasArrowBoundText || style.hasShapeBoundText ||
-        elements.whereType<TextElement>().isNotEmpty);
 
     return TextFieldTapRegion(
       child: Container(
@@ -2163,13 +2200,15 @@ class _CanvasPageState extends State<_CanvasPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-            _buildSectionLabel('Layer order'),
-            _buildLayerButtons(),
-            const SizedBox(height: 8),
-            _buildAlignmentButtons(elements.length),
-            const SizedBox(height: 12),
-            _buildLockToggle(style.locked),
+            if (elements.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              _buildSectionLabel('Layer order'),
+              _buildLayerButtons(),
+              const SizedBox(height: 8),
+              _buildAlignmentButtons(elements.length),
+              const SizedBox(height: 12),
+              _buildLockToggle(style.locked),
+            ],
           ],
         ),
       ),
