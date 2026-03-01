@@ -80,6 +80,95 @@ class ElbowRouting {
     return simplify(result);
   }
 
+  /// Adjust only the terminal segments of an existing elbow path.
+  ///
+  /// When a bound shape moves, instead of re-routing the entire path
+  /// (which destroys user's manual segment adjustments), this method
+  /// only updates the first and/or last segments to connect to the new
+  /// endpoint positions, preserving all middle segments.
+  ///
+  /// Returns null if the path has fewer than 3 points (caller should
+  /// fall back to full [route]).
+  ///
+  /// Pass [newStart] and/or [newEnd] for whichever side changed.
+  static List<Point>? updateTerminals(
+    List<Point> absPoints, {
+    Point? newStart,
+    Point? newEnd,
+  }) {
+    if (absPoints.length < 3) return null;
+
+    final pts = List<Point>.of(absPoints);
+
+    if (pts.length == 3) {
+      // Special case: 3 points means one middle point shared by both
+      // terminal segments. Determine original first segment direction.
+      final p0 = newStart ?? pts[0];
+      final p2 = newEnd ?? pts[2];
+
+      // Determine if the original first segment was horizontal or vertical
+      final origHorizontal = (pts[0].y - pts[1].y).abs() <=
+          (pts[0].x - pts[1].x).abs();
+
+      Point newMid;
+      if (origHorizontal) {
+        // First segment horizontal → middle point takes end's x, start's y
+        newMid = Point(p2.x, p0.y);
+      } else {
+        // First segment vertical → middle point takes start's x, end's y
+        newMid = Point(p0.x, p2.y);
+      }
+
+      return simplify([p0, newMid, p2]);
+    }
+
+    // General case: ≥4 points
+    // Update start side
+    if (newStart != null) {
+      pts[0] = newStart;
+
+      // Look at direction of second segment (P1→P2)
+      final p1 = pts[1];
+      final p2 = pts[2];
+      final secondSegHorizontal = (p1.y - p2.y).abs() <=
+          (p1.x - p2.x).abs();
+
+      if (secondSegHorizontal) {
+        // Second segment is horizontal → adjust P1 to keep vertical
+        // first segment connecting to it
+        pts[1] = Point(newStart.x, p1.y);
+      } else {
+        // Second segment is vertical → adjust P1 to keep horizontal
+        // first segment connecting to it
+        pts[1] = Point(p1.x, newStart.y);
+      }
+    }
+
+    // Update end side
+    if (newEnd != null) {
+      final lastIdx = pts.length - 1;
+      pts[lastIdx] = newEnd;
+
+      // Look at direction of second-to-last segment (PN-3→PN-2)
+      final pn3 = pts[lastIdx - 2];
+      final pn2 = pts[lastIdx - 1];
+      final penultSegHorizontal = (pn3.y - pn2.y).abs() <=
+          (pn3.x - pn2.x).abs();
+
+      if (penultSegHorizontal) {
+        // Second-to-last is horizontal → adjust PN-2 to keep vertical
+        // last segment connecting to it
+        pts[lastIdx - 1] = Point(newEnd.x, pn2.y);
+      } else {
+        // Second-to-last is vertical → adjust PN-2 to keep horizontal
+        // last segment connecting to it
+        pts[lastIdx - 1] = Point(pn2.x, newEnd.y);
+      }
+    }
+
+    return simplify(pts);
+  }
+
   /// Remove collinear points and merge segments shorter than [minLength].
   static List<Point> simplify(List<Point> points, {double minLength = 2.0}) {
     if (points.length <= 2) return List.of(points);

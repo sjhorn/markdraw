@@ -162,21 +162,49 @@ class BindingUtils {
 
     if (!changed) return arrow;
 
-    // For elbowed arrows, re-route the full path between endpoints
+    // For elbowed arrows, try terminal-only update to preserve middle segments
     var routedPoints = absPoints;
     if (arrow.elbowed) {
-      final startHeading = arrow.startBinding != null
-          ? ElbowRouting.headingFromFixedPoint(arrow.startBinding!.fixedPoint)
+      // Build the original absolute points (before endpoint updates)
+      final origAbsPoints = arrow.points
+          .map((p) => Point(arrow.x + p.x, arrow.y + p.y))
+          .toList();
+
+      // Determine which sides changed
+      final newStart = (arrow.startBinding != null &&
+              absPoints.first != origAbsPoints.first)
+          ? absPoints.first
           : null;
-      final endHeading = arrow.endBinding != null
-          ? ElbowRouting.headingFromFixedPoint(arrow.endBinding!.fixedPoint)
+      final newEnd = (arrow.endBinding != null &&
+              absPoints.last != origAbsPoints.last)
+          ? absPoints.last
           : null;
-      routedPoints = ElbowRouting.route(
-        start: absPoints.first,
-        end: absPoints.last,
-        startHeading: startHeading,
-        endHeading: endHeading,
+
+      // Try terminal-only adjustment first
+      final terminalResult = ElbowRouting.updateTerminals(
+        origAbsPoints,
+        newStart: newStart,
+        newEnd: newEnd,
       );
+
+      if (terminalResult != null) {
+        routedPoints = terminalResult;
+      } else {
+        // Fall back to full re-route for short paths
+        final startHeading = arrow.startBinding != null
+            ? ElbowRouting.headingFromFixedPoint(
+                arrow.startBinding!.fixedPoint)
+            : null;
+        final endHeading = arrow.endBinding != null
+            ? ElbowRouting.headingFromFixedPoint(arrow.endBinding!.fixedPoint)
+            : null;
+        routedPoints = ElbowRouting.route(
+          start: absPoints.first,
+          end: absPoints.last,
+          startHeading: startHeading,
+          endHeading: endHeading,
+        );
+      }
     }
 
     // Recalculate bounding box and relative points
