@@ -55,13 +55,21 @@ class DrawStyle {
   }
 
   /// Returns the appropriate rough_flutter [Filler] for this style's fill.
+  ///
+  /// Sets [FillerConfig.hachureGap] and [FillerConfig.fillWeight] based on
+  /// [strokeWidth] to match Excalidraw's fill density.
   Filler toFiller() {
-    final config = FillerConfig.build(drawConfig: toDrawConfig());
+    final drawConfig = toDrawConfig();
+    final fw = strokeWidth / 2;
     return switch (fillStyle) {
-      core.FillStyle.solid => SolidFiller(config),
-      core.FillStyle.hachure => HachureFiller(config),
-      core.FillStyle.crossHatch => CrossHatchFiller(config),
-      core.FillStyle.zigzag => ZigZagFiller(config),
+      core.FillStyle.solid => SolidFiller(FillerConfig.build(
+          drawConfig: drawConfig, hachureGap: strokeWidth * 2, fillWeight: fw)),
+      core.FillStyle.hachure => HachureFiller(FillerConfig.build(
+          drawConfig: drawConfig, hachureGap: strokeWidth * 2, fillWeight: fw)),
+      core.FillStyle.crossHatch => CrossHatchFiller(FillerConfig.build(
+          drawConfig: drawConfig, hachureGap: strokeWidth * 3, fillWeight: fw)),
+      core.FillStyle.zigzag => ZigZagFiller(FillerConfig.build(
+          drawConfig: drawConfig, hachureGap: strokeWidth * 3, fillWeight: fw)),
     };
   }
 
@@ -76,12 +84,13 @@ class DrawStyle {
   /// Creates a [Paint] configured for fill rendering.
   ///
   /// Uses [PaintingStyle.stroke] because rough_flutter's sketch fillers
-  /// (hachure, zigzag, etc.) draw lines internally.
+  /// (hachure, zigzag, etc.) draw lines internally. The stroke width is
+  /// set to [strokeWidth] / 2 to match Excalidraw's fill weight.
   Paint toFillPaint() {
     return Paint()
       ..color = _withOpacity(backgroundColor, opacity)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
+      ..strokeWidth = strokeWidth / 2;
   }
 
   /// Creates a configured rough_flutter [Generator].
