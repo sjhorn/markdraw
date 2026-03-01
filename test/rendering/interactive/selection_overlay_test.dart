@@ -267,6 +267,117 @@ void main() {
     });
   });
 
+  group('ElementSelectionBounds', () {
+    test('equality by value', () {
+      final a = ElementSelectionBounds(
+        bounds: Bounds.fromLTWH(10, 20, 100, 50),
+        angle: 0.5,
+      );
+      final b = ElementSelectionBounds(
+        bounds: Bounds.fromLTWH(10, 20, 100, 50),
+        angle: 0.5,
+      );
+      final c = ElementSelectionBounds(
+        bounds: Bounds.fromLTWH(10, 20, 100, 50),
+        angle: 1.0,
+      );
+
+      expect(a, equals(b));
+      expect(a, isNot(equals(c)));
+    });
+
+    test('default angle is 0', () {
+      final eb = ElementSelectionBounds(
+        bounds: Bounds.fromLTWH(0, 0, 100, 100),
+      );
+      expect(eb.angle, 0.0);
+    });
+  });
+
+  group('SelectionOverlay elementBounds', () {
+    test('single element has empty elementBounds', () {
+      final element = RectangleElement(
+        id: const ElementId('r1'),
+        x: 50,
+        y: 100,
+        width: 200,
+        height: 150,
+      );
+      final overlay = SelectionOverlay.fromElements([element]);
+      expect(overlay!.elementBounds, isEmpty);
+    });
+
+    test('multi-select populates elementBounds with per-element bounds', () {
+      final e1 = RectangleElement(
+        id: const ElementId('r1'),
+        x: 50,
+        y: 100,
+        width: 100,
+        height: 80,
+      );
+      final e2 = EllipseElement(
+        id: const ElementId('e1'),
+        x: 200,
+        y: 50,
+        width: 150,
+        height: 200,
+      );
+
+      final overlay = SelectionOverlay.fromElements([e1, e2]);
+      expect(overlay!.elementBounds, hasLength(2));
+      expect(overlay.elementBounds[0].bounds,
+          Bounds.fromLTWH(50, 100, 100, 80));
+      expect(overlay.elementBounds[1].bounds,
+          Bounds.fromLTWH(200, 50, 150, 200));
+    });
+
+    test('multi-select preserves per-element angles', () {
+      final e1 = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        angle: 0.5,
+      );
+      final e2 = RectangleElement(
+        id: const ElementId('r2'),
+        x: 200,
+        y: 200,
+        width: 100,
+        height: 100,
+        angle: 1.0,
+      );
+
+      final overlay = SelectionOverlay.fromElements([e1, e2]);
+      expect(overlay!.elementBounds[0].angle, 0.5);
+      expect(overlay.elementBounds[1].angle, 1.0);
+    });
+
+    test('elementBounds included in equality', () {
+      final e1 = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+      );
+      final e2 = RectangleElement(
+        id: const ElementId('r2'),
+        x: 200, y: 200, width: 100, height: 100,
+      );
+      final e3 = EllipseElement(
+        id: const ElementId('e1'),
+        x: 200, y: 200, width: 100, height: 100,
+      );
+
+      final a = SelectionOverlay.fromElements([e1, e2]);
+      final b = SelectionOverlay.fromElements([e1, e2]);
+      final c = SelectionOverlay.fromElements([e1, e3]);
+
+      expect(a, equals(b));
+      // e2 and e3 have the same bounds, so overlays should be equal
+      expect(a, equals(c));
+    });
+  });
+
   group('InteractionMode-aware padding', () {
     test('selectionPaddingFor returns 6.0 for pointer mode', () {
       expect(selectionPaddingFor(InteractionMode.pointer), 6.0);

@@ -60,7 +60,15 @@ class InteractiveCanvasPainter extends CustomPainter {
 
     // Selection box + handles (all drawn in the same rotated space)
     if (selection != null) {
+      final isMultiSelect = selection!.elementBounds.isNotEmpty;
       final hasAngle = selection!.angle != 0.0;
+
+      // Multi-select: draw individual per-element outlines first
+      if (isMultiSelect) {
+        SelectionRenderer.drawElementOutlines(
+            canvas, selection!.elementBounds,
+            mode: interactionMode);
+      }
 
       if (hasAngle) {
         canvas.save();
@@ -71,8 +79,13 @@ class InteractiveCanvasPainter extends CustomPainter {
       }
 
       if (selection!.showBoundingBox) {
-        SelectionRenderer.drawSelectionBox(canvas, selection!.bounds,
-            mode: interactionMode);
+        if (isMultiSelect) {
+          SelectionRenderer.drawDashedSelectionBox(canvas, selection!.bounds,
+              mode: interactionMode);
+        } else {
+          SelectionRenderer.drawSelectionBox(canvas, selection!.bounds,
+              mode: interactionMode);
+        }
       }
 
       if (!selection!.isLocked) {

@@ -134,6 +134,69 @@ class SelectionRenderer {
     );
   }
 
+  /// Draws individual blue outlines around each element in a multi-selection.
+  ///
+  /// Each outline respects the element's own rotation. Used to highlight
+  /// individual elements within a multi-select group (Excalidraw-style).
+  static void drawElementOutlines(
+    Canvas canvas,
+    List<ElementSelectionBounds> elementBounds, {
+    InteractionMode mode = InteractionMode.pointer,
+  }) {
+    final paint = Paint()
+      ..color = _selectionColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = _selectionStrokeWidth;
+
+    final pad = selectionPaddingFor(mode);
+
+    for (final eb in elementBounds) {
+      final rect = Rect.fromLTWH(
+        eb.bounds.left - pad,
+        eb.bounds.top - pad,
+        eb.bounds.size.width + pad * 2,
+        eb.bounds.size.height + pad * 2,
+      );
+
+      if (eb.angle != 0) {
+        canvas.save();
+        final cx = eb.bounds.left + eb.bounds.size.width / 2;
+        final cy = eb.bounds.top + eb.bounds.size.height / 2;
+        canvas.translate(cx, cy);
+        canvas.rotate(eb.angle);
+        canvas.translate(-cx, -cy);
+      }
+
+      canvas.drawRect(rect, paint);
+
+      if (eb.angle != 0) {
+        canvas.restore();
+      }
+    }
+  }
+
+  /// Draws a dashed selection bounding box (for multi-select combined bounds).
+  static void drawDashedSelectionBox(
+    Canvas canvas,
+    Bounds bounds, {
+    InteractionMode mode = InteractionMode.pointer,
+  }) {
+    final paint = Paint()
+      ..color = _selectionColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = _selectionStrokeWidth;
+
+    final pad = selectionPaddingFor(mode);
+    final rect = Rect.fromLTWH(
+      bounds.left - pad,
+      bounds.top - pad,
+      bounds.size.width + pad * 2,
+      bounds.size.height + pad * 2,
+    );
+
+    _drawDashedRect(canvas, rect, paint);
+  }
+
   /// Draws a semi-transparent highlight over [bounds] for hover feedback.
   static void drawHoverHighlight(Canvas canvas, Bounds bounds) {
     final paint = Paint()

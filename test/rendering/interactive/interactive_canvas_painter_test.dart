@@ -473,6 +473,63 @@ void main() {
       );
     });
 
+    test('draws multi-select with per-element outlines and dashed box', () {
+      final (recorder, canvas) = _makeCanvas();
+      final e1 = RectangleElement(
+        id: const ElementId('r1'),
+        x: 50, y: 50, width: 100, height: 80,
+      );
+      final e2 = EllipseElement(
+        id: const ElementId('e1'),
+        x: 200, y: 100, width: 150, height: 120,
+      );
+      final overlay = SelectionOverlay.fromElements([e1, e2]);
+
+      // Verify multi-select has elementBounds populated
+      expect(overlay!.elementBounds, hasLength(2));
+
+      final painter = InteractiveCanvasPainter(
+        viewport: const ViewportState(),
+        selection: overlay,
+      );
+
+      expect(
+        () {
+          painter.paint(canvas, const Size(800, 600));
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
+    test('draws multi-select with rotated elements', () {
+      final (recorder, canvas) = _makeCanvas();
+      final e1 = RectangleElement(
+        id: const ElementId('r1'),
+        x: 50, y: 50, width: 100, height: 80,
+        angle: 0.5,
+      );
+      final e2 = DiamondElement(
+        id: const ElementId('d1'),
+        x: 200, y: 100, width: 150, height: 120,
+        angle: 1.2,
+      );
+      final overlay = SelectionOverlay.fromElements([e1, e2]);
+
+      final painter = InteractiveCanvasPainter(
+        viewport: const ViewportState(),
+        selection: overlay,
+      );
+
+      expect(
+        () {
+          painter.paint(canvas, const Size(800, 600));
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
     test('shouldRepaint returns true when interactionMode changes', () {
       final overlay = SelectionOverlay.fromElements([
         RectangleElement(

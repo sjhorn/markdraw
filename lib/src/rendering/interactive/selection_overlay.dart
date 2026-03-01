@@ -27,6 +27,24 @@ const double _expandedHandleExtra = 10.0;
 /// Element types whose handles sit further from the selection box.
 const _expandedHandleTypes = {'line', 'arrow', 'diamond'};
 
+/// Per-element bounds used for drawing individual outlines in multi-select.
+class ElementSelectionBounds {
+  final Bounds bounds;
+  final double angle;
+
+  const ElementSelectionBounds({required this.bounds, this.angle = 0.0});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ElementSelectionBounds &&
+          bounds == other.bounds &&
+          angle == other.angle;
+
+  @override
+  int get hashCode => Object.hash(bounds, angle);
+}
+
 /// Describes the selection UI to draw: bounding box, handles, and rotation.
 class SelectionOverlay {
   final Bounds bounds;
@@ -38,12 +56,17 @@ class SelectionOverlay {
   /// False for 2-point lines/arrows and elbow arrows (only point handles shown).
   final bool showBoundingBox;
 
+  /// Per-element bounds for drawing individual outlines in multi-select.
+  /// Empty for single-element selection.
+  final List<ElementSelectionBounds> elementBounds;
+
   const SelectionOverlay({
     required this.bounds,
     required this.handles,
     this.angle = 0.0,
     this.isLocked = false,
     this.showBoundingBox = true,
+    this.elementBounds = const [],
   });
 
   /// Creates a [SelectionOverlay] from a list of selected elements.
@@ -99,12 +122,23 @@ class SelectionOverlay {
       }
     }
 
+    // Populate per-element bounds for multi-select outlines.
+    final elemBounds = elements.length > 1
+        ? elements
+            .map((e) => ElementSelectionBounds(
+                  bounds: Bounds.fromLTWH(e.x, e.y, e.width, e.height),
+                  angle: e.angle,
+                ))
+            .toList()
+        : const <ElementSelectionBounds>[];
+
     return SelectionOverlay(
       bounds: union,
       handles: computeHandles(handleBounds),
       angle: angle,
       isLocked: isLocked,
       showBoundingBox: showBoundingBox,
+      elementBounds: elemBounds,
     );
   }
 
@@ -141,12 +175,13 @@ class SelectionOverlay {
           angle == other.angle &&
           isLocked == other.isLocked &&
           showBoundingBox == other.showBoundingBox &&
-          listEquals(handles, other.handles);
+          listEquals(handles, other.handles) &&
+          listEquals(elementBounds, other.elementBounds);
 
   @override
   int get hashCode =>
       Object.hash(bounds, angle, isLocked, showBoundingBox,
-          Object.hashAll(handles));
+          Object.hashAll(handles), Object.hashAll(elementBounds));
 
   @override
   String toString() => 'SelectionOverlay($bounds, angle=$angle)';
