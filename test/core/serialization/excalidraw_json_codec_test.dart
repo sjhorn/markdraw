@@ -396,6 +396,45 @@ void main() {
         expect(text.containerId, 'rect1');
         expect(text.lineHeight, 1.5);
         expect(text.autoResize, false);
+        expect(text.verticalAlign, VerticalAlign.middle);
+      });
+
+      test('parses verticalAlign top', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'txt2', type: 'text'),
+            'text': 'Hi',
+            'verticalAlign': 'top',
+          },
+        ]);
+        final result = ExcalidrawJsonCodec.parse(json);
+        final text = result.value.allElements.first as TextElement;
+        expect(text.verticalAlign, VerticalAlign.top);
+      });
+
+      test('parses verticalAlign bottom', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'txt3', type: 'text'),
+            'text': 'Hi',
+            'verticalAlign': 'bottom',
+          },
+        ]);
+        final result = ExcalidrawJsonCodec.parse(json);
+        final text = result.value.allElements.first as TextElement;
+        expect(text.verticalAlign, VerticalAlign.bottom);
+      });
+
+      test('defaults verticalAlign to middle when missing', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'txt4', type: 'text'),
+            'text': 'Hi',
+          },
+        ]);
+        final result = ExcalidrawJsonCodec.parse(json);
+        final text = result.value.allElements.first as TextElement;
+        expect(text.verticalAlign, VerticalAlign.middle);
       });
 
       test('fontFamily number 2 maps to Helvetica', () {
@@ -974,6 +1013,26 @@ void main() {
       expect(el['lineHeight'], 1.5);
       expect(el['autoResize'], false);
       expect(el['originalText'], 'Hello World');
+      expect(el['verticalAlign'], 'middle');
+    });
+
+    test('text export with verticalAlign top', () {
+      final doc = MarkdrawDocument(
+        sections: [
+          SketchSection([
+            TextElement(
+              id: const ElementId('txt2'),
+              x: 0, y: 0, width: 100, height: 25,
+              text: 'Hi',
+              verticalAlign: VerticalAlign.top,
+              seed: 1, version: 1, versionNonce: 0, updated: 0,
+            ),
+          ]),
+        ],
+      );
+      final jsonStr = ExcalidrawJsonCodec.serialize(doc);
+      final el =
+          (jsonDecode(jsonStr)['elements'] as List)[0] as Map<String, dynamic>;
       expect(el['verticalAlign'], 'top');
     });
 

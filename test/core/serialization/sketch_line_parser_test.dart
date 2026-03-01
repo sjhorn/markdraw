@@ -150,6 +150,25 @@ void main() {
       expect(text.fontSize, 20);
       expect(text.fontFamily, 'Excalifont');
       expect(text.textAlign, TextAlign.left);
+      expect(text.verticalAlign, VerticalAlign.middle);
+    });
+
+    test('text with valign=top', () {
+      final result = parser.parseLine(
+        'text "Top" at 0,0 valign=top seed=5',
+        1,
+      );
+      final text = result.value! as TextElement;
+      expect(text.verticalAlign, VerticalAlign.top);
+    });
+
+    test('text with valign=bottom', () {
+      final result = parser.parseLine(
+        'text "Bottom" at 0,0 valign=bottom seed=5',
+        1,
+      );
+      final text = result.value! as TextElement;
+      expect(text.verticalAlign, VerticalAlign.bottom);
     });
   });
 

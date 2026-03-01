@@ -619,6 +619,173 @@ void main() {
     });
   });
 
+  group('PropertyPanelState.fromElements with bound text', () {
+    test('shape with bound text surfaces text properties', () {
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+        boundElements: const [BoundElement(id: 'bt1', type: 'text')],
+      );
+      final boundText = TextElement(
+        id: const ElementId('bt1'),
+        x: 0, y: 0, width: 80, height: 20,
+        text: 'Label',
+        fontSize: 24.0,
+        fontFamily: 'Nunito',
+        textAlign: TextAlign.center,
+        verticalAlign: VerticalAlign.top,
+        containerId: 'r1',
+      );
+      final style = PropertyPanelState.fromElements(
+        [rect],
+        boundTextElements: [boundText],
+      );
+      expect(style.hasText, isTrue);
+      expect(style.hasShapeBoundText, isTrue);
+      expect(style.hasArrowBoundText, isFalse);
+      expect(style.fontSize, 24.0);
+      expect(style.fontFamily, 'Nunito');
+      expect(style.textAlign, TextAlign.center);
+      expect(style.verticalAlign, VerticalAlign.top);
+    });
+
+    test('arrow with bound text surfaces only fontSize', () {
+      final arrow = ArrowElement(
+        id: const ElementId('a1'),
+        x: 0, y: 0, width: 100, height: 0,
+        points: const [Point(0, 0), Point(100, 0)],
+        endArrowhead: Arrowhead.arrow,
+        boundElements: const [BoundElement(id: 'bt2', type: 'text')],
+      );
+      final boundText = TextElement(
+        id: const ElementId('bt2'),
+        x: 0, y: 0, width: 50, height: 20,
+        text: 'Label',
+        fontSize: 16.0,
+        fontFamily: 'Excalifont',
+        containerId: 'a1',
+      );
+      final style = PropertyPanelState.fromElements(
+        [arrow],
+        boundTextElements: [boundText],
+      );
+      expect(style.hasText, isTrue);
+      expect(style.hasArrowBoundText, isTrue);
+      expect(style.hasShapeBoundText, isFalse);
+      expect(style.fontSize, 16.0);
+    });
+
+    test('mixed shape bound text and direct text merges values', () {
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+        boundElements: const [BoundElement(id: 'bt1', type: 'text')],
+      );
+      final boundText = TextElement(
+        id: const ElementId('bt1'),
+        x: 0, y: 0, width: 80, height: 20,
+        text: 'Label',
+        fontSize: 24.0,
+        containerId: 'r1',
+      );
+      final directText = TextElement(
+        id: const ElementId('t1'),
+        x: 50, y: 50, width: 100, height: 20,
+        text: 'Standalone',
+        fontSize: 24.0,
+      );
+      final style = PropertyPanelState.fromElements(
+        [rect, directText],
+        boundTextElements: [boundText],
+      );
+      expect(style.hasText, isTrue);
+      expect(style.fontSize, 24.0); // same → not null
+    });
+
+    test('mixed bound text and direct text with different sizes → null', () {
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+        boundElements: const [BoundElement(id: 'bt1', type: 'text')],
+      );
+      final boundText = TextElement(
+        id: const ElementId('bt1'),
+        x: 0, y: 0, width: 80, height: 20,
+        text: 'Label',
+        fontSize: 24.0,
+        containerId: 'r1',
+      );
+      final directText = TextElement(
+        id: const ElementId('t1'),
+        x: 50, y: 50, width: 100, height: 20,
+        text: 'Standalone',
+        fontSize: 16.0,
+      );
+      final style = PropertyPanelState.fromElements(
+        [rect, directText],
+        boundTextElements: [boundText],
+      );
+      expect(style.hasText, isTrue);
+      expect(style.fontSize, isNull); // different → mixed
+    });
+
+    test('no bound text and no direct text → hasText false', () {
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+      );
+      final style = PropertyPanelState.fromElements(
+        [rect],
+        boundTextElements: [],
+      );
+      expect(style.hasText, isFalse);
+    });
+
+    test('verticalAlign from direct TextElement', () {
+      final textEl = TextElement(
+        id: const ElementId('t1'),
+        x: 0, y: 0, width: 100, height: 24,
+        text: 'Hello',
+        verticalAlign: VerticalAlign.bottom,
+      );
+      final style = PropertyPanelState.fromElements([textEl]);
+      expect(style.verticalAlign, VerticalAlign.bottom);
+    });
+
+    test('verticalAlign null when mixed', () {
+      final t1 = TextElement(
+        id: const ElementId('t1'),
+        x: 0, y: 0, width: 100, height: 24,
+        text: 'Hello',
+        verticalAlign: VerticalAlign.top,
+      );
+      final t2 = TextElement(
+        id: const ElementId('t2'),
+        x: 0, y: 0, width: 100, height: 24,
+        text: 'World',
+        verticalAlign: VerticalAlign.bottom,
+      );
+      final style = PropertyPanelState.fromElements([t1, t2]);
+      expect(style.verticalAlign, isNull);
+    });
+  });
+
+  group('PropertyPanelState.applyStyle verticalAlign', () {
+    test('applies verticalAlign to TextElement', () {
+      final element = TextElement(
+        id: const ElementId('t1'),
+        x: 0, y: 0, width: 100, height: 24,
+        text: 'Hello',
+      );
+      final result = PropertyPanelState.applyStyle(
+        [element],
+        const ElementStyle(hasText: true, verticalAlign: VerticalAlign.top),
+      );
+      final updated = (result as UpdateElementResult).element as TextElement;
+      expect(updated.verticalAlign, VerticalAlign.top);
+    });
+  });
+
   group('PropertyPanelState arrowhead', () {
     final lineWithArrows = LineElement(
       id: const ElementId('l1'),

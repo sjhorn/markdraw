@@ -109,6 +109,9 @@ class SketchLineSerializer {
     if (element.textAlign != TextAlign.left) {
       parts.add('align=${element.textAlign.name}');
     }
+    if (element.verticalAlign != VerticalAlign.middle) {
+      parts.add('valign=${element.verticalAlign.name}');
+    }
     _addCommonProperties(parts, element);
     return parts.join(' ');
   }

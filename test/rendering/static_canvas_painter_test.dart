@@ -755,6 +755,68 @@ void main() {
       expect(adapter.calls, ['arrow']);
     });
 
+    test('bound text with verticalAlign top renders without error', () {
+      final (recorder, canvas) = _makeCanvas();
+
+      var scene = Scene();
+      scene = scene.addElement(RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 200, height: 100,
+      ));
+      scene = scene.addElement(core.TextElement(
+        id: const ElementId('t1'),
+        x: 0, y: 0, width: 200, height: 100,
+        text: 'Top',
+        containerId: 'r1',
+        verticalAlign: VerticalAlign.top,
+      ));
+
+      final painter = StaticCanvasPainter(
+        scene: scene,
+        adapter: adapter,
+        viewport: const ViewportState(),
+      );
+
+      expect(
+        () {
+          painter.paint(canvas, const Size(800, 600));
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
+    test('bound text with verticalAlign bottom renders without error', () {
+      final (recorder, canvas) = _makeCanvas();
+
+      var scene = Scene();
+      scene = scene.addElement(RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 200, height: 100,
+      ));
+      scene = scene.addElement(core.TextElement(
+        id: const ElementId('t1'),
+        x: 0, y: 0, width: 200, height: 100,
+        text: 'Bottom',
+        containerId: 'r1',
+        verticalAlign: VerticalAlign.bottom,
+      ));
+
+      final painter = StaticCanvasPainter(
+        scene: scene,
+        adapter: adapter,
+        viewport: const ViewportState(),
+      );
+
+      expect(
+        () {
+          painter.paint(canvas, const Size(800, 600));
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
     test('element with no bound text renders normally', () {
       final (recorder, canvas) = _makeCanvas();
 

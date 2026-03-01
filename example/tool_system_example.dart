@@ -1563,8 +1563,19 @@ class _CanvasPageState extends State<_CanvasPage> {
         builder: (ctx, scrollController) {
           final elements = _selectedElements;
           if (elements.isEmpty) return const SizedBox.shrink();
-          final style = PropertyPanelState.fromElements(elements);
+          final boundText = <TextElement>[];
+          for (final e in elements) {
+            final bt = _editorState.scene.findBoundText(e.id);
+            if (bt != null) boundText.add(bt);
+          }
+          final style = PropertyPanelState.fromElements(
+            elements,
+            boundTextElements: boundText,
+          );
           final isLocked = style.locked == true;
+          final showFullTextProps = style.hasText &&
+              (!style.hasArrowBoundText || style.hasShapeBoundText ||
+              elements.whereType<TextElement>().isNotEmpty);
 
           return Container(
             decoration: const BoxDecoration(
@@ -1630,16 +1641,23 @@ class _CanvasPageState extends State<_CanvasPage> {
                           _buildSectionLabel('Arrow type'),
                           _buildElbowedRow(style.elbowed),
                         ],
-                        if (style.hasText) ...[
+                        if (showFullTextProps) ...[
                           const SizedBox(height: 12),
                           _buildSectionLabel('Font family'),
                           _buildFontFamilyRow(style.fontFamily),
+                        ],
+                        if (style.hasText) ...[
                           const SizedBox(height: 8),
                           _buildSectionLabel('Font size'),
                           _buildFontSizeRow(style.fontSize),
+                        ],
+                        if (showFullTextProps) ...[
                           const SizedBox(height: 8),
                           _buildSectionLabel('Text align'),
                           _buildTextAlignRow(style.textAlign),
+                          const SizedBox(height: 8),
+                          _buildSectionLabel('Vertical align'),
+                          _buildVerticalAlignRow(style.verticalAlign),
                         ],
                         if (style.hasLines) ...[
                           const SizedBox(height: 8),
@@ -1891,14 +1909,43 @@ class _CanvasPageState extends State<_CanvasPage> {
     _historyManager.push(_editorState.scene);
     final result = PropertyPanelState.applyStyle(elements, style);
     _applyResult(result);
+
+    // Also apply text properties to bound text of selected containers
+    if (style.fontSize != null ||
+        style.fontFamily != null ||
+        style.textAlign != null ||
+        style.verticalAlign != null) {
+      for (final e in elements) {
+        final bt = _editorState.scene.findBoundText(e.id);
+        if (bt != null) {
+          _applyResult(UpdateElementResult(bt.copyWithText(
+            fontSize: style.fontSize,
+            fontFamily: style.fontFamily,
+            textAlign: style.textAlign,
+            verticalAlign: style.verticalAlign,
+          )));
+        }
+      }
+    }
   }
 
   Widget _buildPropertyPanel() {
     final elements = _selectedElements;
     if (elements.isEmpty) return const SizedBox.shrink();
 
-    final style = PropertyPanelState.fromElements(elements);
+    final boundText = <TextElement>[];
+    for (final e in elements) {
+      final bt = _editorState.scene.findBoundText(e.id);
+      if (bt != null) boundText.add(bt);
+    }
+    final style = PropertyPanelState.fromElements(
+      elements,
+      boundTextElements: boundText,
+    );
     final isLocked = style.locked == true;
+    final showFullTextProps = style.hasText &&
+        (!style.hasArrowBoundText || style.hasShapeBoundText ||
+        elements.whereType<TextElement>().isNotEmpty);
 
     return Container(
       width: 220,
@@ -1970,16 +2017,23 @@ class _CanvasPageState extends State<_CanvasPage> {
                       _buildSectionLabel('Arrow type'),
                       _buildElbowedRow(style.elbowed),
                     ],
-                    if (style.hasText) ...[
+                    if (showFullTextProps) ...[
                       const SizedBox(height: 12),
                       _buildSectionLabel('Font family'),
                       _buildFontFamilyRow(style.fontFamily),
+                    ],
+                    if (style.hasText) ...[
                       const SizedBox(height: 8),
                       _buildSectionLabel('Font size'),
                       _buildFontSizeRow(style.fontSize),
+                    ],
+                    if (showFullTextProps) ...[
                       const SizedBox(height: 8),
                       _buildSectionLabel('Text align'),
                       _buildTextAlignRow(style.textAlign),
+                      const SizedBox(height: 8),
+                      _buildSectionLabel('Vertical align'),
+                      _buildVerticalAlignRow(style.verticalAlign),
                     ],
                     if (style.hasLines) ...[
                       const SizedBox(height: 8),
@@ -2544,6 +2598,19 @@ class _CanvasPageState extends State<_CanvasPage> {
       isSelected: (i) => current == aligns[i],
       onTap: (i) =>
           _applyStyleChange(ElementStyle(hasText: true, textAlign: aligns[i])),
+    );
+  }
+
+  Widget _buildVerticalAlignRow(VerticalAlign? current) {
+    const aligns = VerticalAlign.values;
+    final labels = aligns.map((a) => a.name).toList();
+    return _buildToggleRow(
+      count: aligns.length,
+      labels: labels,
+      isSelected: (i) => current == aligns[i],
+      onTap: (i) => _applyStyleChange(
+        ElementStyle(hasText: true, verticalAlign: aligns[i]),
+      ),
     );
   }
 

@@ -11,12 +11,20 @@ enum TextAlign {
   right,
 }
 
+/// Vertical alignment of bound text within a container shape.
+enum VerticalAlign {
+  top,
+  middle,
+  bottom,
+}
+
 /// A text drawing element.
 class TextElement extends Element {
   final String text;
   final double fontSize;
   final String fontFamily;
   final TextAlign textAlign;
+  final VerticalAlign verticalAlign;
   final String? containerId;
   final double lineHeight;
   final bool autoResize;
@@ -31,6 +39,7 @@ class TextElement extends Element {
     this.fontSize = 20.0,
     this.fontFamily = 'Excalifont',
     this.textAlign = TextAlign.left,
+    this.verticalAlign = VerticalAlign.middle,
     this.containerId,
     this.lineHeight = 1.25,
     this.autoResize = true,
@@ -62,6 +71,7 @@ class TextElement extends Element {
     double? fontSize,
     String? fontFamily,
     TextAlign? textAlign,
+    VerticalAlign? verticalAlign,
     String? containerId,
     bool clearContainerId = false,
     double? lineHeight,
@@ -77,6 +87,7 @@ class TextElement extends Element {
       fontSize: fontSize ?? this.fontSize,
       fontFamily: fontFamily ?? this.fontFamily,
       textAlign: textAlign ?? this.textAlign,
+      verticalAlign: verticalAlign ?? this.verticalAlign,
       containerId:
           clearContainerId ? null : (containerId ?? this.containerId),
       lineHeight: lineHeight ?? this.lineHeight,
@@ -147,6 +158,7 @@ class TextElement extends Element {
       fontSize: fontSize,
       fontFamily: fontFamily,
       textAlign: textAlign,
+      verticalAlign: verticalAlign,
       containerId: containerId,
       lineHeight: lineHeight,
       autoResize: autoResize,

@@ -20,16 +20,24 @@ class ElementStyle {
   /// True if any selected element has a non-null roundness.
   final bool hasRoundness;
 
-  /// True if at least one selected element is a [TextElement].
+  /// True if at least one selected element is a [TextElement],
+  /// or if bound text elements are provided.
   final bool hasText;
 
   /// True if at least one selected element is an [ArrowElement].
   final bool hasArrows;
 
+  /// True when selection includes shapes with bound text.
+  final bool hasShapeBoundText;
+
+  /// True when selection includes arrows with bound text.
+  final bool hasArrowBoundText;
+
   // Text-only properties (null if no text elements or mixed):
   final double? fontSize;
   final String? fontFamily;
   final TextAlign? textAlign;
+  final VerticalAlign? verticalAlign;
 
   // Arrow-only properties (null if no arrows or mixed):
   final bool? elbowed;
@@ -63,6 +71,8 @@ class ElementStyle {
     this.hasRoundness = false,
     this.hasText = false,
     this.hasArrows = false,
+    this.hasShapeBoundText = false,
+    this.hasArrowBoundText = false,
     this.hasLines = false,
     this.startArrowhead,
     this.startArrowheadNone = false,
@@ -71,6 +81,7 @@ class ElementStyle {
     this.fontSize,
     this.fontFamily,
     this.textAlign,
+    this.verticalAlign,
     this.elbowed,
     this.locked,
   });
@@ -83,7 +94,10 @@ class PropertyPanelState {
   ///
   /// Returns `null` for a property if elements have mixed values.
   /// Returns an all-null [ElementStyle] if [elements] is empty.
-  static ElementStyle fromElements(List<Element> elements) {
+  static ElementStyle fromElements(
+    List<Element> elements, {
+    List<TextElement> boundTextElements = const [],
+  }) {
     if (elements.isEmpty) {
       return const ElementStyle();
     }
@@ -173,26 +187,76 @@ class PropertyPanelState {
       }
     }
 
-    // Text properties — only if at least one TextElement is present.
-    final textElements =
+    // Text properties — from directly selected TextElements and bound text.
+    final directTextElements =
         elements.whereType<TextElement>().toList();
-    final hasText = textElements.isNotEmpty;
+
+    // Classify bound text by container type
+    final shapeBoundText = <TextElement>[];
+    final arrowBoundText = <TextElement>[];
+    for (final bt in boundTextElements) {
+      if (bt.containerId == null) continue;
+      final container = elements.where(
+        (e) => e.id.value == bt.containerId,
+      );
+      if (container.isEmpty) continue;
+      if (container.first is ArrowElement) {
+        arrowBoundText.add(bt);
+      } else {
+        shapeBoundText.add(bt);
+      }
+    }
+
+    final hasShapeBoundText = shapeBoundText.isNotEmpty;
+    final hasArrowBoundText = arrowBoundText.isNotEmpty;
+
+    // All text elements contributing font size (direct + all bound)
+    final allTextForFontSize = <TextElement>[
+      ...directTextElements,
+      ...shapeBoundText,
+      ...arrowBoundText,
+    ];
+    // Text elements contributing full text props (direct + shape-bound)
+    final allTextForFullProps = <TextElement>[
+      ...directTextElements,
+      ...shapeBoundText,
+    ];
+
+    final hasText = allTextForFontSize.isNotEmpty;
 
     double? fontSize;
     String? fontFamily;
     TextAlign? textAlign;
+    VerticalAlign? verticalAlign;
 
     if (hasText) {
-      final firstText = textElements.first;
-      fontSize = firstText.fontSize;
-      fontFamily = firstText.fontFamily;
-      textAlign = firstText.textAlign;
+      // fontSize: merge from all (direct + shape-bound + arrow-bound)
+      fontSize = allTextForFontSize.first.fontSize;
+      for (var i = 1; i < allTextForFontSize.length; i++) {
+        if (fontSize != null &&
+            allTextForFontSize[i].fontSize != fontSize) {
+          fontSize = null;
+        }
+      }
 
-      for (var i = 1; i < textElements.length; i++) {
-        final t = textElements[i];
-        if (fontSize != null && t.fontSize != fontSize) fontSize = null;
-        if (fontFamily != null && t.fontFamily != fontFamily) fontFamily = null;
-        if (textAlign != null && t.textAlign != textAlign) textAlign = null;
+      // fontFamily, textAlign, verticalAlign: merge from direct + shape-bound only
+      if (allTextForFullProps.isNotEmpty) {
+        fontFamily = allTextForFullProps.first.fontFamily;
+        textAlign = allTextForFullProps.first.textAlign;
+        verticalAlign = allTextForFullProps.first.verticalAlign;
+
+        for (var i = 1; i < allTextForFullProps.length; i++) {
+          final t = allTextForFullProps[i];
+          if (fontFamily != null && t.fontFamily != fontFamily) {
+            fontFamily = null;
+          }
+          if (textAlign != null && t.textAlign != textAlign) {
+            textAlign = null;
+          }
+          if (verticalAlign != null && t.verticalAlign != verticalAlign) {
+            verticalAlign = null;
+          }
+        }
       }
     }
 
@@ -217,6 +281,8 @@ class PropertyPanelState {
       hasRoundness: hasRoundness,
       hasText: hasText,
       hasArrows: hasArrows,
+      hasShapeBoundText: hasShapeBoundText,
+      hasArrowBoundText: hasArrowBoundText,
       hasLines: hasLines,
       startArrowhead: startArrowhead,
       startArrowheadNone: startArrowheadNone,
@@ -225,6 +291,7 @@ class PropertyPanelState {
       fontSize: fontSize,
       fontFamily: fontFamily,
       textAlign: textAlign,
+      verticalAlign: verticalAlign,
       elbowed: elbowed,
       locked: locked,
     );
@@ -248,11 +315,13 @@ class PropertyPanelState {
       if (element is TextElement) {
         if (style.fontSize != null ||
             style.fontFamily != null ||
-            style.textAlign != null) {
+            style.textAlign != null ||
+            style.verticalAlign != null) {
           updated = (updated as TextElement).copyWithText(
             fontSize: style.fontSize,
             fontFamily: style.fontFamily,
             textAlign: style.textAlign,
+            verticalAlign: style.verticalAlign,
           );
         }
       }

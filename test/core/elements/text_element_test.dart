@@ -65,5 +65,49 @@ void main() {
       expect(bumped, isA<TextElement>());
       expect((bumped as TextElement).text, 'Hello');
     });
+
+    test('defaults verticalAlign to middle', () {
+      final t = createText();
+      expect(t.verticalAlign, VerticalAlign.middle);
+    });
+
+    test('constructs with custom verticalAlign', () {
+      final t = TextElement(
+        id: const ElementId('txt-1'),
+        x: 0, y: 0, width: 100, height: 25,
+        text: 'Hi',
+        verticalAlign: VerticalAlign.top,
+      );
+      expect(t.verticalAlign, VerticalAlign.top);
+    });
+
+    test('copyWithText changes verticalAlign', () {
+      final t = createText();
+      final modified = t.copyWithText(verticalAlign: VerticalAlign.bottom);
+      expect(modified.verticalAlign, VerticalAlign.bottom);
+      expect(modified.text, 'Hello'); // preserved
+    });
+
+    test('copyWithText preserves verticalAlign when not specified', () {
+      final t = TextElement(
+        id: const ElementId('txt-1'),
+        x: 0, y: 0, width: 100, height: 25,
+        text: 'Hi',
+        verticalAlign: VerticalAlign.top,
+      );
+      final modified = t.copyWithText(text: 'Changed');
+      expect(modified.verticalAlign, VerticalAlign.top);
+    });
+
+    test('copyWith preserves verticalAlign', () {
+      final t = TextElement(
+        id: const ElementId('txt-1'),
+        x: 0, y: 0, width: 100, height: 25,
+        text: 'Hi',
+        verticalAlign: VerticalAlign.bottom,
+      );
+      final modified = t.copyWith(x: 50.0);
+      expect(modified.verticalAlign, VerticalAlign.bottom);
+    });
   });
 }

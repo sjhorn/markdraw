@@ -117,7 +117,7 @@ class ExcalidrawJsonCodec {
         'lineHeight': el.lineHeight,
         'autoResize': el.autoResize,
         'originalText': el.text,
-        'verticalAlign': 'top',
+        'verticalAlign': el.verticalAlign.name,
       };
     } else if (el is ArrowElement) {
       return {
@@ -470,6 +470,17 @@ class ExcalidrawJsonCodec {
     }
   }
 
+  static VerticalAlign _verticalAlign(Map<String, dynamic> raw) {
+    switch (raw['verticalAlign'] as String? ?? 'middle') {
+      case 'top':
+        return VerticalAlign.top;
+      case 'bottom':
+        return VerticalAlign.bottom;
+      default:
+        return VerticalAlign.middle;
+    }
+  }
+
   static String _fontFamily(
     Map<String, dynamic> raw,
     int index,
@@ -744,6 +755,7 @@ class ExcalidrawJsonCodec {
       fontSize: _double(raw, 'fontSize', 20.0),
       fontFamily: _fontFamily(raw, index, warnings),
       textAlign: _textAlign(raw),
+      verticalAlign: _verticalAlign(raw),
       containerId: raw['containerId'] as String?,
       lineHeight: _double(raw, 'lineHeight', 1.25),
       autoResize: raw['autoResize'] as bool? ?? true,

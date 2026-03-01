@@ -277,6 +277,29 @@ void main() {
       expect(line, contains('align=center'));
     });
 
+    test('text with non-default verticalAlign', () {
+      final text = TextElement(
+        id: const ElementId('t1'),
+        x: 0, y: 0, width: 100, height: 30,
+        text: 'Top',
+        verticalAlign: VerticalAlign.top,
+        seed: 5, versionNonce: 1, updated: 0,
+      );
+      final line = serializer.serialize(text);
+      expect(line, contains('valign=top'));
+    });
+
+    test('text with default verticalAlign omits valign', () {
+      final text = TextElement(
+        id: const ElementId('t1'),
+        x: 0, y: 0, width: 100, height: 30,
+        text: 'Middle',
+        seed: 5, versionNonce: 1, updated: 0,
+      );
+      final line = serializer.serialize(text);
+      expect(line, isNot(contains('valign=')));
+    });
+
     test('text with non-default color', () {
       final text = TextElement(
         id: const ElementId('t1'),

@@ -323,6 +323,8 @@ class SketchLineParser {
     final fontFamily = props.namedString('font') ?? 'Excalifont';
     final alignStr = props.namedString('align');
     final textAlign = _parseTextAlign(alignStr);
+    final valignStr = props.namedString('valign');
+    final verticalAlign = _parseVerticalAlign(valignStr);
 
     final elementId = ElementId(id ?? _generateId());
     if (id != null) {
@@ -339,6 +341,7 @@ class SketchLineParser {
       fontSize: fontSize,
       fontFamily: fontFamily,
       textAlign: textAlign,
+      verticalAlign: verticalAlign,
       strokeColor: common.strokeColor,
       backgroundColor: common.backgroundColor,
       fillStyle: common.fillStyle,
@@ -517,6 +520,14 @@ class SketchLineParser {
       'center' => TextAlign.center,
       'right' => TextAlign.right,
       _ => TextAlign.left,
+    };
+  }
+
+  VerticalAlign _parseVerticalAlign(String? value) {
+    return switch (value) {
+      'top' => VerticalAlign.top,
+      'bottom' => VerticalAlign.bottom,
+      _ => VerticalAlign.middle,
     };
   }
 
