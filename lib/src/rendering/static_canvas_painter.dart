@@ -133,10 +133,17 @@ class StaticCanvasPainter extends CustomPainter {
     const boundTextPadding = 5.0;
     final maxWidth = shape.width - boundTextPadding * 2;
     final painter = TextRenderer.buildTextPainter(textElem);
+    // Use longestLine so painter.width reflects actual content width,
+    // allowing us to manually position based on textAlign.
+    painter.textWidthBasis = TextWidthBasis.longestLine;
     painter.layout(maxWidth: maxWidth > 0 ? maxWidth : 0);
 
-    // Paint at left padding edge; TextPainter handles textAlign within maxWidth
-    final textX = shape.x + boundTextPadding;
+    final textX = switch (textElem.textAlign) {
+      TextAlign.left => shape.x + boundTextPadding,
+      TextAlign.center => shape.x + (shape.width - painter.width) / 2,
+      TextAlign.right =>
+        shape.x + shape.width - painter.width - boundTextPadding,
+    };
     final textY = switch (textElem.verticalAlign) {
       VerticalAlign.top => shape.y + boundTextPadding,
       VerticalAlign.middle =>

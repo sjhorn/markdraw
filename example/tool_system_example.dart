@@ -87,8 +87,6 @@ class _CanvasPageState extends State<_CanvasPage> {
   // Track whether we're editing an existing element vs a newly created one
   bool _isEditingExisting = false;
   String? _originalText;
-  // Deferred focus-loss commit — cancelled by property panel taps
-  bool _pendingFocusCommit = false;
 
   @override
   void initState() {
@@ -245,6 +243,7 @@ class _CanvasPageState extends State<_CanvasPage> {
         height: shape.height,
         text: '',
         containerId: shape.id.value,
+        textAlign: core.TextAlign.center,
       );
       setState(() {
         _editorState = _editorState.applyResult(AddElementResult(textElem));
@@ -294,6 +293,7 @@ class _CanvasPageState extends State<_CanvasPage> {
         height: 24,
         text: '',
         containerId: arrow.id.value,
+        textAlign: core.TextAlign.center,
       );
       setState(() {
         _editorState = _editorState.applyResult(AddElementResult(textElem));
@@ -318,14 +318,7 @@ class _CanvasPageState extends State<_CanvasPage> {
 
   void _onTextFocusChanged() {
     if (!_textFocusNode.hasFocus && _editingTextElementId != null) {
-      // Defer commit to post-frame so property panel taps can cancel it
-      _pendingFocusCommit = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_pendingFocusCommit && _editingTextElementId != null) {
-          _commitTextEditing();
-        }
-        _pendingFocusCommit = false;
-      });
+      _commitTextEditing();
     }
   }
 
@@ -1586,7 +1579,8 @@ class _CanvasPageState extends State<_CanvasPage> {
               (!style.hasArrowBoundText || style.hasShapeBoundText ||
               elements.whereType<TextElement>().isNotEmpty);
 
-          return Container(
+          return TextFieldTapRegion(
+            child: Container(
             decoration: const BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -1717,6 +1711,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                 _buildLockToggle(style.locked),
               ],
             ),
+          ),
           );
         },
       ),
@@ -1915,9 +1910,6 @@ class _CanvasPageState extends State<_CanvasPage> {
     final elements = _selectedElements;
     if (elements.isEmpty) return;
 
-    final wasEditing = _editingTextElementId != null;
-    if (wasEditing) _pendingFocusCommit = false;
-
     _historyManager.push(_editorState.scene);
     final result = PropertyPanelState.applyStyle(elements, style);
     _applyResult(result);
@@ -1940,14 +1932,6 @@ class _CanvasPageState extends State<_CanvasPage> {
       }
     }
 
-    // Re-request focus to the text editor after style change
-    if (wasEditing) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_editingTextElementId != null) {
-          _textFocusNode.requestFocus();
-        }
-      });
-    }
   }
 
   Widget _buildPropertyPanel() {
@@ -1968,39 +1952,40 @@ class _CanvasPageState extends State<_CanvasPage> {
         (!style.hasArrowBoundText || style.hasShapeBoundText ||
         elements.whereType<TextElement>().isNotEmpty);
 
-    return Container(
-      width: 220,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.17),
-            blurRadius: 1,
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 3,
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 14,
-            offset: const Offset(0, 7),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: ListView(
-          padding: const EdgeInsets.all(12),
-          children: [
-            IgnorePointer(
-              ignoring: isLocked,
-              child: Opacity(
-                opacity: isLocked ? 0.4 : 1.0,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+    return TextFieldTapRegion(
+      child: Container(
+        width: 220,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.17),
+              blurRadius: 1,
+            ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 3,
+            ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 14,
+              offset: const Offset(0, 7),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: ListView(
+            padding: const EdgeInsets.all(12),
+            children: [
+              IgnorePointer(
+                ignoring: isLocked,
+                child: Opacity(
+                  opacity: isLocked ? 0.4 : 1.0,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                     _buildSectionLabel('Stroke'),
                     _buildColorPickerRow(
                       selected: style.strokeColor,
@@ -2104,6 +2089,7 @@ class _CanvasPageState extends State<_CanvasPage> {
             _buildLockToggle(style.locked),
           ],
         ),
+      ),
       ),
     );
   }
