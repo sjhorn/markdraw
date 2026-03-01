@@ -1717,10 +1717,8 @@ class _CanvasPageState extends State<_CanvasPage> {
                         if (showFullTextProps) ...[
                           const SizedBox(height: 8),
                           _buildSectionLabel('Text align'),
-                          _buildTextAlignRow(style.textAlign),
-                          const SizedBox(height: 8),
-                          _buildSectionLabel('Vertical align'),
-                          _buildVerticalAlignRow(style.verticalAlign),
+                          _buildTextAlignCombinedRow(
+                              style.textAlign, style.verticalAlign),
                         ],
                         if (style.hasLines) ...[
                           const SizedBox(height: 8),
@@ -2123,10 +2121,8 @@ class _CanvasPageState extends State<_CanvasPage> {
                     if (showFullTextProps) ...[
                       const SizedBox(height: 8),
                       _buildSectionLabel('Text align'),
-                      _buildTextAlignRow(style.textAlign),
-                      const SizedBox(height: 8),
-                      _buildSectionLabel('Vertical align'),
-                      _buildVerticalAlignRow(style.verticalAlign),
+                      _buildTextAlignCombinedRow(
+                          style.textAlign, style.verticalAlign),
                     ],
                     if (style.hasLines) ...[
                       const SizedBox(height: 8),
@@ -2667,50 +2663,54 @@ class _CanvasPageState extends State<_CanvasPage> {
     );
   }
 
-  Widget _buildTextAlignRow(core.TextAlign? current) {
-    const aligns = core.TextAlign.values;
-    const icons = [
+  Widget _buildTextAlignCombinedRow(
+      core.TextAlign? hCurrent, VerticalAlign? vCurrent) {
+    const hAligns = core.TextAlign.values;
+    const hIcons = [
       Icons.format_align_left,
       Icons.format_align_center,
       Icons.format_align_right,
     ];
-    const tooltips = ['Align left', 'Align center', 'Align right'];
-    return Wrap(
-      spacing: 4,
-      children: [
-        for (var i = 0; i < aligns.length; i++)
-          _IconToggleChip(
-            isSelected: current == aligns[i],
-            onTap: () => _applyStyleChange(
-              ElementStyle(hasText: true, textAlign: aligns[i]),
-            ),
-            tooltip: tooltips[i],
-            child: Icon(icons[i], size: 18),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildVerticalAlignRow(VerticalAlign? current) {
-    const aligns = VerticalAlign.values;
-    const icons = [
+    const hTooltips = ['Align left', 'Align center', 'Align right'];
+    const vAligns = VerticalAlign.values;
+    const vIcons = [
       Icons.vertical_align_top,
       Icons.vertical_align_center,
       Icons.vertical_align_bottom,
     ];
-    const tooltips = ['Align top', 'Align middle', 'Align bottom'];
-    return Wrap(
-      spacing: 4,
+    const vTooltips = ['Align top', 'Align middle', 'Align bottom'];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (var i = 0; i < aligns.length; i++)
-          _IconToggleChip(
-            isSelected: current == aligns[i],
-            onTap: () => _applyStyleChange(
-              ElementStyle(hasText: true, verticalAlign: aligns[i]),
-            ),
-            tooltip: tooltips[i],
-            child: Icon(icons[i], size: 18),
-          ),
+        Wrap(
+          spacing: 4,
+          children: [
+            for (var i = 0; i < hAligns.length; i++)
+              _IconToggleChip(
+                isSelected: hCurrent == hAligns[i],
+                onTap: () => _applyStyleChange(
+                  ElementStyle(hasText: true, textAlign: hAligns[i]),
+                ),
+                tooltip: hTooltips[i],
+                child: Icon(hIcons[i], size: 18),
+              ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Wrap(
+          spacing: 4,
+          children: [
+            for (var i = 0; i < vAligns.length; i++)
+              _IconToggleChip(
+                isSelected: vCurrent == vAligns[i],
+                onTap: () => _applyStyleChange(
+                  ElementStyle(hasText: true, verticalAlign: vAligns[i]),
+                ),
+                tooltip: vTooltips[i],
+                child: Icon(vIcons[i], size: 18),
+              ),
+          ],
+        ),
       ],
     );
   }
