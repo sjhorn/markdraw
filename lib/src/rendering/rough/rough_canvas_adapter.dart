@@ -133,14 +133,30 @@ class RoughCanvasAdapter implements RoughAdapter {
     Arrowhead? endArrowhead,
     DrawStyle style,
   ) {
-    // Draw the curved line portion
-    drawCurvedLine(canvas, points, style);
-
     if (points.length < 2) return;
 
-    final paint = style.toStrokePaint();
+    // Build smooth Bezier path that passes exactly through all points
+    // (including endpoints). We don't use rough_flutter's curvePath here
+    // because it applies random offsets to endpoints, causing arrowheads
+    // to visually disconnect from the curve.
+    final path = FreedrawRenderer.buildPath(points, style.strokeWidth);
 
-    // Draw start arrowhead
+    // Apply dash/dot pattern if needed
+    final strokePaint = style.toStrokePaint();
+    strokePaint.strokeCap = StrokeCap.round;
+    strokePaint.strokeJoin = StrokeJoin.round;
+    if (style.strokeStyle == core.StrokeStyle.solid) {
+      canvas.drawPath(path, strokePaint);
+    } else {
+      final dashedPath = PathDashUtility.dashPath(path, style.strokeStyle);
+      canvas.drawPath(dashedPath, strokePaint);
+    }
+
+    // Draw arrowheads at exact endpoint positions
+    final paint = Paint()
+      ..color = strokePaint.color
+      ..strokeWidth = strokePaint.strokeWidth;
+
     if (startArrowhead != null) {
       final angle = ArrowheadRenderer.directionAngle(points, isStart: true);
       ArrowheadRenderer.draw(
@@ -149,11 +165,10 @@ class RoughCanvasAdapter implements RoughAdapter {
         points.first,
         angle,
         style.strokeWidth,
-        Paint()..color = paint.color..strokeWidth = paint.strokeWidth,
+        paint,
       );
     }
 
-    // Draw end arrowhead
     if (endArrowhead != null) {
       final angle = ArrowheadRenderer.directionAngle(points, isStart: false);
       ArrowheadRenderer.draw(
@@ -162,7 +177,7 @@ class RoughCanvasAdapter implements RoughAdapter {
         points.last,
         angle,
         style.strokeWidth,
-        Paint()..color = paint.color..strokeWidth = paint.strokeWidth,
+        paint,
       );
     }
   }
