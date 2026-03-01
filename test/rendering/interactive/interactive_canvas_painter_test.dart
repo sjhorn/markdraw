@@ -530,6 +530,32 @@ void main() {
       );
     });
 
+    test('shouldRepaint returns true when segmentMidpoints changes', () {
+      const p1 = InteractiveCanvasPainter(
+        viewport: ViewportState(),
+        segmentMidpoints: [Point(50, 100), Point(150, 100)],
+      );
+      const p2 = InteractiveCanvasPainter(
+        viewport: ViewportState(),
+        segmentMidpoints: [Point(50, 100), Point(200, 200)],
+      );
+
+      expect(p2.shouldRepaint(p1), isTrue);
+    });
+
+    test('shouldRepaint returns false when segmentMidpoints unchanged', () {
+      const p1 = InteractiveCanvasPainter(
+        viewport: ViewportState(),
+        segmentMidpoints: [Point(50, 100), Point(150, 100)],
+      );
+      const p2 = InteractiveCanvasPainter(
+        viewport: ViewportState(),
+        segmentMidpoints: [Point(50, 100), Point(150, 100)],
+      );
+
+      expect(p2.shouldRepaint(p1), isFalse);
+    });
+
     test('shouldRepaint returns true when interactionMode changes', () {
       final overlay = SelectionOverlay.fromElements([
         RectangleElement(

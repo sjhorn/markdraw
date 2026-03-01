@@ -279,6 +279,31 @@ class SelectionRenderer {
     }
   }
 
+  /// Draws segment midpoint handles for elbow arrows.
+  ///
+  /// Uses semi-transparent blue fill + blue stroke outline to distinguish
+  /// from point handles (white fill) and midpoint handles (solid blue).
+  /// These indicate draggable segments on elbow arrows.
+  static void drawSegmentMidpointHandles(
+    Canvas canvas,
+    List<Point> midpoints, {
+    InteractionMode mode = InteractionMode.pointer,
+  }) {
+    final fillPaint = Paint()
+      ..color = const Color(0x664A90D9) // ~40% opacity blue
+      ..style = PaintingStyle.fill;
+    final strokePaint = Paint()
+      ..color = _selectionColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = _handleStrokeWidth;
+    final radius = handleSize(mode) / 2;
+    for (final point in midpoints) {
+      final center = Offset(point.x, point.y);
+      canvas.drawCircle(center, radius, fillPaint);
+      canvas.drawCircle(center, radius, strokePaint);
+    }
+  }
+
   /// Draws semi-transparent blue circles at midpoint handle positions.
   ///
   /// Used between adjacent vertices on lines/arrows to indicate where

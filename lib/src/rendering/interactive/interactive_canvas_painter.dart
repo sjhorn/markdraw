@@ -29,6 +29,7 @@ class InteractiveCanvasPainter extends CustomPainter {
   final Bounds? creationBounds;
   final List<Point>? pointHandles;
   final List<Point>? midpointHandles;
+  final List<Point>? segmentMidpoints;
   final Bounds? bindTargetBounds;
   final double bindTargetAngle;
 
@@ -43,6 +44,7 @@ class InteractiveCanvasPainter extends CustomPainter {
     this.creationBounds,
     this.pointHandles,
     this.midpointHandles,
+    this.segmentMidpoints,
     this.bindTargetBounds,
     this.bindTargetAngle = 0.0,
   });
@@ -124,6 +126,13 @@ class InteractiveCanvasPainter extends CustomPainter {
           SelectionRenderer.drawMidpointHandles(canvas, midpointHandles!,
               mode: interactionMode);
         }
+
+        // Segment midpoint handles (for dragging elbow arrow segments)
+        if (segmentMidpoints != null && segmentMidpoints!.isNotEmpty) {
+          SelectionRenderer.drawSegmentMidpointHandles(
+              canvas, segmentMidpoints!,
+              mode: interactionMode);
+        }
       }
 
       if (hasAngle) {
@@ -173,6 +182,7 @@ class InteractiveCanvasPainter extends CustomPainter {
         !listEquals(snapLines, oldDelegate.snapLines) ||
         !listEquals(creationPoints, oldDelegate.creationPoints) ||
         !listEquals(pointHandles, oldDelegate.pointHandles) ||
-        !listEquals(midpointHandles, oldDelegate.midpointHandles);
+        !listEquals(midpointHandles, oldDelegate.midpointHandles) ||
+        !listEquals(segmentMidpoints, oldDelegate.segmentMidpoints);
   }
 }

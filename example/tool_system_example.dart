@@ -1175,6 +1175,9 @@ class _CanvasPageState extends State<_CanvasPage> {
                     toolOverlay?.bindTargetAngle ?? 0.0,
                 pointHandles: _buildPointHandles(),
                 midpointHandles: _buildMidpointHandles(),
+                segmentMidpoints: _isDraggingPointHandle()
+                    ? null
+                    : _buildSegmentMidpoints(),
                 creationPoints: toolOverlay?.creationPoints,
               ),
               child: const SizedBox.expand(),
@@ -3100,6 +3103,27 @@ class _CanvasPageState extends State<_CanvasPage> {
           .toList();
     }
     return null;
+  }
+
+  List<Point>? _buildSegmentMidpoints() {
+    if (_editorState.selectedIds.length != 1) return null;
+    final elem = _editorState.scene.getElementById(
+      _editorState.selectedIds.first,
+    );
+    if (elem == null) return null;
+    if (elem is! ArrowElement || !elem.elbowed) return null;
+    if (elem.points.length < 2) return null;
+
+    final midpoints = <Point>[];
+    for (var i = 0; i < elem.points.length - 1; i++) {
+      final a = elem.points[i];
+      final b = elem.points[i + 1];
+      midpoints.add(Point(
+        elem.x + (a.x + b.x) / 2,
+        elem.y + (a.y + b.y) / 2,
+      ));
+    }
+    return midpoints;
   }
 
   List<Point>? _buildMidpointHandles() {

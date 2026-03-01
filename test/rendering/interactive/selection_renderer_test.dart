@@ -188,6 +188,45 @@ void main() {
       );
     });
 
+    test('drawSegmentMidpointHandles does not throw', () {
+      final (recorder, canvas) = _makeCanvas();
+      final points = [const Point(50, 100), const Point(150, 100), const Point(150, 200)];
+
+      expect(
+        () {
+          SelectionRenderer.drawSegmentMidpointHandles(canvas, points);
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
+    test('drawSegmentMidpointHandles with empty list does not throw', () {
+      final (recorder, canvas) = _makeCanvas();
+
+      expect(
+        () {
+          SelectionRenderer.drawSegmentMidpointHandles(canvas, []);
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
+    test('drawSegmentMidpointHandles with touch mode does not throw', () {
+      final (recorder, canvas) = _makeCanvas();
+      final points = [const Point(50, 100), const Point(150, 200)];
+
+      expect(
+        () {
+          SelectionRenderer.drawSegmentMidpointHandles(canvas, points,
+              mode: InteractionMode.touch);
+          recorder.endRecording();
+        },
+        returnsNormally,
+      );
+    });
+
     test('drawBindingIndicator does not throw', () {
       final (recorder, canvas) = _makeCanvas();
       final bounds = Bounds.fromLTWH(100, 100, 200, 150);
