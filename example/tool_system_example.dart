@@ -1048,7 +1048,7 @@ class _CanvasPageState extends State<_CanvasPage> {
               }
               _sceneBeforeDrag = _editorState.scene;
               final point = _toScene(event.localPosition);
-              final shift = event.buttons == kSecondaryMouseButton;
+              final shift = HardwareKeyboard.instance.isShiftPressed;
               if (_activeTool is SelectTool) {
                 _applyResult(
                   (_activeTool as SelectTool).onPointerDown(
