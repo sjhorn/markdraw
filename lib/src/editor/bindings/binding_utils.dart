@@ -20,8 +20,10 @@ class BindingUtils {
 
   /// Find the nearest bindable element within [snapRadius] of [scenePoint].
   ///
-  /// Returns null if no bindable element is close enough. Optionally
-  /// [excludeId] to skip a specific element (e.g., the arrow being created).
+  /// Points inside a shape always qualify as bind targets (matching Excalidraw
+  /// behavior). Points outside must be within [snapRadius] of the shape edge.
+  /// Returns null if no bindable element qualifies. Optionally [excludeId] to
+  /// skip a specific element (e.g., the arrow being created).
   static Element? findBindTarget(
     Scene scene,
     Point scenePoint, {
@@ -35,8 +37,14 @@ class BindingUtils {
       if (!isBindable(element)) continue;
       if (excludeId != null && element.id == excludeId) continue;
 
+      final inside = _isInsideElement(element, scenePoint);
       final dist = _distanceToEdge(element, scenePoint);
-      if (dist <= snapRadius && dist < bestDist) {
+
+      // Inside the shape → always a valid target.
+      // Outside → must be within snapRadius of the edge.
+      if (!inside && dist > snapRadius) continue;
+
+      if (dist < bestDist) {
         bestDist = dist;
         best = element;
       }
@@ -44,11 +52,16 @@ class BindingUtils {
     return best;
   }
 
-  /// Project [scenePoint] onto the nearest bounding-box edge of [target],
-  /// returning a normalized (0-1, 0-1) fixedPoint.
+  /// Compute a normalized (0-1, 0-1) fixedPoint for [scenePoint] relative to
+  /// [target].
+  ///
+  /// For points **inside** the target, the fixedPoint preserves the actual
+  /// interior position (matching Excalidraw's "inside" binding mode). For
+  /// points **outside**, the point is projected onto the nearest bounding-box
+  /// edge.
   ///
   /// Accounts for the target's rotation by transforming [scenePoint] into the
-  /// element's local coordinate space before projecting.
+  /// element's local coordinate space.
   static Point computeFixedPoint(Element target, Point scenePoint) {
     // Transform into local (unrotated) space
     final local = _toLocal(target, scenePoint);
@@ -60,58 +73,39 @@ class BindingUtils {
     final w = target.width;
     final h = target.height;
 
-    // Clamp point to bounding box first
-    final cx = local.x.clamp(left, right);
-    final cy = local.y.clamp(top, bottom);
-
-    // Distance to each edge from the (clamped or original) point
-    final dLeft = (cx - left).abs();
-    final dRight = (cx - right).abs();
-    final dTop = (cy - top).abs();
-    final dBottom = (cy - bottom).abs();
-
-    // For points outside the bounds, also consider distance to the actual edge
-    final distLeft = (local.x - left).abs();
-    final distRight = (local.x - right).abs();
-    final distTop = (local.y - top).abs();
-    final distBottom = (local.y - bottom).abs();
-
-    // Use distance from original point for outside; from clamped for inside
     final isInside = local.x >= left &&
         local.x <= right &&
         local.y >= top &&
         local.y <= bottom;
 
-    double edgeDistLeft, edgeDistRight, edgeDistTop, edgeDistBottom;
     if (isInside) {
-      edgeDistLeft = dLeft;
-      edgeDistRight = dRight;
-      edgeDistTop = dTop;
-      edgeDistBottom = dBottom;
-    } else {
-      edgeDistLeft = distLeft + (cy - local.y).abs();
-      edgeDistRight = distRight + (cy - local.y).abs();
-      edgeDistTop = distTop + (cx - local.x).abs();
-      edgeDistBottom = distBottom + (cx - local.x).abs();
+      // Preserve the actual interior position as a normalized coordinate.
+      final xFrac = w > 0 ? (local.x - left) / w : 0.5;
+      final yFrac = h > 0 ? (local.y - top) / h : 0.5;
+      return Point(xFrac, yFrac);
     }
 
-    final minDist = [edgeDistLeft, edgeDistRight, edgeDistTop, edgeDistBottom]
-        .reduce(math.min);
+    // Outside: project onto nearest edge.
+    final cx = local.x.clamp(left, right);
+    final cy = local.y.clamp(top, bottom);
 
-    if (minDist == edgeDistLeft) {
-      // Project onto left edge
+    final distLeft = (local.x - left).abs() + (cy - local.y).abs();
+    final distRight = (local.x - right).abs() + (cy - local.y).abs();
+    final distTop = (local.y - top).abs() + (cx - local.x).abs();
+    final distBottom = (local.y - bottom).abs() + (cx - local.x).abs();
+
+    final minDist = [distLeft, distRight, distTop, distBottom].reduce(math.min);
+
+    if (minDist == distLeft) {
       final yFrac = h > 0 ? (cy - top) / h : 0.5;
       return Point(0.0, yFrac);
-    } else if (minDist == edgeDistRight) {
-      // Project onto right edge
+    } else if (minDist == distRight) {
       final yFrac = h > 0 ? (cy - top) / h : 0.5;
       return Point(1.0, yFrac);
-    } else if (minDist == edgeDistTop) {
-      // Project onto top edge
+    } else if (minDist == distTop) {
       final xFrac = w > 0 ? (cx - left) / w : 0.5;
       return Point(xFrac, 0.0);
     } else {
-      // Project onto bottom edge
       final xFrac = w > 0 ? (cx - left) / w : 0.5;
       return Point(xFrac, 1.0);
     }
@@ -219,6 +213,16 @@ class BindingUtils {
       }
     }
     return result;
+  }
+
+  /// Whether [point] lies inside [element]'s bounding box, accounting for
+  /// the element's rotation.
+  static bool _isInsideElement(Element element, Point point) {
+    final local = _toLocal(element, point);
+    return local.x >= element.x &&
+        local.x <= element.x + element.width &&
+        local.y >= element.y &&
+        local.y <= element.y + element.height;
   }
 
   /// Minimum distance from [point] to the bounding-box edges of [element],

@@ -185,6 +185,32 @@ void main() {
       );
       expect(target, isNull);
     });
+
+    test('finds element when point is deep inside', () {
+      final rect = _rect(id: 'r1', x: 0, y: 0, w: 200, h: 200);
+      final scene = Scene().addElement(rect);
+      // Center of 200x200 rect — 100px from any edge, well beyond snapRadius
+      final target = BindingUtils.findBindTarget(
+        scene,
+        const Point(100, 100),
+        snapRadius: 20,
+      );
+      expect(target, isNotNull);
+      expect(target!.id, const ElementId('r1'));
+    });
+
+    test('prefers smaller shape when inside overlapping shapes', () {
+      final large = _rect(id: 'r1', x: 0, y: 0, w: 300, h: 300);
+      final small = _rect(id: 'r2', x: 100, y: 100, w: 50, h: 50);
+      final scene = Scene().addElement(large).addElement(small);
+      // Point inside both — should prefer small (closer to edge)
+      final target = BindingUtils.findBindTarget(
+        scene,
+        const Point(125, 125),
+        snapRadius: 20,
+      );
+      expect(target!.id, const ElementId('r2'));
+    });
   });
 
   group('computeFixedPoint', () {
@@ -224,11 +250,30 @@ void main() {
       expect(fp.x, closeTo(0.05, 0.01));
     });
 
-    test('projects interior point to nearest edge', () {
-      // Point inside near left edge
+    test('preserves interior point position', () {
+      // Point inside near left edge — preserves actual position
       final fp = BindingUtils.computeFixedPoint(rect, const Point(110, 140));
-      expect(fp.x, closeTo(0.0, 0.01)); // left edge is nearest
-      expect(fp.y, closeTo(0.4, 0.01));
+      expect(fp.x, closeTo(0.1, 0.01)); // 10/100 = 0.1
+      expect(fp.y, closeTo(0.4, 0.01)); // 40/100 = 0.4
+    });
+
+    test('preserves center interior point', () {
+      final fp = BindingUtils.computeFixedPoint(rect, const Point(150, 150));
+      expect(fp.x, closeTo(0.5, 0.01));
+      expect(fp.y, closeTo(0.5, 0.01));
+    });
+
+    test('preserves interior point near bottom-right', () {
+      final fp = BindingUtils.computeFixedPoint(rect, const Point(190, 180));
+      expect(fp.x, closeTo(0.9, 0.01));
+      expect(fp.y, closeTo(0.8, 0.01));
+    });
+
+    test('point exactly on edge still returns edge fixedPoint', () {
+      // Exactly on the left edge
+      final fp = BindingUtils.computeFixedPoint(rect, const Point(100, 150));
+      expect(fp.x, closeTo(0.0, 0.01));
+      expect(fp.y, closeTo(0.5, 0.01));
     });
   });
 
@@ -285,6 +330,27 @@ void main() {
       final resolved = BindingUtils.resolveBindingPoint(rect, binding);
       // Should be on the left edge (x=50) with the y component from the fixedPoint
       expect(resolved.x, closeTo(50, 0.5));
+    });
+
+    test('resolves interior fixedPoint', () {
+      final rect = _rect(id: 'r1', x: 100, y: 100, w: 100, h: 100);
+      const binding = PointBinding(
+        elementId: 'r1',
+        fixedPoint: Point(0.3, 0.7),
+      );
+      final resolved = BindingUtils.resolveBindingPoint(rect, binding);
+      expect(resolved.x, closeTo(130, 0.01)); // 100 + 0.3*100
+      expect(resolved.y, closeTo(170, 0.01)); // 100 + 0.7*100
+    });
+
+    test('round-trips interior point', () {
+      final rect = _rect(id: 'r1', x: 50, y: 80, w: 120, h: 60);
+      const scenePoint = Point(110, 110); // inside the shape
+      final fp = BindingUtils.computeFixedPoint(rect, scenePoint);
+      final binding = PointBinding(elementId: 'r1', fixedPoint: fp);
+      final resolved = BindingUtils.resolveBindingPoint(rect, binding);
+      expect(resolved.x, closeTo(110, 0.5));
+      expect(resolved.y, closeTo(110, 0.5));
     });
   });
 

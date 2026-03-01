@@ -212,14 +212,15 @@ void main() {
       final moveResult = selectTool1.onPointerUp(const Point(100, 50), ctx);
       scene = _applyResult(scene, moveResult);
 
-      // Arrow start should have moved to new right edge center: (150, 50)
+      // Arrow start bound at (95, 50) inside rect → fixedPoint (0.95, 0.5).
+      // After moving rect +50 in x to (50, 0): resolve = (50 + 0.95*100, 0 + 0.5*100) = (145, 50).
       final movedArrow =
           scene.getElementById(arrow.id) as ArrowElement;
       final startAbs = Point(
         movedArrow.x + movedArrow.points.first.x,
         movedArrow.y + movedArrow.points.first.y,
       );
-      expect(startAbs.x, closeTo(150, 1.0)); // moved right edge
+      expect(startAbs.x, closeTo(145, 1.0)); // interior offset preserved
       expect(startAbs.y, closeTo(50, 1.0));
 
       // Step 3: Unbind by dragging arrow start away

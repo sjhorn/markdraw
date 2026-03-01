@@ -51,7 +51,9 @@ void main() {
       final arrow = _extractArrow(result);
       expect(arrow.startBinding, isNotNull);
       expect(arrow.startBinding!.elementId, 'r1');
-      expect(arrow.startBinding!.fixedPoint.x, closeTo(1.0, 0.01));
+      // Point at (195, 150) is 5px inside the right edge (x=200),
+      // so fixedPoint.x = (195-100)/100 = 0.95 (interior preserved).
+      expect(arrow.startBinding!.fixedPoint.x, closeTo(0.95, 0.01));
     });
 
     test('end point near rect gets endBinding', () {
