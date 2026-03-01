@@ -68,6 +68,7 @@ class _CanvasPageState extends State<_CanvasPage> {
   bool _showLibraryPanel = false;
   bool _toolLocked = false;
   bool _isCompact = false;
+  ElementStyle _defaultStyle = const ElementStyle();
 
   // Drag coalescing: capture scene before drag, push once on pointer up
   Scene? _sceneBeforeDrag;
@@ -149,14 +150,69 @@ class _CanvasPageState extends State<_CanvasPage> {
     }
   }
 
+  bool get _isCreationTool => switch (_editorState.activeToolType) {
+    ToolType.select || ToolType.hand => false,
+    _ => true,
+  };
+
+  Element _applyDefaultStyleToElement(Element element) {
+    Element styled = element.copyWith(
+      strokeColor: _defaultStyle.strokeColor,
+      backgroundColor: _defaultStyle.backgroundColor,
+      strokeWidth: _defaultStyle.strokeWidth,
+      strokeStyle: _defaultStyle.strokeStyle,
+      fillStyle: _defaultStyle.fillStyle,
+      roughness: _defaultStyle.roughness,
+      opacity: _defaultStyle.opacity,
+    );
+    if (styled is TextElement) {
+      styled = styled.copyWithText(
+        fontSize: _defaultStyle.fontSize,
+        fontFamily: _defaultStyle.fontFamily,
+        textAlign: _defaultStyle.textAlign,
+      );
+    }
+    if (styled is LineElement) {
+      styled = styled.copyWithLine(
+        startArrowhead: _defaultStyle.startArrowhead,
+        clearStartArrowhead: _defaultStyle.startArrowheadNone,
+        endArrowhead: _defaultStyle.endArrowhead,
+        clearEndArrowhead: _defaultStyle.endArrowheadNone,
+      );
+    }
+    if (styled is ArrowElement) {
+      styled = styled.copyWithArrow(
+        elbowed: _defaultStyle.elbowed,
+      );
+    }
+    return styled;
+  }
+
+  ToolResult _applyDefaultStyleToResult(ToolResult result) {
+    if (result is AddElementResult) {
+      return AddElementResult(_applyDefaultStyleToElement(result.element));
+    }
+    if (result is CompoundResult) {
+      return CompoundResult(
+        result.results.map(_applyDefaultStyleToResult).toList(),
+      );
+    }
+    return result;
+  }
+
   void _applyResult(ToolResult? result) {
     if (result == null) return;
 
+    // Apply sticky defaults to new elements from creation tools
+    final styled = _isCreationTool
+        ? _applyDefaultStyleToResult(result)
+        : result;
+
     // Write to system clipboard on copy/cut
-    _syncToSystemClipboard(result);
+    _syncToSystemClipboard(styled);
 
     setState(() {
-      final newState = _editorState.applyResult(result);
+      final newState = _editorState.applyResult(styled);
       // If tool switched, create new tool instance
       if (newState.activeToolType != _editorState.activeToolType) {
         final previousToolType = _editorState.activeToolType;
@@ -1907,6 +1963,33 @@ class _CanvasPageState extends State<_CanvasPage> {
   }
 
   void _applyStyleChange(ElementStyle style) {
+    // Update sticky defaults
+    _defaultStyle = ElementStyle(
+      strokeColor: style.strokeColor ?? _defaultStyle.strokeColor,
+      backgroundColor: style.backgroundColor ?? _defaultStyle.backgroundColor,
+      strokeWidth: style.strokeWidth ?? _defaultStyle.strokeWidth,
+      strokeStyle: style.strokeStyle ?? _defaultStyle.strokeStyle,
+      fillStyle: style.fillStyle ?? _defaultStyle.fillStyle,
+      roughness: style.roughness ?? _defaultStyle.roughness,
+      opacity: style.opacity ?? _defaultStyle.opacity,
+      fontSize: style.fontSize ?? _defaultStyle.fontSize,
+      fontFamily: style.fontFamily ?? _defaultStyle.fontFamily,
+      textAlign: style.textAlign ?? _defaultStyle.textAlign,
+      verticalAlign: style.verticalAlign ?? _defaultStyle.verticalAlign,
+      startArrowhead: style.startArrowheadNone
+          ? null
+          : (style.startArrowhead ?? _defaultStyle.startArrowhead),
+      startArrowheadNone: style.startArrowheadNone ||
+          (style.startArrowhead == null && _defaultStyle.startArrowheadNone),
+      endArrowhead: style.endArrowheadNone
+          ? null
+          : (style.endArrowhead ?? _defaultStyle.endArrowhead),
+      endArrowheadNone: style.endArrowheadNone ||
+          (style.endArrowhead == null && _defaultStyle.endArrowheadNone),
+      elbowed: style.elbowed ?? _defaultStyle.elbowed,
+      roundness: style.roundness ?? _defaultStyle.roundness,
+    );
+
     final elements = _selectedElements;
     if (elements.isEmpty) return;
 
