@@ -87,6 +87,8 @@ class _CanvasPageState extends State<_CanvasPage> {
   // Track whether we're editing an existing element vs a newly created one
   bool _isEditingExisting = false;
   String? _originalText;
+  // Guard to prevent focus-loss commit during style changes
+  bool _suppressFocusCommit = false;
 
   @override
   void initState() {
@@ -315,7 +317,9 @@ class _CanvasPageState extends State<_CanvasPage> {
   }
 
   void _onTextFocusChanged() {
-    if (!_textFocusNode.hasFocus && _editingTextElementId != null) {
+    if (!_textFocusNode.hasFocus &&
+        _editingTextElementId != null &&
+        !_suppressFocusCommit) {
       _commitTextEditing();
     }
   }
@@ -1906,6 +1910,9 @@ class _CanvasPageState extends State<_CanvasPage> {
     final elements = _selectedElements;
     if (elements.isEmpty) return;
 
+    final wasEditing = _editingTextElementId != null;
+    if (wasEditing) _suppressFocusCommit = true;
+
     _historyManager.push(_editorState.scene);
     final result = PropertyPanelState.applyStyle(elements, style);
     _applyResult(result);
@@ -1926,6 +1933,16 @@ class _CanvasPageState extends State<_CanvasPage> {
           )));
         }
       }
+    }
+
+    // Re-request focus to the text editor after style change
+    if (wasEditing) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _suppressFocusCommit = false;
+        if (_editingTextElementId != null) {
+          _textFocusNode.requestFocus();
+        }
+      });
     }
   }
 
@@ -2799,6 +2816,7 @@ class _CanvasPageState extends State<_CanvasPage> {
         final parentW = parent.width * zoom;
         final parentH = parent.height * zoom;
 
+        final hPad = parentW * 0.05;
         return Positioned(
           left: parentTopLeft.dx,
           top: parentTopLeft.dy,
@@ -2806,43 +2824,48 @@ class _CanvasPageState extends State<_CanvasPage> {
             angle: parent.angle,
             alignment: Alignment.center,
             child: SizedBox(
-            width: parentW,
-            height: parentH,
-            child: Center(
-              child: IntrinsicWidth(
-                child:
-                    TextSelectionGestureDetectorBuilder(
-                      delegate: _TextSelectionDelegate(_editableTextKey),
-                    ).buildGestureDetector(
-                      behavior: HitTestBehavior.translucent,
-                      child: EditableText(
-                        key: _editableTextKey,
-                        rendererIgnoresPointer: true,
-                        controller: _textEditingController,
-                        focusNode: _textFocusNode,
-                        autofocus: true,
-                        textAlign: flutterTextAlign,
-                        style: FontResolver.resolve(
-                          fontFamily,
-                          baseStyle: TextStyle(
-                            fontSize: fontSize,
-                            color: textColor,
-                            height: lineHeight,
-                          ),
+              width: parentW,
+              height: parentH,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: hPad, vertical: 4),
+                child: Align(
+                  alignment: switch (textElem.verticalAlign) {
+                    VerticalAlign.top => Alignment.topCenter,
+                    VerticalAlign.middle => Alignment.center,
+                    VerticalAlign.bottom => Alignment.bottomCenter,
+                  },
+                  child: TextSelectionGestureDetectorBuilder(
+                    delegate: _TextSelectionDelegate(_editableTextKey),
+                  ).buildGestureDetector(
+                    behavior: HitTestBehavior.translucent,
+                    child: EditableText(
+                      key: _editableTextKey,
+                      rendererIgnoresPointer: true,
+                      controller: _textEditingController,
+                      focusNode: _textFocusNode,
+                      autofocus: true,
+                      textAlign: flutterTextAlign,
+                      style: FontResolver.resolve(
+                        fontFamily,
+                        baseStyle: TextStyle(
+                          fontSize: fontSize,
+                          color: textColor,
+                          height: lineHeight,
                         ),
-                        cursorColor: Colors.blue,
-                        backgroundCursorColor: Colors.grey,
-                        selectionColor: Colors.blue.shade300.withValues(
-                          alpha: 0.5,
-                        ),
-                        maxLines: null,
-                        onChanged: (_) => _onTextChanged(),
-                        onSubmitted: (_) => _commitTextEditing(),
                       ),
+                      cursorColor: Colors.blue,
+                      backgroundCursorColor: Colors.grey,
+                      selectionColor: Colors.blue.shade300.withValues(
+                        alpha: 0.5,
+                      ),
+                      maxLines: null,
+                      onChanged: (_) => _onTextChanged(),
+                      onSubmitted: (_) => _commitTextEditing(),
                     ),
+                  ),
+                ),
               ),
             ),
-          ),
           ),
         );
       }
