@@ -2591,26 +2591,49 @@ class _CanvasPageState extends State<_CanvasPage> {
 
   Widget _buildTextAlignRow(core.TextAlign? current) {
     const aligns = core.TextAlign.values;
-    final labels = aligns.map((a) => a.name).toList();
-    return _buildToggleRow(
-      count: aligns.length,
-      labels: labels,
-      isSelected: (i) => current == aligns[i],
-      onTap: (i) =>
-          _applyStyleChange(ElementStyle(hasText: true, textAlign: aligns[i])),
+    const icons = [
+      Icons.format_align_left,
+      Icons.format_align_center,
+      Icons.format_align_right,
+    ];
+    const tooltips = ['Align left', 'Align center', 'Align right'];
+    return Wrap(
+      spacing: 4,
+      children: [
+        for (var i = 0; i < aligns.length; i++)
+          _IconToggleChip(
+            isSelected: current == aligns[i],
+            onTap: () => _applyStyleChange(
+              ElementStyle(hasText: true, textAlign: aligns[i]),
+            ),
+            tooltip: tooltips[i],
+            child: Icon(icons[i], size: 18),
+          ),
+      ],
     );
   }
 
   Widget _buildVerticalAlignRow(VerticalAlign? current) {
     const aligns = VerticalAlign.values;
-    final labels = aligns.map((a) => a.name).toList();
-    return _buildToggleRow(
-      count: aligns.length,
-      labels: labels,
-      isSelected: (i) => current == aligns[i],
-      onTap: (i) => _applyStyleChange(
-        ElementStyle(hasText: true, verticalAlign: aligns[i]),
-      ),
+    const icons = [
+      Icons.vertical_align_top,
+      Icons.vertical_align_center,
+      Icons.vertical_align_bottom,
+    ];
+    const tooltips = ['Align top', 'Align middle', 'Align bottom'];
+    return Wrap(
+      spacing: 4,
+      children: [
+        for (var i = 0; i < aligns.length; i++)
+          _IconToggleChip(
+            isSelected: current == aligns[i],
+            onTap: () => _applyStyleChange(
+              ElementStyle(hasText: true, verticalAlign: aligns[i]),
+            ),
+            tooltip: tooltips[i],
+            child: Icon(icons[i], size: 18),
+          ),
+      ],
     );
   }
 
@@ -2758,6 +2781,11 @@ class _CanvasPageState extends State<_CanvasPage> {
     final fontFamily = textElem?.fontFamily ?? 'Excalifont';
     final lineHeight = textElem?.lineHeight ?? 1.25;
     final textColor = _parseColor(element.strokeColor);
+    final flutterTextAlign = switch (textElem?.textAlign) {
+      core.TextAlign.center => TextAlign.center,
+      core.TextAlign.right => TextAlign.right,
+      _ => TextAlign.left,
+    };
 
     // For bound text, center the editor within the parent shape
     if (textElem != null && textElem.containerId != null) {
@@ -2793,7 +2821,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                         controller: _textEditingController,
                         focusNode: _textFocusNode,
                         autofocus: true,
-                        textAlign: TextAlign.center,
+                        textAlign: flutterTextAlign,
                         style: FontResolver.resolve(
                           fontFamily,
                           baseStyle: TextStyle(
@@ -2847,6 +2875,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                     controller: _textEditingController,
                     focusNode: _textFocusNode,
                     autofocus: true,
+                    textAlign: flutterTextAlign,
                     style: FontResolver.resolve(
                       fontFamily,
                       baseStyle: TextStyle(
