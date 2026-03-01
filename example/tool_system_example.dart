@@ -2302,26 +2302,36 @@ class _CanvasPageState extends State<_CanvasPage> {
     required bool isNone,
     required void Function(Arrowhead?) onSelect,
   }) {
+    final isStart = label.toLowerCase().contains('start');
     const arrowheads = Arrowhead.values;
-    final labels = ['None', ...arrowheads.map((a) => a.name)];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionLabel(label),
-        _buildToggleRow(
-          count: labels.length,
-          labels: labels,
-          isSelected: (i) {
-            if (i == 0) return isNone;
-            return current == arrowheads[i - 1];
-          },
-          onTap: (i) {
-            if (i == 0) {
-              onSelect(null);
-            } else {
-              onSelect(arrowheads[i - 1]);
-            }
-          },
+        Wrap(
+          spacing: 4,
+          runSpacing: 4,
+          children: [
+            _IconToggleChip(
+              isSelected: isNone,
+              onTap: () => onSelect(null),
+              tooltip: 'None',
+              child: CustomPaint(
+                size: const Size(20, 20),
+                painter: _ArrowheadIcon(null, isStart: isStart),
+              ),
+            ),
+            for (final ah in arrowheads)
+              _IconToggleChip(
+                isSelected: current == ah,
+                onTap: () => onSelect(ah),
+                tooltip: ah.name[0].toUpperCase() + ah.name.substring(1),
+                child: CustomPaint(
+                  size: const Size(20, 20),
+                  painter: _ArrowheadIcon(ah, isStart: isStart),
+                ),
+              ),
+          ],
         ),
       ],
     );
@@ -3605,6 +3615,73 @@ class _ArrowTypeIcon extends CustomPainter {
 
   @override
   bool shouldRepaint(_ArrowTypeIcon old) => old.type != type;
+}
+
+class _ArrowheadIcon extends CustomPainter {
+  final Arrowhead? arrowhead;
+  final bool isStart;
+
+  _ArrowheadIcon(this.arrowhead, {this.isStart = false});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF1e1e1e)
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    final cy = size.height / 2;
+
+    // Line endpoints: tip is the arrowhead end
+    final double lineStart;
+    final double lineEnd;
+    if (isStart) {
+      lineStart = size.width - 4;
+      lineEnd = 4;
+    } else {
+      lineStart = 4;
+      lineEnd = size.width - 4;
+    }
+
+    // Draw the shaft
+    canvas.drawLine(Offset(lineStart, cy), Offset(lineEnd, cy), paint);
+
+    if (arrowhead == null) return;
+
+    // Draw arrowhead at lineEnd
+    final tipX = lineEnd;
+    final dir = isStart ? 1.0 : -1.0; // direction back along shaft
+
+    switch (arrowhead!) {
+      case Arrowhead.arrow:
+        // Open chevron
+        final path = Path()
+          ..moveTo(tipX + dir * 5, cy - 4)
+          ..lineTo(tipX, cy)
+          ..lineTo(tipX + dir * 5, cy + 4);
+        canvas.drawPath(path, paint);
+      case Arrowhead.bar:
+        // Perpendicular bar
+        canvas.drawLine(Offset(tipX, cy - 4), Offset(tipX, cy + 4), paint);
+      case Arrowhead.dot:
+        // Filled circle
+        canvas.drawCircle(
+            Offset(tipX, cy), 3, paint..style = PaintingStyle.fill);
+      case Arrowhead.triangle:
+        // Filled triangle
+        final path = Path()
+          ..moveTo(tipX, cy)
+          ..lineTo(tipX + dir * 6, cy - 4)
+          ..lineTo(tipX + dir * 6, cy + 4)
+          ..close();
+        canvas.drawPath(path, paint..style = PaintingStyle.fill);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ArrowheadIcon old) =>
+      old.arrowhead != arrowhead || old.isStart != isStart;
 }
 
 /// Delegate for [TextSelectionGestureDetectorBuilder] to enable text
