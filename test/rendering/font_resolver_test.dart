@@ -69,5 +69,71 @@ void main() {
         expect(FontResolver.allFonts, contains(font));
       }
     });
+
+    test('expanded uiFonts includes new fonts', () {
+      expect(FontResolver.uiFonts, contains('Roboto'));
+      expect(FontResolver.uiFonts, contains('Source Code Pro'));
+      expect(FontResolver.uiFonts, contains('Fira Code'));
+      expect(FontResolver.uiFonts, contains('Caveat'));
+      expect(FontResolver.uiFonts, contains('Pacifico'));
+      expect(FontResolver.uiFonts, contains('Dancing Script'));
+      expect(FontResolver.uiFonts, contains('Open Sans'));
+      expect(FontResolver.uiFonts, contains('Lato'));
+      expect(FontResolver.uiFonts, contains('Montserrat'));
+      expect(FontResolver.uiFonts, contains('Playfair Display'));
+    });
+  });
+
+  group('FontCategory', () {
+    test('enum has 3 values', () {
+      expect(FontCategory.values, hasLength(3));
+      expect(FontCategory.values, contains(FontCategory.handDrawn));
+      expect(FontCategory.values, contains(FontCategory.normal));
+      expect(FontCategory.values, contains(FontCategory.code));
+    });
+
+    test('categoryOf returns correct category for known fonts', () {
+      expect(FontResolver.categoryOf('Excalifont'), FontCategory.handDrawn);
+      expect(FontResolver.categoryOf('Virgil'), FontCategory.handDrawn);
+      expect(FontResolver.categoryOf('Caveat'), FontCategory.handDrawn);
+      expect(FontResolver.categoryOf('Nunito'), FontCategory.normal);
+      expect(FontResolver.categoryOf('Roboto'), FontCategory.normal);
+      expect(FontResolver.categoryOf('Source Code Pro'), FontCategory.code);
+      expect(FontResolver.categoryOf('Fira Code'), FontCategory.code);
+      expect(FontResolver.categoryOf('Cascadia'), FontCategory.code);
+    });
+
+    test('categoryOf defaults to normal for unknown fonts', () {
+      expect(FontResolver.categoryOf('SomeRandomFont'), FontCategory.normal);
+      expect(FontResolver.categoryOf('Arial'), FontCategory.normal);
+    });
+
+    test('defaultForCategory maps each category', () {
+      expect(
+        FontResolver.defaultForCategory[FontCategory.handDrawn],
+        'Excalifont',
+      );
+      expect(FontResolver.defaultForCategory[FontCategory.normal], 'Nunito');
+      expect(
+        FontResolver.defaultForCategory[FontCategory.code],
+        'Source Code Pro',
+      );
+    });
+
+    test('defaultForCategory fonts are all in allFonts', () {
+      for (final font in FontResolver.defaultForCategory.values) {
+        expect(FontResolver.allFonts, contains(font));
+      }
+    });
+
+    test('all uiFonts have a fontCategories entry', () {
+      for (final font in FontResolver.uiFonts) {
+        expect(
+          FontResolver.fontCategories.containsKey(font),
+          isTrue,
+          reason: '$font should have a category entry',
+        );
+      }
+    });
   });
 }

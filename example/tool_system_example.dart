@@ -68,6 +68,7 @@ class _CanvasPageState extends State<_CanvasPage> {
   bool _showLibraryPanel = false;
   bool _toolLocked = false;
   bool _isCompact = false;
+  bool _fontPickerOpen = false;
   ElementStyle _defaultStyle = const ElementStyle();
 
   // Drag coalescing: capture scene before drag, push once on pointer up
@@ -1631,7 +1632,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                       children: [
                         if (showFullTextProps) ...[
                           _buildSectionLabel('Font family'),
-                          _buildFontFamilyRow(style.fontFamily),
+                          _buildFontPicker(style.fontFamily),
                           const SizedBox(height: 8),
                         ],
                         if (style.hasText) ...[
@@ -1701,7 +1702,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                             if (showFullTextProps) ...[
                               const SizedBox(height: 12),
                               _buildSectionLabel('Font family'),
-                              _buildFontFamilyRow(style.fontFamily),
+                              _buildFontPicker(style.fontFamily),
                             ],
                             if (style.hasText) ...[
                               const SizedBox(height: 8),
@@ -2151,7 +2152,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                     const SizedBox(height: 8),
                     if (showFullTextProps) ...[
                       _buildSectionLabel('Font family'),
-                      _buildFontFamilyRow(style.fontFamily),
+                      _buildFontPicker(style.fontFamily),
                       const SizedBox(height: 8),
                     ],
                     if (style.hasText) ...[
@@ -2222,7 +2223,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                         if (showFullTextProps) ...[
                           const SizedBox(height: 12),
                           _buildSectionLabel('Font family'),
-                          _buildFontFamilyRow(style.fontFamily),
+                          _buildFontPicker(style.fontFamily),
                         ],
                         if (style.hasText) ...[
                           const SizedBox(height: 8),
@@ -2782,25 +2783,215 @@ class _CanvasPageState extends State<_CanvasPage> {
   Widget _buildFontSizeRow(double? current) {
     const sizes = [16.0, 20.0, 28.0, 36.0];
     const labels = ['S', 'M', 'L', 'XL'];
-    return _buildToggleRow(
-      count: 4,
-      labels: labels,
-      isSelected: (i) => current == sizes[i],
-      onTap: (i) =>
-          _applyStyleChange(ElementStyle(hasText: true, fontSize: sizes[i])),
+    final controller = TextEditingController();
+    return Row(
+      children: [
+        Flexible(
+          child: _buildToggleRow(
+            count: 4,
+            labels: labels,
+            isSelected: (i) => current == sizes[i],
+            onTap: (i) => _applyStyleChange(
+              ElementStyle(hasText: true, fontSize: sizes[i]),
+            ),
+          ),
+        ),
+        Container(
+          width: 1,
+          height: 24,
+          color: Colors.grey.shade300,
+          margin: const EdgeInsets.symmetric(horizontal: 6),
+        ),
+        SizedBox(
+          width: 44,
+          height: 28,
+          child: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 11),
+            decoration: InputDecoration(
+              hintText: current != null ? current.round().toString() : '20',
+              hintStyle: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 4,
+                vertical: 4,
+              ),
+              isDense: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(4),
+                borderSide: BorderSide(color: Colors.grey.shade400),
+              ),
+            ),
+            onSubmitted: (value) {
+              final parsed = double.tryParse(value);
+              if (parsed != null) {
+                final clamped = parsed.clamp(4.0, 200.0);
+                _applyStyleChange(
+                  ElementStyle(hasText: true, fontSize: clamped),
+                );
+              }
+              controller.clear();
+            },
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildFontFamilyRow(String? current) {
-    const families = ['Excalifont', 'Nunito', 'Lilita One', 'Virgil'];
-    return _buildToggleRow(
-      count: families.length,
-      labels: families,
-      isSelected: (i) => current == families[i],
-      onTap: (i) => _applyStyleChange(
-        ElementStyle(hasText: true, fontFamily: families[i]),
+  Widget _buildFontPicker(String? current) {
+    final currentCategory = FontResolver.categoryOf(
+      current ?? FontResolver.defaultFontFamily,
+    );
+    if (_isCompact) {
+      return Row(
+        children: [
+          _buildFontCategoryButtons(current, currentCategory),
+          Container(
+            width: 1,
+            height: 24,
+            color: Colors.grey.shade300,
+            margin: const EdgeInsets.symmetric(horizontal: 6),
+          ),
+          _IconToggleChip(
+            isSelected: _fontPickerOpen,
+            onTap: () => _showCompactFontPicker(current),
+            tooltip: 'More fonts',
+            child: const Icon(Icons.more_horiz, size: 18),
+          ),
+        ],
+      );
+    }
+    return Row(
+      children: [
+        _buildFontCategoryButtons(current, currentCategory),
+        Container(
+          width: 1,
+          height: 24,
+          color: Colors.grey.shade300,
+          margin: const EdgeInsets.symmetric(horizontal: 6),
+        ),
+        Builder(
+          builder: (context) => _IconToggleChip(
+            isSelected: _fontPickerOpen,
+            onTap: () => _showFontPickerOverlay(context, current),
+            tooltip: 'More fonts',
+            child: const Icon(Icons.more_horiz, size: 18),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFontCategoryButtons(String? current, FontCategory category) {
+    return Wrap(
+      spacing: 4,
+      children: [
+        _IconToggleChip(
+          isSelected: category == FontCategory.handDrawn && !_fontPickerOpen,
+          onTap: () => _applyStyleChange(
+            ElementStyle(
+              hasText: true,
+              fontFamily:
+                  FontResolver.defaultForCategory[FontCategory.handDrawn],
+            ),
+          ),
+          tooltip: 'Hand-drawn',
+          child: Text(
+            'A',
+            style: FontResolver.resolve(
+              'Excalifont',
+              baseStyle: const TextStyle(fontSize: 16),
+            ),
+          ),
+        ),
+        _IconToggleChip(
+          isSelected: category == FontCategory.normal && !_fontPickerOpen,
+          onTap: () => _applyStyleChange(
+            ElementStyle(
+              hasText: true,
+              fontFamily:
+                  FontResolver.defaultForCategory[FontCategory.normal],
+            ),
+          ),
+          tooltip: 'Normal',
+          child: const Text('Aa', style: TextStyle(fontSize: 13)),
+        ),
+        _IconToggleChip(
+          isSelected: category == FontCategory.code && !_fontPickerOpen,
+          onTap: () => _applyStyleChange(
+            ElementStyle(
+              hasText: true,
+              fontFamily: FontResolver.defaultForCategory[FontCategory.code],
+            ),
+          ),
+          tooltip: 'Code',
+          child: const Text(
+            '{}',
+            style: TextStyle(fontSize: 13, fontFamily: 'monospace'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showFontPickerOverlay(BuildContext context, String? current) {
+    final renderBox = context.findRenderObject() as RenderBox;
+    final offset = renderBox.localToGlobal(Offset.zero);
+    final overlay = Overlay.of(context);
+
+    setState(() => _fontPickerOpen = true);
+
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (ctx) => _FontPickerOverlay(
+        anchor: offset,
+        currentFont: current ?? FontResolver.defaultFontFamily,
+        sceneFonts: _getSceneFontFamilies(),
+        onSelect: (font) {
+          entry.remove();
+          setState(() => _fontPickerOpen = false);
+          _applyStyleChange(ElementStyle(hasText: true, fontFamily: font));
+        },
+        onDismiss: () {
+          entry.remove();
+          setState(() => _fontPickerOpen = false);
+        },
       ),
     );
+    overlay.insert(entry);
+  }
+
+  void _showCompactFontPicker(String? current) {
+    setState(() => _fontPickerOpen = true);
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.3,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (ctx, scrollController) => _FontListContent(
+          currentFont: current ?? FontResolver.defaultFontFamily,
+          sceneFonts: _getSceneFontFamilies(),
+          scrollController: scrollController,
+          onSelect: (font) {
+            Navigator.of(ctx).pop();
+            _applyStyleChange(ElementStyle(hasText: true, fontFamily: font));
+          },
+        ),
+      ),
+    ).whenComplete(() {
+      if (mounted) setState(() => _fontPickerOpen = false);
+    });
+  }
+
+  Set<String> _getSceneFontFamilies() {
+    return _editorState.scene.activeElements
+        .whereType<TextElement>()
+        .map((e) => e.fontFamily)
+        .toSet();
   }
 
   Widget _buildTextAlignCombinedRow(
@@ -3712,6 +3903,273 @@ class _ColorPaletteOverlayState extends State<_ColorPaletteOverlay> {
     final hex = value.startsWith('#') ? value.substring(1) : value;
     if (hex.length != 6) return false;
     return int.tryParse(hex, radix: 16) != null;
+  }
+}
+
+/// Desktop font picker overlay positioned below trigger button.
+class _FontPickerOverlay extends StatefulWidget {
+  final Offset anchor;
+  final String currentFont;
+  final Set<String> sceneFonts;
+  final ValueChanged<String> onSelect;
+  final VoidCallback onDismiss;
+
+  const _FontPickerOverlay({
+    required this.anchor,
+    required this.currentFont,
+    required this.sceneFonts,
+    required this.onSelect,
+    required this.onDismiss,
+  });
+
+  @override
+  State<_FontPickerOverlay> createState() => _FontPickerOverlayState();
+}
+
+class _FontPickerOverlayState extends State<_FontPickerOverlay> {
+  @override
+  Widget build(BuildContext context) {
+    const popupWidth = 240.0;
+    const maxPopupHeight = 360.0;
+
+    final screen = MediaQuery.of(context).size;
+    var left = widget.anchor.dx;
+    var top = widget.anchor.dy + 34;
+    if (left + popupWidth > screen.width - 8) {
+      left = screen.width - popupWidth - 8;
+    }
+    if (left < 8) left = 8;
+    if (top + maxPopupHeight > screen.height - 8) {
+      top = widget.anchor.dy - maxPopupHeight - 4;
+    }
+
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: GestureDetector(
+            onTap: widget.onDismiss,
+            behavior: HitTestBehavior.opaque,
+            child: const SizedBox.expand(),
+          ),
+        ),
+        Positioned(
+          left: left,
+          top: top,
+          child: Material(
+            elevation: 8,
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              width: popupWidth,
+              constraints: const BoxConstraints(maxHeight: maxPopupHeight),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: _FontListContent(
+                currentFont: widget.currentFont,
+                sceneFonts: widget.sceneFonts,
+                onSelect: widget.onSelect,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Shared font list content used by both overlay and bottom sheet.
+class _FontListContent extends StatefulWidget {
+  final String currentFont;
+  final Set<String> sceneFonts;
+  final ValueChanged<String> onSelect;
+  final ScrollController? scrollController;
+
+  const _FontListContent({
+    required this.currentFont,
+    required this.sceneFonts,
+    required this.onSelect,
+    this.scrollController,
+  });
+
+  @override
+  State<_FontListContent> createState() => _FontListContentState();
+}
+
+class _FontListContentState extends State<_FontListContent> {
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final query = _searchQuery.toLowerCase();
+    const allUiFonts = FontResolver.uiFonts;
+
+    // Split into scene fonts and available fonts
+    final sceneFontList = allUiFonts
+        .where((f) => widget.sceneFonts.contains(f))
+        .where((f) => query.isEmpty || f.toLowerCase().contains(query))
+        .toList();
+    final availableFontList = allUiFonts
+        .where((f) => !widget.sceneFonts.contains(f))
+        .where((f) => query.isEmpty || f.toLowerCase().contains(query))
+        .toList();
+
+    // Check if search might be a dynamic Google Font not in curated list
+    final isDynamicSearch = query.isNotEmpty &&
+        !allUiFonts.any((f) => f.toLowerCase() == query);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8),
+          child: TextField(
+            controller: _searchController,
+            autofocus: true,
+            style: const TextStyle(fontSize: 13),
+            decoration: InputDecoration(
+              hintText: 'Search fonts...',
+              hintStyle: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+              prefixIcon: const Icon(Icons.search, size: 18),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 6,
+              ),
+              isDense: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+            ),
+            onChanged: (v) => setState(() => _searchQuery = v),
+          ),
+        ),
+        Flexible(
+          child: ListView(
+            controller: widget.scrollController,
+            padding: const EdgeInsets.only(bottom: 8),
+            shrinkWrap: widget.scrollController == null,
+            children: [
+              if (sceneFontList.isNotEmpty) ...[
+                _buildGroupHeader('Scene fonts'),
+                for (final font in sceneFontList)
+                  _buildFontItem(font),
+              ],
+              if (availableFontList.isNotEmpty) ...[
+                _buildGroupHeader(
+                  sceneFontList.isNotEmpty ? 'Available fonts' : 'Fonts',
+                ),
+                for (final font in availableFontList)
+                  _buildFontItem(font),
+              ],
+              if (isDynamicSearch)
+                _buildDynamicFontItem(_searchQuery),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGroupHeader(String label) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: Colors.grey.shade500,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFontItem(String font) {
+    final isSelected = font == widget.currentFont;
+    final category = FontResolver.categoryOf(font);
+    return InkWell(
+      onTap: () => widget.onSelect(font),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        color: isSelected ? Colors.blue.shade50 : null,
+        child: Row(
+          children: [
+            SizedBox(
+              width: 20,
+              child: Text(
+                _categoryIcon(category),
+                style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+              ),
+            ),
+            Expanded(
+              child: Text(
+                font,
+                style: FontResolver.resolve(
+                  font,
+                  baseStyle: TextStyle(
+                    fontSize: 13,
+                    color: isSelected
+                        ? Colors.blue.shade900
+                        : Colors.grey.shade800,
+                  ),
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (isSelected)
+              Icon(Icons.check, size: 16, color: Colors.blue.shade700),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDynamicFontItem(String searchText) {
+    // Capitalize first letter of each word for display
+    final displayName = searchText
+        .split(' ')
+        .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
+        .join(' ');
+    return InkWell(
+      onTap: () => widget.onSelect(displayName),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        child: Row(
+          children: [
+            Icon(Icons.cloud_download, size: 14, color: Colors.grey.shade500),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                'Google Font: $displayName',
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _categoryIcon(FontCategory category) {
+    switch (category) {
+      case FontCategory.handDrawn:
+        return '~';
+      case FontCategory.normal:
+        return 'A';
+      case FontCategory.code:
+        return '</>';
+    }
   }
 }
 
