@@ -1647,6 +1647,7 @@ class _CanvasPageState extends State<_CanvasPage> {
           final showFullTextProps = style.hasText &&
               (!style.hasArrowBoundText || style.hasShapeBoundText ||
               elements.whereType<TextElement>().isNotEmpty);
+          final isEditingText = _editingTextElementId != null;
 
           return TextFieldTapRegion(
             child: Container(
@@ -1669,6 +1670,31 @@ class _CanvasPageState extends State<_CanvasPage> {
                     ),
                   ),
                 ),
+                if (isEditingText) ...[
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (showFullTextProps) ...[
+                        _buildSectionLabel('Font family'),
+                        _buildFontFamilyRow(style.fontFamily),
+                        const SizedBox(height: 8),
+                      ],
+                      if (style.hasText) ...[
+                        _buildSectionLabel('Font size'),
+                        _buildFontSizeRow(style.fontSize),
+                        const SizedBox(height: 8),
+                      ],
+                      if (showFullTextProps) ...[
+                        _buildSectionLabel('Text align'),
+                        _buildTextAlignCombinedRow(
+                            style.textAlign, style.verticalAlign),
+                        const SizedBox(height: 8),
+                      ],
+                      _buildSectionLabel('Opacity'),
+                      _buildOpacitySlider(style.opacity),
+                    ],
+                  ),
+                ] else ...[
                 IgnorePointer(
                   ignoring: isLocked,
                   child: Opacity(
@@ -1775,7 +1801,9 @@ class _CanvasPageState extends State<_CanvasPage> {
                 const SizedBox(height: 8),
                 _buildAlignmentButtons(elements.length),
                 const SizedBox(height: 12),
+                _buildSectionLabel('Locked'),
                 _buildLockToggle(style.locked),
+                ],
               ],
             ),
           ),
@@ -2039,6 +2067,8 @@ class _CanvasPageState extends State<_CanvasPage> {
     final bool isLocked;
     final bool showFullTextProps;
 
+    final isEditingText = _editingTextElementId != null;
+
     if (elements.isNotEmpty) {
       final boundText = <TextElement>[];
       for (final e in elements) {
@@ -2111,6 +2141,31 @@ class _CanvasPageState extends State<_CanvasPage> {
           child: ListView(
             padding: const EdgeInsets.all(12),
             children: [
+              if (isEditingText) ...[
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (showFullTextProps) ...[
+                      _buildSectionLabel('Font family'),
+                      _buildFontFamilyRow(style.fontFamily),
+                      const SizedBox(height: 8),
+                    ],
+                    if (style.hasText) ...[
+                      _buildSectionLabel('Font size'),
+                      _buildFontSizeRow(style.fontSize),
+                      const SizedBox(height: 8),
+                    ],
+                    if (showFullTextProps) ...[
+                      _buildSectionLabel('Text align'),
+                      _buildTextAlignCombinedRow(
+                          style.textAlign, style.verticalAlign),
+                      const SizedBox(height: 8),
+                    ],
+                    _buildSectionLabel('Opacity'),
+                    _buildOpacitySlider(style.opacity),
+                  ],
+                ),
+              ] else ...[
               IgnorePointer(
                 ignoring: isLocked,
                 child: Opacity(
@@ -2217,8 +2272,10 @@ class _CanvasPageState extends State<_CanvasPage> {
               const SizedBox(height: 8),
               _buildAlignmentButtons(elements.length),
               const SizedBox(height: 12),
+              _buildSectionLabel('Locked'),
               _buildLockToggle(style.locked),
             ],
+              ],
           ],
         ),
       ),
@@ -2525,79 +2582,69 @@ class _CanvasPageState extends State<_CanvasPage> {
   }
 
   Widget _buildLayerButtons() {
-    return Row(
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
       children: [
-        Tooltip(
-          message: 'Send to back (Ctrl+Shift+[)',
-          child: IconButton(
-            icon: const Icon(Icons.vertical_align_bottom, size: 18),
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-            padding: EdgeInsets.zero,
-            onPressed: () {
-              _historyManager.push(_editorState.scene);
-              final ids = _editorState.selectedIds;
-              final updated =
-                  LayerUtils.sendToBack(_editorState.scene, ids);
-              if (updated.isEmpty) return;
-              _applyResult(CompoundResult([
-                for (final e in updated) UpdateElementResult(e),
-              ]));
-            },
-          ),
+        _IconToggleChip(
+          isSelected: false,
+          onTap: () {
+            _historyManager.push(_editorState.scene);
+            final ids = _editorState.selectedIds;
+            final updated =
+                LayerUtils.sendToBack(_editorState.scene, ids);
+            if (updated.isEmpty) return;
+            _applyResult(CompoundResult([
+              for (final e in updated) UpdateElementResult(e),
+            ]));
+          },
+          tooltip: 'Send to back (Ctrl+Shift+[)',
+          child: const Icon(Icons.vertical_align_bottom, size: 18),
         ),
-        Tooltip(
-          message: 'Send backward (Ctrl+[)',
-          child: IconButton(
-            icon: const Icon(Icons.arrow_downward, size: 18),
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-            padding: EdgeInsets.zero,
-            onPressed: () {
-              _historyManager.push(_editorState.scene);
-              final ids = _editorState.selectedIds;
-              final updated =
-                  LayerUtils.sendBackward(_editorState.scene, ids);
-              if (updated.isEmpty) return;
-              _applyResult(CompoundResult([
-                for (final e in updated) UpdateElementResult(e),
-              ]));
-            },
-          ),
+        _IconToggleChip(
+          isSelected: false,
+          onTap: () {
+            _historyManager.push(_editorState.scene);
+            final ids = _editorState.selectedIds;
+            final updated =
+                LayerUtils.sendBackward(_editorState.scene, ids);
+            if (updated.isEmpty) return;
+            _applyResult(CompoundResult([
+              for (final e in updated) UpdateElementResult(e),
+            ]));
+          },
+          tooltip: 'Send backward (Ctrl+[)',
+          child: const Icon(Icons.arrow_downward, size: 18),
         ),
-        Tooltip(
-          message: 'Bring forward (Ctrl+])',
-          child: IconButton(
-            icon: const Icon(Icons.arrow_upward, size: 18),
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-            padding: EdgeInsets.zero,
-            onPressed: () {
-              _historyManager.push(_editorState.scene);
-              final ids = _editorState.selectedIds;
-              final updated =
-                  LayerUtils.bringForward(_editorState.scene, ids);
-              if (updated.isEmpty) return;
-              _applyResult(CompoundResult([
-                for (final e in updated) UpdateElementResult(e),
-              ]));
-            },
-          ),
+        _IconToggleChip(
+          isSelected: false,
+          onTap: () {
+            _historyManager.push(_editorState.scene);
+            final ids = _editorState.selectedIds;
+            final updated =
+                LayerUtils.bringForward(_editorState.scene, ids);
+            if (updated.isEmpty) return;
+            _applyResult(CompoundResult([
+              for (final e in updated) UpdateElementResult(e),
+            ]));
+          },
+          tooltip: 'Bring forward (Ctrl+])',
+          child: const Icon(Icons.arrow_upward, size: 18),
         ),
-        Tooltip(
-          message: 'Bring to front (Ctrl+Shift+])',
-          child: IconButton(
-            icon: const Icon(Icons.vertical_align_top, size: 18),
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-            padding: EdgeInsets.zero,
-            onPressed: () {
-              _historyManager.push(_editorState.scene);
-              final ids = _editorState.selectedIds;
-              final updated =
-                  LayerUtils.bringToFront(_editorState.scene, ids);
-              if (updated.isEmpty) return;
-              _applyResult(CompoundResult([
-                for (final e in updated) UpdateElementResult(e),
-              ]));
-            },
-          ),
+        _IconToggleChip(
+          isSelected: false,
+          onTap: () {
+            _historyManager.push(_editorState.scene);
+            final ids = _editorState.selectedIds;
+            final updated =
+                LayerUtils.bringToFront(_editorState.scene, ids);
+            if (updated.isEmpty) return;
+            _applyResult(CompoundResult([
+              for (final e in updated) UpdateElementResult(e),
+            ]));
+          },
+          tooltip: 'Bring to front (Ctrl+Shift+])',
+          child: const Icon(Icons.vertical_align_top, size: 18),
         ),
       ],
     );
@@ -2669,32 +2716,27 @@ class _CanvasPageState extends State<_CanvasPage> {
   }
 
   Widget _buildLockToggle(bool? current) {
-    return Row(
-      children: [
-        Icon(
-          current == true ? Icons.lock : Icons.lock_open,
-          size: 16,
-          color: Colors.grey.shade700,
-        ),
-        const SizedBox(width: 4),
-        const Text('Locked', style: TextStyle(fontSize: 12)),
-        const Spacer(),
-        Switch(
-          value: current ?? false,
-          onChanged: (on) {
-            _historyManager.push(_editorState.scene);
-            final elements = _selectedElements;
-            if (elements.isEmpty) return;
-            final results = <ToolResult>[
-              for (final e in elements)
-                UpdateElementResult(e.copyWith(locked: on)),
-            ];
-            _applyResult(
-              results.length == 1 ? results.first : CompoundResult(results),
-            );
-          },
-        ),
-      ],
+    final isLocked = current ?? false;
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: _IconToggleChip(
+      isSelected: isLocked,
+      onTap: () {
+        _historyManager.push(_editorState.scene);
+        final elements = _selectedElements;
+        if (elements.isEmpty) return;
+        final on = !isLocked;
+        final results = <ToolResult>[
+          for (final e in elements)
+            UpdateElementResult(e.copyWith(locked: on)),
+        ];
+        _applyResult(
+          results.length == 1 ? results.first : CompoundResult(results),
+        );
+      },
+      tooltip: isLocked ? 'Unlock' : 'Lock',
+      child: Icon(isLocked ? Icons.lock : Icons.lock_open, size: 18),
+      ),
     );
   }
 
