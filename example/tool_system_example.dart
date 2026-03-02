@@ -92,6 +92,9 @@ class _CanvasPageState extends State<_CanvasPage> {
   // Guard to suppress focus-loss commit during style changes
   bool _suppressFocusCommit = false;
 
+  // Mouse position for custom cursor overlay (e.g., eraser circle)
+  Offset? _mousePosition;
+
   @override
   void initState() {
     super.initState();
@@ -972,6 +975,7 @@ class _CanvasPageState extends State<_CanvasPage> {
   MouseCursor get _cursorForTool {
     return switch (_editorState.activeToolType) {
       ToolType.select || ToolType.hand => SystemMouseCursors.basic,
+      ToolType.eraser => SystemMouseCursors.none,
       _ => SystemMouseCursors.precise,
     };
   }
@@ -1064,7 +1068,9 @@ class _CanvasPageState extends State<_CanvasPage> {
             onPointerHover: (event) {
               final point = _toScene(event.localPosition);
               _activeTool.onPointerMove(point, _toolContext);
-              setState(() {});
+              setState(() {
+                _mousePosition = event.localPosition;
+              });
             },
             onPointerDown: (event) {
               _keyboardFocusNode.requestFocus();
@@ -1096,7 +1102,9 @@ class _CanvasPageState extends State<_CanvasPage> {
                   screenDelta: Offset(delta.dx, delta.dy),
                 ),
               );
-              setState(() {});
+              setState(() {
+                _mousePosition = event.localPosition;
+              });
             },
             onPointerUp: (event) {
               final point = _toScene(event.localPosition);
@@ -1185,6 +1193,18 @@ class _CanvasPageState extends State<_CanvasPage> {
               child: const SizedBox.expand(),
             ),
           ),
+          if (_editorState.activeToolType == ToolType.eraser &&
+              _mousePosition != null)
+            Positioned(
+              left: _mousePosition!.dx - 10,
+              top: _mousePosition!.dy - 10,
+              child: IgnorePointer(
+                child: CustomPaint(
+                  size: const Size(20, 20),
+                  painter: _EraserCursorPainter(),
+                ),
+              ),
+            ),
           if (_editingTextElementId != null) _buildTextEditingOverlay(),
           // Compact property panel as bottom sheet trigger
           if (_isCompact && _selectedElements.isNotEmpty)
@@ -4438,6 +4458,31 @@ class _DiagonalLinePainter extends CustomPainter {
       ..color = Colors.red
       ..strokeWidth = 1.5;
     canvas.drawLine(Offset(0, size.height), Offset(size.width, 0), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Paints a 20×20 circle cursor for the eraser tool, matching Excalidraw's
+/// eraser cursor: white fill with a thin black stroke.
+class _EraserCursorPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    canvas.drawCircle(
+      center,
+      5,
+      Paint()..color = Colors.white,
+    );
+    canvas.drawCircle(
+      center,
+      5,
+      Paint()
+        ..color = Colors.black
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1,
+    );
   }
 
   @override
