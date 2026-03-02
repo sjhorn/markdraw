@@ -11,6 +11,14 @@ enum Arrowhead {
   bar,
   dot,
   triangle,
+  triangleOutline,
+  circle,
+  circleOutline,
+  diamond,
+  diamondOutline,
+  crowfootOne,
+  crowfootMany,
+  crowfootOneOrMany,
 }
 
 /// A linear element defined by a list of points.

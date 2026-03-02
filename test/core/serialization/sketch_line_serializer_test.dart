@@ -504,6 +504,45 @@ void main() {
       final line = serializer.serialize(arrow);
       expect(line, isNot(contains('end-arrow=')));
     });
+
+    test('new arrowhead types serialize with camelCase names', () {
+      final cases = <Arrowhead, String>{
+        Arrowhead.triangleOutline: 'triangleOutline',
+        Arrowhead.circle: 'circle',
+        Arrowhead.circleOutline: 'circleOutline',
+        Arrowhead.diamond: 'diamond',
+        Arrowhead.diamondOutline: 'diamondOutline',
+        Arrowhead.crowfootOne: 'crowfootOne',
+        Arrowhead.crowfootMany: 'crowfootMany',
+        Arrowhead.crowfootOneOrMany: 'crowfootOneOrMany',
+      };
+      for (final entry in cases.entries) {
+        final arrow = ArrowElement(
+          id: const ElementId('a1'),
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 0,
+          points: [const Point(0, 0), const Point(200, 0)],
+          startArrowhead: entry.key,
+          endArrowhead: entry.key,
+          seed: 20,
+          versionNonce: 1,
+          updated: 0,
+        );
+        final line = serializer.serialize(arrow);
+        expect(
+          line,
+          contains('start-arrow=${entry.value}'),
+          reason: '${entry.key} should serialize as ${entry.value}',
+        );
+        expect(
+          line,
+          contains('end-arrow=${entry.value}'),
+          reason: '${entry.key} should serialize as ${entry.value}',
+        );
+      }
+    });
   });
 
   group('FreedrawElement', () {

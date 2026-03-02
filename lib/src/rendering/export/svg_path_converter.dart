@@ -40,8 +40,16 @@ class SvgPathConverter {
     return switch (type) {
       Arrowhead.arrow => _arrowPath(tip, angle, size),
       Arrowhead.triangle => _trianglePath(tip, angle, size),
+      Arrowhead.triangleOutline => _trianglePath(tip, angle, size),
       Arrowhead.bar => _barPath(tip, angle, size),
       Arrowhead.dot => _dotPath(tip, size),
+      Arrowhead.circle => _dotPath(tip, size),
+      Arrowhead.circleOutline => _dotPath(tip, size),
+      Arrowhead.diamond => _diamondPath(tip, angle, size),
+      Arrowhead.diamondOutline => _diamondPath(tip, angle, size),
+      Arrowhead.crowfootOne => _crowfootOnePath(tip, angle, size),
+      Arrowhead.crowfootMany => _crowfootManyPath(tip, angle, size),
+      Arrowhead.crowfootOneOrMany => _crowfootOneOrManyPath(tip, angle, size),
     };
   }
 
@@ -130,6 +138,62 @@ class SvgPathConverter {
     return 'M${_n(tip.x - radius)} ${_n(tip.y)}'
         'A${_n(radius)} ${_n(radius)} 0 1 0 ${_n(tip.x + radius)} ${_n(tip.y)}'
         'A${_n(radius)} ${_n(radius)} 0 1 0 ${_n(tip.x - radius)} ${_n(tip.y)}';
+  }
+
+  static String _diamondPath(Point tip, double angle, double size) {
+    final s = size * 0.6;
+    final backAngle = angle + math.pi;
+    final perpAngle = angle + math.pi / 2;
+
+    final backX = tip.x + s * math.cos(backAngle);
+    final backY = tip.y + s * math.sin(backAngle);
+    final midX = tip.x + s * 0.5 * math.cos(backAngle);
+    final midY = tip.y + s * 0.5 * math.sin(backAngle);
+    final leftX = midX + s * 0.4 * math.cos(perpAngle);
+    final leftY = midY + s * 0.4 * math.sin(perpAngle);
+    final rightX = midX - s * 0.4 * math.cos(perpAngle);
+    final rightY = midY - s * 0.4 * math.sin(perpAngle);
+
+    return 'M${_n(tip.x)} ${_n(tip.y)}'
+        'L${_n(leftX)} ${_n(leftY)}'
+        'L${_n(backX)} ${_n(backY)}'
+        'L${_n(rightX)} ${_n(rightY)}Z';
+  }
+
+  static String _crowfootOnePath(Point tip, double angle, double size) {
+    final perpAngle = angle + math.pi / 2;
+    final halfSize = size * 0.5;
+    final backAngle = angle + math.pi;
+    final offsetX = tip.x + size * 0.3 * math.cos(backAngle);
+    final offsetY = tip.y + size * 0.3 * math.sin(backAngle);
+    final x1 = offsetX + halfSize * math.cos(perpAngle);
+    final y1 = offsetY + halfSize * math.sin(perpAngle);
+    final x2 = offsetX - halfSize * math.cos(perpAngle);
+    final y2 = offsetY - halfSize * math.sin(perpAngle);
+
+    return 'M${_n(x1)} ${_n(y1)}L${_n(x2)} ${_n(y2)}';
+  }
+
+  static String _crowfootManyPath(Point tip, double angle, double size) {
+    final backAngle = angle + math.pi;
+    final forkX = tip.x + size * 0.5 * math.cos(backAngle);
+    final forkY = tip.y + size * 0.5 * math.sin(backAngle);
+    final perpAngle = angle + math.pi / 2;
+    final halfSpread = size * 0.4;
+    final armX1 = tip.x + halfSpread * math.cos(perpAngle);
+    final armY1 = tip.y + halfSpread * math.sin(perpAngle);
+    final armX2 = tip.x - halfSpread * math.cos(perpAngle);
+    final armY2 = tip.y - halfSpread * math.sin(perpAngle);
+
+    return 'M${_n(armX1)} ${_n(armY1)}'
+        'L${_n(forkX)} ${_n(forkY)}'
+        'L${_n(armX2)} ${_n(armY2)}';
+  }
+
+  static String _crowfootOneOrManyPath(Point tip, double angle, double size) {
+    final many = _crowfootManyPath(tip, angle, size);
+    final one = _crowfootOnePath(tip, angle, size);
+    return '$many$one';
   }
 
   /// Formats a number with up to 2 decimal places, stripping trailing zeros.

@@ -4701,6 +4701,68 @@ class _ArrowheadIcon extends CustomPainter {
           ..lineTo(tipX + dir * 6, cy + 4)
           ..close();
         canvas.drawPath(path, paint..style = PaintingStyle.fill);
+      case Arrowhead.triangleOutline:
+        // Outline triangle
+        final path = Path()
+          ..moveTo(tipX, cy)
+          ..lineTo(tipX + dir * 6, cy - 4)
+          ..lineTo(tipX + dir * 6, cy + 4)
+          ..close();
+        canvas.drawPath(path, paint..style = PaintingStyle.stroke);
+      case Arrowhead.circle:
+        // Filled circle (like dot)
+        canvas.drawCircle(
+          Offset(tipX, cy),
+          3,
+          paint..style = PaintingStyle.fill,
+        );
+      case Arrowhead.circleOutline:
+        // Outline circle
+        canvas.drawCircle(
+          Offset(tipX, cy),
+          3,
+          paint..style = PaintingStyle.stroke,
+        );
+      case Arrowhead.diamond:
+        // Filled diamond
+        final path = Path()
+          ..moveTo(tipX, cy)
+          ..lineTo(tipX + dir * 3, cy - 3)
+          ..lineTo(tipX + dir * 6, cy)
+          ..lineTo(tipX + dir * 3, cy + 3)
+          ..close();
+        canvas.drawPath(path, paint..style = PaintingStyle.fill);
+      case Arrowhead.diamondOutline:
+        // Outline diamond
+        final path = Path()
+          ..moveTo(tipX, cy)
+          ..lineTo(tipX + dir * 3, cy - 3)
+          ..lineTo(tipX + dir * 6, cy)
+          ..lineTo(tipX + dir * 3, cy + 3)
+          ..close();
+        canvas.drawPath(path, paint..style = PaintingStyle.stroke);
+      case Arrowhead.crowfootOne:
+        // Perpendicular bar offset from tip
+        final barX = tipX + dir * 3;
+        canvas.drawLine(Offset(barX, cy - 4), Offset(barX, cy + 4), paint);
+      case Arrowhead.crowfootMany:
+        // V-fork
+        final forkX = tipX + dir * 5;
+        final path = Path()
+          ..moveTo(tipX, cy - 4)
+          ..lineTo(forkX, cy)
+          ..lineTo(tipX, cy + 4);
+        canvas.drawPath(path, paint);
+      case Arrowhead.crowfootOneOrMany:
+        // V-fork + bar
+        final forkX = tipX + dir * 5;
+        final barX = tipX + dir * 3;
+        final path = Path()
+          ..moveTo(tipX, cy - 4)
+          ..lineTo(forkX, cy)
+          ..lineTo(tipX, cy + 4);
+        canvas.drawPath(path, paint);
+        canvas.drawLine(Offset(barX, cy - 4), Offset(barX, cy + 4), paint);
     }
   }
 

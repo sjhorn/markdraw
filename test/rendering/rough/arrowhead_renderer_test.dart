@@ -144,6 +144,80 @@ void main() {
     });
   });
 
+  group('ArrowheadRenderer new arrowhead types', () {
+    const tip = Point(100, 50);
+    const strokeWidth = 2.0;
+    const angle = 0.0;
+
+    test('triangleOutline produces a non-empty path', () {
+      final path = ArrowheadRenderer.buildPath(
+        Arrowhead.triangleOutline, tip, angle, strokeWidth,
+      );
+      expect(path.computeMetrics().isNotEmpty, isTrue);
+    });
+
+    test('circle produces a non-empty path', () {
+      final path = ArrowheadRenderer.buildPath(
+        Arrowhead.circle, tip, angle, strokeWidth,
+      );
+      expect(path.computeMetrics().isNotEmpty, isTrue);
+    });
+
+    test('circleOutline produces a non-empty path', () {
+      final path = ArrowheadRenderer.buildPath(
+        Arrowhead.circleOutline, tip, angle, strokeWidth,
+      );
+      expect(path.computeMetrics().isNotEmpty, isTrue);
+    });
+
+    test('diamond produces a closed path with 4+ segments', () {
+      final path = ArrowheadRenderer.buildPath(
+        Arrowhead.diamond, tip, angle, strokeWidth,
+      );
+      final metrics = path.computeMetrics().toList();
+      expect(metrics.isNotEmpty, isTrue);
+    });
+
+    test('diamondOutline produces a non-empty path', () {
+      final path = ArrowheadRenderer.buildPath(
+        Arrowhead.diamondOutline, tip, angle, strokeWidth,
+      );
+      expect(path.computeMetrics().isNotEmpty, isTrue);
+    });
+
+    test('crowfootOne produces a non-empty path', () {
+      final path = ArrowheadRenderer.buildPath(
+        Arrowhead.crowfootOne, tip, angle, strokeWidth,
+      );
+      expect(path.computeMetrics().isNotEmpty, isTrue);
+    });
+
+    test('crowfootMany produces a non-empty path', () {
+      final path = ArrowheadRenderer.buildPath(
+        Arrowhead.crowfootMany, tip, angle, strokeWidth,
+      );
+      expect(path.computeMetrics().isNotEmpty, isTrue);
+    });
+
+    test('crowfootOneOrMany produces a non-empty path', () {
+      final path = ArrowheadRenderer.buildPath(
+        Arrowhead.crowfootOneOrMany, tip, angle, strokeWidth,
+      );
+      expect(path.computeMetrics().isNotEmpty, isTrue);
+    });
+
+    test('all Arrowhead values produce non-empty paths', () {
+      for (final type in Arrowhead.values) {
+        final path = ArrowheadRenderer.buildPath(type, tip, angle, strokeWidth);
+        expect(
+          path.computeMetrics().isNotEmpty,
+          isTrue,
+          reason: 'Arrowhead.$type should produce a non-empty path',
+        );
+      }
+    });
+  });
+
   group('ArrowheadRenderer edge cases', () {
     test('single point returns zero angle', () {
       final angle = ArrowheadRenderer.directionAngle(

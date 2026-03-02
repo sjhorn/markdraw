@@ -557,6 +557,14 @@ class SketchLineParser {
       'bar' => Arrowhead.bar,
       'dot' => Arrowhead.dot,
       'triangle' => Arrowhead.triangle,
+      'triangleOutline' => Arrowhead.triangleOutline,
+      'circle' => Arrowhead.circle,
+      'circleOutline' => Arrowhead.circleOutline,
+      'diamond' => Arrowhead.diamond,
+      'diamondOutline' => Arrowhead.diamondOutline,
+      'crowfootOne' => Arrowhead.crowfootOne,
+      'crowfootMany' => Arrowhead.crowfootMany,
+      'crowfootOneOrMany' => Arrowhead.crowfootOneOrMany,
       _ => null,
     };
   }

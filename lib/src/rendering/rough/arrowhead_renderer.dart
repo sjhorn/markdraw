@@ -4,7 +4,7 @@ import 'dart:ui';
 import '../../core/elements/elements.dart';
 import '../../core/math/math.dart';
 
-/// Renders arrowhead shapes (arrow, triangle, bar, dot) at line endpoints.
+/// Renders arrowhead shapes at line endpoints.
 class ArrowheadRenderer {
   /// The size multiplier for arrowheads relative to stroke width.
   static const double _sizeMultiplier = 6.0;
@@ -54,8 +54,17 @@ class ArrowheadRenderer {
     return switch (type) {
       Arrowhead.arrow => _buildArrowPath(tip, angle, size),
       Arrowhead.triangle => _buildTrianglePath(tip, angle, size),
+      Arrowhead.triangleOutline => _buildTrianglePath(tip, angle, size),
       Arrowhead.bar => _buildBarPath(tip, angle, size),
       Arrowhead.dot => _buildDotPath(tip, size),
+      Arrowhead.circle => _buildDotPath(tip, size),
+      Arrowhead.circleOutline => _buildDotPath(tip, size),
+      Arrowhead.diamond => _buildDiamondPath(tip, angle, size),
+      Arrowhead.diamondOutline => _buildDiamondPath(tip, angle, size),
+      Arrowhead.crowfootOne => _buildCrowfootOnePath(tip, angle, size),
+      Arrowhead.crowfootMany => _buildCrowfootManyPath(tip, angle, size),
+      Arrowhead.crowfootOneOrMany =>
+        _buildCrowfootOneOrManyPath(tip, angle, size),
     };
   }
 
@@ -113,6 +122,80 @@ class ArrowheadRenderer {
       ));
   }
 
+  /// Diamond (4-point polygon): tip, left, back, right.
+  static Path _buildDiamondPath(Point tip, double angle, double size) {
+    final s = size * 0.6;
+    final backAngle = angle + math.pi;
+    final perpAngle = angle + math.pi / 2;
+
+    final backX = tip.x + s * math.cos(backAngle);
+    final backY = tip.y + s * math.sin(backAngle);
+    final midX = tip.x + s * 0.5 * math.cos(backAngle);
+    final midY = tip.y + s * 0.5 * math.sin(backAngle);
+    final leftX = midX + s * 0.4 * math.cos(perpAngle);
+    final leftY = midY + s * 0.4 * math.sin(perpAngle);
+    final rightX = midX - s * 0.4 * math.cos(perpAngle);
+    final rightY = midY - s * 0.4 * math.sin(perpAngle);
+
+    return Path()
+      ..moveTo(tip.x, tip.y)
+      ..lineTo(leftX, leftY)
+      ..lineTo(backX, backY)
+      ..lineTo(rightX, rightY)
+      ..close();
+  }
+
+  /// Crow's foot "one": perpendicular bar offset slightly back from tip.
+  static Path _buildCrowfootOnePath(Point tip, double angle, double size) {
+    final perpAngle = angle + math.pi / 2;
+    final halfSize = size * 0.5;
+    final backAngle = angle + math.pi;
+    final offsetX = tip.x + size * 0.3 * math.cos(backAngle);
+    final offsetY = tip.y + size * 0.3 * math.sin(backAngle);
+    final x1 = offsetX + halfSize * math.cos(perpAngle);
+    final y1 = offsetY + halfSize * math.sin(perpAngle);
+    final x2 = offsetX - halfSize * math.cos(perpAngle);
+    final y2 = offsetY - halfSize * math.sin(perpAngle);
+
+    return Path()
+      ..moveTo(x1, y1)
+      ..lineTo(x2, y2);
+  }
+
+  /// Crow's foot "many": V-fork from a point on the shaft.
+  static Path _buildCrowfootManyPath(Point tip, double angle, double size) {
+    final backAngle = angle + math.pi;
+    final forkX = tip.x + size * 0.5 * math.cos(backAngle);
+    final forkY = tip.y + size * 0.5 * math.sin(backAngle);
+    final perpAngle = angle + math.pi / 2;
+    final halfSpread = size * 0.4;
+    final armX1 = tip.x + halfSpread * math.cos(perpAngle);
+    final armY1 = tip.y + halfSpread * math.sin(perpAngle);
+    final armX2 = tip.x - halfSpread * math.cos(perpAngle);
+    final armY2 = tip.y - halfSpread * math.sin(perpAngle);
+
+    return Path()
+      ..moveTo(armX1, armY1)
+      ..lineTo(forkX, forkY)
+      ..lineTo(armX2, armY2);
+  }
+
+  /// Crow's foot "one or many": V-fork + perpendicular bar.
+  static Path _buildCrowfootOneOrManyPath(
+      Point tip, double angle, double size) {
+    final manyPath = _buildCrowfootManyPath(tip, angle, size);
+    final onePath = _buildCrowfootOnePath(tip, angle, size);
+    return manyPath..addPath(onePath, Offset.zero);
+  }
+
+  /// The set of arrowhead types that are drawn with fill style.
+  static const _filledTypes = {
+    Arrowhead.triangle,
+    Arrowhead.dot,
+    Arrowhead.circle,
+    Arrowhead.diamond,
+  };
+
   /// Draws an arrowhead on the canvas.
   static void draw(
     Canvas canvas,
@@ -123,7 +206,7 @@ class ArrowheadRenderer {
     Paint paint,
   ) {
     final path = buildPath(type, tip, angle, strokeWidth);
-    if (type == Arrowhead.triangle || type == Arrowhead.dot) {
+    if (_filledTypes.contains(type)) {
       canvas.drawPath(path, paint..style = PaintingStyle.fill);
     } else {
       canvas.drawPath(path, paint..style = PaintingStyle.stroke);

@@ -290,8 +290,7 @@ class SvgElementRenderer {
         angle,
         element.strokeWidth,
       );
-      final isFilled = element.startArrowhead == Arrowhead.triangle ||
-          element.startArrowhead == Arrowhead.dot;
+      final isFilled = _isFilledArrowhead(element.startArrowhead!);
       _writeArrowheadPath(buf, d, element, isFilled);
     }
 
@@ -304,8 +303,7 @@ class SvgElementRenderer {
         angle,
         element.strokeWidth,
       );
-      final isFilled = element.endArrowhead == Arrowhead.triangle ||
-          element.endArrowhead == Arrowhead.dot;
+      final isFilled = _isFilledArrowhead(element.endArrowhead!);
       _writeArrowheadPath(buf, d, element, isFilled);
     }
   }
@@ -449,6 +447,13 @@ class SvgElementRenderer {
           buf.write('/>');
       }
     }
+  }
+
+  static bool _isFilledArrowhead(Arrowhead type) {
+    return type == Arrowhead.triangle ||
+        type == Arrowhead.dot ||
+        type == Arrowhead.circle ||
+        type == Arrowhead.diamond;
   }
 
   static void _writeArrowheadPath(

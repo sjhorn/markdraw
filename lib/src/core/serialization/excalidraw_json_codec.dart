@@ -123,8 +123,8 @@ class ExcalidrawJsonCodec {
       return {
         ...base,
         'points': el.points.map((p) => [p.x, p.y]).toList(),
-        'startArrowhead': el.startArrowhead?.name,
-        'endArrowhead': el.endArrowhead?.name,
+        'startArrowhead': _arrowheadName(el.startArrowhead),
+        'endArrowhead': _arrowheadName(el.endArrowhead),
         'startBinding': _bindingToJson(el.startBinding),
         'endBinding': _bindingToJson(el.endBinding),
         if (el.arrowType.isElbow) 'elbowed': true,
@@ -133,8 +133,8 @@ class ExcalidrawJsonCodec {
       return {
         ...base,
         'points': el.points.map((p) => [p.x, p.y]).toList(),
-        'startArrowhead': el.startArrowhead?.name,
-        'endArrowhead': el.endArrowhead?.name,
+        'startArrowhead': _arrowheadName(el.startArrowhead),
+        'endArrowhead': _arrowheadName(el.endArrowhead),
         if (el.closed) 'polygon': true,
       };
     } else if (el is FreedrawElement) {
@@ -501,9 +501,26 @@ class ExcalidrawJsonCodec {
     return 'Excalifont';
   }
 
+  /// Converts an [Arrowhead] enum to its Excalidraw snake_case name.
+  static String? _arrowheadName(Arrowhead? arrowhead) {
+    if (arrowhead == null) return null;
+    return switch (arrowhead) {
+      Arrowhead.arrow => 'arrow',
+      Arrowhead.bar => 'bar',
+      Arrowhead.dot => 'dot',
+      Arrowhead.triangle => 'triangle',
+      Arrowhead.triangleOutline => 'triangle_outline',
+      Arrowhead.circle => 'circle',
+      Arrowhead.circleOutline => 'circle_outline',
+      Arrowhead.diamond => 'diamond',
+      Arrowhead.diamondOutline => 'diamond_outline',
+      Arrowhead.crowfootOne => 'crowfoot_one',
+      Arrowhead.crowfootMany => 'crowfoot_many',
+      Arrowhead.crowfootOneOrMany => 'crowfoot_one_or_many',
+    };
+  }
+
   /// Maps an Excalidraw arrowhead string to our [Arrowhead] enum.
-  ///
-  /// Produces a warning for lossy mappings.
   static Arrowhead? _arrowhead(
     String? value,
     int index,
@@ -519,34 +536,23 @@ class ExcalidrawJsonCodec {
         return Arrowhead.dot;
       case 'triangle':
         return Arrowhead.triangle;
-      case 'circle':
-      case 'circle_outline':
-        warnings.add(ParseWarning(
-          line: index,
-          message: 'Arrowhead "$value" mapped to "dot" (closest match)',
-        ));
-        return Arrowhead.dot;
       case 'triangle_outline':
-        warnings.add(ParseWarning(
-          line: index,
-          message: 'Arrowhead "$value" mapped to "triangle" (closest match)',
-        ));
-        return Arrowhead.triangle;
+        return Arrowhead.triangleOutline;
+      case 'circle':
+        return Arrowhead.circle;
+      case 'circle_outline':
+        return Arrowhead.circleOutline;
       case 'diamond':
+        return Arrowhead.diamond;
       case 'diamond_outline':
-        warnings.add(ParseWarning(
-          line: index,
-          message: 'Arrowhead "$value" mapped to "triangle" (closest match)',
-        ));
-        return Arrowhead.triangle;
+        return Arrowhead.diamondOutline;
+      case 'crowfoot_one':
+        return Arrowhead.crowfootOne;
+      case 'crowfoot_many':
+        return Arrowhead.crowfootMany;
+      case 'crowfoot_one_or_many':
+        return Arrowhead.crowfootOneOrMany;
       default:
-        if (value.startsWith('crowfoot_')) {
-          warnings.add(ParseWarning(
-            line: index,
-            message: 'Arrowhead "$value" mapped to "arrow" (closest match)',
-          ));
-          return Arrowhead.arrow;
-        }
         warnings.add(ParseWarning(
           line: index,
           message: 'Unknown arrowhead "$value", using "arrow"',

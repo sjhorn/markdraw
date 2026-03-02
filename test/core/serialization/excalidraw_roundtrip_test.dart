@@ -332,8 +332,7 @@ void main() {
       expect(textEl.text, 'Inside');
     });
 
-    test('warnings for lossy conversions', () {
-      // Create JSON with a lossy arrowhead type
+    test('all arrowhead types round-trip without warnings', () {
       const jsonStr = '{"type":"excalidraw","version":2,"elements":[{'
           '"id":"a1","type":"arrow","x":0,"y":0,"width":100,"height":0,'
           '"points":[[0,0],[100,0]],"endArrowhead":"circle_outline",'
@@ -344,9 +343,32 @@ void main() {
           '}]}';
 
       final parsed = ExcalidrawJsonCodec.parse(jsonStr);
+      expect(parsed.hasWarnings, isFalse);
+      final arrow = parsed.value.allElements.first as ArrowElement;
+      expect(arrow.endArrowhead, Arrowhead.circleOutline);
+
+      // Re-serialize and parse again
+      final serialized = ExcalidrawJsonCodec.serialize(parsed.value);
+      final reparsed = ExcalidrawJsonCodec.parse(serialized);
+      expect(reparsed.hasWarnings, isFalse);
+      final arrow2 = reparsed.value.allElements.first as ArrowElement;
+      expect(arrow2.endArrowhead, Arrowhead.circleOutline);
+    });
+
+    test('warnings for unknown arrowhead types', () {
+      const jsonStr = '{"type":"excalidraw","version":2,"elements":[{'
+          '"id":"a1","type":"arrow","x":0,"y":0,"width":100,"height":0,'
+          '"points":[[0,0],[100,0]],"endArrowhead":"unknown_type",'
+          '"angle":0,"strokeColor":"#000000","backgroundColor":"transparent",'
+          '"fillStyle":"solid","strokeWidth":2,"strokeStyle":"solid",'
+          '"roughness":1,"opacity":100,"seed":42,"version":1,'
+          '"versionNonce":1,"isDeleted":false,"groupIds":[]'
+          '}]}';
+
+      final parsed = ExcalidrawJsonCodec.parse(jsonStr);
       expect(parsed.warnings, isNotEmpty);
       expect(
-        parsed.warnings.any((w) => w.message.contains('circle_outline')),
+        parsed.warnings.any((w) => w.message.contains('unknown_type')),
         isTrue,
       );
     });

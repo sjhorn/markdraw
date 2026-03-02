@@ -261,6 +261,41 @@ void main() {
       );
       expect(parser.pendingBindings, isNotEmpty);
     });
+
+    test('parses all new arrowhead types on line', () {
+      final cases = <String, Arrowhead>{
+        'triangleOutline': Arrowhead.triangleOutline,
+        'circle': Arrowhead.circle,
+        'circleOutline': Arrowhead.circleOutline,
+        'diamond': Arrowhead.diamond,
+        'diamondOutline': Arrowhead.diamondOutline,
+        'crowfootOne': Arrowhead.crowfootOne,
+        'crowfootMany': Arrowhead.crowfootMany,
+        'crowfootOneOrMany': Arrowhead.crowfootOneOrMany,
+      };
+      for (final entry in cases.entries) {
+        final result = parser.parseLine(
+          'line points=[[0,0],[100,0]] end-arrow=${entry.key} seed=10',
+          1,
+        );
+        final line = result.value! as LineElement;
+        expect(
+          line.endArrowhead,
+          entry.value,
+          reason: '${entry.key} should parse to ${entry.value}',
+        );
+      }
+    });
+
+    test('parses new arrowhead types as start-arrow on arrow', () {
+      final result = parser.parseLine(
+        'arrow points=[[0,0],[100,0]] start-arrow=crowfootMany end-arrow=crowfootOne seed=10',
+        1,
+      );
+      final arrow = result.value! as ArrowElement;
+      expect(arrow.startArrowhead, Arrowhead.crowfootMany);
+      expect(arrow.endArrowhead, Arrowhead.crowfootOne);
+    });
   });
 
   group('Freedraw parsing', () {

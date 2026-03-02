@@ -748,41 +748,7 @@ void main() {
         expect(el.endArrowhead, Arrowhead.triangle);
       });
 
-      test('circle maps to dot with warning', () {
-        final json = _wrapElements([
-          {
-            ..._baseElement(id: 'a1', type: 'arrow'),
-            'points': [
-              [0, 0],
-              [100, 0],
-            ],
-            'endArrowhead': 'circle',
-          },
-        ]);
-        final result = ExcalidrawJsonCodec.parse(json);
-        final el = result.value.allElements.first as ArrowElement;
-        expect(el.endArrowhead, Arrowhead.dot);
-        expect(result.hasWarnings, isTrue);
-        expect(result.warnings.first.message, contains('circle'));
-      });
-
-      test('circle_outline maps to dot with warning', () {
-        final json = _wrapElements([
-          {
-            ..._baseElement(id: 'a1', type: 'arrow'),
-            'points': [
-              [0, 0],
-              [100, 0],
-            ],
-            'endArrowhead': 'circle_outline',
-          },
-        ]);
-        final result = ExcalidrawJsonCodec.parse(json);
-        final el = result.value.allElements.first as ArrowElement;
-        expect(el.endArrowhead, Arrowhead.dot);
-      });
-
-      test('triangle_outline maps to triangle with warning', () {
+      test('triangle_outline maps to triangleOutline', () {
         final json = _wrapElements([
           {
             ..._baseElement(id: 'a1', type: 'arrow'),
@@ -795,10 +761,45 @@ void main() {
         ]);
         final result = ExcalidrawJsonCodec.parse(json);
         final el = result.value.allElements.first as ArrowElement;
-        expect(el.endArrowhead, Arrowhead.triangle);
+        expect(el.endArrowhead, Arrowhead.triangleOutline);
+        expect(result.hasWarnings, isFalse);
       });
 
-      test('diamond maps to triangle with warning', () {
+      test('circle maps to circle', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'a1', type: 'arrow'),
+            'points': [
+              [0, 0],
+              [100, 0],
+            ],
+            'endArrowhead': 'circle',
+          },
+        ]);
+        final result = ExcalidrawJsonCodec.parse(json);
+        final el = result.value.allElements.first as ArrowElement;
+        expect(el.endArrowhead, Arrowhead.circle);
+        expect(result.hasWarnings, isFalse);
+      });
+
+      test('circle_outline maps to circleOutline', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'a1', type: 'arrow'),
+            'points': [
+              [0, 0],
+              [100, 0],
+            ],
+            'endArrowhead': 'circle_outline',
+          },
+        ]);
+        final result = ExcalidrawJsonCodec.parse(json);
+        final el = result.value.allElements.first as ArrowElement;
+        expect(el.endArrowhead, Arrowhead.circleOutline);
+        expect(result.hasWarnings, isFalse);
+      });
+
+      test('diamond maps to diamond', () {
         final json = _wrapElements([
           {
             ..._baseElement(id: 'a1', type: 'arrow'),
@@ -811,14 +812,11 @@ void main() {
         ]);
         final result = ExcalidrawJsonCodec.parse(json);
         final el = result.value.allElements.first as ArrowElement;
-        expect(el.endArrowhead, Arrowhead.triangle);
-        expect(
-          result.warnings.first.message,
-          contains('diamond'),
-        );
+        expect(el.endArrowhead, Arrowhead.diamond);
+        expect(result.hasWarnings, isFalse);
       });
 
-      test('diamond_outline maps to triangle with warning', () {
+      test('diamond_outline maps to diamondOutline', () {
         final json = _wrapElements([
           {
             ..._baseElement(id: 'a1', type: 'arrow'),
@@ -831,10 +829,11 @@ void main() {
         ]);
         final result = ExcalidrawJsonCodec.parse(json);
         final el = result.value.allElements.first as ArrowElement;
-        expect(el.endArrowhead, Arrowhead.triangle);
+        expect(el.endArrowhead, Arrowhead.diamondOutline);
+        expect(result.hasWarnings, isFalse);
       });
 
-      test('crowfoot_one maps to arrow with warning', () {
+      test('crowfoot_one maps to crowfootOne', () {
         final json = _wrapElements([
           {
             ..._baseElement(id: 'a1', type: 'arrow'),
@@ -847,11 +846,82 @@ void main() {
         ]);
         final result = ExcalidrawJsonCodec.parse(json);
         final el = result.value.allElements.first as ArrowElement;
-        expect(el.endArrowhead, Arrowhead.arrow);
-        expect(
-          result.warnings.first.message,
-          contains('crowfoot_one'),
-        );
+        expect(el.endArrowhead, Arrowhead.crowfootOne);
+        expect(result.hasWarnings, isFalse);
+      });
+
+      test('crowfoot_many maps to crowfootMany', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'a1', type: 'arrow'),
+            'points': [
+              [0, 0],
+              [100, 0],
+            ],
+            'endArrowhead': 'crowfoot_many',
+          },
+        ]);
+        final result = ExcalidrawJsonCodec.parse(json);
+        final el = result.value.allElements.first as ArrowElement;
+        expect(el.endArrowhead, Arrowhead.crowfootMany);
+        expect(result.hasWarnings, isFalse);
+      });
+
+      test('crowfoot_one_or_many maps to crowfootOneOrMany', () {
+        final json = _wrapElements([
+          {
+            ..._baseElement(id: 'a1', type: 'arrow'),
+            'points': [
+              [0, 0],
+              [100, 0],
+            ],
+            'endArrowhead': 'crowfoot_one_or_many',
+          },
+        ]);
+        final result = ExcalidrawJsonCodec.parse(json);
+        final el = result.value.allElements.first as ArrowElement;
+        expect(el.endArrowhead, Arrowhead.crowfootOneOrMany);
+        expect(result.hasWarnings, isFalse);
+      });
+
+      test('serializes arrowheads to Excalidraw snake_case names', () {
+        final cases = <Arrowhead, String>{
+          Arrowhead.arrow: 'arrow',
+          Arrowhead.bar: 'bar',
+          Arrowhead.dot: 'dot',
+          Arrowhead.triangle: 'triangle',
+          Arrowhead.triangleOutline: 'triangle_outline',
+          Arrowhead.circle: 'circle',
+          Arrowhead.circleOutline: 'circle_outline',
+          Arrowhead.diamond: 'diamond',
+          Arrowhead.diamondOutline: 'diamond_outline',
+          Arrowhead.crowfootOne: 'crowfoot_one',
+          Arrowhead.crowfootMany: 'crowfoot_many',
+          Arrowhead.crowfootOneOrMany: 'crowfoot_one_or_many',
+        };
+        for (final entry in cases.entries) {
+          final arrow = ArrowElement(
+            id: const ElementId('a1'),
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 0,
+            points: [const Point(0, 0), const Point(100, 0)],
+            endArrowhead: entry.key,
+            seed: 1,
+            versionNonce: 1,
+            updated: 0,
+          );
+          final doc = MarkdrawDocument(
+            sections: [SketchSection([arrow])],
+          );
+          final jsonStr = ExcalidrawJsonCodec.serialize(doc);
+          expect(
+            jsonStr,
+            contains('"endArrowhead":"${entry.value}"'),
+            reason: '${entry.key} should serialize as ${entry.value}',
+          );
+        }
       });
     });
 
