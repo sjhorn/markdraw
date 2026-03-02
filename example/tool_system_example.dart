@@ -126,7 +126,10 @@ class _CanvasPageState extends State<_CanvasPage> {
     setState(() {
       _activeTool.reset();
       _activeTool = createTool(type);
-      _editorState = _editorState.copyWith(activeToolType: type);
+      _editorState = _editorState.copyWith(
+        activeToolType: type,
+        selectedIds: type == ToolType.select ? null : {},
+      );
       _cancelTextEditing();
     });
     _keyboardFocusNode.requestFocus();
