@@ -105,6 +105,10 @@ class ToolOverlay {
   /// indicating the line will close into a polygon on finalization.
   final bool creationClosed;
 
+  /// Element IDs that the eraser tool will delete on pointer-up.
+  /// Non-null during an eraser drag to allow the UI to dim these elements.
+  final Set<ElementId>? eraserElementIds;
+
   const ToolOverlay({
     this.creationBounds,
     this.creationPoints,
@@ -112,6 +116,7 @@ class ToolOverlay {
     this.bindTargetBounds,
     this.bindTargetAngle = 0.0,
     this.creationClosed = false,
+    this.eraserElementIds,
   });
 }
 

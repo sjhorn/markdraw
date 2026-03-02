@@ -104,15 +104,18 @@ void main() {
       expect((bounds.width - bounds.height).abs(), lessThan(1.0));
     });
 
-    test('arrowhead size scales with stroke width', () {
+    test('circle arrowhead size scales with stroke width', () {
+      // Only circle-type arrowheads (dot, circle, circleOutline) use
+      // strokeWidth in their size calculation. Arrow/triangle/bar/diamond
+      // use fixed pixel sizes matching Excalidraw.
       final smallPath = ArrowheadRenderer.buildPath(
-        Arrowhead.arrow,
+        Arrowhead.dot,
         tip,
         0.0,
         1.0,
       );
       final largePath = ArrowheadRenderer.buildPath(
-        Arrowhead.arrow,
+        Arrowhead.dot,
         tip,
         0.0,
         4.0,

@@ -157,7 +157,7 @@ class _CanvasPageState extends State<_CanvasPage> {
   }
 
   bool get _isCreationTool => switch (_editorState.activeToolType) {
-    ToolType.select || ToolType.hand => false,
+    ToolType.select || ToolType.hand || ToolType.eraser => false,
     _ => true,
   };
 
@@ -3814,6 +3814,7 @@ class _CanvasPageState extends State<_CanvasPage> {
       ToolType.text => Icons.text_fields,
       ToolType.hand => Icons.pan_tool_outlined,
       ToolType.frame => Icons.crop_free,
+      ToolType.eraser => Icons.auto_fix_off,
     };
   }
 }

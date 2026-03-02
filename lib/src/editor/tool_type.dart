@@ -13,4 +13,5 @@ enum ToolType {
   freedraw,
   text,
   frame,
+  eraser,
 }

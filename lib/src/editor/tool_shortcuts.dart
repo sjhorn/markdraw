@@ -5,7 +5,7 @@ import 'tool_type.dart';
 ///
 /// Number keys 1–8 map to tools in toolbar order (matching Excalidraw).
 /// Letter keys F and H map to frame and hand tools (matching Excalidraw).
-/// Keys 9 and 0 are reserved for image and eraser (not yet implemented).
+/// Key 9 is reserved for image (not yet implemented).
 /// Only fires when no modifier keys (Ctrl/Shift) are held.
 ToolType? toolTypeForKey(String key) {
   return switch (key) {
@@ -19,6 +19,7 @@ ToolType? toolTypeForKey(String key) {
     '8' => ToolType.text,
     'f' => ToolType.frame,
     'h' => ToolType.hand,
+    '0' => ToolType.eraser,
     _ => null,
   };
 }
@@ -37,5 +38,6 @@ String? shortcutForToolType(ToolType type) {
     ToolType.text => '8',
     ToolType.frame => 'F',
     ToolType.hand => 'H',
+    ToolType.eraser => '0',
   };
 }

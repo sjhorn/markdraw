@@ -2,6 +2,7 @@ import '../tool_type.dart';
 import 'arrow_tool.dart';
 import 'diamond_tool.dart';
 import 'ellipse_tool.dart';
+import 'eraser_tool.dart';
 import 'frame_tool.dart';
 import 'freedraw_tool.dart';
 import 'hand_tool.dart';
@@ -24,5 +25,6 @@ Tool createTool(ToolType type) {
     ToolType.text => TextTool(),
     ToolType.hand => HandTool(),
     ToolType.frame => FrameTool(),
+    ToolType.eraser => EraserTool(),
   };
 }

@@ -4,8 +4,8 @@ import 'package:markdraw/markdraw.dart';
 
 void main() {
   group('ToolType', () {
-    test('has all 10 values', () {
-      expect(ToolType.values.length, 10);
+    test('has all 11 values', () {
+      expect(ToolType.values.length, 11);
       expect(ToolType.values, containsAll([
         ToolType.select,
         ToolType.rectangle,
@@ -17,6 +17,7 @@ void main() {
         ToolType.text,
         ToolType.hand,
         ToolType.frame,
+        ToolType.eraser,
       ]));
     });
   });

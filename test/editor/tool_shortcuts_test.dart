@@ -43,9 +43,12 @@ void main() {
       expect(toolTypeForKey('h'), ToolType.hand);
     });
 
-    test('9 and 0 are reserved (return null)', () {
+    test('9 is reserved (returns null)', () {
       expect(toolTypeForKey('9'), isNull);
-      expect(toolTypeForKey('0'), isNull);
+    });
+
+    test('0 maps to eraser', () {
+      expect(toolTypeForKey('0'), ToolType.eraser);
     });
 
     test('unknown key returns null', () {
@@ -63,7 +66,7 @@ void main() {
 
     test('all ToolType values have a shortcut', () {
       final reachable = <ToolType>{};
-      for (final c in '12345678fh'.split('')) {
+      for (final c in '1234567890fh'.split('')) {
         final t = toolTypeForKey(c);
         if (t != null) reachable.add(t);
       }
