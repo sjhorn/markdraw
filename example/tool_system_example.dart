@@ -2783,7 +2783,8 @@ class _CanvasPageState extends State<_CanvasPage> {
   Widget _buildFontSizeRow(double? current) {
     const sizes = [16.0, 20.0, 28.0, 36.0];
     const labels = ['S', 'M', 'L', 'XL'];
-    final controller = TextEditingController();
+    final displaySize = current != null ? current.round().toString() : '—';
+    final isPreset = current != null && sizes.contains(current);
     return Row(
       children: [
         Flexible(
@@ -2802,39 +2803,66 @@ class _CanvasPageState extends State<_CanvasPage> {
           color: Colors.grey.shade300,
           margin: const EdgeInsets.symmetric(horizontal: 6),
         ),
-        SizedBox(
-          width: 32,
-          child: TextField(
-            controller: controller,
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 11),
-            decoration: InputDecoration(
-              hintText: current != null ? current.round().toString() : '20',
-              hintStyle: TextStyle(fontSize: 11, color: Colors.grey.shade500),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 4,
-                vertical: 4,
-              ),
-              isDense: true,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: BorderSide(color: Colors.grey.shade400),
-              ),
-            ),
-            onSubmitted: (value) {
-              final parsed = double.tryParse(value);
-              if (parsed != null) {
-                final clamped = parsed.clamp(4.0, 200.0);
-                _applyStyleChange(
-                  ElementStyle(hasText: true, fontSize: clamped),
-                );
-              }
-              controller.clear();
-            },
-          ),
+        _ToggleChip(
+          label: displaySize,
+          isSelected: !isPreset && current != null,
+          onTap: () => _showFontSizeDialog(current),
         ),
       ],
+    );
+  }
+
+  void _showFontSizeDialog(double? current) {
+    final controller = TextEditingController(
+      text: current != null ? current.round().toString() : '',
+    );
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Custom font size'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: '4–200',
+            isDense: true,
+          ),
+          onSubmitted: (value) {
+            final parsed = double.tryParse(value);
+            if (parsed != null) {
+              _applyStyleChange(
+                ElementStyle(
+                  hasText: true,
+                  fontSize: parsed.clamp(4.0, 200.0),
+                ),
+              );
+            }
+            Navigator.of(ctx).pop();
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              final parsed = double.tryParse(controller.text);
+              if (parsed != null) {
+                _applyStyleChange(
+                  ElementStyle(
+                    hasText: true,
+                    fontSize: parsed.clamp(4.0, 200.0),
+                  ),
+                );
+              }
+              Navigator.of(ctx).pop();
+            },
+            child: const Text('Apply'),
+          ),
+        ],
+      ),
     );
   }
 
