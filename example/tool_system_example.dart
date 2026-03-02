@@ -2032,7 +2032,7 @@ class _CanvasPageState extends State<_CanvasPage> {
     final elements = _selectedElements;
     if (elements.isEmpty) {
       setState(() {});
-      if (wasEditing) _suppressFocusCommit = false;
+      _restoreTextFocus(wasEditing, savedSelection);
       return;
     }
 
@@ -2063,29 +2063,7 @@ class _CanvasPageState extends State<_CanvasPage> {
     }
 
     // Restore text editing focus and selection after style change
-    if (wasEditing && _editingTextElementId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _suppressFocusCommit = false;
-        if (_editingTextElementId != null) {
-          _textFocusNode.requestFocus();
-          if (savedSelection != null) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              final editable = _editableTextKey.currentState;
-              if (editable != null) {
-                editable.userUpdateTextEditingValue(
-                  editable.textEditingValue.copyWith(
-                    selection: savedSelection,
-                  ),
-                  SelectionChangedCause.keyboard,
-                );
-              }
-            });
-          }
-        }
-      });
-    } else if (wasEditing) {
-      _suppressFocusCommit = false;
-    }
+    _restoreTextFocus(wasEditing, savedSelection);
   }
 
   Widget _buildPropertyPanel() {
@@ -2850,6 +2828,12 @@ class _CanvasPageState extends State<_CanvasPage> {
   }
 
   void _showFontSizeDialog(double? current) {
+    final wasEditing = _editingTextElementId != null;
+    final savedSelection = wasEditing
+        ? _editableTextKey.currentState?.textEditingValue.selection
+        : null;
+    if (wasEditing) _suppressFocusCommit = true;
+
     final controller = TextEditingController(
       text: current != null ? current.round().toString() : '',
     );
@@ -2900,7 +2884,9 @@ class _CanvasPageState extends State<_CanvasPage> {
           ),
         ],
       ),
-    );
+    ).then((_) {
+      _restoreTextFocus(wasEditing, savedSelection);
+    });
   }
 
   Widget _buildFontPicker(String? current) {
@@ -3004,6 +2990,12 @@ class _CanvasPageState extends State<_CanvasPage> {
     final offset = renderBox.localToGlobal(Offset.zero);
     final overlay = Overlay.of(context);
 
+    final wasEditing = _editingTextElementId != null;
+    final savedSelection = wasEditing
+        ? _editableTextKey.currentState?.textEditingValue.selection
+        : null;
+    if (wasEditing) _suppressFocusCommit = true;
+
     setState(() => _fontPickerOpen = true);
 
     late OverlayEntry entry;
@@ -3016,10 +3008,12 @@ class _CanvasPageState extends State<_CanvasPage> {
           entry.remove();
           setState(() => _fontPickerOpen = false);
           _applyStyleChange(ElementStyle(hasText: true, fontFamily: font));
+          _restoreTextFocus(wasEditing, savedSelection);
         },
         onDismiss: () {
           entry.remove();
           setState(() => _fontPickerOpen = false);
+          _restoreTextFocus(wasEditing, savedSelection);
         },
       ),
     );
@@ -3027,6 +3021,12 @@ class _CanvasPageState extends State<_CanvasPage> {
   }
 
   void _showCompactFontPicker(String? current) {
+    final wasEditing = _editingTextElementId != null;
+    final savedSelection = wasEditing
+        ? _editableTextKey.currentState?.textEditingValue.selection
+        : null;
+    if (wasEditing) _suppressFocusCommit = true;
+
     setState(() => _fontPickerOpen = true);
     showModalBottomSheet<void>(
       context: context,
@@ -3051,7 +3051,10 @@ class _CanvasPageState extends State<_CanvasPage> {
         ),
       ),
     ).whenComplete(() {
-      if (mounted) setState(() => _fontPickerOpen = false);
+      if (mounted) {
+        setState(() => _fontPickerOpen = false);
+        _restoreTextFocus(wasEditing, savedSelection);
+      }
     });
   }
 
@@ -3060,6 +3063,26 @@ class _CanvasPageState extends State<_CanvasPage> {
         .whereType<TextElement>()
         .map((e) => e.fontFamily)
         .toSet();
+  }
+
+  void _restoreTextFocus(bool wasEditing, TextSelection? savedSelection) {
+    if (!wasEditing || _editingTextElementId == null) {
+      _suppressFocusCommit = false;
+      return;
+    }
+    _textFocusNode.requestFocus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _suppressFocusCommit = false;
+      if (savedSelection != null && _editingTextElementId != null) {
+        final editable = _editableTextKey.currentState;
+        if (editable != null) {
+          editable.userUpdateTextEditingValue(
+            editable.textEditingValue.copyWith(selection: savedSelection),
+            SelectionChangedCause.keyboard,
+          );
+        }
+      }
+    });
   }
 
   Widget _buildTextAlignCombinedRow(
