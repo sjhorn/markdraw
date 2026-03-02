@@ -9,7 +9,8 @@ class MockRoughAdapter implements RoughAdapter {
   final List<String> calls = [];
 
   @override
-  void drawRectangle(Canvas canvas, Bounds bounds, DrawStyle style) {
+  void drawRectangle(Canvas canvas, Bounds bounds, DrawStyle style,
+      {Roundness? roundness}) {
     calls.add('rectangle');
   }
 
@@ -19,7 +20,8 @@ class MockRoughAdapter implements RoughAdapter {
   }
 
   @override
-  void drawDiamond(Canvas canvas, Bounds bounds, DrawStyle style) {
+  void drawDiamond(Canvas canvas, Bounds bounds, DrawStyle style,
+      {Roundness? roundness}) {
     calls.add('diamond');
   }
 

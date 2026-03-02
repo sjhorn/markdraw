@@ -13,7 +13,8 @@ class MockRoughAdapter implements RoughAdapter {
   List<Point>? lastPoints;
 
   @override
-  void drawRectangle(Canvas canvas, Bounds bounds, DrawStyle style) {
+  void drawRectangle(Canvas canvas, Bounds bounds, DrawStyle style,
+      {Roundness? roundness}) {
     calls.add('drawRectangle');
     lastBounds = bounds;
   }
@@ -25,7 +26,8 @@ class MockRoughAdapter implements RoughAdapter {
   }
 
   @override
-  void drawDiamond(Canvas canvas, Bounds bounds, DrawStyle style) {
+  void drawDiamond(Canvas canvas, Bounds bounds, DrawStyle style,
+      {Roundness? roundness}) {
     calls.add('drawDiamond');
     lastBounds = bounds;
   }

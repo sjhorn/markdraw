@@ -113,7 +113,7 @@ class PropertyPanelState {
     double? roughness = first.roughness;
     double? opacity = first.opacity;
 
-    bool hasRoundness = first.roundness != null;
+    bool hasRoundness = first is RectangleElement || first is DiamondElement;
     Roundness? roundness = first.roundness;
     bool roundnessMixed = false;
 
@@ -140,7 +140,7 @@ class PropertyPanelState {
       if (opacity != null && e.opacity != opacity) {
         opacity = null;
       }
-      if (e.roundness != null) hasRoundness = true;
+      if (e is RectangleElement || e is DiamondElement) hasRoundness = true;
       if (!roundnessMixed && e.roundness != roundness) {
         roundness = null;
         roundnessMixed = true;

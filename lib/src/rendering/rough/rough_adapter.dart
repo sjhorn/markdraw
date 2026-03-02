@@ -10,13 +10,21 @@ import 'draw_style.dart';
 /// typically using `rough_flutter` for the hand-drawn aesthetic.
 abstract class RoughAdapter {
   /// Draws a rectangle with rough/hand-drawn styling.
-  void drawRectangle(Canvas canvas, Bounds bounds, DrawStyle style);
+  ///
+  /// When [roundness] is non-null, corners are rounded using the Excalidraw
+  /// adaptive/proportional radius algorithm.
+  void drawRectangle(Canvas canvas, Bounds bounds, DrawStyle style,
+      {Roundness? roundness});
 
   /// Draws an ellipse with rough/hand-drawn styling.
   void drawEllipse(Canvas canvas, Bounds bounds, DrawStyle style);
 
   /// Draws a diamond (4 midpoints of bounding box) with rough/hand-drawn styling.
-  void drawDiamond(Canvas canvas, Bounds bounds, DrawStyle style);
+  ///
+  /// When [roundness] is non-null, corners are rounded using the Excalidraw
+  /// proportional radius algorithm.
+  void drawDiamond(Canvas canvas, Bounds bounds, DrawStyle style,
+      {Roundness? roundness});
 
   /// Draws a line (open polyline) through the given points.
   void drawLine(Canvas canvas, List<Point> points, DrawStyle style);

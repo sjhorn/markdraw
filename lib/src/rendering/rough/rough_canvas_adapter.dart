@@ -18,8 +18,16 @@ import 'rough_adapter.dart';
 /// diamond) use rough_flutter's Generator for the sketchy look. Lines and
 /// arrows use rough linear paths. Freedraw uses smooth Bezier curves.
 class RoughCanvasAdapter implements RoughAdapter {
+  /// Number of line segments used to approximate each Bezier corner curve.
+  static const _cornerSegments = 10;
+
   @override
-  void drawRectangle(Canvas canvas, Bounds bounds, DrawStyle style) {
+  void drawRectangle(Canvas canvas, Bounds bounds, DrawStyle style,
+      {Roundness? roundness}) {
+    if (roundness != null) {
+      _drawRoundedRectangle(canvas, bounds, style, roundness);
+      return;
+    }
     final generator = style.toGenerator();
     final drawable = generator.rectangle(
       bounds.left,
@@ -39,6 +47,42 @@ class RoughCanvasAdapter implements RoughAdapter {
     _drawClippedFillThenStroke(canvas, drawable, style, clipRect: clipRect);
   }
 
+  void _drawRoundedRectangle(
+      Canvas canvas, Bounds bounds, DrawStyle style, Roundness roundness) {
+    final w = bounds.size.width;
+    final h = bounds.size.height;
+    final r = Roundness.cornerRadius(math.min(w, h), roundness);
+    final x = bounds.left;
+    final y = bounds.top;
+
+    // Build polygon points: straight edges + discretized quadratic Bezier corners.
+    // Matches Excalidraw's SVG path: M r,0 L w-r,0 Q w,0 w,r ...
+    final points = <PointD>[
+      PointD(x + r, y), // start of top edge
+      PointD(x + w - r, y), // end of top edge
+      ..._quadBezier(x + w - r, y, x + w, y, x + w, y + r),
+      PointD(x + w, y + h - r), // end of right edge
+      ..._quadBezier(x + w, y + h - r, x + w, y + h, x + w - r, y + h),
+      PointD(x + r, y + h), // end of bottom edge
+      ..._quadBezier(x + r, y + h, x, y + h, x, y + h - r),
+      PointD(x, y + r), // end of left edge
+      ..._quadBezier(x, y + r, x, y, x + r, y),
+    ];
+
+    final generator = style.toGenerator();
+    final drawable = generator.polygon(points);
+
+    // Clip fill using rounded rect path
+    final inset = style.strokeWidth / 2;
+    final ri = math.max(r - inset, 0.0);
+    final clip = Path()
+      ..addRRect(RRect.fromLTRBR(
+        x + inset, y + inset, x + w - inset, y + h - inset,
+        Radius.circular(ri),
+      ));
+    _drawClippedFillThenStroke(canvas, drawable, style, clipPath: clip);
+  }
+
   @override
   void drawEllipse(Canvas canvas, Bounds bounds, DrawStyle style) {
     final generator = style.toGenerator();
@@ -53,7 +97,12 @@ class RoughCanvasAdapter implements RoughAdapter {
   }
 
   @override
-  void drawDiamond(Canvas canvas, Bounds bounds, DrawStyle style) {
+  void drawDiamond(Canvas canvas, Bounds bounds, DrawStyle style,
+      {Roundness? roundness}) {
+    if (roundness != null) {
+      _drawRoundedDiamond(canvas, bounds, style, roundness);
+      return;
+    }
     final generator = style.toGenerator();
     // Diamond: polygon through the 4 midpoints of the bounding box edges
     final top = PointD(bounds.center.x, bounds.top);
@@ -73,6 +122,98 @@ class RoughCanvasAdapter implements RoughAdapter {
       ..lineTo(bounds.left + inset, cy)
       ..close();
     _drawClippedFillThenStroke(canvas, drawable, style, clipPath: clip);
+  }
+
+  void _drawRoundedDiamond(
+      Canvas canvas, Bounds bounds, DrawStyle style, Roundness roundness) {
+    final topX = bounds.center.x;
+    final topY = bounds.top;
+    final rightX = bounds.right;
+    final rightY = bounds.center.y;
+    final bottomX = bounds.center.x;
+    final bottomY = bounds.bottom;
+    final leftX = bounds.left;
+    final leftY = bounds.center.y;
+
+    // Excalidraw uses two radii based on horizontal and vertical spans.
+    final vr = Roundness.cornerRadius((topX - leftX).abs(), roundness);
+    final hr = Roundness.cornerRadius((rightY - topY).abs(), roundness);
+
+    // Build polygon: straight edges + discretized cubic Bezier at each vertex.
+    // Matches Excalidraw's SVG path with C commands at diamond corners.
+    final points = <PointD>[
+      PointD(topX + vr, topY + hr), // start after top corner
+      PointD(rightX - vr, rightY - hr), // end before right corner
+      ..._cubicBezier(
+          rightX - vr, rightY - hr, rightX, rightY, rightX, rightY,
+          rightX - vr, rightY + hr),
+      PointD(bottomX + vr, bottomY - hr), // end before bottom corner
+      ..._cubicBezier(
+          bottomX + vr, bottomY - hr, bottomX, bottomY, bottomX, bottomY,
+          bottomX - vr, bottomY - hr),
+      PointD(leftX + vr, leftY + hr), // end before left corner
+      ..._cubicBezier(leftX + vr, leftY + hr, leftX, leftY, leftX, leftY,
+          leftX + vr, leftY - hr),
+      PointD(topX - vr, topY + hr), // end before top corner
+      ..._cubicBezier(topX - vr, topY + hr, topX, topY, topX, topY,
+          topX + vr, topY + hr),
+    ];
+
+    final generator = style.toGenerator();
+    final drawable = generator.polygon(points);
+
+    // Build clip path from the same rounded shape, inset by half stroke width.
+    final inset = style.strokeWidth / 2;
+    final vri = math.max(vr - inset, 0.0);
+    final hri = math.max(hr - inset, 0.0);
+    final clip = Path()
+      ..moveTo(topX + vri, topY + hri)
+      ..lineTo(rightX - vri, rightY - hri)
+      ..quadraticBezierTo(rightX - inset, rightY, rightX - vri, rightY + hri)
+      ..lineTo(bottomX + vri, bottomY - hri)
+      ..quadraticBezierTo(bottomX, bottomY - inset, bottomX - vri, bottomY - hri)
+      ..lineTo(leftX + vri, leftY + hri)
+      ..quadraticBezierTo(leftX + inset, leftY, leftX + vri, leftY - hri)
+      ..lineTo(topX - vri, topY + hri)
+      ..quadraticBezierTo(topX, topY + inset, topX + vri, topY + hri)
+      ..close();
+    _drawClippedFillThenStroke(canvas, drawable, style, clipPath: clip);
+  }
+
+  /// Approximates a quadratic Bezier curve as [_cornerSegments] line points.
+  static List<PointD> _quadBezier(
+      double x0, double y0, double cx, double cy, double x1, double y1) {
+    final pts = <PointD>[];
+    for (var i = 1; i <= _cornerSegments; i++) {
+      final t = i / _cornerSegments;
+      final mt = 1 - t;
+      pts.add(PointD(
+        mt * mt * x0 + 2 * mt * t * cx + t * t * x1,
+        mt * mt * y0 + 2 * mt * t * cy + t * t * y1,
+      ));
+    }
+    return pts;
+  }
+
+  /// Approximates a cubic Bezier curve as [_cornerSegments] line points.
+  static List<PointD> _cubicBezier(double x0, double y0, double cx1,
+      double cy1, double cx2, double cy2, double x1, double y1) {
+    final pts = <PointD>[];
+    for (var i = 1; i <= _cornerSegments; i++) {
+      final t = i / _cornerSegments;
+      final mt = 1 - t;
+      pts.add(PointD(
+        mt * mt * mt * x0 +
+            3 * mt * mt * t * cx1 +
+            3 * mt * t * t * cx2 +
+            t * t * t * x1,
+        mt * mt * mt * y0 +
+            3 * mt * mt * t * cy1 +
+            3 * mt * t * t * cy2 +
+            t * t * t * y1,
+      ));
+    }
+    return pts;
   }
 
   @override

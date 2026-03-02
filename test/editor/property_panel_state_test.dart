@@ -901,7 +901,7 @@ void main() {
       expect(updated.endArrowhead, Arrowhead.triangle);
     });
 
-    test('fromElements extracts roundness from arrows', () {
+    test('fromElements extracts roundness from arrows but hasRoundness false', () {
       final arrow = ArrowElement(
         id: const ElementId('a1'),
         x: 0, y: 0, width: 100, height: 0,
@@ -910,7 +910,8 @@ void main() {
       );
       final style = PropertyPanelState.fromElements([arrow]);
       expect(style.roundness, const Roundness.proportional(value: 32));
-      expect(style.hasRoundness, isTrue);
+      // hasRoundness only true for rectangles and diamonds (corner rounding)
+      expect(style.hasRoundness, isFalse);
     });
 
     test('fromElements hasRoundness false when no roundness', () {

@@ -94,6 +94,10 @@ flutter test 2<&1 > /tmp/test.txt
 ```
 and grep the /tmp/test.txt file
 
+### Script Wrappers
+- **Never use `sed` directly** — use `scripts/sed.sh` instead so it can be approved once in permissions
+- Example: `scripts/sed.sh 's/old/new/g' lib/src/rendering/rough/draw_style.dart`
+
 ## Code Review Checklist
 - [ ] Tests written before implementation
 - [ ] All public APIs documented

@@ -58,11 +58,13 @@ class ElementRenderer {
 
     switch (element.type) {
       case 'rectangle':
-        adapter.drawRectangle(canvas, bounds, style);
+        adapter.drawRectangle(canvas, bounds, style,
+            roundness: element.roundness);
       case 'ellipse':
         adapter.drawEllipse(canvas, bounds, style);
       case 'diamond':
-        adapter.drawDiamond(canvas, bounds, style);
+        adapter.drawDiamond(canvas, bounds, style,
+            roundness: element.roundness);
       case 'frame':
         _renderFrame(canvas, element, bounds);
       case 'image':

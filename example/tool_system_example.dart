@@ -185,6 +185,15 @@ class _CanvasPageState extends State<_CanvasPage> {
         arrowType: _defaultStyle.arrowType,
       );
     }
+    // Apply roundness default to rectangles and diamonds, using the correct
+    // type per element (adaptive for rectangles, proportional for diamonds).
+    if (_defaultStyle.roundness != null &&
+        (styled is RectangleElement || styled is DiamondElement)) {
+      final r = styled is DiamondElement
+          ? Roundness.proportional(value: _defaultStyle.roundness!.value)
+          : Roundness.adaptive(value: _defaultStyle.roundness!.value);
+      styled = styled.copyWith(roundness: r);
+    }
     return styled;
   }
 
@@ -1989,7 +1998,8 @@ class _CanvasPageState extends State<_CanvasPage> {
       endArrowheadNone: style.endArrowheadNone ||
           (style.endArrowhead == null && _defaultStyle.endArrowheadNone),
       arrowType: style.arrowType ?? _defaultStyle.arrowType,
-      roundness: style.roundness ?? _defaultStyle.roundness,
+      roundness: style.roundness ??
+          (style.hasRoundness ? null : _defaultStyle.roundness),
     );
 
     final elements = _selectedElements;
@@ -2054,7 +2064,7 @@ class _CanvasPageState extends State<_CanvasPage> {
         roughness: _defaultStyle.roughness,
         opacity: _defaultStyle.opacity,
         roundness: _defaultStyle.roundness,
-        hasRoundness: toolType == ToolType.rectangle,
+        hasRoundness: toolType == ToolType.rectangle || toolType == ToolType.diamond,
         hasText: toolType == ToolType.text,
         hasLines: toolType == ToolType.line || toolType == ToolType.arrow,
         hasArrows: toolType == ToolType.arrow,
@@ -2391,17 +2401,8 @@ class _CanvasPageState extends State<_CanvasPage> {
         _IconToggleChip(
           isSelected: !isRound,
           onTap: () {
-            final elements = _selectedElements;
-            if (elements.isEmpty) return;
-            _historyManager.push(_editorState.scene);
-            final results = <ToolResult>[];
-            for (final e in elements) {
-              results.add(
-                UpdateElementResult(e.copyWith(clearRoundness: true)),
-              );
-            }
-            _applyResult(
-              results.length == 1 ? results.first : CompoundResult(results),
+            _applyStyleChange(
+              const ElementStyle(hasRoundness: true),
             );
           },
           tooltip: 'Sharp',
@@ -2413,12 +2414,31 @@ class _CanvasPageState extends State<_CanvasPage> {
         _IconToggleChip(
           isSelected: isRound,
           onTap: () {
-            _applyStyleChange(
-              const ElementStyle(
-                roundness: Roundness.adaptive(value: 8),
-                hasRoundness: true,
-              ),
-            );
+            // Apply per-element type: adaptive for rectangles, proportional
+            // for diamonds (matching Excalidraw). Value 0 uses the default
+            // 32px adaptive radius.
+            final elements = _selectedElements;
+            if (elements.isNotEmpty) {
+              _historyManager.push(_editorState.scene);
+              final results = <ToolResult>[];
+              for (final e in elements) {
+                final r = e is DiamondElement
+                    ? const Roundness.proportional(value: 0)
+                    : const Roundness.adaptive(value: 0);
+                results.add(UpdateElementResult(e.copyWith(roundness: r)));
+              }
+              _applyResult(results.length == 1
+                  ? results.first
+                  : CompoundResult(results));
+            } else {
+              // Update defaults for creation tools
+              _applyStyleChange(
+                const ElementStyle(
+                  roundness: Roundness.adaptive(value: 0),
+                  hasRoundness: true,
+                ),
+              );
+            }
           },
           tooltip: 'Round',
           child: CustomPaint(

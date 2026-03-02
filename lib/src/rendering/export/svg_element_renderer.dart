@@ -83,12 +83,17 @@ class SvgElementRenderer {
     final Drawable drawable;
     switch (shapeType) {
       case _ShapeType.rectangle:
-        drawable = generator.rectangle(
-          bounds.left,
-          bounds.top,
-          bounds.size.width,
-          bounds.size.height,
-        );
+        if (element.roundness != null) {
+          drawable = generator.polygon(
+              _roundedRectPoints(bounds, element.roundness!));
+        } else {
+          drawable = generator.rectangle(
+            bounds.left,
+            bounds.top,
+            bounds.size.width,
+            bounds.size.height,
+          );
+        }
       case _ShapeType.ellipse:
         drawable = generator.ellipse(
           bounds.center.x,
@@ -97,11 +102,16 @@ class SvgElementRenderer {
           bounds.size.height,
         );
       case _ShapeType.diamond:
-        final top = PointD(bounds.center.x, bounds.top);
-        final right = PointD(bounds.right, bounds.center.y);
-        final bottom = PointD(bounds.center.x, bounds.bottom);
-        final left = PointD(bounds.left, bounds.center.y);
-        drawable = generator.polygon([top, right, bottom, left]);
+        if (element.roundness != null) {
+          drawable = generator.polygon(
+              _roundedDiamondPoints(bounds, element.roundness!));
+        } else {
+          final top = PointD(bounds.center.x, bounds.top);
+          final right = PointD(bounds.right, bounds.center.y);
+          final bottom = PointD(bounds.center.x, bounds.bottom);
+          final left = PointD(bounds.left, bounds.center.y);
+          drawable = generator.polygon([top, right, bottom, left]);
+        }
     }
 
     _drawableToSvg(buf, drawable, style, element);
@@ -497,6 +507,92 @@ class SvgElementRenderer {
       return s.substring(0, end);
     }
     return s;
+  }
+  static const _cornerSegments = 10;
+
+  /// Generates polygon points for a rounded rectangle (quadratic Bezier corners).
+  static List<PointD> _roundedRectPoints(Bounds bounds, Roundness roundness) {
+    final w = bounds.size.width;
+    final h = bounds.size.height;
+    final r = Roundness.cornerRadius(math.min(w, h), roundness);
+    final x = bounds.left;
+    final y = bounds.top;
+    return [
+      PointD(x + r, y),
+      PointD(x + w - r, y),
+      ..._quadBezier(x + w - r, y, x + w, y, x + w, y + r),
+      PointD(x + w, y + h - r),
+      ..._quadBezier(x + w, y + h - r, x + w, y + h, x + w - r, y + h),
+      PointD(x + r, y + h),
+      ..._quadBezier(x + r, y + h, x, y + h, x, y + h - r),
+      PointD(x, y + r),
+      ..._quadBezier(x, y + r, x, y, x + r, y),
+    ];
+  }
+
+  /// Generates polygon points for a rounded diamond (cubic Bezier corners).
+  static List<PointD> _roundedDiamondPoints(
+      Bounds bounds, Roundness roundness) {
+    final topX = bounds.center.x;
+    final topY = bounds.top;
+    final rightX = bounds.right;
+    final rightY = bounds.center.y;
+    final bottomX = bounds.center.x;
+    final bottomY = bounds.bottom;
+    final leftX = bounds.left;
+    final leftY = bounds.center.y;
+
+    final vr = Roundness.cornerRadius((topX - leftX).abs(), roundness);
+    final hr = Roundness.cornerRadius((rightY - topY).abs(), roundness);
+    return [
+      PointD(topX + vr, topY + hr),
+      PointD(rightX - vr, rightY - hr),
+      ..._cubicBezier(rightX - vr, rightY - hr, rightX, rightY, rightX, rightY,
+          rightX - vr, rightY + hr),
+      PointD(bottomX + vr, bottomY - hr),
+      ..._cubicBezier(bottomX + vr, bottomY - hr, bottomX, bottomY, bottomX,
+          bottomY, bottomX - vr, bottomY - hr),
+      PointD(leftX + vr, leftY + hr),
+      ..._cubicBezier(leftX + vr, leftY + hr, leftX, leftY, leftX, leftY,
+          leftX + vr, leftY - hr),
+      PointD(topX - vr, topY + hr),
+      ..._cubicBezier(topX - vr, topY + hr, topX, topY, topX, topY, topX + vr,
+          topY + hr),
+    ];
+  }
+
+  static List<PointD> _quadBezier(
+      double x0, double y0, double cx, double cy, double x1, double y1) {
+    final pts = <PointD>[];
+    for (var i = 1; i <= _cornerSegments; i++) {
+      final t = i / _cornerSegments;
+      final mt = 1 - t;
+      pts.add(PointD(
+        mt * mt * x0 + 2 * mt * t * cx + t * t * x1,
+        mt * mt * y0 + 2 * mt * t * cy + t * t * y1,
+      ));
+    }
+    return pts;
+  }
+
+  static List<PointD> _cubicBezier(double x0, double y0, double cx1,
+      double cy1, double cx2, double cy2, double x1, double y1) {
+    final pts = <PointD>[];
+    for (var i = 1; i <= _cornerSegments; i++) {
+      final t = i / _cornerSegments;
+      final mt = 1 - t;
+      pts.add(PointD(
+        mt * mt * mt * x0 +
+            3 * mt * mt * t * cx1 +
+            3 * mt * t * t * cx2 +
+            t * t * t * x1,
+        mt * mt * mt * y0 +
+            3 * mt * mt * t * cy1 +
+            3 * mt * t * t * cy2 +
+            t * t * t * y1,
+      ));
+    }
+    return pts;
   }
 }
 
