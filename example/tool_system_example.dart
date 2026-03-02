@@ -422,6 +422,16 @@ class _CanvasPageState extends State<_CanvasPage> {
             _editorState = _editorState.applyResult(
               UpdateElementResult(measured),
             );
+          } else if (!element.autoResize && element.width > 0) {
+            // Fixed-width text: keep width, grow height but never shrink
+            final (_, h) = TextRenderer.measure(measured,
+                maxWidth: element.width);
+            final updated = measured.copyWith(
+              height: math.max(h, element.height),
+            );
+            _editorState = _editorState.applyResult(
+              UpdateElementResult(updated),
+            );
           } else {
             // Standalone text: auto-resize
             final (w, h) = TextRenderer.measure(measured);
@@ -1188,6 +1198,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                     ? null
                     : _buildSegmentMidpoints(),
                 creationPoints: toolOverlay?.creationPoints,
+                creationBounds: toolOverlay?.creationBounds,
               ),
               child: const SizedBox.expand(),
             ),
@@ -2945,6 +2956,13 @@ class _CanvasPageState extends State<_CanvasPage> {
       if (isBound) {
         // Bound text: keep parent's dimensions, just update text
         _editorState = _editorState.applyResult(UpdateElementResult(measured));
+      } else if (!element.autoResize && element.width > 0) {
+        // Fixed-width text: wrap within width, grow height but never shrink
+        final (_, h) = TextRenderer.measure(measured, maxWidth: element.width);
+        final updated = measured.copyWith(
+          height: math.max(h, element.height),
+        );
+        _editorState = _editorState.applyResult(UpdateElementResult(updated));
       } else {
         // Standalone text: auto-resize using TextRenderer.measure
         final (w, h) = TextRenderer.measure(measured);
@@ -3038,6 +3056,65 @@ class _CanvasPageState extends State<_CanvasPage> {
           ),
         );
       }
+    }
+
+    // Fixed-width text: position at element's top-left, constrain width
+    if (textElem != null && !textElem.autoResize && textElem.width > 0) {
+      final topLeftScene = Offset(element.x, element.y);
+      final screenTopLeft =
+          _editorState.viewport.sceneToScreen(topLeftScene);
+      final screenW = textElem.width * zoom;
+      final screenH = element.height * zoom;
+      final centerScene = Offset(
+        element.x + element.width / 2,
+        element.y + element.height / 2,
+      );
+      final screenCenter =
+          _editorState.viewport.sceneToScreen(centerScene);
+
+      return Positioned(
+        left: screenTopLeft.dx,
+        top: screenTopLeft.dy,
+        child: Transform.rotate(
+          angle: element.angle,
+          origin: Offset(
+            screenCenter.dx - screenTopLeft.dx,
+            screenCenter.dy - screenTopLeft.dy,
+          ),
+          child: SizedBox(
+            width: screenW,
+            height: screenH > 0 ? screenH : null,
+            child: TextSelectionGestureDetectorBuilder(
+              delegate: _TextSelectionDelegate(_editableTextKey),
+            ).buildGestureDetector(
+              behavior: HitTestBehavior.translucent,
+              child: EditableText(
+                key: _editableTextKey,
+                rendererIgnoresPointer: true,
+                controller: _textEditingController,
+                focusNode: _textFocusNode,
+                autofocus: true,
+                textAlign: flutterTextAlign,
+                style: FontResolver.resolve(
+                  fontFamily,
+                  baseStyle: TextStyle(
+                    fontSize: fontSize,
+                    color: textColor,
+                    height: lineHeight,
+                  ),
+                ),
+                cursorColor: Colors.blue,
+                backgroundCursorColor: Colors.grey,
+                selectionColor:
+                    Colors.blue.shade300.withValues(alpha: 0.5),
+                maxLines: null,
+                onChanged: (_) => _onTextChanged(),
+                onSubmitted: (_) => _commitTextEditing(),
+              ),
+            ),
+          ),
+        ),
+      );
     }
 
     // Standalone text: position at element's center, rotate around center
