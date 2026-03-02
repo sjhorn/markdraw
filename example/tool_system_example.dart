@@ -89,6 +89,8 @@ class _CanvasPageState extends State<_CanvasPage> {
   // Track whether we're editing an existing element vs a newly created one
   bool _isEditingExisting = false;
   String? _originalText;
+  // Guard to suppress focus-loss commit during style changes
+  bool _suppressFocusCommit = false;
 
   @override
   void initState() {
@@ -384,7 +386,9 @@ class _CanvasPageState extends State<_CanvasPage> {
   }
 
   void _onTextFocusChanged() {
-    if (!_textFocusNode.hasFocus && _editingTextElementId != null) {
+    if (!_textFocusNode.hasFocus &&
+        _editingTextElementId != null &&
+        !_suppressFocusCommit) {
       _commitTextEditing();
     }
   }
@@ -1987,6 +1991,13 @@ class _CanvasPageState extends State<_CanvasPage> {
   }
 
   void _applyStyleChange(ElementStyle style) {
+    // Capture text editing state before the change
+    final wasEditing = _editingTextElementId != null;
+    final savedSelection = wasEditing
+        ? _editableTextKey.currentState?.textEditingValue.selection
+        : null;
+    if (wasEditing) _suppressFocusCommit = true;
+
     // Update sticky defaults
     _defaultStyle = ElementStyle(
       strokeColor: style.strokeColor ?? _defaultStyle.strokeColor,
@@ -2021,6 +2032,7 @@ class _CanvasPageState extends State<_CanvasPage> {
     final elements = _selectedElements;
     if (elements.isEmpty) {
       setState(() {});
+      if (wasEditing) _suppressFocusCommit = false;
       return;
     }
 
@@ -2048,6 +2060,31 @@ class _CanvasPageState extends State<_CanvasPage> {
           );
         }
       }
+    }
+
+    // Restore text editing focus and selection after style change
+    if (wasEditing && _editingTextElementId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _suppressFocusCommit = false;
+        if (_editingTextElementId != null) {
+          _textFocusNode.requestFocus();
+          if (savedSelection != null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              final editable = _editableTextKey.currentState;
+              if (editable != null) {
+                editable.userUpdateTextEditingValue(
+                  editable.textEditingValue.copyWith(
+                    selection: savedSelection,
+                  ),
+                  SelectionChangedCause.keyboard,
+                );
+              }
+            });
+          }
+        }
+      });
+    } else if (wasEditing) {
+      _suppressFocusCommit = false;
     }
   }
 
