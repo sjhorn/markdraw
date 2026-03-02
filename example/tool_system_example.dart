@@ -1254,6 +1254,8 @@ class _CanvasPageState extends State<_CanvasPage> {
               setState(() => _showLibraryPanel = !_showLibraryPanel);
             case 'import_image':
               _importImage();
+            case 'frame_tool':
+              _switchTool(ToolType.frame);
           }
         },
         itemBuilder: (context) => [
@@ -1286,6 +1288,8 @@ class _CanvasPageState extends State<_CanvasPage> {
             'Import Image',
             '9',
           ),
+          const PopupMenuDivider(),
+          _menuItem('frame_tool', Icons.crop_free, 'Frame Tool', 'F'),
         ],
       ),
     );
@@ -1345,9 +1349,10 @@ class _CanvasPageState extends State<_CanvasPage> {
             onPressed: _redo,
           ),
           _toolbarDivider(),
-          // Tool buttons
-          for (final type in ToolType.values) ...[
-            if (type == ToolType.frame)
+          // Tool buttons (frame is in the menu)
+          for (final type in ToolType.values)
+            if (type != ToolType.frame) ...[
+            if (type == ToolType.eraser)
               _toolbarButton(
                 iconWidget: Stack(
                   clipBehavior: Clip.none,
@@ -1459,19 +1464,20 @@ class _CanvasPageState extends State<_CanvasPage> {
             ),
             _toolbarDivider(),
             for (final type in ToolType.values)
-              _compactToolbarButton(
-                iconWidget: _iconWidgetFor(
-                  type,
-                  color: _editorState.activeToolType == type
-                      ? Colors.blue
-                      : Colors.grey.shade700,
-                  size: 22,
+              if (type != ToolType.frame)
+                _compactToolbarButton(
+                  iconWidget: _iconWidgetFor(
+                    type,
+                    color: _editorState.activeToolType == type
+                        ? Colors.blue
+                        : Colors.grey.shade700,
+                    size: 22,
+                    isActive: _editorState.activeToolType == type,
+                  ),
+                  tooltip: type.name,
+                  onPressed: () => _switchTool(type),
                   isActive: _editorState.activeToolType == type,
                 ),
-                tooltip: type.name,
-                onPressed: () => _switchTool(type),
-                isActive: _editorState.activeToolType == type,
-              ),
           ],
         ),
       ),
