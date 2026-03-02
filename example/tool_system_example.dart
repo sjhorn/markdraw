@@ -1236,6 +1236,7 @@ class _CanvasPageState extends State<_CanvasPage> {
       child: PopupMenuButton<String>(
         icon: const Icon(Icons.menu, size: 20),
         tooltip: 'Menu',
+        offset: const Offset(0, 40),
         padding: EdgeInsets.zero,
         constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
         onSelected: (value) {
