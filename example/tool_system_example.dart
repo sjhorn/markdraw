@@ -181,9 +181,7 @@ class _CanvasPageState extends State<_CanvasPage> {
       );
     }
     if (styled is ArrowElement) {
-      styled = styled.copyWithArrow(
-        arrowType: _defaultStyle.arrowType,
-      );
+      styled = styled.copyWithArrow(arrowType: _defaultStyle.arrowType);
     }
     // Apply roundness default to rectangles and diamonds, using the correct
     // type per element (adaptive for rectangles, proportional for diamonds).
@@ -424,8 +422,10 @@ class _CanvasPageState extends State<_CanvasPage> {
             );
           } else if (!element.autoResize && element.width > 0) {
             // Fixed-width text: keep width, grow height but never shrink
-            final (_, h) = TextRenderer.measure(measured,
-                maxWidth: element.width);
+            final (_, h) = TextRenderer.measure(
+              measured,
+              maxWidth: element.width,
+            );
             final updated = measured.copyWith(
               height: math.max(h, element.height),
             );
@@ -626,11 +626,13 @@ class _CanvasPageState extends State<_CanvasPage> {
       _imageCache.putImage(fileId, decodedImage);
 
       _historyManager.push(_editorState.scene);
-      _applyResult(CompoundResult([
-        AddFileResult(fileId: fileId, file: imageFile),
-        AddElementResult(element),
-        SetSelectionResult({element.id}),
-      ]));
+      _applyResult(
+        CompoundResult([
+          AddFileResult(fileId: fileId, file: imageFile),
+          AddElementResult(element),
+          SetSelectionResult({element.id}),
+        ]),
+      );
     } catch (e) {
       debugPrint('Image import error: $e');
     }
@@ -763,8 +765,10 @@ class _CanvasPageState extends State<_CanvasPage> {
             ),
             child: Row(
               children: [
-                const Text('Library',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text(
+                  'Library',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 const Spacer(),
                 IconButton(
                   icon: const Icon(Icons.file_upload, size: 18),
@@ -823,7 +827,10 @@ class _CanvasPageState extends State<_CanvasPage> {
                       final item = _libraryItems[index];
                       return ListTile(
                         dense: true,
-                        title: Text(item.name, style: const TextStyle(fontSize: 13)),
+                        title: Text(
+                          item.name,
+                          style: const TextStyle(fontSize: 13),
+                        ),
                         subtitle: Text(
                           '${item.elements.length} element${item.elements.length == 1 ? '' : 's'}',
                           style: const TextStyle(fontSize: 11),
@@ -911,8 +918,7 @@ class _CanvasPageState extends State<_CanvasPage> {
       final parseResult = switch (format) {
         DocumentFormat.markdraw => DocumentParser.parse(content),
         DocumentFormat.excalidraw => ExcalidrawJsonCodec.parse(content),
-        DocumentFormat.markdrawLibrary ||
-        DocumentFormat.excalidrawLibrary =>
+        DocumentFormat.markdrawLibrary || DocumentFormat.excalidrawLibrary =>
           throw ArgumentError('Use Import Library for library files'),
       };
       final scene = SceneDocumentConverter.documentToScene(parseResult.value);
@@ -1024,11 +1030,7 @@ class _CanvasPageState extends State<_CanvasPage> {
             right: 0,
             child: Center(child: _buildToolbar()),
           ),
-          Positioned(
-            top: 12,
-            left: 12,
-            child: _buildHamburgerMenu(),
-          ),
+          Positioned(top: 12, left: 12, child: _buildHamburgerMenu()),
         ],
         // Floating property panel — desktop left side
         if (!_isCompact && (_selectedElements.isNotEmpty || _isCreationTool))
@@ -1040,11 +1042,7 @@ class _CanvasPageState extends State<_CanvasPage> {
           ),
         // Compact menu button — top-left
         if (_isCompact)
-          Positioned(
-            top: 12,
-            left: 12,
-            child: _buildCompactMenuButton(),
-          ),
+          Positioned(top: 12, left: 12, child: _buildCompactMenuButton()),
       ],
     );
   }
@@ -1077,12 +1075,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                   ),
                 );
               } else {
-                _applyResult(
-                  _activeTool.onPointerDown(
-                    point,
-                    _toolContext,
-                  ),
-                );
+                _applyResult(_activeTool.onPointerDown(point, _toolContext));
               }
             },
             onPointerMove: (event) {
@@ -1102,10 +1095,7 @@ class _CanvasPageState extends State<_CanvasPage> {
               final now = DateTime.now();
               final isDoubleClick =
                   _lastPointerUpTime != null &&
-                  now
-                          .difference(_lastPointerUpTime!)
-                          .inMilliseconds <
-                      300;
+                  now.difference(_lastPointerUpTime!).inMilliseconds < 300;
               _lastPointerUpTime = now;
 
               if (_activeTool is LineTool) {
@@ -1125,23 +1115,17 @@ class _CanvasPageState extends State<_CanvasPage> {
                   ),
                 );
               } else {
-                _applyResult(
-                  _activeTool.onPointerUp(point, _toolContext),
-                );
+                _applyResult(_activeTool.onPointerUp(point, _toolContext));
               }
 
               // Double-click dispatch for text editing
               if (isDoubleClick &&
                   _activeTool is SelectTool &&
                   _editingTextElementId == null) {
-                final hit =
-                    _editorState.scene.getElementAtPoint(
-                      point,
-                    );
+                final hit = _editorState.scene.getElementAtPoint(point);
                 if (hit is TextElement) {
                   _startTextEditingExisting(hit);
-                } else if (hit != null &&
-                    BoundTextUtils.isTextContainer(hit)) {
+                } else if (hit != null && BoundTextUtils.isTextContainer(hit)) {
                   _startBoundTextEditing(hit);
                 } else if (hit is ArrowElement) {
                   _startArrowLabelEditing(hit);
@@ -1149,26 +1133,19 @@ class _CanvasPageState extends State<_CanvasPage> {
               }
 
               if (_sceneBeforeDrag != null &&
-                  !identical(
-                    _editorState.scene,
-                    _sceneBeforeDrag,
-                  )) {
+                  !identical(_editorState.scene, _sceneBeforeDrag)) {
                 _historyManager.push(_sceneBeforeDrag!);
               }
               _sceneBeforeDrag = null;
             },
             onPointerSignal: (event) {
               if (event is PointerScrollEvent) {
-                final factor =
-                    event.scrollDelta.dy < 0 ? 1.1 : 0.9;
-                final newViewport =
-                    _editorState.viewport.zoomAt(
-                      factor,
-                      event.localPosition,
-                    );
-                _applyResult(
-                  UpdateViewportResult(newViewport),
+                final factor = event.scrollDelta.dy < 0 ? 1.1 : 0.9;
+                final newViewport = _editorState.viewport.zoomAt(
+                  factor,
+                  event.localPosition,
                 );
+                _applyResult(UpdateViewportResult(newViewport));
               }
             },
             child: CustomPaint(
@@ -1176,8 +1153,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                 scene: _editorState.scene,
                 adapter: _adapter,
                 viewport: _editorState.viewport,
-                previewElement:
-                    _buildPreviewElement(toolOverlay),
+                previewElement: _buildPreviewElement(toolOverlay),
                 editingElementId: _editingTextElementId,
                 resolvedImages: _resolveImages(),
               ),
@@ -1188,10 +1164,8 @@ class _CanvasPageState extends State<_CanvasPage> {
                     ? null
                     : _buildSelectionOverlay(),
                 marqueeRect: marqueeRect,
-                bindTargetBounds:
-                    toolOverlay?.bindTargetBounds,
-                bindTargetAngle:
-                    toolOverlay?.bindTargetAngle ?? 0.0,
+                bindTargetBounds: toolOverlay?.bindTargetBounds,
+                bindTargetAngle: toolOverlay?.bindTargetAngle ?? 0.0,
                 pointHandles: _buildPointHandles(),
                 midpointHandles: _buildMidpointHandles(),
                 segmentMidpoints: _isDraggingPointHandle()
@@ -1203,8 +1177,7 @@ class _CanvasPageState extends State<_CanvasPage> {
               child: const SizedBox.expand(),
             ),
           ),
-          if (_editingTextElementId != null)
-            _buildTextEditingOverlay(),
+          if (_editingTextElementId != null) _buildTextEditingOverlay(),
           // Compact property panel as bottom sheet trigger
           if (_isCompact && _selectedElements.isNotEmpty)
             Positioned(
@@ -1223,14 +1196,8 @@ class _CanvasPageState extends State<_CanvasPage> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.17),
-            blurRadius: 1,
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 3,
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.17), blurRadius: 1),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 3),
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 14,
@@ -1266,12 +1233,7 @@ class _CanvasPageState extends State<_CanvasPage> {
           _menuItem('save', Icons.save, 'Save', 'Ctrl+S'),
           _menuItem('save_as', Icons.save_as, 'Save As', 'Ctrl+Shift+S'),
           const PopupMenuDivider(),
-          _menuItem(
-            'export_png',
-            Icons.image,
-            'Export PNG',
-            'Ctrl+Shift+E',
-          ),
+          _menuItem('export_png', Icons.image, 'Export PNG', 'Ctrl+Shift+E'),
           _menuItem('export_svg', Icons.code, 'Export SVG', null),
           const PopupMenuDivider(),
           PopupMenuItem<String>(
@@ -1331,14 +1293,8 @@ class _CanvasPageState extends State<_CanvasPage> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.17),
-            blurRadius: 1,
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 3,
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.17), blurRadius: 1),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 3),
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 14,
@@ -1396,6 +1352,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                         ? Colors.blue
                         : Colors.grey.shade700,
                     size: 20,
+                    isActive: _editorState.activeToolType == type,
                   ),
                   if (shortcutForToolType(type) != null)
                     Positioned(
@@ -1427,9 +1384,7 @@ class _CanvasPageState extends State<_CanvasPage> {
             onPressed: () {
               setState(() {
                 _toolLocked = !_toolLocked;
-                _editorState = _editorState.copyWith(
-                  toolLocked: _toolLocked,
-                );
+                _editorState = _editorState.copyWith(toolLocked: _toolLocked);
                 if (!_toolLocked) {
                   _switchTool(ToolType.select);
                 }
@@ -1450,14 +1405,8 @@ class _CanvasPageState extends State<_CanvasPage> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.17),
-            blurRadius: 1,
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 3,
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.17), blurRadius: 1),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 3),
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 14,
@@ -1489,6 +1438,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                       ? Colors.blue
                       : Colors.grey.shade700,
                   size: 22,
+                  isActive: _editorState.activeToolType == type,
                 ),
                 tooltip: type.name,
                 onPressed: () => _switchTool(type),
@@ -1519,7 +1469,8 @@ class _CanvasPageState extends State<_CanvasPage> {
             width: 44,
             height: 44,
             child: Center(
-              child: iconWidget ??
+              child:
+                  iconWidget ??
                   Icon(
                     icon,
                     size: 22,
@@ -1538,14 +1489,8 @@ class _CanvasPageState extends State<_CanvasPage> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.17),
-            blurRadius: 1,
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 3,
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.17), blurRadius: 1),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 3),
         ],
       ),
       child: IconButton(
@@ -1614,14 +1559,8 @@ class _CanvasPageState extends State<_CanvasPage> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.17),
-            blurRadius: 1,
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 3,
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.17), blurRadius: 1),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 3),
         ],
       ),
       child: IconButton(
@@ -1655,169 +1594,192 @@ class _CanvasPageState extends State<_CanvasPage> {
             boundTextElements: boundText,
           );
           final isLocked = style.locked == true;
-          final showFullTextProps = style.hasText &&
-              (!style.hasArrowBoundText || style.hasShapeBoundText ||
-              elements.whereType<TextElement>().isNotEmpty);
+          final showFullTextProps =
+              style.hasText &&
+              (!style.hasArrowBoundText ||
+                  style.hasShapeBoundText ||
+                  elements.whereType<TextElement>().isNotEmpty);
           final isEditingText = _editingTextElementId != null;
 
           return TextFieldTapRegion(
             child: Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-            ),
-            child: ListView(
-              controller: scrollController,
-              padding: const EdgeInsets.all(16),
-              children: [
-                Center(
-                  child: Container(
-                    width: 32,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              ),
+              child: ListView(
+                controller: scrollController,
+                padding: const EdgeInsets.all(16),
+                children: [
+                  Center(
+                    child: Container(
+                      width: 32,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
                   ),
-                ),
-                if (isEditingText) ...[
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (showFullTextProps) ...[
-                        _buildSectionLabel('Font family'),
-                        _buildFontFamilyRow(style.fontFamily),
-                        const SizedBox(height: 8),
-                      ],
-                      if (style.hasText) ...[
-                        _buildSectionLabel('Font size'),
-                        _buildFontSizeRow(style.fontSize),
-                        const SizedBox(height: 8),
-                      ],
-                      if (showFullTextProps) ...[
-                        _buildSectionLabel('Text align'),
-                        _buildTextAlignCombinedRow(
-                            style.textAlign, style.verticalAlign),
-                        const SizedBox(height: 8),
-                      ],
-                      _buildSectionLabel('Opacity'),
-                      _buildOpacitySlider(style.opacity),
-                    ],
-                  ),
-                ] else ...[
-                IgnorePointer(
-                  ignoring: isLocked,
-                  child: Opacity(
-                    opacity: isLocked ? 0.4 : 1.0,
-                    child: Column(
+                  if (isEditingText) ...[
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildSectionLabel('Stroke'),
-                        _buildColorPickerRow(
-                          selected: style.strokeColor,
-                          onSelect: (c) =>
-                              _applyStyleChange(ElementStyle(strokeColor: c)),
-                          quickPicks: _strokeQuickPicks,
-                        ),
-                        const SizedBox(height: 8),
-                        _buildSectionLabel('Background'),
-                        _buildColorPickerRow(
-                          selected: style.backgroundColor,
-                          onSelect: (c) => _applyStyleChange(
-                              ElementStyle(backgroundColor: c)),
-                          quickPicks: _backgroundQuickPicks,
-                        ),
-                        const SizedBox(height: 8),
-                        _buildSectionLabel('Fill style'),
-                        _buildFillStyleRow(style.fillStyle),
-                        const SizedBox(height: 8),
-                        _buildSectionLabel('Stroke width'),
-                        _buildStrokeWidthRow(style.strokeWidth),
-                        const SizedBox(height: 8),
-                        _buildSectionLabel('Stroke style'),
-                        _buildStrokeStyleRow(style.strokeStyle),
-                        const SizedBox(height: 8),
-                        _buildSectionLabel('Sloppiness'),
-                        _buildRoughnessRow(style.roughness),
-                        if (style.hasRoundness) ...[
-                          const SizedBox(height: 8),
-                          _buildSectionLabel('Roundness'),
-                          _buildRoundnessRow(style.roundness),
-                        ],
-                        if (style.hasArrows) ...[
-                          const SizedBox(height: 8),
-                          _buildSectionLabel('Arrow type'),
-                          _buildArrowTypeRow(style.arrowType),
-                        ],
                         if (showFullTextProps) ...[
-                          const SizedBox(height: 12),
                           _buildSectionLabel('Font family'),
                           _buildFontFamilyRow(style.fontFamily),
+                          const SizedBox(height: 8),
                         ],
                         if (style.hasText) ...[
-                          const SizedBox(height: 8),
                           _buildSectionLabel('Font size'),
                           _buildFontSizeRow(style.fontSize),
+                          const SizedBox(height: 8),
                         ],
                         if (showFullTextProps) ...[
-                          const SizedBox(height: 8),
                           _buildSectionLabel('Text align'),
                           _buildTextAlignCombinedRow(
-                              style.textAlign, style.verticalAlign),
-                        ],
-                        if (style.hasLines) ...[
+                            style.textAlign,
+                            style.verticalAlign,
+                          ),
                           const SizedBox(height: 8),
-                          _buildArrowheadRow(
-                            label: 'Start arrowhead',
-                            current: style.startArrowhead,
-                            isNone: style.startArrowheadNone,
-                            onSelect: (a) {
-                              if (a == null) {
-                                _applyStyleChange(const ElementStyle(
-                                    hasLines: true,
-                                    startArrowheadNone: true));
-                              } else {
-                                _applyStyleChange(ElementStyle(
-                                    hasLines: true, startArrowhead: a));
-                              }
-                            },
-                          ),
-                          const SizedBox(height: 4),
-                          _buildArrowheadRow(
-                            label: 'End arrowhead',
-                            current: style.endArrowhead,
-                            isNone: style.endArrowheadNone,
-                            onSelect: (a) {
-                              if (a == null) {
-                                _applyStyleChange(const ElementStyle(
-                                    hasLines: true, endArrowheadNone: true));
-                              } else {
-                                _applyStyleChange(ElementStyle(
-                                    hasLines: true, endArrowhead: a));
-                              }
-                            },
-                          ),
                         ],
-                        const SizedBox(height: 8),
                         _buildSectionLabel('Opacity'),
                         _buildOpacitySlider(style.opacity),
                       ],
                     ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _buildSectionLabel('Layer order'),
-                _buildLayerButtons(),
-                const SizedBox(height: 8),
-                _buildAlignmentButtons(elements.length),
-                const SizedBox(height: 12),
-                _buildSectionLabel('Locked'),
-                _buildLockToggle(style.locked),
+                  ] else ...[
+                    IgnorePointer(
+                      ignoring: isLocked,
+                      child: Opacity(
+                        opacity: isLocked ? 0.4 : 1.0,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildSectionLabel('Stroke'),
+                            _buildColorPickerRow(
+                              selected: style.strokeColor,
+                              onSelect: (c) => _applyStyleChange(
+                                ElementStyle(strokeColor: c),
+                              ),
+                              quickPicks: _strokeQuickPicks,
+                            ),
+                            const SizedBox(height: 8),
+                            _buildSectionLabel('Background'),
+                            _buildColorPickerRow(
+                              selected: style.backgroundColor,
+                              onSelect: (c) => _applyStyleChange(
+                                ElementStyle(backgroundColor: c),
+                              ),
+                              quickPicks: _backgroundQuickPicks,
+                            ),
+                            const SizedBox(height: 8),
+                            _buildSectionLabel('Fill style'),
+                            _buildFillStyleRow(style.fillStyle),
+                            const SizedBox(height: 8),
+                            _buildSectionLabel('Stroke width'),
+                            _buildStrokeWidthRow(style.strokeWidth),
+                            const SizedBox(height: 8),
+                            _buildSectionLabel('Stroke style'),
+                            _buildStrokeStyleRow(style.strokeStyle),
+                            const SizedBox(height: 8),
+                            _buildSectionLabel('Sloppiness'),
+                            _buildRoughnessRow(style.roughness),
+                            if (style.hasRoundness) ...[
+                              const SizedBox(height: 8),
+                              _buildSectionLabel('Roundness'),
+                              _buildRoundnessRow(style.roundness),
+                            ],
+                            if (style.hasArrows) ...[
+                              const SizedBox(height: 8),
+                              _buildSectionLabel('Arrow type'),
+                              _buildArrowTypeRow(style.arrowType),
+                            ],
+                            if (showFullTextProps) ...[
+                              const SizedBox(height: 12),
+                              _buildSectionLabel('Font family'),
+                              _buildFontFamilyRow(style.fontFamily),
+                            ],
+                            if (style.hasText) ...[
+                              const SizedBox(height: 8),
+                              _buildSectionLabel('Font size'),
+                              _buildFontSizeRow(style.fontSize),
+                            ],
+                            if (showFullTextProps) ...[
+                              const SizedBox(height: 8),
+                              _buildSectionLabel('Text align'),
+                              _buildTextAlignCombinedRow(
+                                style.textAlign,
+                                style.verticalAlign,
+                              ),
+                            ],
+                            if (style.hasLines) ...[
+                              const SizedBox(height: 8),
+                              _buildArrowheadRow(
+                                label: 'Start arrowhead',
+                                current: style.startArrowhead,
+                                isNone: style.startArrowheadNone,
+                                onSelect: (a) {
+                                  if (a == null) {
+                                    _applyStyleChange(
+                                      const ElementStyle(
+                                        hasLines: true,
+                                        startArrowheadNone: true,
+                                      ),
+                                    );
+                                  } else {
+                                    _applyStyleChange(
+                                      ElementStyle(
+                                        hasLines: true,
+                                        startArrowhead: a,
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+                              const SizedBox(height: 4),
+                              _buildArrowheadRow(
+                                label: 'End arrowhead',
+                                current: style.endArrowhead,
+                                isNone: style.endArrowheadNone,
+                                onSelect: (a) {
+                                  if (a == null) {
+                                    _applyStyleChange(
+                                      const ElementStyle(
+                                        hasLines: true,
+                                        endArrowheadNone: true,
+                                      ),
+                                    );
+                                  } else {
+                                    _applyStyleChange(
+                                      ElementStyle(
+                                        hasLines: true,
+                                        endArrowhead: a,
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+                            ],
+                            const SizedBox(height: 8),
+                            _buildSectionLabel('Opacity'),
+                            _buildOpacitySlider(style.opacity),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildSectionLabel('Layer order'),
+                    _buildLayerButtons(),
+                    const SizedBox(height: 8),
+                    _buildAlignmentButtons(elements.length),
+                    const SizedBox(height: 12),
+                    _buildSectionLabel('Locked'),
+                    _buildLockToggle(style.locked),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
           );
         },
       ),
@@ -1852,13 +1814,19 @@ class _CanvasPageState extends State<_CanvasPage> {
                 ),
               ),
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Row(
                   children: [
-                    const Text('Library',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16)),
+                    const Text(
+                      'Library',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
                     const Spacer(),
                     IconButton(
                       icon: const Icon(Icons.file_upload, size: 20),
@@ -1912,7 +1880,8 @@ class _CanvasPageState extends State<_CanvasPage> {
                           return ListTile(
                             title: Text(item.name),
                             subtitle: Text(
-                                '${item.elements.length} element${item.elements.length == 1 ? '' : 's'}'),
+                              '${item.elements.length} element${item.elements.length == 1 ? '' : 's'}',
+                            ),
                             onTap: () {
                               _placeLibraryItem(item);
                               Navigator.pop(ctx);
@@ -1954,7 +1923,8 @@ class _CanvasPageState extends State<_CanvasPage> {
             width: 32,
             height: 32,
             child: Center(
-              child: iconWidget ??
+              child:
+                  iconWidget ??
                   Icon(
                     icon,
                     size: 20,
@@ -2029,15 +1999,18 @@ class _CanvasPageState extends State<_CanvasPage> {
       startArrowhead: style.startArrowheadNone
           ? null
           : (style.startArrowhead ?? _defaultStyle.startArrowhead),
-      startArrowheadNone: style.startArrowheadNone ||
+      startArrowheadNone:
+          style.startArrowheadNone ||
           (style.startArrowhead == null && _defaultStyle.startArrowheadNone),
       endArrowhead: style.endArrowheadNone
           ? null
           : (style.endArrowhead ?? _defaultStyle.endArrowhead),
-      endArrowheadNone: style.endArrowheadNone ||
+      endArrowheadNone:
+          style.endArrowheadNone ||
           (style.endArrowhead == null && _defaultStyle.endArrowheadNone),
       arrowType: style.arrowType ?? _defaultStyle.arrowType,
-      roundness: style.roundness ??
+      roundness:
+          style.roundness ??
           (style.hasRoundness ? null : _defaultStyle.roundness),
     );
 
@@ -2059,16 +2032,19 @@ class _CanvasPageState extends State<_CanvasPage> {
       for (final e in elements) {
         final bt = _editorState.scene.findBoundText(e.id);
         if (bt != null) {
-          _applyResult(UpdateElementResult(bt.copyWithText(
-            fontSize: style.fontSize,
-            fontFamily: style.fontFamily,
-            textAlign: style.textAlign,
-            verticalAlign: style.verticalAlign,
-          )));
+          _applyResult(
+            UpdateElementResult(
+              bt.copyWithText(
+                fontSize: style.fontSize,
+                fontFamily: style.fontFamily,
+                textAlign: style.textAlign,
+                verticalAlign: style.verticalAlign,
+              ),
+            ),
+          );
         }
       }
     }
-
   }
 
   Widget _buildPropertyPanel() {
@@ -2092,9 +2068,11 @@ class _CanvasPageState extends State<_CanvasPage> {
         boundTextElements: boundText,
       );
       isLocked = style.locked == true;
-      showFullTextProps = style.hasText &&
-          (!style.hasArrowBoundText || style.hasShapeBoundText ||
-          elements.whereType<TextElement>().isNotEmpty);
+      showFullTextProps =
+          style.hasText &&
+          (!style.hasArrowBoundText ||
+              style.hasShapeBoundText ||
+              elements.whereType<TextElement>().isNotEmpty);
       textOnly = elements.every((e) => e is TextElement);
     } else if (_isCreationTool) {
       final toolType = _editorState.activeToolType;
@@ -2107,7 +2085,8 @@ class _CanvasPageState extends State<_CanvasPage> {
         roughness: _defaultStyle.roughness,
         opacity: _defaultStyle.opacity,
         roundness: _defaultStyle.roundness,
-        hasRoundness: toolType == ToolType.rectangle || toolType == ToolType.diamond,
+        hasRoundness:
+            toolType == ToolType.rectangle || toolType == ToolType.diamond,
         hasText: toolType == ToolType.text,
         hasLines: toolType == ToolType.line || toolType == ToolType.arrow,
         hasArrows: toolType == ToolType.arrow,
@@ -2180,7 +2159,9 @@ class _CanvasPageState extends State<_CanvasPage> {
                     if (showFullTextProps) ...[
                       _buildSectionLabel('Text align'),
                       _buildTextAlignCombinedRow(
-                          style.textAlign, style.verticalAlign),
+                        style.textAlign,
+                        style.verticalAlign,
+                      ),
                       const SizedBox(height: 8),
                     ],
                     _buildSectionLabel('Opacity'),
@@ -2188,121 +2169,137 @@ class _CanvasPageState extends State<_CanvasPage> {
                   ],
                 ),
               ] else ...[
-              IgnorePointer(
-                ignoring: isLocked,
-                child: Opacity(
-                  opacity: isLocked ? 0.4 : 1.0,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                    _buildSectionLabel('Stroke'),
-                    _buildColorPickerRow(
-                      selected: style.strokeColor,
-                      onSelect: (c) =>
-                          _applyStyleChange(ElementStyle(strokeColor: c)),
-                      quickPicks: _strokeQuickPicks,
+                IgnorePointer(
+                  ignoring: isLocked,
+                  child: Opacity(
+                    opacity: isLocked ? 0.4 : 1.0,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionLabel('Stroke'),
+                        _buildColorPickerRow(
+                          selected: style.strokeColor,
+                          onSelect: (c) =>
+                              _applyStyleChange(ElementStyle(strokeColor: c)),
+                          quickPicks: _strokeQuickPicks,
+                        ),
+                        if (!textOnly) ...[
+                          const SizedBox(height: 8),
+                          _buildSectionLabel('Background'),
+                          _buildColorPickerRow(
+                            selected: style.backgroundColor,
+                            onSelect: (c) => _applyStyleChange(
+                              ElementStyle(backgroundColor: c),
+                            ),
+                            quickPicks: _backgroundQuickPicks,
+                          ),
+                          const SizedBox(height: 8),
+                          _buildSectionLabel('Fill style'),
+                          _buildFillStyleRow(style.fillStyle),
+                          const SizedBox(height: 8),
+                          _buildSectionLabel('Stroke width'),
+                          _buildStrokeWidthRow(style.strokeWidth),
+                          const SizedBox(height: 8),
+                          _buildSectionLabel('Stroke style'),
+                          _buildStrokeStyleRow(style.strokeStyle),
+                          const SizedBox(height: 8),
+                          _buildSectionLabel('Sloppiness'),
+                          _buildRoughnessRow(style.roughness),
+                          if (style.hasRoundness) ...[
+                            const SizedBox(height: 8),
+                            _buildSectionLabel('Roundness'),
+                            _buildRoundnessRow(style.roundness),
+                          ],
+                        ],
+                        if (style.hasArrows) ...[
+                          const SizedBox(height: 8),
+                          _buildSectionLabel('Arrow type'),
+                          _buildArrowTypeRow(style.arrowType),
+                        ],
+                        if (showFullTextProps) ...[
+                          const SizedBox(height: 12),
+                          _buildSectionLabel('Font family'),
+                          _buildFontFamilyRow(style.fontFamily),
+                        ],
+                        if (style.hasText) ...[
+                          const SizedBox(height: 8),
+                          _buildSectionLabel('Font size'),
+                          _buildFontSizeRow(style.fontSize),
+                        ],
+                        if (showFullTextProps) ...[
+                          const SizedBox(height: 8),
+                          _buildSectionLabel('Text align'),
+                          _buildTextAlignCombinedRow(
+                            style.textAlign,
+                            style.verticalAlign,
+                          ),
+                        ],
+                        if (style.hasLines) ...[
+                          const SizedBox(height: 8),
+                          _buildArrowheadRow(
+                            label: 'Start arrowhead',
+                            current: style.startArrowhead,
+                            isNone: style.startArrowheadNone,
+                            onSelect: (a) {
+                              if (a == null) {
+                                _applyStyleChange(
+                                  const ElementStyle(
+                                    hasLines: true,
+                                    startArrowheadNone: true,
+                                  ),
+                                );
+                              } else {
+                                _applyStyleChange(
+                                  ElementStyle(
+                                    hasLines: true,
+                                    startArrowhead: a,
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 4),
+                          _buildArrowheadRow(
+                            label: 'End arrowhead',
+                            current: style.endArrowhead,
+                            isNone: style.endArrowheadNone,
+                            onSelect: (a) {
+                              if (a == null) {
+                                _applyStyleChange(
+                                  const ElementStyle(
+                                    hasLines: true,
+                                    endArrowheadNone: true,
+                                  ),
+                                );
+                              } else {
+                                _applyStyleChange(
+                                  ElementStyle(hasLines: true, endArrowhead: a),
+                                );
+                              }
+                            },
+                          ),
+                        ],
+                        const SizedBox(height: 8),
+                        _buildSectionLabel('Opacity'),
+                        _buildOpacitySlider(style.opacity),
+                      ],
                     ),
-                    if (!textOnly) ...[
-                    const SizedBox(height: 8),
-                    _buildSectionLabel('Background'),
-                    _buildColorPickerRow(
-                      selected: style.backgroundColor,
-                      onSelect: (c) =>
-                          _applyStyleChange(ElementStyle(backgroundColor: c)),
-                      quickPicks: _backgroundQuickPicks,
-                    ),
-                    const SizedBox(height: 8),
-                    _buildSectionLabel('Fill style'),
-                    _buildFillStyleRow(style.fillStyle),
-                    const SizedBox(height: 8),
-                    _buildSectionLabel('Stroke width'),
-                    _buildStrokeWidthRow(style.strokeWidth),
-                    const SizedBox(height: 8),
-                    _buildSectionLabel('Stroke style'),
-                    _buildStrokeStyleRow(style.strokeStyle),
-                    const SizedBox(height: 8),
-                    _buildSectionLabel('Sloppiness'),
-                    _buildRoughnessRow(style.roughness),
-                    if (style.hasRoundness) ...[
-                      const SizedBox(height: 8),
-                      _buildSectionLabel('Roundness'),
-                      _buildRoundnessRow(style.roundness),
-                    ],
-                    ],
-                    if (style.hasArrows) ...[
-                      const SizedBox(height: 8),
-                      _buildSectionLabel('Arrow type'),
-                      _buildArrowTypeRow(style.arrowType),
-                    ],
-                    if (showFullTextProps) ...[
-                      const SizedBox(height: 12),
-                      _buildSectionLabel('Font family'),
-                      _buildFontFamilyRow(style.fontFamily),
-                    ],
-                    if (style.hasText) ...[
-                      const SizedBox(height: 8),
-                      _buildSectionLabel('Font size'),
-                      _buildFontSizeRow(style.fontSize),
-                    ],
-                    if (showFullTextProps) ...[
-                      const SizedBox(height: 8),
-                      _buildSectionLabel('Text align'),
-                      _buildTextAlignCombinedRow(
-                          style.textAlign, style.verticalAlign),
-                    ],
-                    if (style.hasLines) ...[
-                      const SizedBox(height: 8),
-                      _buildArrowheadRow(
-                        label: 'Start arrowhead',
-                        current: style.startArrowhead,
-                        isNone: style.startArrowheadNone,
-                        onSelect: (a) {
-                          if (a == null) {
-                            _applyStyleChange(const ElementStyle(
-                                hasLines: true, startArrowheadNone: true));
-                          } else {
-                            _applyStyleChange(ElementStyle(
-                                hasLines: true, startArrowhead: a));
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 4),
-                      _buildArrowheadRow(
-                        label: 'End arrowhead',
-                        current: style.endArrowhead,
-                        isNone: style.endArrowheadNone,
-                        onSelect: (a) {
-                          if (a == null) {
-                            _applyStyleChange(const ElementStyle(
-                                hasLines: true, endArrowheadNone: true));
-                          } else {
-                            _applyStyleChange(ElementStyle(
-                                hasLines: true, endArrowhead: a));
-                          }
-                        },
-                      ),
-                    ],
-                    const SizedBox(height: 8),
-                    _buildSectionLabel('Opacity'),
-                    _buildOpacitySlider(style.opacity),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-            if (elements.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              _buildSectionLabel('Layer order'),
-              _buildLayerButtons(),
-              const SizedBox(height: 8),
-              _buildAlignmentButtons(elements.length),
-              const SizedBox(height: 12),
-              _buildSectionLabel('Locked'),
-              _buildLockToggle(style.locked),
-            ],
+                if (elements.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  _buildSectionLabel('Layer order'),
+                  _buildLayerButtons(),
+                  const SizedBox(height: 8),
+                  _buildAlignmentButtons(elements.length),
+                  const SizedBox(height: 12),
+                  _buildSectionLabel('Locked'),
+                  _buildLockToggle(style.locked),
+                ],
               ],
-          ],
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -2428,8 +2425,7 @@ class _CanvasPageState extends State<_CanvasPage> {
         for (var i = 0; i < styles.length; i++)
           _IconToggleChip(
             isSelected: current == styles[i],
-            onTap: () =>
-                _applyStyleChange(ElementStyle(fillStyle: styles[i])),
+            onTap: () => _applyStyleChange(ElementStyle(fillStyle: styles[i])),
             tooltip: names[i],
             child: CustomPaint(
               size: const Size(20, 20),
@@ -2450,8 +2446,7 @@ class _CanvasPageState extends State<_CanvasPage> {
         for (var i = 0; i < values.length; i++)
           _IconToggleChip(
             isSelected: current == values[i],
-            onTap: () =>
-                _applyStyleChange(ElementStyle(roughness: values[i])),
+            onTap: () => _applyStyleChange(ElementStyle(roughness: values[i])),
             tooltip: tooltips[i],
             child: CustomPaint(
               size: const Size(20, 20),
@@ -2482,9 +2477,7 @@ class _CanvasPageState extends State<_CanvasPage> {
         _IconToggleChip(
           isSelected: !isRound,
           onTap: () {
-            _applyStyleChange(
-              const ElementStyle(hasRoundness: true),
-            );
+            _applyStyleChange(const ElementStyle(hasRoundness: true));
           },
           tooltip: 'Sharp',
           child: CustomPaint(
@@ -2508,9 +2501,9 @@ class _CanvasPageState extends State<_CanvasPage> {
                     : const Roundness.adaptive(value: 0);
                 results.add(UpdateElementResult(e.copyWith(roundness: r)));
               }
-              _applyResult(results.length == 1
-                  ? results.first
-                  : CompoundResult(results));
+              _applyResult(
+                results.length == 1 ? results.first : CompoundResult(results),
+              );
             } else {
               // Update defaults for creation tools
               _applyStyleChange(
@@ -2541,8 +2534,7 @@ class _CanvasPageState extends State<_CanvasPage> {
             isSelected: current == type,
             onTap: () {
               _historyManager.push(_editorState.scene);
-              _applyStyleChange(
-                  ElementStyle(hasArrows: true, arrowType: type));
+              _applyStyleChange(ElementStyle(hasArrows: true, arrowType: type));
             },
             tooltip: switch (type) {
               ArrowType.sharp => 'Sharp',
@@ -2615,12 +2607,11 @@ class _CanvasPageState extends State<_CanvasPage> {
           onTap: () {
             _historyManager.push(_editorState.scene);
             final ids = _editorState.selectedIds;
-            final updated =
-                LayerUtils.sendToBack(_editorState.scene, ids);
+            final updated = LayerUtils.sendToBack(_editorState.scene, ids);
             if (updated.isEmpty) return;
-            _applyResult(CompoundResult([
-              for (final e in updated) UpdateElementResult(e),
-            ]));
+            _applyResult(
+              CompoundResult([for (final e in updated) UpdateElementResult(e)]),
+            );
           },
           tooltip: 'Send to back (Ctrl+Shift+[)',
           child: const Icon(Icons.vertical_align_bottom, size: 18),
@@ -2630,12 +2621,11 @@ class _CanvasPageState extends State<_CanvasPage> {
           onTap: () {
             _historyManager.push(_editorState.scene);
             final ids = _editorState.selectedIds;
-            final updated =
-                LayerUtils.sendBackward(_editorState.scene, ids);
+            final updated = LayerUtils.sendBackward(_editorState.scene, ids);
             if (updated.isEmpty) return;
-            _applyResult(CompoundResult([
-              for (final e in updated) UpdateElementResult(e),
-            ]));
+            _applyResult(
+              CompoundResult([for (final e in updated) UpdateElementResult(e)]),
+            );
           },
           tooltip: 'Send backward (Ctrl+[)',
           child: const Icon(Icons.arrow_downward, size: 18),
@@ -2645,12 +2635,11 @@ class _CanvasPageState extends State<_CanvasPage> {
           onTap: () {
             _historyManager.push(_editorState.scene);
             final ids = _editorState.selectedIds;
-            final updated =
-                LayerUtils.bringForward(_editorState.scene, ids);
+            final updated = LayerUtils.bringForward(_editorState.scene, ids);
             if (updated.isEmpty) return;
-            _applyResult(CompoundResult([
-              for (final e in updated) UpdateElementResult(e),
-            ]));
+            _applyResult(
+              CompoundResult([for (final e in updated) UpdateElementResult(e)]),
+            );
           },
           tooltip: 'Bring forward (Ctrl+])',
           child: const Icon(Icons.arrow_upward, size: 18),
@@ -2660,12 +2649,11 @@ class _CanvasPageState extends State<_CanvasPage> {
           onTap: () {
             _historyManager.push(_editorState.scene);
             final ids = _editorState.selectedIds;
-            final updated =
-                LayerUtils.bringToFront(_editorState.scene, ids);
+            final updated = LayerUtils.bringToFront(_editorState.scene, ids);
             if (updated.isEmpty) return;
-            _applyResult(CompoundResult([
-              for (final e in updated) UpdateElementResult(e),
-            ]));
+            _applyResult(
+              CompoundResult([for (final e in updated) UpdateElementResult(e)]),
+            );
           },
           tooltip: 'Bring to front (Ctrl+Shift+])',
           child: const Icon(Icons.vertical_align_top, size: 18),
@@ -2683,18 +2671,36 @@ class _CanvasPageState extends State<_CanvasPage> {
         Wrap(
           spacing: 4,
           children: [
-            _alignButton(Icons.align_horizontal_left, 'Align left',
-                AlignmentUtils.alignLeft),
-            _alignButton(Icons.align_horizontal_center, 'Align center H',
-                AlignmentUtils.alignCenterH),
-            _alignButton(Icons.align_horizontal_right, 'Align right',
-                AlignmentUtils.alignRight),
-            _alignButton(Icons.align_vertical_top, 'Align top',
-                AlignmentUtils.alignTop),
-            _alignButton(Icons.align_vertical_center, 'Align center V',
-                AlignmentUtils.alignCenterV),
-            _alignButton(Icons.align_vertical_bottom, 'Align bottom',
-                AlignmentUtils.alignBottom),
+            _alignButton(
+              Icons.align_horizontal_left,
+              'Align left',
+              AlignmentUtils.alignLeft,
+            ),
+            _alignButton(
+              Icons.align_horizontal_center,
+              'Align center H',
+              AlignmentUtils.alignCenterH,
+            ),
+            _alignButton(
+              Icons.align_horizontal_right,
+              'Align right',
+              AlignmentUtils.alignRight,
+            ),
+            _alignButton(
+              Icons.align_vertical_top,
+              'Align top',
+              AlignmentUtils.alignTop,
+            ),
+            _alignButton(
+              Icons.align_vertical_center,
+              'Align center V',
+              AlignmentUtils.alignCenterV,
+            ),
+            _alignButton(
+              Icons.align_vertical_bottom,
+              'Align bottom',
+              AlignmentUtils.alignBottom,
+            ),
           ],
         ),
         if (selectedCount >= 3) ...[
@@ -2703,10 +2709,16 @@ class _CanvasPageState extends State<_CanvasPage> {
           Wrap(
             spacing: 4,
             children: [
-              _alignButton(Icons.horizontal_distribute, 'Distribute H',
-                  AlignmentUtils.distributeH),
-              _alignButton(Icons.vertical_distribute, 'Distribute V',
-                  AlignmentUtils.distributeV),
+              _alignButton(
+                Icons.horizontal_distribute,
+                'Distribute H',
+                AlignmentUtils.distributeH,
+              ),
+              _alignButton(
+                Icons.vertical_distribute,
+                'Distribute V',
+                AlignmentUtils.distributeV,
+              ),
             ],
           ),
         ],
@@ -2731,9 +2743,9 @@ class _CanvasPageState extends State<_CanvasPage> {
           _historyManager.push(_editorState.scene);
           final updated = operation(elements);
           if (updated.isEmpty) return;
-          _applyResult(CompoundResult([
-            for (final e in updated) UpdateElementResult(e),
-          ]));
+          _applyResult(
+            CompoundResult([for (final e in updated) UpdateElementResult(e)]),
+          );
         },
       ),
     );
@@ -2744,22 +2756,22 @@ class _CanvasPageState extends State<_CanvasPage> {
     return Align(
       alignment: Alignment.centerLeft,
       child: _IconToggleChip(
-      isSelected: isLocked,
-      onTap: () {
-        _historyManager.push(_editorState.scene);
-        final elements = _selectedElements;
-        if (elements.isEmpty) return;
-        final on = !isLocked;
-        final results = <ToolResult>[
-          for (final e in elements)
-            UpdateElementResult(e.copyWith(locked: on)),
-        ];
-        _applyResult(
-          results.length == 1 ? results.first : CompoundResult(results),
-        );
-      },
-      tooltip: isLocked ? 'Unlock' : 'Lock',
-      child: Icon(isLocked ? Icons.lock : Icons.lock_open, size: 18),
+        isSelected: isLocked,
+        onTap: () {
+          _historyManager.push(_editorState.scene);
+          final elements = _selectedElements;
+          if (elements.isEmpty) return;
+          final on = !isLocked;
+          final results = <ToolResult>[
+            for (final e in elements)
+              UpdateElementResult(e.copyWith(locked: on)),
+          ];
+          _applyResult(
+            results.length == 1 ? results.first : CompoundResult(results),
+          );
+        },
+        tooltip: isLocked ? 'Unlock' : 'Lock',
+        child: Icon(isLocked ? Icons.lock : Icons.lock_open, size: 18),
       ),
     );
   }
@@ -2789,7 +2801,9 @@ class _CanvasPageState extends State<_CanvasPage> {
   }
 
   Widget _buildTextAlignCombinedRow(
-      core.TextAlign? hCurrent, VerticalAlign? vCurrent) {
+    core.TextAlign? hCurrent,
+    VerticalAlign? vCurrent,
+  ) {
     const hAligns = core.TextAlign.values;
     const hIcons = [
       Icons.format_align_left,
@@ -2972,9 +2986,7 @@ class _CanvasPageState extends State<_CanvasPage> {
       } else if (!element.autoResize && element.width > 0) {
         // Fixed-width text: wrap within width, grow height but never shrink
         final (_, h) = TextRenderer.measure(measured, maxWidth: element.width);
-        final updated = measured.copyWith(
-          height: math.max(h, element.height),
-        );
+        final updated = measured.copyWith(height: math.max(h, element.height));
         _editorState = _editorState.applyResult(UpdateElementResult(updated));
       } else {
         // Standalone text: auto-resize using TextRenderer.measure
@@ -3034,7 +3046,76 @@ class _CanvasPageState extends State<_CanvasPage> {
                     VerticalAlign.middle => Alignment.center,
                     VerticalAlign.bottom => Alignment.bottomCenter,
                   },
-                  child: TextSelectionGestureDetectorBuilder(
+                  child:
+                      TextSelectionGestureDetectorBuilder(
+                        delegate: _TextSelectionDelegate(_editableTextKey),
+                      ).buildGestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        child: EditableText(
+                          key: _editableTextKey,
+                          rendererIgnoresPointer: true,
+                          controller: _textEditingController,
+                          focusNode: _textFocusNode,
+                          autofocus: true,
+                          textAlign: flutterTextAlign,
+                          style: FontResolver.resolve(
+                            fontFamily,
+                            baseStyle: TextStyle(
+                              fontSize: fontSize,
+                              color: textColor,
+                              height: lineHeight,
+                            ),
+                          ),
+                          cursorColor: Colors.blue,
+                          backgroundCursorColor: Colors.grey,
+                          selectionColor: Colors.blue.shade300.withValues(
+                            alpha: 0.5,
+                          ),
+                          maxLines: null,
+                          onChanged: (_) => _onTextChanged(),
+                          onSubmitted: (_) => _commitTextEditing(),
+                        ),
+                      ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+    }
+
+    // Fixed-width text: position at element's top-left, constrain width
+    if (textElem != null && !textElem.autoResize && textElem.width > 0) {
+      final topLeftScene = Offset(element.x, element.y);
+      final screenTopLeft = _editorState.viewport.sceneToScreen(topLeftScene);
+      final screenW = textElem.width * zoom;
+      final screenH = element.height * zoom;
+      final centerScene = Offset(
+        element.x + element.width / 2,
+        element.y + element.height / 2,
+      );
+      final screenCenter = _editorState.viewport.sceneToScreen(centerScene);
+
+      return Positioned(
+        left: screenTopLeft.dx,
+        top: screenTopLeft.dy,
+        child: Transform.rotate(
+          angle: element.angle,
+          origin: Offset(
+            screenCenter.dx - screenTopLeft.dx,
+            screenCenter.dy - screenTopLeft.dy,
+          ),
+          child: SizedBox(
+            width: screenW,
+            height: screenH > 0 ? screenH : null,
+            child: Align(
+              alignment: switch (textElem.verticalAlign) {
+                VerticalAlign.top => Alignment.topLeft,
+                VerticalAlign.middle => Alignment.centerLeft,
+                VerticalAlign.bottom => Alignment.bottomLeft,
+              },
+              child:
+                  TextSelectionGestureDetectorBuilder(
                     delegate: _TextSelectionDelegate(_editableTextKey),
                   ).buildGestureDetector(
                     behavior: HitTestBehavior.translucent,
@@ -3063,74 +3144,6 @@ class _CanvasPageState extends State<_CanvasPage> {
                       onSubmitted: (_) => _commitTextEditing(),
                     ),
                   ),
-                ),
-              ),
-            ),
-          ),
-        );
-      }
-    }
-
-    // Fixed-width text: position at element's top-left, constrain width
-    if (textElem != null && !textElem.autoResize && textElem.width > 0) {
-      final topLeftScene = Offset(element.x, element.y);
-      final screenTopLeft =
-          _editorState.viewport.sceneToScreen(topLeftScene);
-      final screenW = textElem.width * zoom;
-      final screenH = element.height * zoom;
-      final centerScene = Offset(
-        element.x + element.width / 2,
-        element.y + element.height / 2,
-      );
-      final screenCenter =
-          _editorState.viewport.sceneToScreen(centerScene);
-
-      return Positioned(
-        left: screenTopLeft.dx,
-        top: screenTopLeft.dy,
-        child: Transform.rotate(
-          angle: element.angle,
-          origin: Offset(
-            screenCenter.dx - screenTopLeft.dx,
-            screenCenter.dy - screenTopLeft.dy,
-          ),
-          child: SizedBox(
-            width: screenW,
-            height: screenH > 0 ? screenH : null,
-            child: Align(
-              alignment: switch (textElem.verticalAlign) {
-                VerticalAlign.top => Alignment.topLeft,
-                VerticalAlign.middle => Alignment.centerLeft,
-                VerticalAlign.bottom => Alignment.bottomLeft,
-              },
-              child: TextSelectionGestureDetectorBuilder(
-                delegate: _TextSelectionDelegate(_editableTextKey),
-              ).buildGestureDetector(
-                behavior: HitTestBehavior.translucent,
-                child: EditableText(
-                  key: _editableTextKey,
-                  rendererIgnoresPointer: true,
-                  controller: _textEditingController,
-                  focusNode: _textFocusNode,
-                  autofocus: true,
-                  textAlign: flutterTextAlign,
-                  style: FontResolver.resolve(
-                    fontFamily,
-                    baseStyle: TextStyle(
-                      fontSize: fontSize,
-                      color: textColor,
-                      height: lineHeight,
-                    ),
-                  ),
-                  cursorColor: Colors.blue,
-                  backgroundCursorColor: Colors.grey,
-                  selectionColor:
-                      Colors.blue.shade300.withValues(alpha: 0.5),
-                  maxLines: null,
-                  onChanged: (_) => _onTextChanged(),
-                  onSubmitted: (_) => _commitTextEditing(),
-                ),
-              ),
             ),
           ),
         ),
@@ -3296,9 +3309,7 @@ class _CanvasPageState extends State<_CanvasPage> {
     );
     if (elem == null) return null;
     if (elem is LineElement) {
-      return elem.points
-          .map((p) => Point(elem.x + p.x, elem.y + p.y))
-          .toList();
+      return elem.points.map((p) => Point(elem.x + p.x, elem.y + p.y)).toList();
     }
     return null;
   }
@@ -3316,10 +3327,7 @@ class _CanvasPageState extends State<_CanvasPage> {
     for (var i = 0; i < elem.points.length - 1; i++) {
       final a = elem.points[i];
       final b = elem.points[i + 1];
-      midpoints.add(Point(
-        elem.x + (a.x + b.x) / 2,
-        elem.y + (a.y + b.y) / 2,
-      ));
+      midpoints.add(Point(elem.x + (a.x + b.x) / 2, elem.y + (a.y + b.y) / 2));
     }
     return midpoints;
   }
@@ -3339,10 +3347,7 @@ class _CanvasPageState extends State<_CanvasPage> {
     for (var i = 0; i < elem.points.length - 1; i++) {
       final a = elem.points[i];
       final b = elem.points[i + 1];
-      midpoints.add(Point(
-        elem.x + (a.x + b.x) / 2,
-        elem.y + (a.y + b.y) / 2,
-      ));
+      midpoints.add(Point(elem.x + (a.x + b.x) / 2, elem.y + (a.y + b.y) / 2));
     }
     return midpoints;
   }
@@ -3357,28 +3362,41 @@ class _CanvasPageState extends State<_CanvasPage> {
     return SelectionOverlay.fromElements(selected, mode: _interactionMode);
   }
 
-  Widget _iconWidgetFor(ToolType type, {Color? color, double? size}) {
+  Widget _iconWidgetFor(
+    ToolType type, {
+    Color? color,
+    double? size,
+    bool isActive = false,
+  }) {
     final s = size ?? 24;
     if (type == ToolType.diamond) {
       return CustomPaint(
         size: Size(s, s),
-        painter: _DiamondIconPainter(color: color ?? Colors.grey.shade800),
+        painter: _DiamondIconPainter(
+          color: color ?? Colors.grey.shade800,
+          filled: isActive,
+        ),
       );
     }
-    return Icon(_iconFor(type), color: color, size: s);
+    return Icon(
+      _iconFor(type, isActive: isActive),
+      color: color,
+      size: s,
+    );
   }
 
-  IconData _iconFor(ToolType type) {
+  IconData _iconFor(ToolType type, {bool isActive = false}) {
     return switch (type) {
       ToolType.select => Icons.near_me,
-      ToolType.rectangle => Icons.rectangle_outlined,
-      ToolType.ellipse => Icons.circle_outlined,
+      ToolType.rectangle =>
+        isActive ? Icons.rectangle : Icons.rectangle_outlined,
+      ToolType.ellipse => isActive ? Icons.circle : Icons.circle_outlined,
       ToolType.diamond => Icons.square_outlined,
       ToolType.line => Icons.show_chart,
       ToolType.arrow => Icons.arrow_forward,
       ToolType.freedraw => Icons.draw,
       ToolType.text => Icons.text_fields,
-      ToolType.hand => Icons.pan_tool,
+      ToolType.hand => Icons.pan_tool_outlined,
       ToolType.frame => Icons.crop_free,
     };
   }
@@ -3406,8 +3424,7 @@ class _ColorSwatch extends StatelessWidget {
     final parsed = _parseColor(color);
     final isTransparent = color == 'transparent';
     // Light colors get a gray outline for visibility (like Excalidraw)
-    final isLight =
-        !isTransparent && (parsed.r + parsed.g + parsed.b) > 1.8;
+    final isLight = !isTransparent && (parsed.r + parsed.g + parsed.b) > 1.8;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -3419,8 +3436,8 @@ class _ColorSwatch extends StatelessWidget {
             color: isSelected
                 ? Colors.blue
                 : (isLight || isTransparent)
-                    ? Colors.grey.shade400
-                    : Colors.transparent,
+                ? Colors.grey.shade400
+                : Colors.transparent,
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(4),
@@ -3464,8 +3481,7 @@ class _ColorPickerButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final parsed = _parseColor(color);
     final isTransparent = color == 'transparent';
-    final isLight =
-        !isTransparent && (parsed.r + parsed.g + parsed.b) > 1.8;
+    final isLight = !isTransparent && (parsed.r + parsed.g + parsed.b) > 1.8;
     return GestureDetector(
       onTap: () => _showPalettePopup(context),
       child: Container(
@@ -3477,8 +3493,8 @@ class _ColorPickerButton extends StatelessWidget {
             color: isActive
                 ? Colors.blue
                 : (isLight || isTransparent)
-                    ? Colors.grey.shade400
-                    : Colors.grey.shade300,
+                ? Colors.grey.shade400
+                : Colors.grey.shade300,
             width: isActive ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(4),
@@ -3606,8 +3622,7 @@ class _ColorPaletteOverlayState extends State<_ColorPaletteOverlay> {
                           color: widget.currentColor == 'transparent'
                               ? Colors.blue
                               : Colors.grey.shade400,
-                          width:
-                              widget.currentColor == 'transparent' ? 2 : 1,
+                          width: widget.currentColor == 'transparent' ? 2 : 1,
                         ),
                         borderRadius: BorderRadius.circular(4),
                       ),
@@ -3624,8 +3639,7 @@ class _ColorPaletteOverlayState extends State<_ColorPaletteOverlay> {
                         children: [
                           for (final hex in row)
                             Padding(
-                              padding:
-                                  const EdgeInsets.only(right: spacing),
+                              padding: const EdgeInsets.only(right: spacing),
                               child: _buildGridSwatch(hex, swatchSize),
                             ),
                         ],
@@ -3641,7 +3655,9 @@ class _ColorPaletteOverlayState extends State<_ColorPaletteOverlay> {
                         hintText: '#rrggbb',
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 6),
+                          horizontal: 8,
+                          vertical: 6,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(4),
                         ),
@@ -3667,8 +3683,7 @@ class _ColorPaletteOverlayState extends State<_ColorPaletteOverlay> {
   Widget _buildGridSwatch(String hex, double size) {
     final parsed = _parseColor(hex);
     final isLight = (parsed.r + parsed.g + parsed.b) > 1.8;
-    final isSelected =
-        widget.currentColor.toLowerCase() == hex.toLowerCase();
+    final isSelected = widget.currentColor.toLowerCase() == hex.toLowerCase();
     return GestureDetector(
       onTap: () => widget.onSelect(hex),
       child: Container(
@@ -3680,8 +3695,8 @@ class _ColorPaletteOverlayState extends State<_ColorPaletteOverlay> {
             color: isSelected
                 ? Colors.blue
                 : isLight
-                    ? Colors.grey.shade300
-                    : Colors.transparent,
+                ? Colors.grey.shade300
+                : Colors.transparent,
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(3),
@@ -3699,7 +3714,8 @@ class _ColorPaletteOverlayState extends State<_ColorPaletteOverlay> {
 
 class _DiamondIconPainter extends CustomPainter {
   final Color color;
-  _DiamondIconPainter({required this.color});
+  final bool filled;
+  _DiamondIconPainter({required this.color, this.filled = false});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -3718,14 +3734,15 @@ class _DiamondIconPainter extends CustomPainter {
       ),
       Paint()
         ..color = color
-        ..style = PaintingStyle.stroke
+        ..style = filled ? PaintingStyle.fill : PaintingStyle.stroke
         ..strokeWidth = 2.0,
     );
     canvas.restore();
   }
 
   @override
-  bool shouldRepaint(_DiamondIconPainter old) => old.color != color;
+  bool shouldRepaint(_DiamondIconPainter old) =>
+      old.color != color || old.filled != filled;
 }
 
 class _DiagonalLinePainter extends CustomPainter {
@@ -3930,7 +3947,11 @@ class _StrokeStyleIcon extends CustomPainter {
       case 'dotted':
         var x = 5.0;
         while (x < size.width - 4) {
-          canvas.drawCircle(Offset(x, y), 1.0, paint..style = PaintingStyle.fill);
+          canvas.drawCircle(
+            Offset(x, y),
+            1.0,
+            paint..style = PaintingStyle.fill,
+          );
           x += 5;
         }
     }
@@ -3996,7 +4017,12 @@ class _RoundnessIcon extends CustomPainter {
     if (rounded) {
       path.moveTo(size.width - 6, 6);
       path.lineTo(size.width - 6, 12);
-      path.quadraticBezierTo(size.width - 6, size.height - 6, 12, size.height - 6);
+      path.quadraticBezierTo(
+        size.width - 6,
+        size.height - 6,
+        12,
+        size.height - 6,
+      );
       path.lineTo(6, size.height - 6);
     } else {
       path.moveTo(size.width - 6, 6);
@@ -4031,7 +4057,12 @@ class _ArrowTypeIcon extends CustomPainter {
       case 'round':
         // Curved path
         path.moveTo(5, size.height - 5);
-        path.quadraticBezierTo(size.width / 2, 2, size.width - 5, size.height - 5);
+        path.quadraticBezierTo(
+          size.width / 2,
+          2,
+          size.width - 5,
+          size.height - 5,
+        );
       case 'elbow':
         // Right-angle path
         path.moveTo(5, size.height - 5);
@@ -4104,7 +4135,10 @@ class _ArrowheadIcon extends CustomPainter {
       case Arrowhead.dot:
         // Filled circle
         canvas.drawCircle(
-            Offset(tipX, cy), 3, paint..style = PaintingStyle.fill);
+          Offset(tipX, cy),
+          3,
+          paint..style = PaintingStyle.fill,
+        );
       case Arrowhead.triangle:
         // Filled triangle
         final path = Path()
