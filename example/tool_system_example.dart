@@ -2077,6 +2077,7 @@ class _CanvasPageState extends State<_CanvasPage> {
     final ElementStyle style;
     final bool isLocked;
     final bool showFullTextProps;
+    bool textOnly = false;
 
     final isEditingText = _editingTextElementId != null;
 
@@ -2094,6 +2095,7 @@ class _CanvasPageState extends State<_CanvasPage> {
       showFullTextProps = style.hasText &&
           (!style.hasArrowBoundText || style.hasShapeBoundText ||
           elements.whereType<TextElement>().isNotEmpty);
+      textOnly = elements.every((e) => e is TextElement);
     } else if (_isCreationTool) {
       final toolType = _editorState.activeToolType;
       style = ElementStyle(
@@ -2121,6 +2123,7 @@ class _CanvasPageState extends State<_CanvasPage> {
       );
       isLocked = false;
       showFullTextProps = style.hasText;
+      textOnly = style.hasText;
     } else {
       return const SizedBox.shrink();
     }
@@ -2156,6 +2159,14 @@ class _CanvasPageState extends State<_CanvasPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    _buildSectionLabel('Stroke'),
+                    _buildColorPickerRow(
+                      selected: style.strokeColor,
+                      onSelect: (c) =>
+                          _applyStyleChange(ElementStyle(strokeColor: c)),
+                      quickPicks: _strokeQuickPicks,
+                    ),
+                    const SizedBox(height: 8),
                     if (showFullTextProps) ...[
                       _buildSectionLabel('Font family'),
                       _buildFontFamilyRow(style.fontFamily),
@@ -2191,6 +2202,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                           _applyStyleChange(ElementStyle(strokeColor: c)),
                       quickPicks: _strokeQuickPicks,
                     ),
+                    if (!textOnly) ...[
                     const SizedBox(height: 8),
                     _buildSectionLabel('Background'),
                     _buildColorPickerRow(
@@ -2215,6 +2227,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                       const SizedBox(height: 8),
                       _buildSectionLabel('Roundness'),
                       _buildRoundnessRow(style.roundness),
+                    ],
                     ],
                     if (style.hasArrows) ...[
                       const SizedBox(height: 8),
@@ -3084,32 +3097,39 @@ class _CanvasPageState extends State<_CanvasPage> {
           child: SizedBox(
             width: screenW,
             height: screenH > 0 ? screenH : null,
-            child: TextSelectionGestureDetectorBuilder(
-              delegate: _TextSelectionDelegate(_editableTextKey),
-            ).buildGestureDetector(
-              behavior: HitTestBehavior.translucent,
-              child: EditableText(
-                key: _editableTextKey,
-                rendererIgnoresPointer: true,
-                controller: _textEditingController,
-                focusNode: _textFocusNode,
-                autofocus: true,
-                textAlign: flutterTextAlign,
-                style: FontResolver.resolve(
-                  fontFamily,
-                  baseStyle: TextStyle(
-                    fontSize: fontSize,
-                    color: textColor,
-                    height: lineHeight,
+            child: Align(
+              alignment: switch (textElem.verticalAlign) {
+                VerticalAlign.top => Alignment.topLeft,
+                VerticalAlign.middle => Alignment.centerLeft,
+                VerticalAlign.bottom => Alignment.bottomLeft,
+              },
+              child: TextSelectionGestureDetectorBuilder(
+                delegate: _TextSelectionDelegate(_editableTextKey),
+              ).buildGestureDetector(
+                behavior: HitTestBehavior.translucent,
+                child: EditableText(
+                  key: _editableTextKey,
+                  rendererIgnoresPointer: true,
+                  controller: _textEditingController,
+                  focusNode: _textFocusNode,
+                  autofocus: true,
+                  textAlign: flutterTextAlign,
+                  style: FontResolver.resolve(
+                    fontFamily,
+                    baseStyle: TextStyle(
+                      fontSize: fontSize,
+                      color: textColor,
+                      height: lineHeight,
+                    ),
                   ),
+                  cursorColor: Colors.blue,
+                  backgroundCursorColor: Colors.grey,
+                  selectionColor:
+                      Colors.blue.shade300.withValues(alpha: 0.5),
+                  maxLines: null,
+                  onChanged: (_) => _onTextChanged(),
+                  onSubmitted: (_) => _commitTextEditing(),
                 ),
-                cursorColor: Colors.blue,
-                backgroundCursorColor: Colors.grey,
-                selectionColor:
-                    Colors.blue.shade300.withValues(alpha: 0.5),
-                maxLines: null,
-                onChanged: (_) => _onTextChanged(),
-                onSubmitted: (_) => _commitTextEditing(),
               ),
             ),
           ),

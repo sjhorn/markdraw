@@ -2,7 +2,8 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/painting.dart';
 
-import '../core/elements/elements.dart' as core show TextAlign, TextElement;
+import '../core/elements/elements.dart' as core
+    show TextAlign, TextElement, VerticalAlign;
 import 'font_resolver.dart';
 
 /// Renders text elements using Flutter's [TextPainter].
@@ -27,12 +28,24 @@ class TextRenderer {
   }
 
   /// Draws a [TextElement] onto [canvas] at the element's position.
+  ///
+  /// For elements with a fixed height (non-auto-resize), applies
+  /// [VerticalAlign] to position text within the element bounds.
   static void draw(ui.Canvas canvas, core.TextElement element) {
     if (element.text.isEmpty) return;
 
     final painter = buildTextPainter(element);
     painter.layout(maxWidth: element.width);
-    painter.paint(canvas, Offset(element.x, element.y));
+
+    final dy = switch (element.verticalAlign) {
+      core.VerticalAlign.top => 0.0,
+      core.VerticalAlign.middle =>
+        element.height > 0 ? (element.height - painter.height) / 2 : 0.0,
+      core.VerticalAlign.bottom =>
+        element.height > 0 ? element.height - painter.height : 0.0,
+    };
+
+    painter.paint(canvas, Offset(element.x, element.y + dy));
     painter.dispose();
   }
 
