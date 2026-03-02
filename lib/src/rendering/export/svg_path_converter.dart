@@ -36,15 +36,15 @@ class SvgPathConverter {
     double angle,
     double strokeWidth,
   ) {
-    final size = math.max(strokeWidth * 6.0, 8.0);
+    final size = _baseSize(type);
     return switch (type) {
       Arrowhead.arrow => _arrowPath(tip, angle, size),
       Arrowhead.triangle => _trianglePath(tip, angle, size),
       Arrowhead.triangleOutline => _trianglePath(tip, angle, size),
       Arrowhead.bar => _barPath(tip, angle, size),
-      Arrowhead.dot => _dotPath(tip, size),
-      Arrowhead.circle => _dotPath(tip, size),
-      Arrowhead.circleOutline => _dotPath(tip, size),
+      Arrowhead.dot => _circlePath(tip, size, strokeWidth),
+      Arrowhead.circle => _circlePath(tip, size, strokeWidth),
+      Arrowhead.circleOutline => _circlePath(tip, size, strokeWidth),
       Arrowhead.diamond => _diamondPath(tip, angle, size),
       Arrowhead.diamondOutline => _diamondPath(tip, angle, size),
       Arrowhead.crowfootOne => _crowfootOnePath(tip, angle, size),
@@ -93,16 +93,35 @@ class SvgPathConverter {
     return buf.toString();
   }
 
-  // -- Arrowhead path builders (same math as ArrowheadRenderer) --
+  // -- Size and angle constants matching Excalidraw --
 
-  static const double _halfAngle = 0.44;
+  /// Half-angle for arrow chevron (20°).
+  static const double _arrowHalfAngle = 0.349;
+
+  /// Half-angle for triangle, diamond, crowfoot (25°).
+  static const double _defaultHalfAngle = 0.436;
+
+  /// Fixed pixel sizes per arrowhead type, matching Excalidraw.
+  static double _baseSize(Arrowhead type) {
+    return switch (type) {
+      Arrowhead.arrow => 25.0,
+      Arrowhead.diamond || Arrowhead.diamondOutline => 12.0,
+      Arrowhead.crowfootOne ||
+      Arrowhead.crowfootMany ||
+      Arrowhead.crowfootOneOrMany =>
+        20.0,
+      _ => 15.0,
+    };
+  }
+
+  // -- Arrowhead path builders (same math as ArrowheadRenderer) --
 
   static String _arrowPath(Point tip, double angle, double size) {
     final backAngle = angle + math.pi;
-    final arm1X = tip.x + size * math.cos(backAngle + _halfAngle);
-    final arm1Y = tip.y + size * math.sin(backAngle + _halfAngle);
-    final arm2X = tip.x + size * math.cos(backAngle - _halfAngle);
-    final arm2Y = tip.y + size * math.sin(backAngle - _halfAngle);
+    final arm1X = tip.x + size * math.cos(backAngle + _arrowHalfAngle);
+    final arm1Y = tip.y + size * math.sin(backAngle + _arrowHalfAngle);
+    final arm2X = tip.x + size * math.cos(backAngle - _arrowHalfAngle);
+    final arm2Y = tip.y + size * math.sin(backAngle - _arrowHalfAngle);
 
     return 'M${_n(arm1X)} ${_n(arm1Y)}'
         'L${_n(tip.x)} ${_n(tip.y)}'
@@ -111,10 +130,10 @@ class SvgPathConverter {
 
   static String _trianglePath(Point tip, double angle, double size) {
     final backAngle = angle + math.pi;
-    final arm1X = tip.x + size * math.cos(backAngle + _halfAngle);
-    final arm1Y = tip.y + size * math.sin(backAngle + _halfAngle);
-    final arm2X = tip.x + size * math.cos(backAngle - _halfAngle);
-    final arm2Y = tip.y + size * math.sin(backAngle - _halfAngle);
+    final arm1X = tip.x + size * math.cos(backAngle + _defaultHalfAngle);
+    final arm1Y = tip.y + size * math.sin(backAngle + _defaultHalfAngle);
+    final arm2X = tip.x + size * math.cos(backAngle - _defaultHalfAngle);
+    final arm2Y = tip.y + size * math.sin(backAngle - _defaultHalfAngle);
 
     return 'M${_n(tip.x)} ${_n(tip.y)}'
         'L${_n(arm1X)} ${_n(arm1Y)}'
@@ -132,61 +151,58 @@ class SvgPathConverter {
     return 'M${_n(x1)} ${_n(y1)}L${_n(x2)} ${_n(y2)}';
   }
 
-  static String _dotPath(Point tip, double size) {
-    final radius = size * 0.35;
-    // Circle via two half-arcs
+  static String _circlePath(Point tip, double size, double strokeWidth) {
+    final radius = (size + strokeWidth - 2) / 2;
+    // Circle via two half-arcs, centered on tip
     return 'M${_n(tip.x - radius)} ${_n(tip.y)}'
         'A${_n(radius)} ${_n(radius)} 0 1 0 ${_n(tip.x + radius)} ${_n(tip.y)}'
         'A${_n(radius)} ${_n(radius)} 0 1 0 ${_n(tip.x - radius)} ${_n(tip.y)}';
   }
 
   static String _diamondPath(Point tip, double angle, double size) {
-    final s = size * 0.6;
     final backAngle = angle + math.pi;
-    final perpAngle = angle + math.pi / 2;
 
-    final backX = tip.x + s * math.cos(backAngle);
-    final backY = tip.y + s * math.sin(backAngle);
-    final midX = tip.x + s * 0.5 * math.cos(backAngle);
-    final midY = tip.y + s * 0.5 * math.sin(backAngle);
-    final leftX = midX + s * 0.4 * math.cos(perpAngle);
-    final leftY = midY + s * 0.4 * math.sin(perpAngle);
-    final rightX = midX - s * 0.4 * math.cos(perpAngle);
-    final rightY = midY - s * 0.4 * math.sin(perpAngle);
+    // Back vertex: offset backward by size × 2
+    final backX = tip.x + size * 2 * math.cos(backAngle);
+    final backY = tip.y + size * 2 * math.sin(backAngle);
+
+    // Side vertices: tip rotated ±25° around mid-point (at size back)
+    final midX = tip.x + size * math.cos(backAngle);
+    final midY = tip.y + size * math.sin(backAngle);
+    final leftX = _rotateX(tip.x, tip.y, midX, midY, _defaultHalfAngle);
+    final leftY = _rotateY(tip.x, tip.y, midX, midY, _defaultHalfAngle);
+    final rightX = _rotateX(tip.x, tip.y, midX, midY, -_defaultHalfAngle);
+    final rightY = _rotateY(tip.x, tip.y, midX, midY, -_defaultHalfAngle);
 
     return 'M${_n(tip.x)} ${_n(tip.y)}'
-        'L${_n(leftX)} ${_n(leftY)}'
+        'L${_n(rightX)} ${_n(rightY)}'
         'L${_n(backX)} ${_n(backY)}'
-        'L${_n(rightX)} ${_n(rightY)}Z';
+        'L${_n(leftX)} ${_n(leftY)}Z';
   }
 
   static String _crowfootOnePath(Point tip, double angle, double size) {
-    final perpAngle = angle + math.pi / 2;
-    final halfSize = size * 0.5;
     final backAngle = angle + math.pi;
-    final offsetX = tip.x + size * 0.3 * math.cos(backAngle);
-    final offsetY = tip.y + size * 0.3 * math.sin(backAngle);
-    final x1 = offsetX + halfSize * math.cos(perpAngle);
-    final y1 = offsetY + halfSize * math.sin(perpAngle);
-    final x2 = offsetX - halfSize * math.cos(perpAngle);
-    final y2 = offsetY - halfSize * math.sin(perpAngle);
+    final baseX = tip.x + size * math.cos(backAngle);
+    final baseY = tip.y + size * math.sin(backAngle);
+    final x1 = _rotateX(tip.x, tip.y, baseX, baseY, -_defaultHalfAngle);
+    final y1 = _rotateY(tip.x, tip.y, baseX, baseY, -_defaultHalfAngle);
+    final x2 = _rotateX(tip.x, tip.y, baseX, baseY, _defaultHalfAngle);
+    final y2 = _rotateY(tip.x, tip.y, baseX, baseY, _defaultHalfAngle);
 
     return 'M${_n(x1)} ${_n(y1)}L${_n(x2)} ${_n(y2)}';
   }
 
   static String _crowfootManyPath(Point tip, double angle, double size) {
     final backAngle = angle + math.pi;
-    final forkX = tip.x + size * 0.5 * math.cos(backAngle);
-    final forkY = tip.y + size * 0.5 * math.sin(backAngle);
-    final perpAngle = angle + math.pi / 2;
-    final halfSpread = size * 0.4;
-    final armX1 = tip.x + halfSpread * math.cos(perpAngle);
-    final armY1 = tip.y + halfSpread * math.sin(perpAngle);
-    final armX2 = tip.x - halfSpread * math.cos(perpAngle);
-    final armY2 = tip.y - halfSpread * math.sin(perpAngle);
+    final baseX = tip.x + size * math.cos(backAngle);
+    final baseY = tip.y + size * math.sin(backAngle);
+    final armX1 = _rotateX(tip.x, tip.y, baseX, baseY, -_defaultHalfAngle);
+    final armY1 = _rotateY(tip.x, tip.y, baseX, baseY, -_defaultHalfAngle);
+    final armX2 = _rotateX(tip.x, tip.y, baseX, baseY, _defaultHalfAngle);
+    final armY2 = _rotateY(tip.x, tip.y, baseX, baseY, _defaultHalfAngle);
 
     return 'M${_n(armX1)} ${_n(armY1)}'
-        'L${_n(forkX)} ${_n(forkY)}'
+        'L${_n(baseX)} ${_n(baseY)}'
         'L${_n(armX2)} ${_n(armY2)}';
   }
 
@@ -194,6 +210,21 @@ class SvgPathConverter {
     final many = _crowfootManyPath(tip, angle, size);
     final one = _crowfootOnePath(tip, angle, size);
     return '$many$one';
+  }
+
+  /// Rotates point (px, py) around center (cx, cy) by [radians].
+  static double _rotateX(
+      double px, double py, double cx, double cy, double radians) {
+    final cos = math.cos(radians);
+    final sin = math.sin(radians);
+    return cx + (px - cx) * cos - (py - cy) * sin;
+  }
+
+  static double _rotateY(
+      double px, double py, double cx, double cy, double radians) {
+    final cos = math.cos(radians);
+    final sin = math.sin(radians);
+    return cy + (px - cx) * sin + (py - cy) * cos;
   }
 
   /// Formats a number with up to 2 decimal places, stripping trailing zeros.

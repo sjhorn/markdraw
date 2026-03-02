@@ -5,12 +5,29 @@ import '../../core/elements/elements.dart';
 import '../../core/math/math.dart';
 
 /// Renders arrowhead shapes at line endpoints.
+///
+/// Sizes and geometry match Excalidraw's implementation:
+/// fixed pixel sizes per type, 20° angle for arrow chevron,
+/// 25° for triangle/diamond/crowfoot, circle centered on tip.
 class ArrowheadRenderer {
-  /// The size multiplier for arrowheads relative to stroke width.
-  static const double _sizeMultiplier = 6.0;
+  /// Half-angle for arrow chevron (20°).
+  static const double _arrowHalfAngle = 0.349;
 
-  /// The half-angle of arrow/triangle arrowheads in radians (~25 degrees).
-  static const double _halfAngle = 0.44;
+  /// Half-angle for triangle, diamond, crowfoot (25°).
+  static const double _defaultHalfAngle = 0.436;
+
+  /// Fixed pixel sizes per arrowhead type, matching Excalidraw.
+  static double _baseSize(Arrowhead type) {
+    return switch (type) {
+      Arrowhead.arrow => 25.0,
+      Arrowhead.diamond || Arrowhead.diamondOutline => 12.0,
+      Arrowhead.crowfootOne ||
+      Arrowhead.crowfootMany ||
+      Arrowhead.crowfootOneOrMany =>
+        20.0,
+      _ => 15.0, // bar, triangle, triangleOutline, dot, circle, circleOutline
+    };
+  }
 
   /// Computes the direction angle at a line endpoint.
   ///
@@ -43,22 +60,22 @@ class ArrowheadRenderer {
   /// Builds a [Path] for the given arrowhead type at the given tip point.
   ///
   /// [angle] is the direction the arrow is pointing (in radians).
-  /// [strokeWidth] scales the arrowhead size.
+  /// [strokeWidth] is used for circle diameter calculation.
   static Path buildPath(
     Arrowhead type,
     Point tip,
     double angle,
     double strokeWidth,
   ) {
-    final size = math.max(strokeWidth * _sizeMultiplier, 8.0);
+    final size = _baseSize(type);
     return switch (type) {
       Arrowhead.arrow => _buildArrowPath(tip, angle, size),
       Arrowhead.triangle => _buildTrianglePath(tip, angle, size),
       Arrowhead.triangleOutline => _buildTrianglePath(tip, angle, size),
       Arrowhead.bar => _buildBarPath(tip, angle, size),
-      Arrowhead.dot => _buildDotPath(tip, size),
-      Arrowhead.circle => _buildDotPath(tip, size),
-      Arrowhead.circleOutline => _buildDotPath(tip, size),
+      Arrowhead.dot => _buildCirclePath(tip, size, strokeWidth),
+      Arrowhead.circle => _buildCirclePath(tip, size, strokeWidth),
+      Arrowhead.circleOutline => _buildCirclePath(tip, size, strokeWidth),
       Arrowhead.diamond => _buildDiamondPath(tip, angle, size),
       Arrowhead.diamondOutline => _buildDiamondPath(tip, angle, size),
       Arrowhead.crowfootOne => _buildCrowfootOnePath(tip, angle, size),
@@ -68,14 +85,13 @@ class ArrowheadRenderer {
     };
   }
 
-  /// Open chevron: two lines from tip at an angle.
+  /// Open chevron: two lines from tip at 20° angle.
   static Path _buildArrowPath(Point tip, double angle, double size) {
-    // The arrow points in [angle] direction; the two arms go backward
     final backAngle = angle + math.pi;
-    final arm1X = tip.x + size * math.cos(backAngle + _halfAngle);
-    final arm1Y = tip.y + size * math.sin(backAngle + _halfAngle);
-    final arm2X = tip.x + size * math.cos(backAngle - _halfAngle);
-    final arm2Y = tip.y + size * math.sin(backAngle - _halfAngle);
+    final arm1X = tip.x + size * math.cos(backAngle + _arrowHalfAngle);
+    final arm1Y = tip.y + size * math.sin(backAngle + _arrowHalfAngle);
+    final arm2X = tip.x + size * math.cos(backAngle - _arrowHalfAngle);
+    final arm2Y = tip.y + size * math.sin(backAngle - _arrowHalfAngle);
 
     return Path()
       ..moveTo(arm1X, arm1Y)
@@ -83,13 +99,13 @@ class ArrowheadRenderer {
       ..lineTo(arm2X, arm2Y);
   }
 
-  /// Filled triangle: three-point closed polygon.
+  /// Filled/outline triangle: three-point closed polygon at 25°.
   static Path _buildTrianglePath(Point tip, double angle, double size) {
     final backAngle = angle + math.pi;
-    final arm1X = tip.x + size * math.cos(backAngle + _halfAngle);
-    final arm1Y = tip.y + size * math.sin(backAngle + _halfAngle);
-    final arm2X = tip.x + size * math.cos(backAngle - _halfAngle);
-    final arm2Y = tip.y + size * math.sin(backAngle - _halfAngle);
+    final arm1X = tip.x + size * math.cos(backAngle + _defaultHalfAngle);
+    final arm1Y = tip.y + size * math.sin(backAngle + _defaultHalfAngle);
+    final arm2X = tip.x + size * math.cos(backAngle - _defaultHalfAngle);
+    final arm2Y = tip.y + size * math.sin(backAngle - _defaultHalfAngle);
 
     return Path()
       ..moveTo(tip.x, tip.y)
@@ -112,9 +128,10 @@ class ArrowheadRenderer {
       ..lineTo(x2, y2);
   }
 
-  /// Filled circle at the endpoint.
-  static Path _buildDotPath(Point tip, double size) {
-    final radius = size * 0.35;
+  /// Circle centered on the tip. Diameter = size + strokeWidth - 2
+  /// (matches Excalidraw).
+  static Path _buildCirclePath(Point tip, double size, double strokeWidth) {
+    final radius = (size + strokeWidth - 2) / 2;
     return Path()
       ..addOval(Rect.fromCircle(
         center: Offset(tip.x, tip.y),
@@ -122,70 +139,91 @@ class ArrowheadRenderer {
       ));
   }
 
-  /// Diamond (4-point polygon): tip, left, back, right.
+  /// Diamond (4-point polygon): tip → right → back → left.
+  ///
+  /// Back vertex at size × 2 from tip; side vertices at ±25° from tip.
   static Path _buildDiamondPath(Point tip, double angle, double size) {
-    final s = size * 0.6;
     final backAngle = angle + math.pi;
-    final perpAngle = angle + math.pi / 2;
 
-    final backX = tip.x + s * math.cos(backAngle);
-    final backY = tip.y + s * math.sin(backAngle);
-    final midX = tip.x + s * 0.5 * math.cos(backAngle);
-    final midY = tip.y + s * 0.5 * math.sin(backAngle);
-    final leftX = midX + s * 0.4 * math.cos(perpAngle);
-    final leftY = midY + s * 0.4 * math.sin(perpAngle);
-    final rightX = midX - s * 0.4 * math.cos(perpAngle);
-    final rightY = midY - s * 0.4 * math.sin(perpAngle);
+    // Back vertex: offset backward by size × 2
+    final backX = tip.x + size * 2 * math.cos(backAngle);
+    final backY = tip.y + size * 2 * math.sin(backAngle);
+
+    // Side vertices: tip rotated ±25° around mid-point (at size back)
+    final midX = tip.x + size * math.cos(backAngle);
+    final midY = tip.y + size * math.sin(backAngle);
+    final leftX = _rotateX(tip.x, tip.y, midX, midY, _defaultHalfAngle);
+    final leftY = _rotateY(tip.x, tip.y, midX, midY, _defaultHalfAngle);
+    final rightX = _rotateX(tip.x, tip.y, midX, midY, -_defaultHalfAngle);
+    final rightY = _rotateY(tip.x, tip.y, midX, midY, -_defaultHalfAngle);
 
     return Path()
       ..moveTo(tip.x, tip.y)
-      ..lineTo(leftX, leftY)
-      ..lineTo(backX, backY)
       ..lineTo(rightX, rightY)
+      ..lineTo(backX, backY)
+      ..lineTo(leftX, leftY)
       ..close();
   }
 
-  /// Crow's foot "one": perpendicular bar offset slightly back from tip.
+  /// Crow's foot "one": bar connecting tip rotated ±25° around base.
   static Path _buildCrowfootOnePath(Point tip, double angle, double size) {
-    final perpAngle = angle + math.pi / 2;
-    final halfSize = size * 0.5;
     final backAngle = angle + math.pi;
-    final offsetX = tip.x + size * 0.3 * math.cos(backAngle);
-    final offsetY = tip.y + size * 0.3 * math.sin(backAngle);
-    final x1 = offsetX + halfSize * math.cos(perpAngle);
-    final y1 = offsetY + halfSize * math.sin(perpAngle);
-    final x2 = offsetX - halfSize * math.cos(perpAngle);
-    final y2 = offsetY - halfSize * math.sin(perpAngle);
+    // Base point offset backward from tip by size
+    final baseX = tip.x + size * math.cos(backAngle);
+    final baseY = tip.y + size * math.sin(backAngle);
+    // Rotate tip around base by ±25°
+    final x1 = _rotateX(tip.x, tip.y, baseX, baseY, -_defaultHalfAngle);
+    final y1 = _rotateY(tip.x, tip.y, baseX, baseY, -_defaultHalfAngle);
+    final x2 = _rotateX(tip.x, tip.y, baseX, baseY, _defaultHalfAngle);
+    final y2 = _rotateY(tip.x, tip.y, baseX, baseY, _defaultHalfAngle);
 
     return Path()
       ..moveTo(x1, y1)
       ..lineTo(x2, y2);
   }
 
-  /// Crow's foot "many": V-fork from a point on the shaft.
+  /// Crow's foot "many": V-fork — two lines from base to tip rotated ±25°.
   static Path _buildCrowfootManyPath(Point tip, double angle, double size) {
     final backAngle = angle + math.pi;
-    final forkX = tip.x + size * 0.5 * math.cos(backAngle);
-    final forkY = tip.y + size * 0.5 * math.sin(backAngle);
-    final perpAngle = angle + math.pi / 2;
-    final halfSpread = size * 0.4;
-    final armX1 = tip.x + halfSpread * math.cos(perpAngle);
-    final armY1 = tip.y + halfSpread * math.sin(perpAngle);
-    final armX2 = tip.x - halfSpread * math.cos(perpAngle);
-    final armY2 = tip.y - halfSpread * math.sin(perpAngle);
+    // Base point offset backward from tip by size
+    final baseX = tip.x + size * math.cos(backAngle);
+    final baseY = tip.y + size * math.sin(backAngle);
+    // Rotate tip around base by ±25°
+    final armX1 = _rotateX(tip.x, tip.y, baseX, baseY, -_defaultHalfAngle);
+    final armY1 = _rotateY(tip.x, tip.y, baseX, baseY, -_defaultHalfAngle);
+    final armX2 = _rotateX(tip.x, tip.y, baseX, baseY, _defaultHalfAngle);
+    final armY2 = _rotateY(tip.x, tip.y, baseX, baseY, _defaultHalfAngle);
 
     return Path()
       ..moveTo(armX1, armY1)
-      ..lineTo(forkX, forkY)
+      ..lineTo(baseX, baseY)
       ..lineTo(armX2, armY2);
   }
 
-  /// Crow's foot "one or many": V-fork + perpendicular bar.
+  /// Crow's foot "one or many": V-fork + bar.
   static Path _buildCrowfootOneOrManyPath(
       Point tip, double angle, double size) {
     final manyPath = _buildCrowfootManyPath(tip, angle, size);
     final onePath = _buildCrowfootOnePath(tip, angle, size);
     return manyPath..addPath(onePath, Offset.zero);
+  }
+
+  /// Rotates point (px, py) around center (cx, cy) by [radians].
+  /// Returns the new x coordinate.
+  static double _rotateX(
+      double px, double py, double cx, double cy, double radians) {
+    final cos = math.cos(radians);
+    final sin = math.sin(radians);
+    return cx + (px - cx) * cos - (py - cy) * sin;
+  }
+
+  /// Rotates point (px, py) around center (cx, cy) by [radians].
+  /// Returns the new y coordinate.
+  static double _rotateY(
+      double px, double py, double cx, double cy, double radians) {
+    final cos = math.cos(radians);
+    final sin = math.sin(radians);
+    return cy + (px - cx) * sin + (py - cy) * cos;
   }
 
   /// The set of arrowhead types that are drawn with fill style.
