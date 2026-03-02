@@ -2803,8 +2803,7 @@ class _CanvasPageState extends State<_CanvasPage> {
           margin: const EdgeInsets.symmetric(horizontal: 6),
         ),
         SizedBox(
-          width: 44,
-          height: 28,
+          width: 32,
           child: TextField(
             controller: controller,
             keyboardType: TextInputType.number,
@@ -2967,19 +2966,23 @@ class _CanvasPageState extends State<_CanvasPage> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (ctx) => DraggableScrollableSheet(
-        initialChildSize: 0.6,
-        minChildSize: 0.3,
-        maxChildSize: 0.9,
-        expand: false,
-        builder: (ctx, scrollController) => _FontListContent(
-          currentFont: current ?? FontResolver.defaultFontFamily,
-          sceneFonts: _getSceneFontFamilies(),
-          scrollController: scrollController,
-          onSelect: (font) {
-            Navigator.of(ctx).pop();
-            _applyStyleChange(ElementStyle(hasText: true, fontFamily: font));
-          },
+      builder: (ctx) => TextFieldTapRegion(
+        child: DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.3,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (ctx, scrollController) => _FontListContent(
+            currentFont: current ?? FontResolver.defaultFontFamily,
+            sceneFonts: _getSceneFontFamilies(),
+            scrollController: scrollController,
+            onSelect: (font) {
+              Navigator.of(ctx).pop();
+              _applyStyleChange(
+                ElementStyle(hasText: true, fontFamily: font),
+              );
+            },
+          ),
         ),
       ),
     ).whenComplete(() {
@@ -3955,21 +3958,23 @@ class _FontPickerOverlayState extends State<_FontPickerOverlay> {
         Positioned(
           left: left,
           top: top,
-          child: Material(
-            elevation: 8,
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              width: popupWidth,
-              constraints: const BoxConstraints(maxHeight: maxPopupHeight),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              child: _FontListContent(
-                currentFont: widget.currentFont,
-                sceneFonts: widget.sceneFonts,
-                onSelect: widget.onSelect,
+          child: TextFieldTapRegion(
+            child: Material(
+              elevation: 8,
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                width: popupWidth,
+                constraints: const BoxConstraints(maxHeight: maxPopupHeight),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: _FontListContent(
+                  currentFont: widget.currentFont,
+                  sceneFonts: widget.sceneFonts,
+                  onSelect: widget.onSelect,
+                ),
               ),
             ),
           ),
