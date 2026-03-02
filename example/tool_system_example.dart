@@ -1782,8 +1782,8 @@ class _CanvasPageState extends State<_CanvasPage> {
                     const SizedBox(height: 8),
                     _buildAlignmentButtons(elements.length),
                     const SizedBox(height: 12),
-                    _buildSectionLabel('Locked'),
-                    _buildLockToggle(style.locked),
+                    _buildSectionLabel('Actions'),
+                    _buildActionsRow(elements, style),
                   ],
                 ],
               ),
@@ -2312,8 +2312,8 @@ class _CanvasPageState extends State<_CanvasPage> {
                   const SizedBox(height: 8),
                   _buildAlignmentButtons(elements.length),
                   const SizedBox(height: 12),
-                  _buildSectionLabel('Locked'),
-                  _buildLockToggle(style.locked),
+                  _buildSectionLabel('Actions'),
+                  _buildActionsRow(elements, style),
                 ],
               ],
             ],
@@ -2772,26 +2772,148 @@ class _CanvasPageState extends State<_CanvasPage> {
 
   Widget _buildLockToggle(bool? current) {
     final isLocked = current ?? false;
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: _IconToggleChip(
-        isSelected: isLocked,
-        onTap: () {
-          _historyManager.push(_editorState.scene);
-          final elements = _selectedElements;
-          if (elements.isEmpty) return;
-          final on = !isLocked;
-          final results = <ToolResult>[
-            for (final e in elements)
-              UpdateElementResult(e.copyWith(locked: on)),
-          ];
-          _applyResult(
-            results.length == 1 ? results.first : CompoundResult(results),
-          );
-        },
-        tooltip: isLocked ? 'Unlock' : 'Lock',
-        child: Icon(isLocked ? Icons.lock : Icons.lock_open, size: 18),
+    return _IconToggleChip(
+      isSelected: isLocked,
+      onTap: () {
+        _historyManager.push(_editorState.scene);
+        final elements = _selectedElements;
+        if (elements.isEmpty) return;
+        final on = !isLocked;
+        final results = <ToolResult>[
+          for (final e in elements)
+            UpdateElementResult(e.copyWith(locked: on)),
+        ];
+        _applyResult(
+          results.length == 1 ? results.first : CompoundResult(results),
+        );
+      },
+      tooltip: isLocked ? 'Unlock' : 'Lock',
+      child: Icon(isLocked ? Icons.lock : Icons.lock_open, size: 18),
+    );
+  }
+
+  void _dispatchKey(String key, {bool shift = false, bool ctrl = false}) {
+    final result = _activeTool.onKeyEvent(
+      key,
+      shift: shift,
+      ctrl: ctrl,
+      context: _toolContext,
+    );
+    if (isSceneChangingResult(result)) {
+      _historyManager.push(_editorState.scene);
+    }
+    _applyResult(result);
+  }
+
+  void _showLinkDialog(Element element) {
+    final controller = TextEditingController(text: element.link ?? '');
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Edit link'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'https://...',
+            labelText: 'URL',
+          ),
+          onSubmitted: (_) {
+            final url = controller.text.trim();
+            _historyManager.push(_editorState.scene);
+            if (url.isEmpty) {
+              _applyResult(
+                UpdateElementResult(element.copyWith(clearLink: true)),
+              );
+            } else {
+              _applyResult(
+                UpdateElementResult(element.copyWith(link: url)),
+              );
+            }
+            Navigator.of(ctx).pop();
+          },
+        ),
+        actions: [
+          if (element.link != null)
+            TextButton(
+              onPressed: () {
+                _historyManager.push(_editorState.scene);
+                _applyResult(
+                  UpdateElementResult(element.copyWith(clearLink: true)),
+                );
+                Navigator.of(ctx).pop();
+              },
+              child: const Text('Remove'),
+            ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              final url = controller.text.trim();
+              _historyManager.push(_editorState.scene);
+              if (url.isEmpty) {
+                _applyResult(
+                  UpdateElementResult(element.copyWith(clearLink: true)),
+                );
+              } else {
+                _applyResult(
+                  UpdateElementResult(element.copyWith(link: url)),
+                );
+              }
+              Navigator.of(ctx).pop();
+            },
+            child: const Text('Save'),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildActionsRow(List<Element> elements, ElementStyle style) {
+    final hasGroup = elements.any((e) => e.groupIds.isNotEmpty);
+    final isSingle = elements.length == 1;
+
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        _IconToggleChip(
+          isSelected: false,
+          onTap: () => _dispatchKey('d', ctrl: true),
+          tooltip: 'Duplicate',
+          child: const Icon(Icons.copy, size: 18),
+        ),
+        if (elements.length >= 2)
+          _IconToggleChip(
+            isSelected: false,
+            onTap: () => _dispatchKey('g', ctrl: true),
+            tooltip: 'Group',
+            child: const Icon(Icons.group_work, size: 18),
+          ),
+        if (hasGroup)
+          _IconToggleChip(
+            isSelected: false,
+            onTap: () => _dispatchKey('g', ctrl: true, shift: true),
+            tooltip: 'Ungroup',
+            child: const Icon(Icons.group_work_outlined, size: 18),
+          ),
+        if (isSingle)
+          _IconToggleChip(
+            isSelected: elements.first.link != null,
+            onTap: () => _showLinkDialog(elements.first),
+            tooltip: 'Link',
+            child: const Icon(Icons.link, size: 18),
+          ),
+        _IconToggleChip(
+          isSelected: false,
+          onTap: () => _dispatchKey('Delete'),
+          tooltip: 'Delete',
+          child: const Icon(Icons.delete_outline, size: 18),
+        ),
+        _buildLockToggle(style.locked),
+      ],
     );
   }
 
@@ -3516,6 +3638,15 @@ class _CanvasPageState extends State<_CanvasPage> {
     }
     if (ctrl && key == LogicalKeyboardKey.keyO) {
       _openFile();
+      return;
+    }
+
+    // Link shortcut: Ctrl+K on single selection
+    if (ctrl && !shift && key == LogicalKeyboardKey.keyK) {
+      final elements = _selectedElements;
+      if (elements.length == 1) {
+        _showLinkDialog(elements.first);
+      }
       return;
     }
 
