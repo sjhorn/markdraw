@@ -251,6 +251,65 @@ class RoughCanvasAdapter implements RoughAdapter {
   }
 
   @override
+  void drawCurvedPolygon(Canvas canvas, List<Point> points, DrawStyle style) {
+    if (points.length < 3) return;
+
+    // Strip duplicate closing point if last ≈ first (LineTool snap-to-close
+    // adds first point again; SelectTool snaps last to match first).
+    var pts = points;
+    if (pts.length > 3 && _pointsEqual(pts.last, pts.first)) {
+      pts = pts.sublist(0, pts.length - 1);
+    }
+
+    // Discretize Catmull-Rom spline into a dense polygon, then use
+    // generator.polygon() — same approach as rounded rectangles/diamonds.
+    // This gives correct fill + stroke + closure for the rough renderer.
+    final curvePoints = _catmullRomPolygon(pts);
+    final generator = style.toGenerator();
+    final drawable = generator.polygon(curvePoints);
+
+    // Build clip path from the dense curve points
+    final clip = Path();
+    clip.moveTo(curvePoints.first.x, curvePoints.first.y);
+    for (var i = 1; i < curvePoints.length; i++) {
+      clip.lineTo(curvePoints[i].x, curvePoints[i].y);
+    }
+    clip.close();
+    _drawClippedFillThenStroke(canvas, drawable, style, clipPath: clip);
+  }
+
+  /// Discretizes a closed polygon's edges into a smooth Catmull-Rom curve.
+  ///
+  /// Each edge is subdivided into [_cornerSegments] points along the spline.
+  /// Uses the same segment count as rounded rectangle/diamond corners.
+  static List<PointD> _catmullRomPolygon(List<Point> pts) {
+    final n = pts.length;
+    final result = <PointD>[];
+    for (var i = 0; i < n; i++) {
+      final p0 = pts[(i - 1 + n) % n];
+      final p1 = pts[i];
+      final p2 = pts[(i + 1) % n];
+      final p3 = pts[(i + 2) % n];
+      for (var j = 0; j < _cornerSegments; j++) {
+        final t = j / _cornerSegments;
+        final tt = t * t;
+        final ttt = tt * t;
+        result.add(PointD(
+          0.5 * ((-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * ttt +
+              (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * tt +
+              (-p0.x + p2.x) * t +
+              2 * p1.x),
+          0.5 * ((-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * ttt +
+              (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * tt +
+              (-p0.y + p2.y) * t +
+              2 * p1.y),
+        ));
+      }
+    }
+    return result;
+  }
+
+  @override
   void drawCurvedLine(Canvas canvas, List<Point> points, DrawStyle style) {
     if (points.length < 2) return;
 
@@ -516,6 +575,12 @@ class RoughCanvasAdapter implements RoughAdapter {
   }
 
   static double _min(double a, double b) => a < b ? a : b;
+
+  /// Returns true if two points are at the same position (within epsilon).
+  static bool _pointsEqual(Point a, Point b) {
+    const eps = 0.01;
+    return (a.x - b.x).abs() < eps && (a.y - b.y).abs() < eps;
+  }
 
   @override
   void drawFreedraw(

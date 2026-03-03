@@ -125,9 +125,21 @@ class SvgElementRenderer {
     if (absPoints.length < 2) return;
 
     if (element.closed && absPoints.length >= 3) {
-      final roughPoints = absPoints.map((p) => PointD(p.x, p.y)).toList();
-      final drawable = generator.polygon(roughPoints);
-      _drawableToSvg(buf, drawable, style, element);
+      if (element.roundness != null) {
+        // Strip duplicate closing point if last ≈ first
+        var pts = absPoints;
+        if (pts.length > 3 && _pointsNear(pts.last, pts.first)) {
+          pts = pts.sublist(0, pts.length - 1);
+        }
+        // Discretize Catmull-Rom into a dense polygon (same as canvas renderer)
+        final curvePoints = _catmullRomPolygon(pts);
+        final drawable = generator.polygon(curvePoints);
+        _drawableToSvg(buf, drawable, style, element);
+      } else {
+        final roughPoints = absPoints.map((p) => PointD(p.x, p.y)).toList();
+        final drawable = generator.polygon(roughPoints);
+        _drawableToSvg(buf, drawable, style, element);
+      }
     } else if (element.roundness != null) {
       final paddedPoints = [
         PointD(absPoints.first.x, absPoints.first.y),
@@ -484,6 +496,11 @@ class SvgElementRenderer {
     };
   }
 
+  static bool _pointsNear(Point a, Point b) {
+    const eps = 0.01;
+    return (a.x - b.x).abs() < eps && (a.y - b.y).abs() < eps;
+  }
+
   static List<Point> _absolutePoints(
     List<Point> points,
     double x,
@@ -514,6 +531,34 @@ class SvgElementRenderer {
     return s;
   }
   static const _cornerSegments = 10;
+
+  /// Discretizes a closed polygon into smooth Catmull-Rom curve points.
+  static List<PointD> _catmullRomPolygon(List<Point> pts) {
+    final n = pts.length;
+    final result = <PointD>[];
+    for (var i = 0; i < n; i++) {
+      final p0 = pts[(i - 1 + n) % n];
+      final p1 = pts[i];
+      final p2 = pts[(i + 1) % n];
+      final p3 = pts[(i + 2) % n];
+      for (var j = 0; j < _cornerSegments; j++) {
+        final t = j / _cornerSegments;
+        final tt = t * t;
+        final ttt = tt * t;
+        result.add(PointD(
+          0.5 * ((-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * ttt +
+              (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * tt +
+              (-p0.x + p2.x) * t +
+              2 * p1.x),
+          0.5 * ((-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * ttt +
+              (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * tt +
+              (-p0.y + p2.y) * t +
+              2 * p1.y),
+        ));
+      }
+    }
+    return result;
+  }
 
   /// Generates polygon points for a rounded rectangle (quadratic Bezier corners).
   static List<PointD> _roundedRectPoints(Bounds bounds, Roundness roundness) {

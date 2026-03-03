@@ -57,6 +57,12 @@ class MockRoughAdapter implements RoughAdapter {
   }
 
   @override
+  void drawCurvedPolygon(Canvas canvas, List<Point> points, DrawStyle style) {
+    calls.add('drawCurvedPolygon');
+    lastPoints = List.of(points);
+  }
+
+  @override
   void drawCurvedLine(Canvas canvas, List<Point> points, DrawStyle style) {
     calls.add('drawCurvedLine');
     lastPoints = List.of(points);
@@ -428,6 +434,51 @@ void main() {
       recorder.endRecording();
 
       expect(adapter.calls, ['drawCurvedLine']);
+    });
+
+    test('dispatches closed line with roundness to drawCurvedPolygon', () {
+      final (recorder, canvas) = _makeCanvas();
+      final element = LineElement(
+        id: ElementId.generate(),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        points: [
+          const Point(0, 0),
+          const Point(100, 0),
+          const Point(50, 100),
+        ],
+        closed: true,
+        roundness: const Roundness.proportional(value: 0),
+      );
+
+      ElementRenderer.render(canvas, element, adapter);
+      recorder.endRecording();
+
+      expect(adapter.calls, ['drawCurvedPolygon']);
+    });
+
+    test('dispatches closed line without roundness to drawPolygonLine', () {
+      final (recorder, canvas) = _makeCanvas();
+      final element = LineElement(
+        id: ElementId.generate(),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        points: [
+          const Point(0, 0),
+          const Point(100, 0),
+          const Point(50, 100),
+        ],
+        closed: true,
+      );
+
+      ElementRenderer.render(canvas, element, adapter);
+      recorder.endRecording();
+
+      expect(adapter.calls, ['drawPolygonLine']);
     });
 
     test('dispatches round arrow to drawCurvedArrow', () {

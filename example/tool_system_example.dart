@@ -1182,6 +1182,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                 marqueeRect: marqueeRect,
                 bindTargetBounds: toolOverlay?.bindTargetBounds,
                 bindTargetAngle: toolOverlay?.bindTargetAngle ?? 0.0,
+                closeIndicatorCenter: toolOverlay?.closeIndicatorCenter,
                 pointHandles: _buildPointHandles(),
                 midpointHandles: _buildMidpointHandles(),
                 segmentMidpoints: _isDraggingPointHandle()
@@ -1720,10 +1721,11 @@ class _CanvasPageState extends State<_CanvasPage> {
                             const SizedBox(height: 8),
                             _buildSectionLabel('Sloppiness'),
                             _buildRoughnessRow(style.roughness),
-                            if (style.hasRoundness) ...[
+                            if (style.hasRoundness ||
+                                style.canBreakPolygon) ...[
                               const SizedBox(height: 8),
-                              _buildSectionLabel('Roundness'),
-                              _buildRoundnessRow(style.roundness),
+                              _buildSectionLabel('Edges'),
+                              _buildEdgesRow(style),
                             ],
                             if (style.hasArrows) ...[
                               const SizedBox(height: 8),
@@ -2251,10 +2253,11 @@ class _CanvasPageState extends State<_CanvasPage> {
                           const SizedBox(height: 8),
                           _buildSectionLabel('Sloppiness'),
                           _buildRoughnessRow(style.roughness),
-                          if (style.hasRoundness) ...[
+                          if (style.hasRoundness ||
+                              style.canBreakPolygon) ...[
                             const SizedBox(height: 8),
-                            _buildSectionLabel('Roundness'),
-                            _buildRoundnessRow(style.roundness),
+                            _buildSectionLabel('Edges'),
+                            _buildEdgesRow(style),
                           ],
                         ],
                         if (style.hasArrows) ...[
@@ -2514,58 +2517,81 @@ class _CanvasPageState extends State<_CanvasPage> {
     );
   }
 
-  Widget _buildRoundnessRow(Roundness? current) {
+  Widget _buildEdgesRow(ElementStyle style) {
+    final current = style.roundness;
     final isRound = current != null;
     return Wrap(
       spacing: 4,
       runSpacing: 4,
       children: [
-        _IconToggleChip(
-          isSelected: !isRound,
-          onTap: () {
-            _applyStyleChange(const ElementStyle(hasRoundness: true));
-          },
-          tooltip: 'Sharp',
-          child: CustomPaint(
-            size: const Size(20, 20),
-            painter: _RoundnessIcon(false),
+        if (style.hasRoundness) ...[
+          _IconToggleChip(
+            isSelected: !isRound,
+            onTap: () {
+              _applyStyleChange(const ElementStyle(hasRoundness: true));
+            },
+            tooltip: 'Sharp',
+            child: CustomPaint(
+              size: const Size(20, 20),
+              painter: _RoundnessIcon(false),
+            ),
           ),
-        ),
-        _IconToggleChip(
-          isSelected: isRound,
-          onTap: () {
-            // Apply per-element type: adaptive for rectangles, proportional
-            // for diamonds (matching Excalidraw). Value 0 uses the default
-            // 32px adaptive radius.
-            final elements = _selectedElements;
-            if (elements.isNotEmpty) {
-              _historyManager.push(_editorState.scene);
-              final results = <ToolResult>[];
-              for (final e in elements) {
-                final r = e is DiamondElement
-                    ? const Roundness.proportional(value: 0)
-                    : const Roundness.adaptive(value: 0);
-                results.add(UpdateElementResult(e.copyWith(roundness: r)));
+          _IconToggleChip(
+            isSelected: isRound,
+            onTap: () {
+              // Apply per-element type: adaptive for rectangles, proportional
+              // for diamonds (matching Excalidraw). Value 0 uses the default
+              // 32px adaptive radius.
+              final elements = _selectedElements;
+              if (elements.isNotEmpty) {
+                _historyManager.push(_editorState.scene);
+                final results = <ToolResult>[];
+                for (final e in elements) {
+                  final r = e is DiamondElement
+                      ? const Roundness.proportional(value: 0)
+                      : e is LineElement
+                          ? const Roundness.proportional(value: 0)
+                          : const Roundness.adaptive(value: 0);
+                  results.add(UpdateElementResult(e.copyWith(roundness: r)));
+                }
+                _applyResult(
+                  results.length == 1
+                      ? results.first
+                      : CompoundResult(results),
+                );
+              } else {
+                // Update defaults for creation tools
+                _applyStyleChange(
+                  const ElementStyle(
+                    roundness: Roundness.adaptive(value: 0),
+                    hasRoundness: true,
+                  ),
+                );
               }
-              _applyResult(
-                results.length == 1 ? results.first : CompoundResult(results),
-              );
-            } else {
-              // Update defaults for creation tools
-              _applyStyleChange(
-                const ElementStyle(
-                  roundness: Roundness.adaptive(value: 0),
-                  hasRoundness: true,
-                ),
-              );
-            }
-          },
-          tooltip: 'Round',
-          child: CustomPaint(
-            size: const Size(20, 20),
-            painter: _RoundnessIcon(true),
+            },
+            tooltip: 'Round',
+            child: CustomPaint(
+              size: const Size(20, 20),
+              painter: _RoundnessIcon(true),
+            ),
           ),
-        ),
+        ],
+        if (style.canBreakPolygon)
+          _IconToggleChip(
+            isSelected: true,
+            onTap: () {
+              final elements = _selectedElements;
+              if (elements.isEmpty) return;
+              _historyManager.push(_editorState.scene);
+              final result = PropertyPanelState.applyStyle(
+                elements,
+                const ElementStyle(canBreakPolygon: true),
+              );
+              _applyResult(result);
+            },
+            tooltip: 'Break polygon',
+            child: const Icon(Icons.hexagon_outlined, size: 20),
+          ),
       ],
     );
   }

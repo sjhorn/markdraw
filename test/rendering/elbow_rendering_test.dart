@@ -54,6 +54,12 @@ class _MockAdapter implements RoughAdapter {
   }
 
   @override
+  void drawCurvedPolygon(Canvas canvas, List<Point> points, DrawStyle style) {
+    calls.add('drawCurvedPolygon');
+    lastPoints = List.of(points);
+  }
+
+  @override
   void drawCurvedLine(Canvas canvas, List<Point> points, DrawStyle style) {
     calls.add('drawCurvedLine');
     lastPoints = List.of(points);

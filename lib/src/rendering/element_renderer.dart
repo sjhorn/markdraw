@@ -75,7 +75,11 @@ class ElementRenderer {
         if (element is LineElement) {
           final absPoints = _absolutePoints(element.points, element.x, element.y);
           if (element.closed) {
-            adapter.drawPolygonLine(canvas, absPoints, style);
+            if (element.roundness != null) {
+              adapter.drawCurvedPolygon(canvas, absPoints, style);
+            } else {
+              adapter.drawPolygonLine(canvas, absPoints, style);
+            }
           } else if (element.roundness != null) {
             adapter.drawCurvedLine(canvas, absPoints, style);
           } else {

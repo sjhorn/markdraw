@@ -41,6 +41,9 @@ abstract class RoughAdapter {
     DrawStyle style,
   );
 
+  /// Draws a closed curved polygon (smooth Bezier curve) through the given points.
+  void drawCurvedPolygon(Canvas canvas, List<Point> points, DrawStyle style);
+
   /// Draws a curved line (smooth Bezier curve) through the given points.
   void drawCurvedLine(Canvas canvas, List<Point> points, DrawStyle style);
 

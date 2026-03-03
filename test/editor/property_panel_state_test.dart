@@ -168,6 +168,44 @@ void main() {
       expect(style.hasRoundness, isTrue);
       expect(style.roundness, isNull);
     });
+
+    test('hasRoundness true for non-arrow LineElement', () {
+      final line = LineElement(
+        id: const ElementId('l1'),
+        x: 0, y: 0, width: 100, height: 100,
+        points: [const Point(0, 0), const Point(100, 0), const Point(50, 100)],
+      );
+
+      final style = PropertyPanelState.fromElements([line]);
+      expect(style.hasRoundness, isTrue);
+    });
+
+    test('hasRoundness false for ArrowElement', () {
+      final arrow = ArrowElement(
+        id: const ElementId('a1'),
+        x: 0, y: 0, width: 100, height: 0,
+        points: [const Point(0, 0), const Point(100, 0)],
+        endArrowhead: Arrowhead.arrow,
+      );
+
+      final style = PropertyPanelState.fromElements([arrow]);
+      expect(style.hasRoundness, isFalse);
+    });
+
+    test('hasRoundness true for mixed LineElement + RectangleElement', () {
+      final line = LineElement(
+        id: const ElementId('l1'),
+        x: 0, y: 0, width: 100, height: 100,
+        points: [const Point(0, 0), const Point(100, 0), const Point(50, 100)],
+      );
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+      );
+
+      final style = PropertyPanelState.fromElements([line, rect]);
+      expect(style.hasRoundness, isTrue);
+    });
   });
 
   group('PropertyPanelState.applyStyle', () {
