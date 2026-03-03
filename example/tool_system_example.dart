@@ -140,25 +140,76 @@ class _CanvasPageState extends State<_CanvasPage> {
     if (mounted) setState(() {});
   }
 
-  void _cycleThemeMode() {
-    _themeModeNotifier.value = switch (_themeModeNotifier.value) {
-      ThemeMode.light => ThemeMode.dark,
-      ThemeMode.dark => ThemeMode.system,
-      ThemeMode.system => ThemeMode.light,
-    };
+  Widget _buildThemeButtons(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final current = _themeModeNotifier.value;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
+        children: [
+          Text('Theme', style: TextStyle(color: cs.onSurface)),
+          const Spacer(),
+          _themeButton(
+            icon: Icons.light_mode,
+            tooltip: 'Light',
+            isActive: current == ThemeMode.light,
+            onTap: () => _setThemeMode(ThemeMode.light),
+            cs: cs,
+          ),
+          const SizedBox(width: 4),
+          _themeButton(
+            icon: Icons.dark_mode,
+            tooltip: 'Dark',
+            isActive: current == ThemeMode.dark,
+            onTap: () => _setThemeMode(ThemeMode.dark),
+            cs: cs,
+          ),
+          const SizedBox(width: 4),
+          _themeButton(
+            icon: Icons.brightness_auto,
+            tooltip: 'System',
+            isActive: current == ThemeMode.system,
+            onTap: () => _setThemeMode(ThemeMode.system),
+            cs: cs,
+          ),
+        ],
+      ),
+    );
   }
 
-  IconData _themeModeIcon() => switch (_themeModeNotifier.value) {
-    ThemeMode.light => Icons.light_mode,
-    ThemeMode.dark => Icons.dark_mode,
-    ThemeMode.system => Icons.brightness_auto,
-  };
+  Widget _themeButton({
+    required IconData icon,
+    required String tooltip,
+    required bool isActive,
+    required VoidCallback onTap,
+    required ColorScheme cs,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: isActive ? cs.primaryContainer : Colors.transparent,
+        borderRadius: BorderRadius.circular(6),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(6),
+          onTap: onTap,
+          child: SizedBox(
+            width: 32,
+            height: 32,
+            child: Icon(
+              icon,
+              size: 18,
+              color: isActive ? cs.primary : cs.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
-  String _themeModeLabel() => switch (_themeModeNotifier.value) {
-    ThemeMode.light => 'Light',
-    ThemeMode.dark => 'Dark',
-    ThemeMode.system => 'System',
-  };
+  void _setThemeMode(ThemeMode mode) {
+    _themeModeNotifier.value = mode;
+    Navigator.of(context).pop(); // dismiss the popup menu
+  }
 
   static const _canvasBackgroundPresets = [
     '#ffffff',
@@ -1356,8 +1407,6 @@ class _CanvasPageState extends State<_CanvasPage> {
               _importImage();
             case 'frame_tool':
               _switchTool(ToolType.frame);
-            case 'theme':
-              _cycleThemeMode();
             case 'canvas_background':
               _showCanvasBackgroundPicker();
           }
@@ -1396,25 +1445,9 @@ class _CanvasPageState extends State<_CanvasPage> {
           _menuItem('frame_tool', Icons.crop_free, 'Frame Tool', 'F'),
           const PopupMenuDivider(),
           PopupMenuItem<String>(
-            value: 'theme',
-            child: Row(
-              children: [
-                Icon(
-                  _themeModeIcon(),
-                  size: 18,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 12),
-                const Expanded(child: Text('Theme')),
-                Text(
-                  _themeModeLabel(),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
+            enabled: false,
+            padding: EdgeInsets.zero,
+            child: _buildThemeButtons(context),
           ),
           _menuItem(
             'canvas_background',
@@ -1711,16 +1744,59 @@ class _CanvasPageState extends State<_CanvasPage> {
               _showCompactLibrary();
             }),
             const Divider(),
-            _compactMenuItem(_themeModeIcon(), 'Theme: ${_themeModeLabel()}', () {
-              Navigator.pop(ctx);
-              _cycleThemeMode();
-            }),
+            _buildCompactThemeRow(ctx),
             _compactMenuItem(Icons.format_color_fill, 'Canvas background', () {
               Navigator.pop(ctx);
               _showCanvasBackgroundPicker();
             }),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCompactThemeRow(BuildContext ctx) {
+    final cs = Theme.of(ctx).colorScheme;
+    final current = _themeModeNotifier.value;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Text('Theme', style: TextStyle(fontSize: 16, color: cs.onSurface)),
+          const Spacer(),
+          _themeButton(
+            icon: Icons.light_mode,
+            tooltip: 'Light',
+            isActive: current == ThemeMode.light,
+            onTap: () {
+              _themeModeNotifier.value = ThemeMode.light;
+              Navigator.pop(ctx);
+            },
+            cs: cs,
+          ),
+          const SizedBox(width: 4),
+          _themeButton(
+            icon: Icons.dark_mode,
+            tooltip: 'Dark',
+            isActive: current == ThemeMode.dark,
+            onTap: () {
+              _themeModeNotifier.value = ThemeMode.dark;
+              Navigator.pop(ctx);
+            },
+            cs: cs,
+          ),
+          const SizedBox(width: 4),
+          _themeButton(
+            icon: Icons.brightness_auto,
+            tooltip: 'System',
+            isActive: current == ThemeMode.system,
+            onTap: () {
+              _themeModeNotifier.value = ThemeMode.system;
+              Navigator.pop(ctx);
+            },
+            cs: cs,
+          ),
+        ],
       ),
     );
   }
