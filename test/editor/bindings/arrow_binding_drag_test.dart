@@ -85,6 +85,7 @@ void main() {
         scene: scene,
         viewport: const ViewportState(),
         selectedIds: {const ElementId('a1')},
+        isEditingLinear: true,
       );
 
       // Drag the start point (at absolute 100, 50) far away
@@ -114,6 +115,7 @@ void main() {
         scene: scene,
         viewport: const ViewportState(),
         selectedIds: {const ElementId('a1')},
+        isEditingLinear: true,
       );
 
       // Drag the last point (at absolute 200, 50) near rect's left edge
@@ -149,6 +151,7 @@ void main() {
         scene: scene,
         viewport: const ViewportState(),
         selectedIds: {const ElementId('a1')},
+        isEditingLinear: true,
       );
 
       // Drag start point near rect2's right edge
@@ -183,6 +186,7 @@ void main() {
         scene: scene,
         viewport: const ViewportState(),
         selectedIds: {const ElementId('a1')},
+        isEditingLinear: true,
       );
 
       // Drag the middle point (at absolute 200, 50) somewhere
@@ -216,6 +220,7 @@ void main() {
         scene: scene,
         viewport: const ViewportState(),
         selectedIds: {const ElementId('a1')},
+        isEditingLinear: true,
       );
 
       // Step 1: Drag start point away to unbind
@@ -261,6 +266,7 @@ void main() {
         scene: scene,
         viewport: const ViewportState(),
         selectedIds: {const ElementId('a1')},
+        isEditingLinear: true,
       );
 
       // Start point drag on last point

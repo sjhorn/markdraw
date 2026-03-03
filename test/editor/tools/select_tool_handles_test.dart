@@ -45,6 +45,7 @@ void main() {
   ToolContext contextWith({
     List<Element> elements = const [],
     Set<ElementId> selectedIds = const {},
+    bool isEditingLinear = false,
   }) {
     var scene = Scene();
     for (final e in elements) {
@@ -54,6 +55,7 @@ void main() {
       scene: scene,
       viewport: const ViewportState(),
       selectedIds: selectedIds,
+      isEditingLinear: isEditingLinear,
     );
   }
 
@@ -105,6 +107,7 @@ void main() {
       final ctx = contextWith(
         elements: [line1],
         selectedIds: {line1.id},
+        isEditingLinear: true,
       );
       // First point is at absolute (50+0, 50+0) = (50, 50)
       tool.onPointerDown(const Point(50, 50), ctx);
@@ -196,6 +199,7 @@ void main() {
       final ctx = contextWith(
         elements: [lineAtCorner],
         selectedIds: {lineAtCorner.id},
+        isEditingLinear: true,
       );
       // Click at the first point (100, 100) which is also where a "topLeft" handle would be
       tool.onPointerDown(const Point(100, 100), ctx);
@@ -680,6 +684,7 @@ void main() {
       final ctx = contextWith(
         elements: [line1],
         selectedIds: {line1.id},
+        isEditingLinear: true,
       );
       // Second point absolute position: (50+100, 50+100) = (150, 150)
       tool.onPointerDown(const Point(150, 150), ctx);
@@ -697,6 +702,7 @@ void main() {
       final ctx = contextWith(
         elements: [line1],
         selectedIds: {line1.id},
+        isEditingLinear: true,
       );
       // Drag second point far away
       tool.onPointerDown(const Point(150, 150), ctx);
@@ -712,6 +718,7 @@ void main() {
       final ctx = contextWith(
         elements: [line1],
         selectedIds: {line1.id},
+        isEditingLinear: true,
       );
       // First point at absolute (50, 50)
       tool.onPointerDown(const Point(50, 50), ctx);
@@ -743,6 +750,7 @@ void main() {
       final ctx = contextWith(
         elements: [rotatedLine],
         selectedIds: {rotatedLine.id},
+        isEditingLinear: true,
       );
       // Center of element is at (200, 100).
       // Unrotated first point is at (100, 100).
@@ -774,6 +782,7 @@ void main() {
       final ctx = contextWith(
         elements: [rotatedLine],
         selectedIds: {rotatedLine.id},
+        isEditingLinear: true,
       );
       // Visual positions before drag:
       // center = (200, 100), first at (200, 0), second at (200, 200)
@@ -812,6 +821,7 @@ void main() {
     ToolContext touchContextWith({
       List<Element> elements = const [],
       Set<ElementId> selectedIds = const {},
+      bool isEditingLinear = false,
     }) {
       var scene = Scene();
       for (final e in elements) {
@@ -822,6 +832,7 @@ void main() {
         viewport: const ViewportState(),
         selectedIds: selectedIds,
         interactionMode: InteractionMode.touch,
+        isEditingLinear: isEditingLinear,
       );
     }
 
@@ -856,6 +867,7 @@ void main() {
       final touchCtx = touchContextWith(
         elements: [line1],
         selectedIds: {line1.id},
+        isEditingLinear: true,
       );
       // Second point absolute position: (150, 150)
       // Click 15px away — within 22px touch radius

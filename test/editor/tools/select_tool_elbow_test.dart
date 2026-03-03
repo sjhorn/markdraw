@@ -63,6 +63,7 @@ void main() {
   ToolContext contextWith({
     List<Element> elements = const [],
     Set<ElementId> selectedIds = const {},
+    bool isEditingLinear = false,
   }) {
     var scene = Scene();
     for (final e in elements) {
@@ -72,6 +73,7 @@ void main() {
       scene: scene,
       viewport: const ViewportState(),
       selectedIds: selectedIds,
+      isEditingLinear: isEditingLinear,
     );
   }
 
@@ -80,6 +82,7 @@ void main() {
       final ctx = contextWith(
         elements: [elbowArrow],
         selectedIds: {elbowArrow.id},
+        isEditingLinear: true,
       );
       // Click near the vertical segment (50, 80) — close to x=50, between y=50..150
       tool.onPointerDown(const Point(52, 80), ctx);
@@ -104,6 +107,7 @@ void main() {
       final ctx = contextWith(
         elements: [elbowArrow],
         selectedIds: {elbowArrow.id},
+        isEditingLinear: true,
       );
       // Click near horizontal segment (100, 150) — close to y=150, between x=50..150
       tool.onPointerDown(const Point(100, 148), ctx);
@@ -129,6 +133,7 @@ void main() {
       final ctx = contextWith(
         elements: [elbowArrow],
         selectedIds: {elbowArrow.id},
+        isEditingLinear: true,
       );
       // Click on horizontal segment at y=150
       tool.onPointerDown(const Point(100, 150), ctx);
@@ -148,6 +153,7 @@ void main() {
       final ctx = contextWith(
         elements: [elbowArrow],
         selectedIds: {elbowArrow.id},
+        isEditingLinear: true,
       );
       // Click on vertical segment at x=50
       tool.onPointerDown(const Point(50, 100), ctx);
@@ -167,6 +173,7 @@ void main() {
       final ctx = contextWith(
         elements: [elbowArrow],
         selectedIds: {elbowArrow.id},
+        isEditingLinear: true,
       );
       // Drag horizontal segment (segment 1) down by 30
       tool.onPointerDown(const Point(100, 150), ctx);
@@ -181,6 +188,7 @@ void main() {
       final ctx = contextWith(
         elements: [elbowArrow],
         selectedIds: {elbowArrow.id},
+        isEditingLinear: true,
       );
       tool.onPointerDown(const Point(100, 150), ctx);
       tool.onPointerMove(const Point(100, 130), ctx);
@@ -232,6 +240,7 @@ void main() {
       final ctx = contextWith(
         elements: [regularArrow],
         selectedIds: {regularArrow.id},
+        isEditingLinear: true,
       );
       // Click near end point (150, 150)
       tool.onPointerDown(const Point(150, 150), ctx);

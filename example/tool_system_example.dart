@@ -68,6 +68,7 @@ class _CanvasPageState extends State<_CanvasPage> {
   bool _showLibraryPanel = false;
   bool _toolLocked = false;
   bool _isCompact = false;
+  bool _isEditingLinear = false;
   bool _fontPickerOpen = false;
   ElementStyle _defaultStyle = const ElementStyle();
 
@@ -227,6 +228,11 @@ class _CanvasPageState extends State<_CanvasPage> {
     // Write to system clipboard on copy/cut
     _syncToSystemClipboard(styled);
 
+    // Auto-exit linear editing mode when selection changes
+    if (_isEditingLinear && _containsSelectionChange(styled)) {
+      _isEditingLinear = false;
+    }
+
     setState(() {
       final newState = _editorState.applyResult(styled);
       // If tool switched, create new tool instance
@@ -253,6 +259,14 @@ class _CanvasPageState extends State<_CanvasPage> {
         _syncToSystemClipboard(r);
       }
     }
+  }
+
+  bool _containsSelectionChange(ToolResult result) {
+    if (result is SetSelectionResult) return true;
+    if (result is CompoundResult) {
+      return result.results.any(_containsSelectionChange);
+    }
+    return false;
   }
 
   /// Start editing a NEW text element (just created by TextTool).
@@ -965,6 +979,7 @@ class _CanvasPageState extends State<_CanvasPage> {
     selectedIds: _editorState.selectedIds,
     clipboard: _editorState.clipboard,
     interactionMode: _interactionMode,
+    isEditingLinear: _isEditingLinear,
   );
 
   Point _toScene(Offset screenPos) {
@@ -1134,7 +1149,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                 _applyResult(_activeTool.onPointerUp(point, _toolContext));
               }
 
-              // Double-click dispatch for text editing
+              // Double-click dispatch for text editing and line editing
               if (isDoubleClick &&
                   _activeTool is SelectTool &&
                   _editingTextElementId == null) {
@@ -1145,6 +1160,10 @@ class _CanvasPageState extends State<_CanvasPage> {
                   _startBoundTextEditing(hit);
                 } else if (hit is ArrowElement) {
                   _startArrowLabelEditing(hit);
+                } else if (hit is LineElement) {
+                  setState(() {
+                    _isEditingLinear = true;
+                  });
                 }
               }
 
@@ -2959,6 +2978,20 @@ class _CanvasPageState extends State<_CanvasPage> {
             tooltip: 'Link',
             child: const Icon(Icons.link, size: 18),
           ),
+        if (isSingle &&
+            elements.first is LineElement &&
+            !(elements.first is ArrowElement &&
+                (elements.first as ArrowElement).elbowed))
+          _IconToggleChip(
+            isSelected: _isEditingLinear,
+            onTap: () => setState(() {
+              _isEditingLinear = !_isEditingLinear;
+            }),
+            tooltip: elements.first is ArrowElement
+                ? 'Edit arrow'
+                : 'Edit line',
+            child: const Icon(Icons.timeline, size: 18),
+          ),
         _IconToggleChip(
           isSelected: false,
           onTap: () => _dispatchKey('Delete'),
@@ -3732,6 +3765,14 @@ class _CanvasPageState extends State<_CanvasPage> {
       }
     }
 
+    // Escape exits linear editing mode before clearing selection
+    if (key == LogicalKeyboardKey.escape && _isEditingLinear) {
+      setState(() {
+        _isEditingLinear = false;
+      });
+      return;
+    }
+
     String? keyName;
     if (key == LogicalKeyboardKey.delete ||
         key == LogicalKeyboardKey.backspace) {
@@ -3772,6 +3813,7 @@ class _CanvasPageState extends State<_CanvasPage> {
   }
 
   List<Point>? _buildPointHandles() {
+    if (!_isEditingLinear) return null;
     if (_editorState.selectedIds.length != 1) return null;
     final elem = _editorState.scene.getElementById(
       _editorState.selectedIds.first,
@@ -3784,6 +3826,7 @@ class _CanvasPageState extends State<_CanvasPage> {
   }
 
   List<Point>? _buildSegmentMidpoints() {
+    if (!_isEditingLinear) return null;
     if (_editorState.selectedIds.length != 1) return null;
     final elem = _editorState.scene.getElementById(
       _editorState.selectedIds.first,
@@ -3802,6 +3845,7 @@ class _CanvasPageState extends State<_CanvasPage> {
   }
 
   List<Point>? _buildMidpointHandles() {
+    if (!_isEditingLinear) return null;
     if (_editorState.selectedIds.length != 1) return null;
     final elem = _editorState.scene.getElementById(
       _editorState.selectedIds.first,

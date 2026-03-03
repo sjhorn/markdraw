@@ -32,6 +32,7 @@ class InteractiveCanvasPainter extends CustomPainter {
   final List<Point>? segmentMidpoints;
   final Bounds? bindTargetBounds;
   final double bindTargetAngle;
+  final Point? closeIndicatorCenter;
 
   const InteractiveCanvasPainter({
     required this.viewport,
@@ -47,6 +48,7 @@ class InteractiveCanvasPainter extends CustomPainter {
     this.segmentMidpoints,
     this.bindTargetBounds,
     this.bindTargetAngle = 0.0,
+    this.closeIndicatorCenter,
   });
 
   @override
@@ -166,6 +168,11 @@ class InteractiveCanvasPainter extends CustomPainter {
           canvas, bindTargetBounds!, bindTargetAngle);
     }
 
+    // Snap-to-close indicator
+    if (closeIndicatorCenter != null) {
+      SelectionRenderer.drawCloseIndicator(canvas, closeIndicatorCenter!);
+    }
+
     canvas.restore();
   }
 
@@ -179,6 +186,7 @@ class InteractiveCanvasPainter extends CustomPainter {
         creationBounds != oldDelegate.creationBounds ||
         bindTargetBounds != oldDelegate.bindTargetBounds ||
         bindTargetAngle != oldDelegate.bindTargetAngle ||
+        closeIndicatorCenter != oldDelegate.closeIndicatorCenter ||
         !listEquals(snapLines, oldDelegate.snapLines) ||
         !listEquals(creationPoints, oldDelegate.creationPoints) ||
         !listEquals(pointHandles, oldDelegate.pointHandles) ||

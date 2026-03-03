@@ -229,6 +229,7 @@ void main() {
         scene: scene,
         viewport: const ViewportState(),
         selectedIds: {arrow.id},
+        isEditingLinear: true,
       );
 
       // Drag the start point far away

@@ -79,6 +79,7 @@ class ToolContext {
   final Set<ElementId> selectedIds;
   final List<Element> clipboard;
   final InteractionMode interactionMode;
+  final bool isEditingLinear;
 
   ToolContext({
     required this.scene,
@@ -86,6 +87,7 @@ class ToolContext {
     required Set<ElementId> selectedIds,
     this.clipboard = const [],
     this.interactionMode = InteractionMode.pointer,
+    this.isEditingLinear = false,
   }) : selectedIds = Set.unmodifiable(selectedIds);
 }
 
@@ -109,6 +111,10 @@ class ToolOverlay {
   /// Non-null during an eraser drag to allow the UI to dim these elements.
   final Set<ElementId>? eraserElementIds;
 
+  /// Scene-space center of the snap-to-close indicator circle, shown when
+  /// dragging a line endpoint near its opposite endpoint.
+  final Point? closeIndicatorCenter;
+
   const ToolOverlay({
     this.creationBounds,
     this.creationPoints,
@@ -117,6 +123,7 @@ class ToolOverlay {
     this.bindTargetAngle = 0.0,
     this.creationClosed = false,
     this.eraserElementIds,
+    this.closeIndicatorCenter,
   });
 }
 

@@ -51,6 +51,7 @@ void main() {
   ToolContext contextWith({
     List<Element> elements = const [],
     Set<ElementId> selectedIds = const {},
+    bool isEditingLinear = true,
   }) {
     var scene = Scene();
     for (final e in elements) {
@@ -60,6 +61,7 @@ void main() {
       scene: scene,
       viewport: const ViewportState(),
       selectedIds: selectedIds,
+      isEditingLinear: isEditingLinear,
     );
   }
 
@@ -363,6 +365,7 @@ void main() {
         scene: scene,
         viewport: const ViewportState(),
         selectedIds: {arrow.id},
+        isEditingLinear: true,
       );
 
       // Click on start point (100, 50) and drag near rect's right edge (40, 50)
@@ -402,6 +405,7 @@ void main() {
         scene: scene,
         viewport: const ViewportState(),
         selectedIds: {arrow.id},
+        isEditingLinear: true,
       );
 
       // Click on last point (250, 150) and drag near rect's left edge (250, 110)
@@ -442,6 +446,7 @@ void main() {
         scene: scene,
         viewport: const ViewportState(),
         selectedIds: {arrow.id},
+        isEditingLinear: true,
       );
 
       // Click on start point (100, 50) and drag near rect's right edge (40, 50)

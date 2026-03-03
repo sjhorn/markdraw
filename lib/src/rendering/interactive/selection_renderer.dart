@@ -380,6 +380,23 @@ class SelectionRenderer {
     }
   }
 
+  /// Radius of the snap-to-close circle indicator.
+  static const _closeIndicatorRadius = 8.0;
+
+  /// Draws a circle at [center] to indicate that a line endpoint will snap
+  /// closed to form a polygon.
+  static void drawCloseIndicator(Canvas canvas, Point center) {
+    final paint = Paint()
+      ..color = _selectionColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+    canvas.drawCircle(
+      Offset(center.x, center.y),
+      _closeIndicatorRadius,
+      paint,
+    );
+  }
+
   /// Draws a creation preview shape (rectangle outline) from [bounds].
   static void drawCreationPreviewShape(Canvas canvas, Bounds bounds) {
     final paint = Paint()

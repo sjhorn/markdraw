@@ -36,6 +36,7 @@ void main() {
   ToolContext contextWith({
     List<Element> elements = const [],
     Set<ElementId> selectedIds = const {},
+    bool isEditingLinear = false,
   }) {
     var scene = Scene();
     for (final e in elements) {
@@ -45,6 +46,7 @@ void main() {
       scene: scene,
       viewport: const ViewportState(),
       selectedIds: selectedIds,
+      isEditingLinear: isEditingLinear,
     );
   }
 
@@ -222,6 +224,7 @@ void main() {
     ToolContext contextWith({
       required List<Element> elements,
       Set<ElementId> selectedIds = const {},
+      bool isEditingLinear = false,
     }) {
       var scene = Scene();
       for (final e in elements) {
@@ -231,6 +234,7 @@ void main() {
         scene: scene,
         viewport: const ViewportState(),
         selectedIds: selectedIds,
+        isEditingLinear: isEditingLinear,
       );
     }
 
@@ -252,6 +256,7 @@ void main() {
       final ctx = contextWith(
         elements: [openLine],
         selectedIds: {openLine.id},
+        isEditingLinear: true,
       );
 
       // Click on the last point (absolute: 50, 100)
@@ -285,6 +290,7 @@ void main() {
       final ctx = contextWith(
         elements: [openLine],
         selectedIds: {openLine.id},
+        isEditingLinear: true,
       );
 
       // Click on the first point (absolute: 0, 0)
@@ -317,6 +323,7 @@ void main() {
       final ctx = contextWith(
         elements: [openLine],
         selectedIds: {openLine.id},
+        isEditingLinear: true,
       );
 
       // Click on last point (absolute: 50, 100)
@@ -347,6 +354,7 @@ void main() {
       final ctx = contextWith(
         elements: [arrow],
         selectedIds: {arrow.id},
+        isEditingLinear: true,
       );
 
       // Click on last point (absolute: 50, 100)
@@ -377,6 +385,7 @@ void main() {
       final ctx = contextWith(
         elements: [shortLine],
         selectedIds: {shortLine.id},
+        isEditingLinear: true,
       );
 
       // Click on last point (absolute: 100, 0)
@@ -388,6 +397,201 @@ void main() {
       expect(result, isA<UpdateElementResult>());
       final updated = (result! as UpdateElementResult).element as LineElement;
       expect(updated.closed, isFalse);
+    });
+
+    test('overlay shows closeIndicatorCenter when near snap', () {
+      final openLine = LineElement(
+        id: const ElementId('ci1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        points: const [
+          Point(0, 0),
+          Point(100, 0),
+          Point(50, 100),
+        ],
+      );
+      final ctx = contextWith(
+        elements: [openLine],
+        selectedIds: {openLine.id},
+        isEditingLinear: true,
+      );
+
+      // Click on last point (absolute: 50, 100)
+      tool.onPointerDown(const Point(50, 100), ctx);
+      // Drag near first point (absolute: 0, 0) — within 10px
+      tool.onPointerMove(const Point(5, 5), ctx);
+
+      final overlay = tool.overlay;
+      expect(overlay, isNotNull);
+      expect(overlay!.closeIndicatorCenter, isNotNull);
+      // Should match the first point's absolute position
+      expect(overlay.closeIndicatorCenter!.x, closeTo(0, 1));
+      expect(overlay.closeIndicatorCenter!.y, closeTo(0, 1));
+    });
+
+    test('overlay has no closeIndicatorCenter when not near snap', () {
+      final openLine = LineElement(
+        id: const ElementId('ci2'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        points: const [
+          Point(0, 0),
+          Point(100, 0),
+          Point(50, 100),
+        ],
+      );
+      final ctx = contextWith(
+        elements: [openLine],
+        selectedIds: {openLine.id},
+        isEditingLinear: true,
+      );
+
+      // Click on last point (absolute: 50, 100)
+      tool.onPointerDown(const Point(50, 100), ctx);
+      // Drag far from first point — more than 10px away
+      tool.onPointerMove(const Point(20, 20), ctx);
+
+      final overlay = tool.overlay;
+      // Overlay should be null (no binding target, no close indicator)
+      expect(overlay?.closeIndicatorCenter, isNull);
+    });
+  });
+
+  group('SelectTool isEditingLinear gating', () {
+    late SelectTool tool;
+
+    setUp(() {
+      tool = SelectTool();
+    });
+
+    final line = LineElement(
+      id: const ElementId('el1'),
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+      points: const [
+        Point(0, 0),
+        Point(50, 50),
+        Point(100, 100),
+      ],
+    );
+
+    ToolContext contextWith({
+      required List<Element> elements,
+      required Set<ElementId> selectedIds,
+      bool isEditingLinear = false,
+    }) {
+      var scene = Scene();
+      for (final e in elements) {
+        scene = scene.addElement(e);
+      }
+      return ToolContext(
+        scene: scene,
+        viewport: const ViewportState(),
+        selectedIds: selectedIds,
+        isEditingLinear: isEditingLinear,
+      );
+    }
+
+    test('isEditingLinear false: point handle click does not start point drag',
+        () {
+      final ctx = contextWith(
+        elements: [line],
+        selectedIds: {line.id},
+        isEditingLinear: false,
+      );
+
+      // Click directly on the first point (0, 0)
+      tool.onPointerDown(const Point(0, 0), ctx);
+      // Drag away — should NOT produce a point drag (UpdateElementResult),
+      // instead falls through to element body hit-test → move
+      tool.onPointerMove(const Point(20, 20), ctx);
+      final result = tool.onPointerUp(const Point(20, 20), ctx);
+
+      // With isEditingLinear=false, clicking on a point handle falls through
+      // to body hit-test. The element is selected, so it moves.
+      expect(result, isA<UpdateElementResult>());
+      final updated = (result! as UpdateElementResult).element;
+      // Move: x += 20, y += 20 (moved the whole element, not just the point)
+      expect(updated.x, 20.0);
+      expect(updated.y, 20.0);
+      // Points should remain unchanged (not a point drag)
+      expect((updated as LineElement).points, line.points);
+    });
+
+    test('isEditingLinear true: point handle click starts point drag', () {
+      final ctx = contextWith(
+        elements: [line],
+        selectedIds: {line.id},
+        isEditingLinear: true,
+      );
+
+      // Click directly on the first point (0, 0)
+      tool.onPointerDown(const Point(0, 0), ctx);
+      // Drag away — should start a point drag
+      tool.onPointerMove(const Point(20, 20), ctx);
+      final result = tool.onPointerUp(const Point(20, 20), ctx);
+
+      expect(result, isA<UpdateElementResult>());
+      final updated = (result! as UpdateElementResult).element as LineElement;
+      // Point drag moves individual points then normalizes. The element's
+      // origin shifts to reflect the new minimum point position.
+      // Original: x=0, points (0,0),(50,50),(100,100)
+      // After drag: first point moves to (20,20), then normalize shifts
+      // origin. The element x/y and width/height change accordingly.
+      expect(updated.x, 20.0); // origin shifted to new min x
+      expect(updated.y, 20.0); // origin shifted to new min y
+      expect(updated.width, 80.0); // 100 - 20
+      expect(updated.height, 80.0); // 100 - 20
+    });
+
+    test('isEditingLinear false: midpoint click does not insert point', () {
+      final ctx = contextWith(
+        elements: [line],
+        selectedIds: {line.id},
+        isEditingLinear: false,
+      );
+
+      // Click on midpoint between first two points (absolute: 25, 25)
+      tool.onPointerDown(const Point(25, 25), ctx);
+      final downResult = tool.onPointerUp(const Point(25, 25), ctx);
+
+      // Should not produce an UpdateElementResult that inserts a point.
+      // Instead, clicking on the line body should just select it.
+      if (downResult is UpdateElementResult) {
+        // If it's an update, the points list should NOT have grown
+        final updated = downResult.element as LineElement;
+        expect(updated.points.length, line.points.length);
+      } else {
+        // It should be a selection result (re-select)
+        expect(downResult, isA<SetSelectionResult>());
+      }
+    });
+
+    test('isEditingLinear true: midpoint click inserts point', () {
+      final ctx = contextWith(
+        elements: [line],
+        selectedIds: {line.id},
+        isEditingLinear: true,
+      );
+
+      // Click on midpoint between first two points (absolute: 25, 25)
+      tool.onPointerDown(const Point(25, 25), ctx);
+      // onPointerDown returns an UpdateElementResult when midpoint is hit
+      // because it inserts the point immediately
+      // Drag slightly to trigger the point drag
+      tool.onPointerMove(const Point(30, 30), ctx);
+      final result = tool.onPointerUp(const Point(30, 30), ctx);
+
+      expect(result, isA<UpdateElementResult>());
+      final updated = (result! as UpdateElementResult).element as LineElement;
+      // A new point was inserted, so points list grew
+      expect(updated.points.length, greaterThan(line.points.length));
     });
   });
 }

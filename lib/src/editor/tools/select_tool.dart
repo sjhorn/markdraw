@@ -57,6 +57,9 @@ class SelectTool implements Tool {
   // Binding indicator during point drag
   Element? _bindTarget;
 
+  // Snap-to-close indicator during point drag
+  Point? _closeIndicatorCenter;
+
   // Snap-to-close constants for non-arrow line endpoints
   static const _closeThreshold = 10.0; // matching LineTool
   static const _defaultPolygonFill = '#a5d8ff'; // Excalidraw default
@@ -88,7 +91,7 @@ class SelectTool implements Tool {
         selectedElements.every((e) => e.locked);
 
     // 1. Point/segment handle hit-test (line/arrow only, single selection)
-    if (selectedElements.length == 1 && !allLocked) {
+    if (selectedElements.length == 1 && !allLocked && context.isEditingLinear) {
       final elem = selectedElements.first;
 
       // Point handle check first — always takes priority over segment drag
@@ -985,6 +988,7 @@ class SelectTool implements Tool {
           updated.y + (isFirst ? pts.last.y : pts.first.y),
         );
         if (draggedAbs.distanceTo(otherAbs) <= _closeThreshold) {
+          _closeIndicatorCenter = otherAbs;
           // Snap: set dragged point to match the other endpoint
           final snappedPts = List<Point>.of(pts);
           final otherRel = isFirst ? pts.last : pts.first;
@@ -993,8 +997,14 @@ class SelectTool implements Tool {
           updated = (updated as LineElement)
               .copyWithLine(closed: true)
               .copyWith(backgroundColor: _defaultPolygonFill);
+        } else {
+          _closeIndicatorCenter = null;
         }
+      } else {
+        _closeIndicatorCenter = null;
       }
+    } else {
+      _closeIndicatorCenter = null;
     }
 
     return UpdateElementResult(updated);
@@ -1517,17 +1527,26 @@ class SelectTool implements Tool {
 
   @override
   ToolOverlay? get overlay {
-    // Binding indicator during point drag
-    if (_dragMode == _DragMode.dragPoint && _isDragging && _bindTarget != null) {
-      return ToolOverlay(
-        bindTargetBounds: Bounds.fromLTWH(
+    // Binding / close indicator during point drag
+    if (_dragMode == _DragMode.dragPoint && _isDragging) {
+      Bounds? bindBounds;
+      double bindAngle = 0.0;
+      if (_bindTarget != null) {
+        bindBounds = Bounds.fromLTWH(
           _bindTarget!.x,
           _bindTarget!.y,
           _bindTarget!.width,
           _bindTarget!.height,
-        ),
-        bindTargetAngle: _bindTarget!.angle,
-      );
+        );
+        bindAngle = _bindTarget!.angle;
+      }
+      if (bindBounds != null || _closeIndicatorCenter != null) {
+        return ToolOverlay(
+          bindTargetBounds: bindBounds,
+          bindTargetAngle: bindAngle,
+          closeIndicatorCenter: _closeIndicatorCenter,
+        );
+      }
     }
     if (_dragMode != _DragMode.marquee || !_isDragging) return null;
     final down = _downPoint;
@@ -1557,6 +1576,7 @@ class SelectTool implements Tool {
     _startElements = null;
     _startUnionBounds = null;
     _bindTarget = null;
+    _closeIndicatorCenter = null;
   }
 
   // --- Helpers ---
