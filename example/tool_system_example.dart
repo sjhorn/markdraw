@@ -112,6 +112,15 @@ class _CanvasPageState extends State<_CanvasPage> {
   // Mouse position for custom cursor overlay (e.g., eraser circle)
   Offset? _mousePosition;
 
+  // Pinch-to-zoom state
+  double _pinchStartZoom = 1.0;
+  Offset _pinchStartOffset = Offset.zero;
+
+  // Zoom constants matching Excalidraw
+  static const _zoomStep = 0.1;
+  static const _minZoom = 0.1;
+  static const _maxZoom = 30.0;
+
   @override
   void initState() {
     super.initState();
@@ -301,6 +310,32 @@ class _CanvasPageState extends State<_CanvasPage> {
         _editorState = _editorState.copyWith(scene: redone);
       });
     }
+  }
+
+  void _zoomIn() {
+    final viewport = _editorState.viewport;
+    final canvasSize = context.size ?? const Size(800, 600);
+    final center = Offset(canvasSize.width / 2, canvasSize.height / 2);
+    final newZoom = (viewport.zoom + _zoomStep).clamp(_minZoom, _maxZoom);
+    final factor = newZoom / viewport.zoom;
+    _applyResult(UpdateViewportResult(
+      viewport.zoomAt(factor, center, minZoom: _minZoom, maxZoom: _maxZoom),
+    ));
+  }
+
+  void _zoomOut() {
+    final viewport = _editorState.viewport;
+    final canvasSize = context.size ?? const Size(800, 600);
+    final center = Offset(canvasSize.width / 2, canvasSize.height / 2);
+    final newZoom = (viewport.zoom - _zoomStep).clamp(_minZoom, _maxZoom);
+    final factor = newZoom / viewport.zoom;
+    _applyResult(UpdateViewportResult(
+      viewport.zoomAt(factor, center, minZoom: _minZoom, maxZoom: _maxZoom),
+    ));
+  }
+
+  void _resetZoom() {
+    _applyResult(UpdateViewportResult(const ViewportState()));
   }
 
   bool get _isCreationTool => switch (_editorState.activeToolType) {
@@ -1209,6 +1244,7 @@ class _CanvasPageState extends State<_CanvasPage> {
             child: Center(child: _buildToolbar()),
           ),
           Positioned(top: 12, left: 12, child: _buildHamburgerMenu()),
+          Positioned(bottom: 12, left: 12, child: _buildZoomControls()),
         ],
         // Floating property panel — desktop left side
         if (!_isCompact && (_selectedElements.isNotEmpty || _isCreationTool))
@@ -1232,7 +1268,28 @@ class _CanvasPageState extends State<_CanvasPage> {
       cursor: _cursorForTool,
       child: Stack(
         children: [
-          Listener(
+          GestureDetector(
+            onScaleStart: (details) {
+              _pinchStartZoom = _editorState.viewport.zoom;
+              _pinchStartOffset = _editorState.viewport.offset;
+            },
+            onScaleUpdate: (details) {
+              if (details.pointerCount < 2) return;
+              var newViewport = ViewportState(
+                offset: _pinchStartOffset,
+                zoom: _pinchStartZoom,
+              );
+              newViewport = newViewport.zoomAt(
+                details.scale,
+                details.localFocalPoint,
+                minZoom: _minZoom,
+                maxZoom: _maxZoom,
+              );
+              newViewport = newViewport.pan(details.focalPointDelta);
+              _applyResult(UpdateViewportResult(newViewport));
+            },
+            onScaleEnd: (_) {},
+            child: Listener(
             onPointerHover: (event) {
               final point = _toScene(event.localPosition);
               _activeTool.onPointerMove(point, _toolContext);
@@ -1332,6 +1389,8 @@ class _CanvasPageState extends State<_CanvasPage> {
                 final newViewport = _editorState.viewport.zoomAt(
                   factor,
                   event.localPosition,
+                  minZoom: _minZoom,
+                  maxZoom: _maxZoom,
                 );
                 _applyResult(UpdateViewportResult(newViewport));
               }
@@ -1366,6 +1425,7 @@ class _CanvasPageState extends State<_CanvasPage> {
               child: const SizedBox.expand(),
             ),
           ),
+          ),
           if (_editorState.activeToolType == ToolType.eraser &&
               _mousePosition != null)
             Positioned(
@@ -1389,6 +1449,60 @@ class _CanvasPageState extends State<_CanvasPage> {
         ],
       ),
     ),
+    );
+  }
+
+  Widget _buildZoomControls() {
+    final cs = Theme.of(context).colorScheme;
+    final zoomPercent = (_editorState.viewport.zoom * 100).round();
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.17), blurRadius: 1),
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08), blurRadius: 3),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 14,
+            offset: const Offset(0, 7),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.remove, size: 16),
+            onPressed: _zoomOut,
+            tooltip: 'Zoom out (Ctrl+\u2212)',
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            iconSize: 16,
+            padding: EdgeInsets.zero,
+          ),
+          InkWell(
+            onTap: _resetZoom,
+            borderRadius: BorderRadius.circular(4),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Text(
+                '$zoomPercent%',
+                style: TextStyle(fontSize: 12, color: cs.onSurface),
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.add, size: 16),
+            onPressed: _zoomIn,
+            tooltip: 'Zoom in (Ctrl++)',
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            iconSize: 16,
+            padding: EdgeInsets.zero,
+          ),
+        ],
+      ),
     );
   }
 
@@ -2277,6 +2391,15 @@ class _CanvasPageState extends State<_CanvasPage> {
     const SingleActivator(LogicalKeyboardKey.keyZ, control: true): _undo,
     const SingleActivator(LogicalKeyboardKey.keyZ, control: true, shift: true):
         _redo,
+    // Zoom shortcuts — meta (macOS) variants
+    const SingleActivator(LogicalKeyboardKey.equal, meta: true): _zoomIn,
+    const SingleActivator(LogicalKeyboardKey.minus, meta: true): _zoomOut,
+    const SingleActivator(LogicalKeyboardKey.digit0, meta: true): _resetZoom,
+    // Zoom shortcuts — ctrl variants for non-macOS platforms
+    const SingleActivator(LogicalKeyboardKey.equal, control: true): _zoomIn,
+    const SingleActivator(LogicalKeyboardKey.minus, control: true): _zoomOut,
+    const SingleActivator(LogicalKeyboardKey.digit0, control: true):
+        _resetZoom,
   };
 
   List<Element> get _selectedElements {
@@ -3973,6 +4096,20 @@ class _CanvasPageState extends State<_CanvasPage> {
     }
     if (ctrl && key == LogicalKeyboardKey.keyO) {
       _openFile();
+      return;
+    }
+
+    // Zoom shortcuts: Ctrl+= zoom in, Ctrl+- zoom out, Ctrl+0 reset
+    if (ctrl && key == LogicalKeyboardKey.equal) {
+      _zoomIn();
+      return;
+    }
+    if (ctrl && key == LogicalKeyboardKey.minus) {
+      _zoomOut();
+      return;
+    }
+    if (ctrl && key == LogicalKeyboardKey.digit0) {
+      _resetZoom();
       return;
     }
 

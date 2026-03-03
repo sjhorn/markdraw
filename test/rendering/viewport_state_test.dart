@@ -192,10 +192,10 @@ void main() {
       expect(zoomed.zoom, 10.0);
     });
 
-    test('default clamp range is 0.1 to 10.0', () {
+    test('default clamp range is 0.1 to 30.0', () {
       const state = ViewportState(zoom: 1.0);
       final zoomedWayIn = state.zoomAt(100.0, Offset.zero);
-      expect(zoomedWayIn.zoom, 10.0);
+      expect(zoomedWayIn.zoom, 30.0);
 
       final zoomedWayOut = state.zoomAt(0.001, Offset.zero);
       expect(zoomedWayOut.zoom, closeTo(0.1, 0.01));

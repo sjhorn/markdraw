@@ -64,7 +64,7 @@ class ViewportState {
     double factor,
     Offset screenPoint, {
     double minZoom = 0.1,
-    double maxZoom = 10.0,
+    double maxZoom = 30.0,
   }) {
     final newZoom = (zoom * factor).clamp(minZoom, maxZoom);
 
