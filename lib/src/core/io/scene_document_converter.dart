@@ -6,10 +6,17 @@ class SceneDocumentConverter {
   SceneDocumentConverter._();
 
   /// Converts a [Scene] to a [MarkdrawDocument] containing its active elements.
-  static MarkdrawDocument sceneToDocument(Scene scene) {
+  ///
+  /// Optionally pass [settings] to include canvas-level settings such as
+  /// the background color.
+  static MarkdrawDocument sceneToDocument(
+    Scene scene, {
+    CanvasSettings? settings,
+  }) {
     return MarkdrawDocument(
       sections: [SketchSection(scene.activeElements)],
       files: scene.files,
+      settings: settings,
     );
   }
 

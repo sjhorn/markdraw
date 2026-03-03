@@ -1800,4 +1800,62 @@ void main() {
       expect(doc2.allElements.first.boundElements[1].type, 'text');
     });
   });
+
+  group('viewBackgroundColor', () {
+    test('parse extracts viewBackgroundColor from appState', () {
+      final json = jsonEncode({
+        'type': 'excalidraw',
+        'version': 2,
+        'elements': <dynamic>[],
+        'appState': {'viewBackgroundColor': '#f0e6d3'},
+        'files': <String, dynamic>{},
+      });
+      final result = ExcalidrawJsonCodec.parse(json);
+      expect(result.value.settings.background, '#f0e6d3');
+    });
+
+    test('parse defaults to #ffffff when appState missing', () {
+      final json = jsonEncode({
+        'type': 'excalidraw',
+        'version': 2,
+        'elements': <dynamic>[],
+        'files': <String, dynamic>{},
+      });
+      final result = ExcalidrawJsonCodec.parse(json);
+      expect(result.value.settings.background, '#ffffff');
+    });
+
+    test('parse defaults to #ffffff when viewBackgroundColor missing', () {
+      final json = jsonEncode({
+        'type': 'excalidraw',
+        'version': 2,
+        'elements': <dynamic>[],
+        'appState': <String, dynamic>{},
+        'files': <String, dynamic>{},
+      });
+      final result = ExcalidrawJsonCodec.parse(json);
+      expect(result.value.settings.background, '#ffffff');
+    });
+
+    test('serialize writes viewBackgroundColor to appState', () {
+      final doc = MarkdrawDocument(
+        sections: [SketchSection(const [])],
+        settings: const CanvasSettings(background: '#e7f5ff'),
+      );
+      final jsonStr = ExcalidrawJsonCodec.serialize(doc);
+      final decoded = jsonDecode(jsonStr) as Map<String, dynamic>;
+      final appState = decoded['appState'] as Map<String, dynamic>;
+      expect(appState['viewBackgroundColor'], '#e7f5ff');
+    });
+
+    test('round-trip preserves viewBackgroundColor', () {
+      final doc = MarkdrawDocument(
+        sections: [SketchSection(const [])],
+        settings: const CanvasSettings(background: '#fff8f0'),
+      );
+      final jsonStr = ExcalidrawJsonCodec.serialize(doc);
+      final result = ExcalidrawJsonCodec.parse(jsonStr);
+      expect(result.value.settings.background, '#fff8f0');
+    });
+  });
 }

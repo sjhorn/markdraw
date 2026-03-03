@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import '../elements/elements.dart';
 import '../math/math.dart';
+import 'canvas_settings.dart';
 import 'document_section.dart';
 import 'markdraw_document.dart';
 import 'parse_result.dart';
@@ -78,7 +79,9 @@ class ExcalidrawJsonCodec {
       'version': 2,
       'source': 'markdraw',
       'elements': elements,
-      'appState': <String, dynamic>{},
+      'appState': <String, dynamic>{
+        'viewBackgroundColor': doc.settings.background,
+      },
       'files': filesJson,
     };
     return jsonEncode(result);
@@ -282,10 +285,17 @@ class ExcalidrawJsonCodec {
 
     final files = parseFilesJson(decoded['files'], warnings);
 
+    // Extract viewBackgroundColor from appState
+    final appState = decoded['appState'];
+    final viewBg = (appState is Map<String, dynamic>)
+        ? (appState['viewBackgroundColor'] as String? ?? '#ffffff')
+        : '#ffffff';
+
     return ParseResult(
       value: MarkdrawDocument(
         sections: [SketchSection(elements)],
         files: files,
+        settings: CanvasSettings(background: viewBg),
       ),
       warnings: warnings,
     );

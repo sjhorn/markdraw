@@ -30,6 +30,8 @@ import 'package:markdraw/markdraw.dart' hide TextAlign;
 
 import 'file_io_stub.dart' if (dart.library.io) 'file_io_native.dart';
 
+final _themeModeNotifier = ValueNotifier<ThemeMode>(ThemeMode.system);
+
 void main() {
   runApp(const ToolSystemExampleApp());
 }
@@ -39,11 +41,24 @@ class ToolSystemExampleApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Tool System Example',
-      theme: ThemeData(useMaterial3: true),
-      home: const _CanvasPage(),
-      debugShowCheckedModeBanner: false,
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: _themeModeNotifier,
+      builder: (context, themeMode, _) => MaterialApp(
+        title: 'Tool System Example',
+        theme: ThemeData(
+          useMaterial3: true,
+          colorSchemeSeed: Colors.blue,
+          brightness: Brightness.light,
+        ),
+        darkTheme: ThemeData(
+          useMaterial3: true,
+          colorSchemeSeed: Colors.blue,
+          brightness: Brightness.dark,
+        ),
+        themeMode: themeMode,
+        home: const _CanvasPage(),
+        debugShowCheckedModeBanner: false,
+      ),
     );
   }
 }
@@ -71,6 +86,7 @@ class _CanvasPageState extends State<_CanvasPage> {
   bool _isEditingLinear = false;
   bool _fontPickerOpen = false;
   ElementStyle _defaultStyle = const ElementStyle();
+  String _canvasBackgroundColor = '#ffffff';
 
   // Drag coalescing: capture scene before drag, push once on pointer up
   Scene? _sceneBeforeDrag;
@@ -113,10 +129,60 @@ class _CanvasPageState extends State<_CanvasPage> {
     _keyboardFocusNode.requestFocus();
 
     _textFocusNode.addListener(_onTextFocusChanged);
+    _themeModeNotifier.addListener(_onThemeModeChanged);
 
     _imageCache.onImageDecoded = () {
       if (mounted) setState(() {});
     };
+  }
+
+  void _onThemeModeChanged() {
+    if (mounted) setState(() {});
+  }
+
+  void _cycleThemeMode() {
+    _themeModeNotifier.value = switch (_themeModeNotifier.value) {
+      ThemeMode.light => ThemeMode.dark,
+      ThemeMode.dark => ThemeMode.system,
+      ThemeMode.system => ThemeMode.light,
+    };
+  }
+
+  IconData _themeModeIcon() => switch (_themeModeNotifier.value) {
+    ThemeMode.light => Icons.light_mode,
+    ThemeMode.dark => Icons.dark_mode,
+    ThemeMode.system => Icons.brightness_auto,
+  };
+
+  String _themeModeLabel() => switch (_themeModeNotifier.value) {
+    ThemeMode.light => 'Light',
+    ThemeMode.dark => 'Dark',
+    ThemeMode.system => 'System',
+  };
+
+  static const _canvasBackgroundPresets = [
+    '#ffffff',
+    '#f8f9fa',
+    '#fff8f0',
+    '#e7f5ff',
+    '#ebfbee',
+  ];
+
+  void _showCanvasBackgroundPicker() {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Canvas background'),
+        content: _buildColorPickerRow(
+          selected: _canvasBackgroundColor,
+          onSelect: (c) {
+            setState(() => _canvasBackgroundColor = c);
+            Navigator.of(ctx).pop();
+          },
+          quickPicks: _canvasBackgroundPresets,
+        ),
+      ),
+    );
   }
 
   @override
@@ -126,6 +192,7 @@ class _CanvasPageState extends State<_CanvasPage> {
     _textEditingController.dispose();
     _textFocusNode.removeListener(_onTextFocusChanged);
     _textFocusNode.dispose();
+    _themeModeNotifier.removeListener(_onThemeModeChanged);
     super.dispose();
   }
 
@@ -531,7 +598,7 @@ class _CanvasPageState extends State<_CanvasPage> {
         _editorState.scene,
         _adapter,
         scale: 2,
-        backgroundColor: const Color(0xFFFFFFFF),
+        backgroundColor: _parseColor(_canvasBackgroundColor),
         selectedIds: selectedIds,
       );
       if (bytes == null) return;
@@ -560,7 +627,7 @@ class _CanvasPageState extends State<_CanvasPage> {
           : null;
       final svg = SvgExporter.export(
         _editorState.scene,
-        backgroundColor: '#ffffff',
+        backgroundColor: _canvasBackgroundColor,
         selectedIds: selectedIds,
       );
       if (svg.isEmpty) return;
@@ -775,18 +842,19 @@ class _CanvasPageState extends State<_CanvasPage> {
   }
 
   Widget _buildLibraryPanel() {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       width: 200,
       decoration: BoxDecoration(
-        border: Border(left: BorderSide(color: Colors.grey.shade300)),
-        color: Colors.grey.shade50,
+        border: Border(left: BorderSide(color: Theme.of(context).dividerColor)),
+        color: cs.surfaceContainerLowest,
       ),
       child: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+              border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor)),
             ),
             child: Row(
               children: [
@@ -836,13 +904,13 @@ class _CanvasPageState extends State<_CanvasPage> {
             ),
           Expanded(
             child: _libraryItems.isEmpty
-                ? const Center(
+                ? Center(
                     child: Padding(
-                      padding: EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(16),
                       child: Text(
                         'No library items.\nSelect elements and click "Add to Library".',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey, fontSize: 12),
+                        style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
                       ),
                     ),
                   )
@@ -880,7 +948,10 @@ class _CanvasPageState extends State<_CanvasPage> {
   Future<void> _saveFile() async {
     try {
       if (!kIsWeb && _currentFilePath != null) {
-        final doc = SceneDocumentConverter.sceneToDocument(_editorState.scene);
+        final doc = SceneDocumentConverter.sceneToDocument(
+          _editorState.scene,
+          settings: CanvasSettings(background: _canvasBackgroundColor),
+        );
         await _documentService.save(doc, _currentFilePath!);
       } else {
         await _saveFileAs();
@@ -892,7 +963,10 @@ class _CanvasPageState extends State<_CanvasPage> {
 
   Future<void> _saveFileAs() async {
     try {
-      final doc = SceneDocumentConverter.sceneToDocument(_editorState.scene);
+      final doc = SceneDocumentConverter.sceneToDocument(
+        _editorState.scene,
+        settings: CanvasSettings(background: _canvasBackgroundColor),
+      );
       final content = DocumentSerializer.serialize(doc);
 
       if (kIsWeb) {
@@ -950,6 +1024,7 @@ class _CanvasPageState extends State<_CanvasPage> {
       _historyManager.clear();
       setState(() {
         _currentFilePath = kIsWeb ? null : file.path;
+        _canvasBackgroundColor = parseResult.value.settings.background;
         _editorState = _editorState.copyWith(scene: scene, selectedIds: {});
       });
     } catch (e) {
@@ -1075,7 +1150,9 @@ class _CanvasPageState extends State<_CanvasPage> {
   }
 
   Widget _buildCanvas(ToolOverlay? toolOverlay, Rect? marqueeRect) {
-    return MouseRegion(
+    return ColoredBox(
+      color: _parseColor(_canvasBackgroundColor),
+      child: MouseRegion(
       cursor: _cursorForTool,
       child: Stack(
         children: [
@@ -1235,13 +1312,15 @@ class _CanvasPageState extends State<_CanvasPage> {
             ),
         ],
       ),
+    ),
     );
   }
 
   Widget _buildHamburgerMenu() {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.17), blurRadius: 1),
@@ -1277,6 +1356,10 @@ class _CanvasPageState extends State<_CanvasPage> {
               _importImage();
             case 'frame_tool':
               _switchTool(ToolType.frame);
+            case 'theme':
+              _cycleThemeMode();
+            case 'canvas_background':
+              _showCanvasBackgroundPicker();
           }
         },
         itemBuilder: (context) => [
@@ -1294,12 +1377,12 @@ class _CanvasPageState extends State<_CanvasPage> {
                 Icon(
                   Icons.library_books,
                   size: 18,
-                  color: _showLibraryPanel ? Colors.blue : Colors.grey.shade700,
+                  color: _showLibraryPanel ? cs.primary : cs.onSurfaceVariant,
                 ),
                 const SizedBox(width: 12),
                 const Expanded(child: Text('Library')),
                 if (_showLibraryPanel)
-                  const Icon(Icons.check, size: 16, color: Colors.blue),
+                  Icon(Icons.check, size: 16, color: cs.primary),
               ],
             ),
           ),
@@ -1311,6 +1394,34 @@ class _CanvasPageState extends State<_CanvasPage> {
           ),
           const PopupMenuDivider(),
           _menuItem('frame_tool', Icons.crop_free, 'Frame Tool', 'F'),
+          const PopupMenuDivider(),
+          PopupMenuItem<String>(
+            value: 'theme',
+            child: Row(
+              children: [
+                Icon(
+                  _themeModeIcon(),
+                  size: 18,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 12),
+                const Expanded(child: Text('Theme')),
+                Text(
+                  _themeModeLabel(),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _menuItem(
+            'canvas_background',
+            Icons.format_color_fill,
+            'Canvas background',
+            null,
+          ),
         ],
       ),
     );
@@ -1322,17 +1433,18 @@ class _CanvasPageState extends State<_CanvasPage> {
     String label,
     String? shortcut,
   ) {
+    final cs = Theme.of(context).colorScheme;
     return PopupMenuItem<String>(
       value: value,
       child: Row(
         children: [
-          Icon(icon, size: 18, color: Colors.grey.shade700),
+          Icon(icon, size: 18, color: cs.onSurfaceVariant),
           const SizedBox(width: 12),
           Expanded(child: Text(label)),
           if (shortcut != null)
             Text(
               shortcut,
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
             ),
         ],
       ),
@@ -1340,10 +1452,11 @@ class _CanvasPageState extends State<_CanvasPage> {
   }
 
   Widget _buildToolbar() {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.17), blurRadius: 1),
@@ -1387,7 +1500,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                         style: TextStyle(
                           fontSize: 8,
                           fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade400,
+                          color: cs.onSurfaceVariant,
                         ),
                       ),
                     ),
@@ -1403,8 +1516,8 @@ class _CanvasPageState extends State<_CanvasPage> {
                   _iconWidgetFor(
                     type,
                     color: _editorState.activeToolType == type
-                        ? Colors.blue
-                        : Colors.grey.shade700,
+                        ? cs.primary
+                        : cs.onSurfaceVariant,
                     size: 20,
                     isActive: _editorState.activeToolType == type,
                   ),
@@ -1418,8 +1531,8 @@ class _CanvasPageState extends State<_CanvasPage> {
                           fontSize: 8,
                           fontWeight: FontWeight.bold,
                           color: _editorState.activeToolType == type
-                              ? Colors.blue.shade300
-                              : Colors.grey.shade400,
+                              ? cs.primary
+                              : cs.onSurfaceVariant,
                         ),
                       ),
                     ),
@@ -1452,11 +1565,12 @@ class _CanvasPageState extends State<_CanvasPage> {
   }
 
   Widget _buildCompactToolbar() {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.17), blurRadius: 1),
@@ -1490,8 +1604,8 @@ class _CanvasPageState extends State<_CanvasPage> {
                   iconWidget: _iconWidgetFor(
                     type,
                     color: _editorState.activeToolType == type
-                        ? Colors.blue
-                        : Colors.grey.shade700,
+                        ? cs.primary
+                        : cs.onSurfaceVariant,
                     size: 22,
                     isActive: _editorState.activeToolType == type,
                   ),
@@ -1512,10 +1626,11 @@ class _CanvasPageState extends State<_CanvasPage> {
     required VoidCallback onPressed,
     bool isActive = false,
   }) {
+    final cs = Theme.of(context).colorScheme;
     return Tooltip(
       message: tooltip,
       child: Material(
-        color: isActive ? Colors.blue.shade50 : Colors.transparent,
+        color: isActive ? cs.primaryContainer : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
@@ -1529,7 +1644,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                   Icon(
                     icon,
                     size: 22,
-                    color: isActive ? Colors.blue : Colors.grey.shade700,
+                    color: isActive ? cs.primary : cs.onSurfaceVariant,
                   ),
             ),
           ),
@@ -1539,9 +1654,10 @@ class _CanvasPageState extends State<_CanvasPage> {
   }
 
   Widget _buildCompactMenuButton() {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.17), blurRadius: 1),
@@ -1594,6 +1710,15 @@ class _CanvasPageState extends State<_CanvasPage> {
               Navigator.pop(ctx);
               _showCompactLibrary();
             }),
+            const Divider(),
+            _compactMenuItem(_themeModeIcon(), 'Theme: ${_themeModeLabel()}', () {
+              Navigator.pop(ctx);
+              _cycleThemeMode();
+            }),
+            _compactMenuItem(Icons.format_color_fill, 'Canvas background', () {
+              Navigator.pop(ctx);
+              _showCanvasBackgroundPicker();
+            }),
           ],
         ),
       ),
@@ -1609,9 +1734,10 @@ class _CanvasPageState extends State<_CanvasPage> {
   }
 
   Widget _buildCompactPropertyButton() {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.17), blurRadius: 1),
@@ -1656,11 +1782,12 @@ class _CanvasPageState extends State<_CanvasPage> {
                   elements.whereType<TextElement>().isNotEmpty);
           final isEditingText = _editingTextElementId != null;
 
+          final cs = Theme.of(ctx).colorScheme;
           return TextFieldTapRegion(
             child: Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              decoration: BoxDecoration(
+                color: cs.surface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
               ),
               child: ListView(
                 controller: scrollController,
@@ -1672,7 +1799,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                       height: 4,
                       margin: const EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
+                        color: Theme.of(ctx).dividerColor,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -1852,9 +1979,9 @@ class _CanvasPageState extends State<_CanvasPage> {
         maxChildSize: 0.7,
         expand: false,
         builder: (ctx, scrollController) => Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          decoration: BoxDecoration(
+            color: Theme.of(ctx).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
           ),
           child: Column(
             children: [
@@ -1864,7 +1991,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                   height: 4,
                   margin: const EdgeInsets.only(top: 12, bottom: 8),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
+                    color: Theme.of(ctx).dividerColor,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -1922,10 +2049,10 @@ class _CanvasPageState extends State<_CanvasPage> {
                 ),
               Expanded(
                 child: _libraryItems.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Text(
                           'No library items.',
-                          style: TextStyle(color: Colors.grey),
+                          style: TextStyle(color: Theme.of(ctx).colorScheme.onSurfaceVariant),
                         ),
                       )
                     : ListView.builder(
@@ -1967,10 +2094,11 @@ class _CanvasPageState extends State<_CanvasPage> {
     required VoidCallback onPressed,
     bool isActive = false,
   }) {
+    final cs = Theme.of(context).colorScheme;
     return Tooltip(
       message: tooltip,
       child: Material(
-        color: isActive ? Colors.blue.shade50 : Colors.transparent,
+        color: isActive ? cs.primaryContainer : Colors.transparent,
         borderRadius: BorderRadius.circular(6),
         child: InkWell(
           borderRadius: BorderRadius.circular(6),
@@ -1984,7 +2112,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                   Icon(
                     icon,
                     size: 20,
-                    color: isActive ? Colors.blue : Colors.grey.shade700,
+                    color: isActive ? cs.primary : cs.onSurfaceVariant,
                   ),
             ),
           ),
@@ -2001,7 +2129,7 @@ class _CanvasPageState extends State<_CanvasPage> {
         child: VerticalDivider(
           width: 1,
           thickness: 1,
-          color: Colors.grey.shade300,
+          color: Theme.of(context).dividerColor,
         ),
       ),
     );
@@ -2174,11 +2302,12 @@ class _CanvasPageState extends State<_CanvasPage> {
       return const SizedBox.shrink();
     }
 
+    final cs = Theme.of(context).colorScheme;
     return TextFieldTapRegion(
       child: Container(
         width: 220,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cs.surface,
           borderRadius: BorderRadius.circular(8),
           boxShadow: [
             BoxShadow(
@@ -2380,7 +2509,7 @@ class _CanvasPageState extends State<_CanvasPage> {
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: Colors.grey.shade700,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
     );
@@ -2426,7 +2555,7 @@ class _CanvasPageState extends State<_CanvasPage> {
           width: 1,
           height: 20,
           margin: const EdgeInsets.symmetric(horizontal: 4),
-          color: Colors.grey.shade300,
+          color: Theme.of(context).dividerColor,
         ),
         // Active-color button that opens the full palette popup
         _ColorPickerButton(
@@ -3023,7 +3152,7 @@ class _CanvasPageState extends State<_CanvasPage> {
         Container(
           width: 1,
           height: 24,
-          color: Colors.grey.shade300,
+          color: Theme.of(context).dividerColor,
           margin: const EdgeInsets.symmetric(horizontal: 6),
         ),
         _ToggleChip(
@@ -3108,7 +3237,7 @@ class _CanvasPageState extends State<_CanvasPage> {
           Container(
             width: 1,
             height: 24,
-            color: Colors.grey.shade300,
+            color: Theme.of(context).dividerColor,
             margin: const EdgeInsets.symmetric(horizontal: 6),
           ),
           _IconToggleChip(
@@ -3126,7 +3255,7 @@ class _CanvasPageState extends State<_CanvasPage> {
         Container(
           width: 1,
           height: 24,
-          color: Colors.grey.shade300,
+          color: Theme.of(context).dividerColor,
           margin: const EdgeInsets.symmetric(horizontal: 6),
         ),
         Builder(
@@ -3935,6 +4064,7 @@ class _ColorSwatch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final parsed = _parseColor(color);
     final isTransparent = color == 'transparent';
     // Light colors get a gray outline for visibility (like Excalidraw)
@@ -3945,12 +4075,12 @@ class _ColorSwatch extends StatelessWidget {
         width: 24,
         height: 24,
         decoration: BoxDecoration(
-          color: isTransparent ? Colors.white : parsed,
+          color: isTransparent ? cs.surface : parsed,
           border: Border.all(
             color: isSelected
-                ? Colors.blue
+                ? cs.primary
                 : (isLight || isTransparent)
-                ? Colors.grey.shade400
+                ? cs.outlineVariant
                 : Colors.transparent,
             width: isSelected ? 2 : 1,
           ),
@@ -3993,6 +4123,7 @@ class _ColorPickerButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final parsed = _parseColor(color);
     final isTransparent = color == 'transparent';
     final isLight = !isTransparent && (parsed.r + parsed.g + parsed.b) > 1.8;
@@ -4002,13 +4133,13 @@ class _ColorPickerButton extends StatelessWidget {
         width: 24,
         height: 24,
         decoration: BoxDecoration(
-          color: isTransparent ? Colors.white : parsed,
+          color: isTransparent ? cs.surface : parsed,
           border: Border.all(
             color: isActive
-                ? Colors.blue
+                ? cs.primary
                 : (isLight || isTransparent)
-                ? Colors.grey.shade400
-                : Colors.grey.shade300,
+                ? cs.outlineVariant
+                : cs.outlineVariant,
             width: isActive ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(4),
@@ -4117,7 +4248,7 @@ class _ColorPaletteOverlayState extends State<_ColorPaletteOverlay> {
               width: popupWidth,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
@@ -4131,11 +4262,11 @@ class _ColorPaletteOverlayState extends State<_ColorPaletteOverlay> {
                       width: swatchSize,
                       height: swatchSize,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.surface,
                         border: Border.all(
                           color: widget.currentColor == 'transparent'
-                              ? Colors.blue
-                              : Colors.grey.shade400,
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.outlineVariant,
                           width: widget.currentColor == 'transparent' ? 2 : 1,
                         ),
                         borderRadius: BorderRadius.circular(4),
@@ -4195,6 +4326,7 @@ class _ColorPaletteOverlayState extends State<_ColorPaletteOverlay> {
   }
 
   Widget _buildGridSwatch(String hex, double size) {
+    final cs = Theme.of(context).colorScheme;
     final parsed = _parseColor(hex);
     final isLight = (parsed.r + parsed.g + parsed.b) > 1.8;
     final isSelected = widget.currentColor.toLowerCase() == hex.toLowerCase();
@@ -4207,9 +4339,9 @@ class _ColorPaletteOverlayState extends State<_ColorPaletteOverlay> {
           color: parsed,
           border: Border.all(
             color: isSelected
-                ? Colors.blue
+                ? cs.primary
                 : isLight
-                ? Colors.grey.shade300
+                ? cs.outlineVariant
                 : Colors.transparent,
             width: isSelected ? 2 : 1,
           ),
@@ -4283,9 +4415,9 @@ class _FontPickerOverlayState extends State<_FontPickerOverlay> {
                 width: popupWidth,
                 constraints: const BoxConstraints(maxHeight: maxPopupHeight),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.shade300),
+                  border: Border.all(color: Theme.of(context).dividerColor),
                 ),
                 child: _FontListContent(
                   currentFont: widget.currentFont,
@@ -4359,7 +4491,7 @@ class _FontListContentState extends State<_FontListContent> {
             style: const TextStyle(fontSize: 13),
             decoration: InputDecoration(
               hintText: 'Search fonts...',
-              hintStyle: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+              hintStyle: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
               prefixIcon: const Icon(Icons.search, size: 18),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 8,
@@ -4368,7 +4500,7 @@ class _FontListContentState extends State<_FontListContent> {
               isDense: true,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide: BorderSide(color: Colors.grey.shade300),
+                borderSide: BorderSide(color: Theme.of(context).dividerColor),
               ),
             ),
             onChanged: (v) => setState(() => _searchQuery = v),
@@ -4409,7 +4541,7 @@ class _FontListContentState extends State<_FontListContent> {
         style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w600,
-          color: Colors.grey.shade500,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
           letterSpacing: 0.5,
         ),
       ),
@@ -4417,20 +4549,21 @@ class _FontListContentState extends State<_FontListContent> {
   }
 
   Widget _buildFontItem(String font) {
+    final cs = Theme.of(context).colorScheme;
     final isSelected = font == widget.currentFont;
     final category = FontResolver.categoryOf(font);
     return InkWell(
       onTap: () => widget.onSelect(font),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        color: isSelected ? Colors.blue.shade50 : null,
+        color: isSelected ? cs.primaryContainer : null,
         child: Row(
           children: [
             SizedBox(
               width: 20,
               child: Text(
                 _categoryIcon(category),
-                style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
               ),
             ),
             Expanded(
@@ -4441,15 +4574,15 @@ class _FontListContentState extends State<_FontListContent> {
                   baseStyle: TextStyle(
                     fontSize: 13,
                     color: isSelected
-                        ? Colors.blue.shade900
-                        : Colors.grey.shade800,
+                        ? cs.onPrimaryContainer
+                        : cs.onSurface,
                   ),
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             if (isSelected)
-              Icon(Icons.check, size: 16, color: Colors.blue.shade700),
+              Icon(Icons.check, size: 16, color: cs.primary),
           ],
         ),
       ),
@@ -4468,12 +4601,12 @@ class _FontListContentState extends State<_FontListContent> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         child: Row(
           children: [
-            Icon(Icons.cloud_download, size: 14, color: Colors.grey.shade500),
+            Icon(Icons.cloud_download, size: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
             const SizedBox(width: 6),
             Expanded(
               child: Text(
                 'Google Font: $displayName',
-                style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -4579,14 +4712,15 @@ class _ToggleChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.blue.shade100 : Colors.white,
+          color: isSelected ? cs.primaryContainer : cs.surface,
           border: Border.all(
-            color: isSelected ? Colors.blue : Colors.grey.shade400,
+            color: isSelected ? cs.primary : cs.outlineVariant,
           ),
           borderRadius: BorderRadius.circular(4),
         ),
@@ -4594,7 +4728,7 @@ class _ToggleChip extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 11,
-            color: isSelected ? Colors.blue.shade900 : Colors.grey.shade800,
+            color: isSelected ? cs.onPrimaryContainer : cs.onSurface,
           ),
         ),
       ),
@@ -4617,15 +4751,16 @@ class _IconToggleChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     Widget chip = GestureDetector(
       onTap: onTap,
       child: Container(
         width: 32,
         height: 32,
         decoration: BoxDecoration(
-          color: isSelected ? Colors.blue.shade100 : Colors.white,
+          color: isSelected ? cs.primaryContainer : cs.surface,
           border: Border.all(
-            color: isSelected ? Colors.blue : Colors.grey.shade400,
+            color: isSelected ? cs.primary : cs.outlineVariant,
           ),
           borderRadius: BorderRadius.circular(4),
         ),
