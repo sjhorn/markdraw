@@ -211,27 +211,52 @@ class _CanvasPageState extends State<_CanvasPage> {
     Navigator.of(context).pop(); // dismiss the popup menu
   }
 
+  // Excalidraw canvas background presets (from packages/common/src/colors.ts)
   static const _canvasBackgroundPresets = [
-    '#ffffff',
-    '#f8f9fa',
-    '#fff8f0',
-    '#e7f5ff',
-    '#ebfbee',
+    '#ffffff',  // white
+    '#f8f9fa',  // radix slate2
+    '#f5faff',  // radix blue2
+    '#fffce8',  // radix yellow2
+    '#fdf8f6',  // radix bronze2
   ];
 
-  void _showCanvasBackgroundPicker() {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Canvas background'),
-        content: _buildColorPickerRow(
-          selected: _canvasBackgroundColor,
-          onSelect: (c) {
-            setState(() => _canvasBackgroundColor = c);
-            Navigator.of(ctx).pop();
-          },
-          quickPicks: _canvasBackgroundPresets,
-        ),
+  Widget _buildCanvasBackgroundPicker(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
+        children: [
+          Text('Background', style: TextStyle(color: cs.onSurface)),
+          const Spacer(),
+          for (final c in _canvasBackgroundPresets)
+            Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: _ColorSwatch(
+                color: c,
+                isSelected: _canvasBackgroundColor == c,
+                onTap: () {
+                  setState(() => _canvasBackgroundColor = c);
+                  Navigator.of(context).pop();
+                },
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.only(left: 4),
+            child: Container(
+              width: 1,
+              height: 20,
+              margin: const EdgeInsets.symmetric(horizontal: 2),
+              color: Theme.of(context).dividerColor,
+            ),
+          ),
+          _ColorPickerButton(
+            color: _canvasBackgroundColor,
+            isActive: !_canvasBackgroundPresets.contains(_canvasBackgroundColor),
+            onColorSelected: (c) {
+              setState(() => _canvasBackgroundColor = c);
+            },
+          ),
+        ],
       ),
     );
   }
@@ -1407,8 +1432,6 @@ class _CanvasPageState extends State<_CanvasPage> {
               _importImage();
             case 'frame_tool':
               _switchTool(ToolType.frame);
-            case 'canvas_background':
-              _showCanvasBackgroundPicker();
           }
         },
         itemBuilder: (context) => [
@@ -1449,11 +1472,10 @@ class _CanvasPageState extends State<_CanvasPage> {
             padding: EdgeInsets.zero,
             child: _buildThemeButtons(context),
           ),
-          _menuItem(
-            'canvas_background',
-            Icons.format_color_fill,
-            'Canvas background',
-            null,
+          PopupMenuItem<String>(
+            enabled: false,
+            padding: EdgeInsets.zero,
+            child: _buildCanvasBackgroundPicker(context),
           ),
         ],
       ),
@@ -1745,10 +1767,7 @@ class _CanvasPageState extends State<_CanvasPage> {
             }),
             const Divider(),
             _buildCompactThemeRow(ctx),
-            _compactMenuItem(Icons.format_color_fill, 'Canvas background', () {
-              Navigator.pop(ctx);
-              _showCanvasBackgroundPicker();
-            }),
+            _buildCompactCanvasBackgroundRow(ctx),
           ],
         ),
       ),
@@ -1796,6 +1815,31 @@ class _CanvasPageState extends State<_CanvasPage> {
             },
             cs: cs,
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactCanvasBackgroundRow(BuildContext ctx) {
+    final cs = Theme.of(ctx).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Text('Background', style: TextStyle(fontSize: 16, color: cs.onSurface)),
+          const Spacer(),
+          for (final c in _canvasBackgroundPresets)
+            Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: _ColorSwatch(
+                color: c,
+                isSelected: _canvasBackgroundColor == c,
+                onTap: () {
+                  setState(() => _canvasBackgroundColor = c);
+                  Navigator.pop(ctx);
+                },
+              ),
+            ),
         ],
       ),
     );
