@@ -56,6 +56,10 @@ class ElementStyle {
   /// True when all selected lines have null endArrowhead.
   final bool endArrowheadNone;
 
+  /// True when all selected elements are closed-polygon LineElements (not arrows)
+  /// with 3+ points.
+  final bool canBreakPolygon;
+
   // Lock state (null if mixed):
   final bool? locked;
 
@@ -83,6 +87,7 @@ class ElementStyle {
     this.textAlign,
     this.verticalAlign,
     this.arrowType,
+    this.canBreakPolygon = false,
     this.locked,
   });
 }
@@ -260,6 +265,16 @@ class PropertyPanelState {
       }
     }
 
+    // Break polygon: true when all selected are non-arrow closed LineElements
+    // with 3+ points.
+    final pureLines = elements
+        .whereType<LineElement>()
+        .where((l) => l is! ArrowElement)
+        .toList();
+    final canBreakPolygon = pureLines.isNotEmpty &&
+        pureLines.length == elements.length &&
+        pureLines.every((l) => l.closed && l.points.length >= 3);
+
     // Locked property
     bool? locked = first.locked;
     for (var i = 1; i < elements.length; i++) {
@@ -293,6 +308,7 @@ class PropertyPanelState {
       textAlign: textAlign,
       verticalAlign: verticalAlign,
       arrowType: arrowType,
+      canBreakPolygon: canBreakPolygon,
       locked: locked,
     );
   }
@@ -367,6 +383,16 @@ class PropertyPanelState {
           // Same category (sharp↔round or sharpElbow↔roundElbow): no point changes
           updated = arrow.copyWithArrow(arrowType: newType);
         }
+      }
+
+      // Break polygon: open the line and set background transparent.
+      // Keep all points as-is so the last segment remains visible.
+      if (style.canBreakPolygon &&
+          element is LineElement &&
+          element is! ArrowElement) {
+        updated = (updated as LineElement)
+            .copyWithLine(closed: false)
+            .copyWith(backgroundColor: 'transparent');
       }
 
       // Apply arrowhead changes for line elements

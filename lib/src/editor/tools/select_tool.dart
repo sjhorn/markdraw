@@ -57,6 +57,10 @@ class SelectTool implements Tool {
   // Binding indicator during point drag
   Element? _bindTarget;
 
+  // Snap-to-close constants for non-arrow line endpoints
+  static const _closeThreshold = 10.0; // matching LineTool
+  static const _defaultPolygonFill = '#a5d8ff'; // Excalidraw default
+
   @override
   ToolType get type => ToolType.select;
 
@@ -962,6 +966,34 @@ class SelectTool implements Tool {
         }
       } else {
         _bindTarget = null;
+      }
+    }
+
+    // Snap-to-close for non-arrow open lines
+    if (updated is LineElement && updated is! ArrowElement) {
+      final pts = updated.points;
+      final isFirst = _activePointIndex == 0;
+      final isLast = _activePointIndex == pts.length - 1;
+
+      if ((isFirst || isLast) && pts.length >= 3) {
+        final draggedAbs = Point(
+          updated.x + (isFirst ? pts.first.x : pts.last.x),
+          updated.y + (isFirst ? pts.first.y : pts.last.y),
+        );
+        final otherAbs = Point(
+          updated.x + (isFirst ? pts.last.x : pts.first.x),
+          updated.y + (isFirst ? pts.last.y : pts.first.y),
+        );
+        if (draggedAbs.distanceTo(otherAbs) <= _closeThreshold) {
+          // Snap: set dragged point to match the other endpoint
+          final snappedPts = List<Point>.of(pts);
+          final otherRel = isFirst ? pts.last : pts.first;
+          snappedPts[_activePointIndex!] = otherRel;
+          updated = _normalizeLineElement(updated, snappedPts);
+          updated = (updated as LineElement)
+              .copyWithLine(closed: true)
+              .copyWith(backgroundColor: _defaultPolygonFill);
+        }
       }
     }
 

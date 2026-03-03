@@ -211,4 +211,183 @@ void main() {
       expect(selected, contains(rect1.id));
     });
   });
+
+  group('SelectTool snap-to-close polygon', () {
+    late SelectTool tool;
+
+    setUp(() {
+      tool = SelectTool();
+    });
+
+    ToolContext contextWith({
+      required List<Element> elements,
+      Set<ElementId> selectedIds = const {},
+    }) {
+      var scene = Scene();
+      for (final e in elements) {
+        scene = scene.addElement(e);
+      }
+      return ToolContext(
+        scene: scene,
+        viewport: const ViewportState(),
+        selectedIds: selectedIds,
+      );
+    }
+
+    test('dragging last point near first point closes polygon', () {
+      // Open triangle: points at (0,0), (100,0), (50,100)
+      // Element at x=0, y=0
+      final openLine = LineElement(
+        id: const ElementId('ol1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        points: const [
+          Point(0, 0),
+          Point(100, 0),
+          Point(50, 100),
+        ],
+      );
+      final ctx = contextWith(
+        elements: [openLine],
+        selectedIds: {openLine.id},
+      );
+
+      // Click on the last point (absolute: 50, 100)
+      tool.onPointerDown(const Point(50, 100), ctx);
+      // Drag it to (5, 5) — within 10px of first point (0, 0)
+      tool.onPointerMove(const Point(5, 5), ctx);
+      final result = tool.onPointerUp(const Point(5, 5), ctx);
+
+      expect(result, isA<UpdateElementResult>());
+      final updated = (result! as UpdateElementResult).element as LineElement;
+      expect(updated.closed, isTrue);
+      expect(updated.backgroundColor, '#a5d8ff');
+      // The last point should be snapped to match the first point
+      expect(updated.points.last, updated.points.first);
+    });
+
+    test('dragging first point near last point closes polygon', () {
+      // Open triangle: points at (0,0), (100,0), (50,100)
+      final openLine = LineElement(
+        id: const ElementId('ol2'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        points: const [
+          Point(0, 0),
+          Point(100, 0),
+          Point(50, 100),
+        ],
+      );
+      final ctx = contextWith(
+        elements: [openLine],
+        selectedIds: {openLine.id},
+      );
+
+      // Click on the first point (absolute: 0, 0)
+      tool.onPointerDown(const Point(0, 0), ctx);
+      // Drag it to (45, 95) — within 10px of last point (50, 100)
+      tool.onPointerMove(const Point(45, 95), ctx);
+      final result = tool.onPointerUp(const Point(45, 95), ctx);
+
+      expect(result, isA<UpdateElementResult>());
+      final updated = (result! as UpdateElementResult).element as LineElement;
+      expect(updated.closed, isTrue);
+      expect(updated.backgroundColor, '#a5d8ff');
+      // The first point should be snapped to match the last point
+      expect(updated.points.first, updated.points.last);
+    });
+
+    test('dragging endpoint not close enough stays open', () {
+      final openLine = LineElement(
+        id: const ElementId('ol3'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        points: const [
+          Point(0, 0),
+          Point(100, 0),
+          Point(50, 100),
+        ],
+      );
+      final ctx = contextWith(
+        elements: [openLine],
+        selectedIds: {openLine.id},
+      );
+
+      // Click on last point (absolute: 50, 100)
+      tool.onPointerDown(const Point(50, 100), ctx);
+      // Drag to (20, 20) — more than 10px from first point (0, 0)
+      tool.onPointerMove(const Point(20, 20), ctx);
+      final result = tool.onPointerUp(const Point(20, 20), ctx);
+
+      expect(result, isA<UpdateElementResult>());
+      final updated = (result! as UpdateElementResult).element as LineElement;
+      expect(updated.closed, isFalse);
+    });
+
+    test('arrow elements are not affected by snap-to-close', () {
+      final arrow = ArrowElement(
+        id: const ElementId('a1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        points: const [
+          Point(0, 0),
+          Point(100, 0),
+          Point(50, 100),
+        ],
+        endArrowhead: Arrowhead.arrow,
+      );
+      final ctx = contextWith(
+        elements: [arrow],
+        selectedIds: {arrow.id},
+      );
+
+      // Click on last point (absolute: 50, 100)
+      tool.onPointerDown(const Point(50, 100), ctx);
+      // Drag it to (3, 3) — very close to first point
+      tool.onPointerMove(const Point(3, 3), ctx);
+      final result = tool.onPointerUp(const Point(3, 3), ctx);
+
+      expect(result, isA<UpdateElementResult>());
+      final updated = (result! as UpdateElementResult).element;
+      // Arrow should not get closed
+      expect(updated, isA<ArrowElement>());
+      expect((updated as LineElement).closed, isFalse);
+    });
+
+    test('line with fewer than 3 points does not snap-to-close', () {
+      final shortLine = LineElement(
+        id: const ElementId('sl1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 0,
+        points: const [
+          Point(0, 0),
+          Point(100, 0),
+        ],
+      );
+      final ctx = contextWith(
+        elements: [shortLine],
+        selectedIds: {shortLine.id},
+      );
+
+      // Click on last point (absolute: 100, 0)
+      tool.onPointerDown(const Point(100, 0), ctx);
+      // Drag to (5, 0) — close to first point
+      tool.onPointerMove(const Point(5, 0), ctx);
+      final result = tool.onPointerUp(const Point(5, 0), ctx);
+
+      expect(result, isA<UpdateElementResult>());
+      final updated = (result! as UpdateElementResult).element as LineElement;
+      expect(updated.closed, isFalse);
+    });
+  });
 }

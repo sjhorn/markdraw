@@ -999,4 +999,280 @@ void main() {
       expect(updated, isA<RectangleElement>());
     });
   });
+
+  group('PropertyPanelState canBreakPolygon', () {
+    test('canBreakPolygon true for closed line with 3+ points', () {
+      final line = LineElement(
+        id: const ElementId('l1'),
+        x: 0, y: 0, width: 100, height: 100,
+        points: const [
+          Point(0, 0),
+          Point(100, 0),
+          Point(100, 100),
+          Point(0, 0),
+        ],
+        closed: true,
+      );
+      final style = PropertyPanelState.fromElements([line]);
+      expect(style.canBreakPolygon, isTrue);
+    });
+
+    test('canBreakPolygon true for closed line with exactly 3 points', () {
+      final line = LineElement(
+        id: const ElementId('l1'),
+        x: 0, y: 0, width: 100, height: 100,
+        points: const [
+          Point(0, 0),
+          Point(100, 0),
+          Point(50, 100),
+        ],
+        closed: true,
+      );
+      final style = PropertyPanelState.fromElements([line]);
+      expect(style.canBreakPolygon, isTrue);
+    });
+
+    test('canBreakPolygon false for open line', () {
+      final line = LineElement(
+        id: const ElementId('l1'),
+        x: 0, y: 0, width: 100, height: 0,
+        points: const [Point(0, 0), Point(100, 0)],
+      );
+      final style = PropertyPanelState.fromElements([line]);
+      expect(style.canBreakPolygon, isFalse);
+    });
+
+    test('canBreakPolygon false for arrow elements even when closed', () {
+      final arrow = ArrowElement(
+        id: const ElementId('a1'),
+        x: 0, y: 0, width: 100, height: 100,
+        points: const [
+          Point(0, 0),
+          Point(100, 0),
+          Point(100, 100),
+          Point(0, 0),
+        ],
+        closed: true,
+        endArrowhead: Arrowhead.arrow,
+      );
+      final style = PropertyPanelState.fromElements([arrow]);
+      expect(style.canBreakPolygon, isFalse);
+    });
+
+    test('canBreakPolygon false for rectangles', () {
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+      );
+      final style = PropertyPanelState.fromElements([rect]);
+      expect(style.canBreakPolygon, isFalse);
+    });
+
+    test('canBreakPolygon false for mix of closed and open lines', () {
+      final closed = LineElement(
+        id: const ElementId('l1'),
+        x: 0, y: 0, width: 100, height: 100,
+        points: const [
+          Point(0, 0),
+          Point(100, 0),
+          Point(100, 100),
+          Point(0, 0),
+        ],
+        closed: true,
+      );
+      final open = LineElement(
+        id: const ElementId('l2'),
+        x: 0, y: 0, width: 100, height: 0,
+        points: const [Point(0, 0), Point(100, 0)],
+      );
+      final style = PropertyPanelState.fromElements([closed, open]);
+      expect(style.canBreakPolygon, isFalse);
+    });
+
+    test('canBreakPolygon false for mix of line and non-line elements', () {
+      final closedLine = LineElement(
+        id: const ElementId('l1'),
+        x: 0, y: 0, width: 100, height: 100,
+        points: const [
+          Point(0, 0),
+          Point(100, 0),
+          Point(100, 100),
+          Point(0, 0),
+        ],
+        closed: true,
+      );
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+      );
+      final style = PropertyPanelState.fromElements([closedLine, rect]);
+      expect(style.canBreakPolygon, isFalse);
+    });
+
+    test('canBreakPolygon true for multiple closed polygons', () {
+      final l1 = LineElement(
+        id: const ElementId('l1'),
+        x: 0, y: 0, width: 100, height: 100,
+        points: const [
+          Point(0, 0),
+          Point(100, 0),
+          Point(100, 100),
+          Point(0, 0),
+        ],
+        closed: true,
+      );
+      final l2 = LineElement(
+        id: const ElementId('l2'),
+        x: 200, y: 200, width: 50, height: 50,
+        points: const [
+          Point(0, 0),
+          Point(50, 0),
+          Point(50, 50),
+        ],
+        closed: true,
+      );
+      final style = PropertyPanelState.fromElements([l1, l2]);
+      expect(style.canBreakPolygon, isTrue);
+    });
+
+    test('canBreakPolygon false for closed line with fewer than 3 points', () {
+      final line = LineElement(
+        id: const ElementId('l1'),
+        x: 0, y: 0, width: 100, height: 0,
+        points: const [Point(0, 0), Point(100, 0)],
+        closed: true,
+      );
+      final style = PropertyPanelState.fromElements([line]);
+      expect(style.canBreakPolygon, isFalse);
+    });
+
+    test('applyStyle with canBreakPolygon keeps all points and opens line',
+        () {
+      final polygon = LineElement(
+        id: const ElementId('l1'),
+        x: 0, y: 0, width: 100, height: 100,
+        points: const [
+          Point(0, 0),
+          Point(100, 0),
+          Point(100, 100),
+          Point(0, 0), // closing point kept as-is
+        ],
+        closed: true,
+        backgroundColor: '#ff0000',
+      );
+      final result = PropertyPanelState.applyStyle(
+        [polygon],
+        const ElementStyle(canBreakPolygon: true),
+      );
+      final updated = (result as UpdateElementResult).element as LineElement;
+      expect(updated.closed, isFalse);
+      expect(updated.points.length, 4); // all points preserved
+      expect(updated.points[0], const Point(0, 0));
+      expect(updated.points[1], const Point(100, 0));
+      expect(updated.points[2], const Point(100, 100));
+      expect(updated.points[3], const Point(0, 0));
+      expect(updated.backgroundColor, 'transparent');
+    });
+
+    test('applyStyle with canBreakPolygon on non-duplicate closing point keeps all points',
+        () {
+      final polygon = LineElement(
+        id: const ElementId('l1'),
+        x: 0, y: 0, width: 100, height: 100,
+        points: const [
+          Point(0, 0),
+          Point(100, 0),
+          Point(50, 100),
+        ],
+        closed: true,
+        backgroundColor: '#00ff00',
+      );
+      final result = PropertyPanelState.applyStyle(
+        [polygon],
+        const ElementStyle(canBreakPolygon: true),
+      );
+      final updated = (result as UpdateElementResult).element as LineElement;
+      expect(updated.closed, isFalse);
+      expect(updated.points.length, 3); // no closing duplicate to remove
+      expect(updated.backgroundColor, 'transparent');
+    });
+
+    test('applyStyle with canBreakPolygon on multiple polygons', () {
+      final p1 = LineElement(
+        id: const ElementId('l1'),
+        x: 0, y: 0, width: 100, height: 100,
+        points: const [
+          Point(0, 0),
+          Point(100, 0),
+          Point(100, 100),
+          Point(0, 0),
+        ],
+        closed: true,
+        backgroundColor: '#ff0000',
+      );
+      final p2 = LineElement(
+        id: const ElementId('l2'),
+        x: 200, y: 200, width: 50, height: 50,
+        points: const [
+          Point(0, 0),
+          Point(50, 0),
+          Point(50, 50),
+          Point(0, 0),
+        ],
+        closed: true,
+        backgroundColor: '#00ff00',
+      );
+      final result = PropertyPanelState.applyStyle(
+        [p1, p2],
+        const ElementStyle(canBreakPolygon: true),
+      );
+      final compound = result as CompoundResult;
+      expect(compound.results.length, 2);
+
+      final u1 = (compound.results[0] as UpdateElementResult).element as LineElement;
+      expect(u1.closed, isFalse);
+      expect(u1.points.length, 4); // all points preserved
+      expect(u1.backgroundColor, 'transparent');
+
+      final u2 = (compound.results[1] as UpdateElementResult).element as LineElement;
+      expect(u2.closed, isFalse);
+      expect(u2.points.length, 4); // all points preserved
+      expect(u2.backgroundColor, 'transparent');
+    });
+
+    test('applyStyle with canBreakPolygon skips non-line elements', () {
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 100,
+      );
+      final result = PropertyPanelState.applyStyle(
+        [rect],
+        const ElementStyle(canBreakPolygon: true),
+      );
+      final updated = (result as UpdateElementResult).element;
+      expect(updated, isA<RectangleElement>());
+    });
+
+    test('applyStyle with canBreakPolygon skips arrow elements', () {
+      final arrow = ArrowElement(
+        id: const ElementId('a1'),
+        x: 0, y: 0, width: 100, height: 100,
+        points: const [
+          Point(0, 0),
+          Point(100, 0),
+          Point(100, 100),
+          Point(0, 0),
+        ],
+        closed: true,
+        endArrowhead: Arrowhead.arrow,
+      );
+      final result = PropertyPanelState.applyStyle(
+        [arrow],
+        const ElementStyle(canBreakPolygon: true),
+      );
+      final updated = (result as UpdateElementResult).element as ArrowElement;
+      // Arrow should not be broken
+      expect(updated.closed, isTrue);
+    });
+  });
 }
