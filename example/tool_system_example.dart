@@ -1274,7 +1274,7 @@ class _CanvasPageState extends State<_CanvasPage> {
           Positioned(
             top: 60,
             left: 12,
-            bottom: 12,
+            bottom: 56,
             child: _buildPropertyPanel(),
           ),
         // Compact menu button — top-left
@@ -3017,7 +3017,8 @@ class _CanvasPageState extends State<_CanvasPage> {
             tooltip: tooltips[i],
             child: CustomPaint(
               size: const Size(20, 20),
-              painter: _StrokeWidthIcon(displayWidths[i]),
+              painter: _StrokeWidthIcon(displayWidths[i],
+                  color: Theme.of(context).colorScheme.onSurface),
             ),
           ),
       ],
@@ -3039,7 +3040,8 @@ class _CanvasPageState extends State<_CanvasPage> {
             tooltip: names[i],
             child: CustomPaint(
               size: const Size(20, 20),
-              painter: _StrokeStyleIcon(names[i]),
+              painter: _StrokeStyleIcon(names[i],
+                  color: Theme.of(context).colorScheme.onSurface),
             ),
           ),
       ],
@@ -3060,7 +3062,8 @@ class _CanvasPageState extends State<_CanvasPage> {
             tooltip: names[i],
             child: CustomPaint(
               size: const Size(20, 20),
-              painter: _FillStyleIcon(names[i]),
+              painter: _FillStyleIcon(names[i],
+                  color: Theme.of(context).colorScheme.onSurface),
             ),
           ),
       ],
@@ -3081,7 +3084,8 @@ class _CanvasPageState extends State<_CanvasPage> {
             tooltip: tooltips[i],
             child: CustomPaint(
               size: const Size(20, 20),
-              painter: _RoughnessIcon(values[i]),
+              painter: _RoughnessIcon(values[i],
+                  color: Theme.of(context).colorScheme.onSurface),
             ),
           ),
       ],
@@ -3115,7 +3119,8 @@ class _CanvasPageState extends State<_CanvasPage> {
             tooltip: 'Sharp',
             child: CustomPaint(
               size: const Size(20, 20),
-              painter: _RoundnessIcon(false),
+              painter: _RoundnessIcon(false,
+                  color: Theme.of(context).colorScheme.onSurface),
             ),
           ),
           _IconToggleChip(
@@ -3154,7 +3159,8 @@ class _CanvasPageState extends State<_CanvasPage> {
             tooltip: 'Round',
             child: CustomPaint(
               size: const Size(20, 20),
-              painter: _RoundnessIcon(true),
+              painter: _RoundnessIcon(true,
+                  color: Theme.of(context).colorScheme.onSurface),
             ),
           ),
         ],
@@ -3203,7 +3209,7 @@ class _CanvasPageState extends State<_CanvasPage> {
                 ArrowType.round => 'round',
                 ArrowType.sharpElbow => 'elbow',
                 ArrowType.roundElbow => 'round-elbow',
-              }),
+              }, color: Theme.of(context).colorScheme.onSurface),
             ),
           ),
       ],
@@ -3232,7 +3238,9 @@ class _CanvasPageState extends State<_CanvasPage> {
               tooltip: 'None',
               child: CustomPaint(
                 size: const Size(20, 20),
-                painter: _ArrowheadIcon(null, isStart: isStart),
+                painter: _ArrowheadIcon(null,
+                    isStart: isStart,
+                    color: Theme.of(context).colorScheme.onSurface),
               ),
             ),
             for (final ah in arrowheads)
@@ -3242,7 +3250,9 @@ class _CanvasPageState extends State<_CanvasPage> {
                 tooltip: ah.name[0].toUpperCase() + ah.name.substring(1),
                 child: CustomPaint(
                   size: const Size(20, 20),
-                  painter: _ArrowheadIcon(ah, isStart: isStart),
+                  painter: _ArrowheadIcon(ah,
+                      isStart: isStart,
+                      color: Theme.of(context).colorScheme.onSurface),
                 ),
               ),
           ],
@@ -5258,19 +5268,20 @@ class _IconToggleChip extends StatelessWidget {
 
 class _FillStyleIcon extends CustomPainter {
   final String style;
-  _FillStyleIcon(this.style);
+  final Color color;
+  _FillStyleIcon(this.style, {this.color = const Color(0xFF1e1e1e)});
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF1e1e1e)
+      ..color = color
       ..strokeWidth = 1.0
       ..style = PaintingStyle.stroke;
     final rect = Rect.fromLTWH(3, 3, size.width - 6, size.height - 6);
     canvas.drawRect(rect, paint);
 
     final fillPaint = Paint()
-      ..color = const Color(0xFF1e1e1e)
+      ..color = color
       ..strokeWidth = 1.0;
     switch (style) {
       case 'solid':
@@ -5324,17 +5335,19 @@ class _FillStyleIcon extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_FillStyleIcon old) => old.style != style;
+  bool shouldRepaint(_FillStyleIcon old) =>
+      old.style != style || old.color != color;
 }
 
 class _StrokeWidthIcon extends CustomPainter {
   final double width;
-  _StrokeWidthIcon(this.width);
+  final Color color;
+  _StrokeWidthIcon(this.width, {this.color = const Color(0xFF1e1e1e)});
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF1e1e1e)
+      ..color = color
       ..strokeWidth = width
       ..strokeCap = StrokeCap.round;
     final y = size.height / 2;
@@ -5342,17 +5355,19 @@ class _StrokeWidthIcon extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_StrokeWidthIcon old) => old.width != width;
+  bool shouldRepaint(_StrokeWidthIcon old) =>
+      old.width != width || old.color != color;
 }
 
 class _StrokeStyleIcon extends CustomPainter {
   final String style;
-  _StrokeStyleIcon(this.style);
+  final Color color;
+  _StrokeStyleIcon(this.style, {this.color = const Color(0xFF1e1e1e)});
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF1e1e1e)
+      ..color = color
       ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
@@ -5383,17 +5398,19 @@ class _StrokeStyleIcon extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_StrokeStyleIcon old) => old.style != style;
+  bool shouldRepaint(_StrokeStyleIcon old) =>
+      old.style != style || old.color != color;
 }
 
 class _RoughnessIcon extends CustomPainter {
   final double roughness;
-  _RoughnessIcon(this.roughness);
+  final Color color;
+  _RoughnessIcon(this.roughness, {this.color = const Color(0xFF1e1e1e)});
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF1e1e1e)
+      ..color = color
       ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
@@ -5424,17 +5441,19 @@ class _RoughnessIcon extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_RoughnessIcon old) => old.roughness != roughness;
+  bool shouldRepaint(_RoughnessIcon old) =>
+      old.roughness != roughness || old.color != color;
 }
 
 class _RoundnessIcon extends CustomPainter {
   final bool rounded;
-  _RoundnessIcon(this.rounded);
+  final Color color;
+  _RoundnessIcon(this.rounded, {this.color = const Color(0xFF1e1e1e)});
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF1e1e1e)
+      ..color = color
       ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
@@ -5458,17 +5477,19 @@ class _RoundnessIcon extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_RoundnessIcon old) => old.rounded != rounded;
+  bool shouldRepaint(_RoundnessIcon old) =>
+      old.rounded != rounded || old.color != color;
 }
 
 class _ArrowTypeIcon extends CustomPainter {
   final String type; // 'sharp', 'round', 'elbow', 'round-elbow'
-  _ArrowTypeIcon(this.type);
+  final Color color;
+  _ArrowTypeIcon(this.type, {this.color = const Color(0xFF1e1e1e)});
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF1e1e1e)
+      ..color = color
       ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
@@ -5507,19 +5528,22 @@ class _ArrowTypeIcon extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_ArrowTypeIcon old) => old.type != type;
+  bool shouldRepaint(_ArrowTypeIcon old) =>
+      old.type != type || old.color != color;
 }
 
 class _ArrowheadIcon extends CustomPainter {
   final Arrowhead? arrowhead;
   final bool isStart;
+  final Color color;
 
-  _ArrowheadIcon(this.arrowhead, {this.isStart = false});
+  _ArrowheadIcon(this.arrowhead,
+      {this.isStart = false, this.color = const Color(0xFF1e1e1e)});
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF1e1e1e)
+      ..color = color
       ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
@@ -5639,7 +5663,7 @@ class _ArrowheadIcon extends CustomPainter {
 
   @override
   bool shouldRepaint(_ArrowheadIcon old) =>
-      old.arrowhead != arrowhead || old.isStart != isStart;
+      old.arrowhead != arrowhead || old.isStart != isStart || old.color != color;
 }
 
 /// Delegate for [TextSelectionGestureDetectorBuilder] to enable text
