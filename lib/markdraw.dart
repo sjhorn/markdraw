@@ -23,3 +23,4 @@ export 'src/rendering/static_canvas_painter.dart';
 export 'src/rendering/text_renderer.dart';
 export 'src/rendering/viewport_culling.dart';
 export 'src/rendering/viewport_state.dart';
+export 'src/ui/ui.dart';

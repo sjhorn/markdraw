@@ -570,20 +570,45 @@ markdraw/
 
 > **TDD checkpoint**: InteractionMode enum with mode-aware rendering (handles, padding, hit radii). Responsive example app with LayoutBuilder breakpoint, compact bottom toolbar (48px touch targets), modal bottom sheets for properties/menu/library. ~1536 tests total. Zero analyzer issues. ✅
 
-### 7.2 Performance
+### 7.2 Google Fonts & Excalifont
+- [x] FontResolver maps font names → TextStyle (bundled, Google Fonts, system fallback)
+- [x] Excalifont bundled font (merged from woff2 subsets)
+- [x] Virgil backward compat font
+- [x] google_fonts package integration (Nunito, Lilita One, Assistant)
+- [x] Default font changed from Virgil to Excalifont across all serializers
+
+> **TDD checkpoint**: FontResolver with bundled/Google/system resolution. ~1609 tests total. Zero analyzer issues. ✅
+
+### 7.3 MarkdrawEditor Widget
+- [x] MarkdrawController — ChangeNotifier wrapping all editor state + logic (~1160 lines)
+- [x] MarkdrawEditorConfig — immutable configuration for appearance/behavior
+- [x] MarkdrawEditor — single configurable widget composing canvas + chrome
+- [x] Extracted UI: toolbar (desktop + compact), property panel (desktop + compact), zoom controls, help dialog, library panel (desktop + compact), menus (hamburger + compact)
+- [x] Responsive layout (desktop + compact at 600px breakpoint) built into widget
+- [x] File I/O via callbacks (no platform code in library)
+- [x] Theme management via callbacks (widget doesn't own ThemeMode)
+- [x] Keyboard handler with shortcut bindings (system-level + tool-level)
+- [x] Text editing overlay (bound text, fixed-width, standalone)
+- [x] Editor canvas with pointer/gesture handling, eraser cursor, pinch-to-zoom
+- [x] 27 new files in lib/src/ui/, barrel-exported via ui.dart
+- [x] Example app migrated from ~5,700 lines to ~340 lines using MarkdrawEditor
+
+> **TDD checkpoint**: Full MarkdrawEditor widget extraction. Example app is a thin wrapper providing file I/O callbacks. ~1795 tests total. Zero analyzer issues. ✅
+
+### 7.4 Performance
 - [ ] Element render caching (only re-render changed elements)
 - [ ] Viewport culling optimization (spatial index / R-tree)
 - [ ] Lazy rough path generation (generate on first paint, cache by seed)
 - [ ] Profile and optimize for 1000+ elements
 - [ ] Web: CanvasKit renderer preferred over HTML renderer
 
-### 7.3 Accessibility
+### 7.5 Accessibility
 - [ ] Semantic labels for all toolbar buttons
 - [ ] Keyboard-only navigation through elements (Tab to cycle, Enter to edit)
 - [ ] Screen reader announcements for tool changes and element creation
 - [ ] High contrast mode
 
-### 7.4 Platform Integration
+### 7.6 Platform Integration
 - [ ] **Web**: URL sharing, PWA support, browser file API
 - [ ] **Desktop**: Native menu bar, file associations (`.markdraw`), drag-and-drop
 - [ ] **Mobile**: Share sheet, haptic feedback on snaps, Apple Pencil / stylus pressure

@@ -1,0 +1,163 @@
+library;
+
+import 'package:flutter/material.dart';
+
+import '../../markdraw.dart' hide TextAlign;
+
+/// Desktop hamburger menu (top-left).
+class HamburgerMenu extends StatelessWidget {
+  final MarkdrawController controller;
+  final ThemeMode? currentThemeMode;
+  final ValueChanged<ThemeMode>? onThemeModeChanged;
+  final VoidCallback? onOpen;
+  final VoidCallback? onSave;
+  final VoidCallback? onSaveAs;
+  final VoidCallback? onExportPng;
+  final VoidCallback? onExportSvg;
+  final VoidCallback? onImportImage;
+
+  const HamburgerMenu({
+    super.key,
+    required this.controller,
+    this.currentThemeMode,
+    this.onThemeModeChanged,
+    this.onOpen,
+    this.onSave,
+    this.onSaveAs,
+    this.onExportPng,
+    this.onExportSvg,
+    this.onImportImage,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.17), blurRadius: 1),
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08), blurRadius: 3),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 14,
+            offset: const Offset(0, 7),
+          ),
+        ],
+      ),
+      child: PopupMenuButton<String>(
+        icon: const Icon(Icons.menu, size: 20),
+        tooltip: 'Menu',
+        offset: const Offset(0, 40),
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+        onSelected: (value) {
+          switch (value) {
+            case 'open':
+              onOpen?.call();
+            case 'save':
+              onSave?.call();
+            case 'save_as':
+              onSaveAs?.call();
+            case 'export_png':
+              onExportPng?.call();
+            case 'export_svg':
+              onExportSvg?.call();
+            case 'library':
+              controller.showLibraryPanel = !controller.showLibraryPanel;
+            case 'import_image':
+              onImportImage?.call();
+            case 'frame_tool':
+              controller.switchTool(ToolType.frame);
+          }
+        },
+        itemBuilder: (context) => [
+          if (onOpen != null)
+            _menuItem(context, 'open', Icons.folder_open, 'Open', 'Ctrl+O'),
+          if (onSave != null)
+            _menuItem(context, 'save', Icons.save, 'Save', 'Ctrl+S'),
+          if (onSaveAs != null)
+            _menuItem(
+                context, 'save_as', Icons.save_as, 'Save As', 'Ctrl+Shift+S'),
+          if (onOpen != null || onSave != null || onSaveAs != null)
+            const PopupMenuDivider(),
+          if (onExportPng != null)
+            _menuItem(
+                context, 'export_png', Icons.image, 'Export PNG', 'Ctrl+Shift+E'),
+          if (onExportSvg != null)
+            _menuItem(context, 'export_svg', Icons.code, 'Export SVG', null),
+          if (onExportPng != null || onExportSvg != null)
+            const PopupMenuDivider(),
+          PopupMenuItem<String>(
+            value: 'library',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.library_books,
+                  size: 18,
+                  color: controller.showLibraryPanel
+                      ? cs.primary
+                      : cs.onSurfaceVariant,
+                ),
+                const SizedBox(width: 12),
+                const Expanded(child: Text('Library')),
+                if (controller.showLibraryPanel)
+                  Icon(Icons.check, size: 16, color: cs.primary),
+              ],
+            ),
+          ),
+          if (onImportImage != null)
+            _menuItem(context, 'import_image', Icons.add_photo_alternate,
+                'Import Image', '9'),
+          const PopupMenuDivider(),
+          _menuItem(
+              context, 'frame_tool', Icons.crop_free, 'Frame Tool', 'F'),
+          if (onThemeModeChanged != null) ...[
+            const PopupMenuDivider(),
+            PopupMenuItem<String>(
+              enabled: false,
+              padding: EdgeInsets.zero,
+              child: ThemeButtons(
+                currentThemeMode: currentThemeMode,
+                onThemeModeChanged: onThemeModeChanged,
+              ),
+            ),
+          ],
+          PopupMenuItem<String>(
+            enabled: false,
+            padding: EdgeInsets.zero,
+            child: CanvasBackgroundPicker(controller: controller),
+          ),
+        ],
+      ),
+    );
+  }
+
+  PopupMenuItem<String> _menuItem(
+    BuildContext context,
+    String value,
+    IconData icon,
+    String label,
+    String? shortcut,
+  ) {
+    final cs = Theme.of(context).colorScheme;
+    return PopupMenuItem<String>(
+      value: value,
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: cs.onSurfaceVariant),
+          const SizedBox(width: 12),
+          Expanded(child: Text(label)),
+          if (shortcut != null)
+            Text(
+              shortcut,
+              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+            ),
+        ],
+      ),
+    );
+  }
+}
