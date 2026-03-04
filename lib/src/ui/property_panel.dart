@@ -70,7 +70,7 @@ class PropertyPanel extends StatelessWidget {
 
     return TextFieldTapRegion(
       child: Container(
-        width: 220,
+        width: 200,
         decoration: BoxDecoration(
           color: cs.surface,
           borderRadius: BorderRadius.circular(8),

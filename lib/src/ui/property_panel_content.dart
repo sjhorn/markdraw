@@ -153,7 +153,7 @@ class PropertyPanelContent extends StatelessWidget {
           _buildTextAlignCombinedRow(
               context, style.textAlign, style.verticalAlign),
         ],
-        if (style.hasLines) ...[
+        if (style.hasArrows) ...[
           const SizedBox(height: 8),
           _buildArrowheadRow(
             context,
@@ -338,14 +338,28 @@ class PropertyPanelContent extends StatelessWidget {
   }
 
   Widget _buildOpacitySlider(BuildContext context, double? current) {
-    return Slider(
-      value: current ?? 1.0,
-      min: 0,
-      max: 1,
-      divisions: 20,
-      label: current != null ? '${(current * 100).round()}%' : 'mixed',
-      onChanged: (v) =>
-          controller.applyStyleChange(ElementStyle(opacity: v)),
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: SizedBox(
+        width: 160,
+        child: SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            trackHeight: 2,
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+            overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+          ),
+          child: Slider(
+            value: current ?? 1.0,
+            min: 0,
+            max: 1,
+            divisions: 20,
+            label:
+                current != null ? '${(current * 100).round()}%' : 'mixed',
+            onChanged: (v) =>
+                controller.applyStyleChange(ElementStyle(opacity: v)),
+          ),
+        ),
+      ),
     );
   }
 
