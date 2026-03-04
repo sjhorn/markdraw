@@ -57,16 +57,21 @@ void main() {
       expect(toolTypeForKey(' '), isNull);
     });
 
-    test('unrelated letter keys return null', () {
-      expect(toolTypeForKey('v'), isNull);
-      expect(toolTypeForKey('r'), isNull);
-      expect(toolTypeForKey('e'), isNull);
-      expect(toolTypeForKey('d'), isNull);
+    test('letter aliases map to tools', () {
+      expect(toolTypeForKey('v'), ToolType.select);
+      expect(toolTypeForKey('r'), ToolType.rectangle);
+      expect(toolTypeForKey('d'), ToolType.diamond);
+      expect(toolTypeForKey('o'), ToolType.ellipse);
+      expect(toolTypeForKey('a'), ToolType.arrow);
+      expect(toolTypeForKey('l'), ToolType.line);
+      expect(toolTypeForKey('p'), ToolType.freedraw);
+      expect(toolTypeForKey('t'), ToolType.text);
+      expect(toolTypeForKey('e'), ToolType.eraser);
     });
 
     test('all ToolType values have a shortcut', () {
       final reachable = <ToolType>{};
-      for (final c in '1234567890fh'.split('')) {
+      for (final c in '1234567890fhvrdoalpt e'.split('')) {
         final t = toolTypeForKey(c);
         if (t != null) reachable.add(t);
       }

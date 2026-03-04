@@ -338,6 +338,28 @@ class _CanvasPageState extends State<_CanvasPage> {
     _applyResult(UpdateViewportResult(const ViewportState()));
   }
 
+  void _zoomToFit() {
+    final bounds = ExportBounds.compute(_editorState.scene);
+    if (bounds == null) return;
+    final canvasSize = context.size ?? const Size(800, 600);
+    _applyResult(UpdateViewportResult(
+      _editorState.viewport.fitToBounds(bounds, canvasSize, padding: 40),
+    ));
+  }
+
+  void _zoomToSelection() {
+    if (_editorState.selectedIds.isEmpty) return;
+    final bounds = ExportBounds.compute(
+      _editorState.scene,
+      selectedIds: _editorState.selectedIds,
+    );
+    if (bounds == null) return;
+    final canvasSize = context.size ?? const Size(800, 600);
+    _applyResult(UpdateViewportResult(
+      _editorState.viewport.fitToBounds(bounds, canvasSize, padding: 40),
+    ));
+  }
+
   bool get _isCreationTool => switch (_editorState.activeToolType) {
     ToolType.select || ToolType.hand || ToolType.eraser => false,
     _ => true,
@@ -1245,6 +1267,7 @@ class _CanvasPageState extends State<_CanvasPage> {
           ),
           Positioned(top: 12, left: 12, child: _buildHamburgerMenu()),
           Positioned(bottom: 12, left: 12, child: _buildZoomControls()),
+          Positioned(bottom: 12, right: 12, child: _buildHelpButton()),
         ],
         // Floating property panel — desktop left side
         if (!_isCompact && (_selectedElements.isNotEmpty || _isCreationTool))
@@ -1500,6 +1523,172 @@ class _CanvasPageState extends State<_CanvasPage> {
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
             iconSize: 16,
             padding: EdgeInsets.zero,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHelpButton() {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.17), blurRadius: 1),
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08), blurRadius: 3),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 14,
+            offset: const Offset(0, 7),
+          ),
+        ],
+      ),
+      child: IconButton(
+        icon: const Icon(Icons.help_outline, size: 18),
+        onPressed: _showHelpDialog,
+        tooltip: 'Help (?)',
+        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+        iconSize: 18,
+        padding: EdgeInsets.zero,
+      ),
+    );
+  }
+
+  void _showHelpDialog() {
+    final isMac =
+        Theme.of(context).platform == TargetPlatform.macOS || kIsWeb;
+    final mod = isMac ? 'Cmd' : 'Ctrl';
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => Dialog(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520, maxHeight: 600),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 20, 8, 0),
+                child: Row(
+                  children: [
+                    const Expanded(
+                      child: Text('Keyboard shortcuts',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold)),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(ctx).pop(),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _helpSection('Tools', [
+                        _shortcutRow('Hand', 'H'),
+                        _shortcutRow('Select', '1 / V'),
+                        _shortcutRow('Rectangle', '2 / R'),
+                        _shortcutRow('Diamond', '3 / D'),
+                        _shortcutRow('Ellipse', '4 / O'),
+                        _shortcutRow('Arrow', '5 / A'),
+                        _shortcutRow('Line', '6 / L'),
+                        _shortcutRow('Freedraw', '7 / P'),
+                        _shortcutRow('Text', '8 / T'),
+                        _shortcutRow('Import image', '9'),
+                        _shortcutRow('Eraser', '0 / E'),
+                        _shortcutRow('Frame', 'F'),
+                        _shortcutRow('Lock tool', 'Q'),
+                      ]),
+                      const SizedBox(height: 16),
+                      _helpSection('View', [
+                        _shortcutRow('Zoom in', '$mod + +'),
+                        _shortcutRow('Zoom out', '$mod + \u2212'),
+                        _shortcutRow('Reset zoom', '$mod + 0'),
+                        _shortcutRow('Zoom to fit', 'Shift + 1'),
+                        _shortcutRow('Zoom to selection', 'Shift + 2'),
+                        _shortcutRow('Toggle theme', 'Alt + Shift + D'),
+                      ]),
+                      const SizedBox(height: 16),
+                      _helpSection('Editor', [
+                        _shortcutRow('Undo', '$mod + Z'),
+                        _shortcutRow('Redo', '$mod + Shift + Z / $mod + Y'),
+                        _shortcutRow('Copy', '$mod + C'),
+                        _shortcutRow('Paste', '$mod + V'),
+                        _shortcutRow('Cut', '$mod + X'),
+                        _shortcutRow('Duplicate', '$mod + D'),
+                        _shortcutRow('Select all', '$mod + A'),
+                        _shortcutRow('Delete', 'Del / Backspace'),
+                        _shortcutRow('Group', '$mod + G'),
+                        _shortcutRow('Ungroup', '$mod + Shift + G'),
+                        _shortcutRow('Lock / Unlock', '$mod + Shift + L'),
+                        _shortcutRow('Bring forward', '$mod + ]'),
+                        _shortcutRow('Bring to front', '$mod + Shift + ]'),
+                        _shortcutRow('Send backward', '$mod + ['),
+                        _shortcutRow('Send to back', '$mod + Shift + ['),
+                        _shortcutRow('Nudge', 'Arrows'),
+                        _shortcutRow('Nudge 10px', 'Shift + Arrows'),
+                        _shortcutRow('Edit link', '$mod + K'),
+                        _shortcutRow('Finalize line', 'Enter'),
+                        _shortcutRow('Deselect', 'Escape'),
+                      ]),
+                      const SizedBox(height: 16),
+                      _helpSection('File', [
+                        _shortcutRow('Open', '$mod + O'),
+                        _shortcutRow('Save', '$mod + S'),
+                        _shortcutRow('Save as', '$mod + Shift + S'),
+                        _shortcutRow('Export PNG', '$mod + Shift + E'),
+                      ]),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _helpSection(String title, List<Widget> rows) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title,
+            style: const TextStyle(
+                fontSize: 14, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        ...rows,
+      ],
+    );
+  }
+
+  Widget _shortcutRow(String description, String shortcut) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(description,
+                style: const TextStyle(fontSize: 13)),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(shortcut,
+                style: const TextStyle(
+                    fontSize: 12, fontFamily: 'monospace')),
           ),
         ],
       ),
@@ -2381,6 +2570,7 @@ class _CanvasPageState extends State<_CanvasPage> {
         _redo,
     const SingleActivator(LogicalKeyboardKey.keyE, meta: true, shift: true):
         _exportPng,
+    const SingleActivator(LogicalKeyboardKey.keyY, meta: true): _redo,
     // Ctrl variants for non-macOS platforms
     const SingleActivator(LogicalKeyboardKey.keyS, control: true): _saveFile,
     const SingleActivator(LogicalKeyboardKey.keyS, control: true, shift: true):
@@ -2391,6 +2581,7 @@ class _CanvasPageState extends State<_CanvasPage> {
     const SingleActivator(LogicalKeyboardKey.keyZ, control: true): _undo,
     const SingleActivator(LogicalKeyboardKey.keyZ, control: true, shift: true):
         _redo,
+    const SingleActivator(LogicalKeyboardKey.keyY, control: true): _redo,
     // Zoom shortcuts — meta (macOS) variants
     const SingleActivator(LogicalKeyboardKey.equal, meta: true): _zoomIn,
     const SingleActivator(LogicalKeyboardKey.minus, meta: true): _zoomOut,
@@ -4084,6 +4275,10 @@ class _CanvasPageState extends State<_CanvasPage> {
       }
       return;
     }
+    if (ctrl && key == LogicalKeyboardKey.keyY) {
+      _redo();
+      return;
+    }
 
     // File shortcuts: Ctrl+S save, Ctrl+Shift+S save-as, Ctrl+O open
     if (ctrl && key == LogicalKeyboardKey.keyS) {
@@ -4119,6 +4314,36 @@ class _CanvasPageState extends State<_CanvasPage> {
       if (elements.length == 1) {
         _showLinkDialog(elements.first);
       }
+      return;
+    }
+
+    // Alt+Shift+D: toggle theme
+    final alt = HardwareKeyboard.instance.isAltPressed;
+    if (alt && shift && key == LogicalKeyboardKey.keyD) {
+      final current = _themeModeNotifier.value;
+      _themeModeNotifier.value = switch (current) {
+        ThemeMode.light => ThemeMode.dark,
+        ThemeMode.dark => ThemeMode.light,
+        ThemeMode.system => ThemeMode.dark,
+      };
+      return;
+    }
+
+    // Shift+1: zoom to fit, Shift+2: zoom to selection
+    if (!ctrl && shift) {
+      if (key == LogicalKeyboardKey.digit1) {
+        _zoomToFit();
+        return;
+      }
+      if (key == LogicalKeyboardKey.digit2) {
+        _zoomToSelection();
+        return;
+      }
+    }
+
+    // ? key opens help dialog
+    if (!ctrl && key.keyLabel == '?') {
+      _showHelpDialog();
       return;
     }
 

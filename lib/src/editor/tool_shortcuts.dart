@@ -9,17 +9,17 @@ import 'tool_type.dart';
 /// Only fires when no modifier keys (Ctrl/Shift) are held.
 ToolType? toolTypeForKey(String key) {
   return switch (key) {
-    '1' => ToolType.select,
-    '2' => ToolType.rectangle,
-    '3' => ToolType.diamond,
-    '4' => ToolType.ellipse,
-    '5' => ToolType.arrow,
-    '6' => ToolType.line,
-    '7' => ToolType.freedraw,
-    '8' => ToolType.text,
+    '1' || 'v' => ToolType.select,
+    '2' || 'r' => ToolType.rectangle,
+    '3' || 'd' => ToolType.diamond,
+    '4' || 'o' => ToolType.ellipse,
+    '5' || 'a' => ToolType.arrow,
+    '6' || 'l' => ToolType.line,
+    '7' || 'p' => ToolType.freedraw,
+    '8' || 't' => ToolType.text,
     'f' => ToolType.frame,
     'h' => ToolType.hand,
-    '0' => ToolType.eraser,
+    '0' || 'e' => ToolType.eraser,
     _ => null,
   };
 }
