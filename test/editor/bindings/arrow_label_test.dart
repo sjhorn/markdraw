@@ -60,7 +60,7 @@ void main() {
     });
 
     group('computeLabelPosition', () {
-      test('offset above midpoint', () {
+      test('centered on midpoint', () {
         final arrow = _arrow(
           x: 0, y: 100, width: 200, height: 0,
           points: [const Point(0, 0), const Point(200, 0)],
@@ -68,7 +68,7 @@ void main() {
         final mid = ArrowLabelUtils.computeArrowMidpoint(arrow);
         final label = ArrowLabelUtils.computeLabelPosition(arrow);
         expect(label.x, mid.x);
-        expect(label.y, lessThan(mid.y));
+        expect(label.y, mid.y);
       });
 
       test('arrow label position updates when points change', () {

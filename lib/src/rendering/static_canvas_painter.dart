@@ -5,8 +5,8 @@ import 'package:flutter/rendering.dart';
 
 import '../core/elements/elements.dart' as core show TextElement;
 import '../core/elements/elements.dart' hide TextElement;
-import '../core/math/math.dart';
 import '../core/scene/scene_exports.dart';
+import '../editor/bindings/arrow_label_utils.dart';
 import 'element_renderer.dart';
 import 'rough/rough_adapter.dart';
 import 'text_renderer.dart';
@@ -76,9 +76,26 @@ class StaticCanvasPainter extends CustomPainter {
         }
       }
 
+      // For arrows with bound text, wrap in a saveLayer so we can
+      // punch a clear hole behind the label (matching Excalidraw).
+      // Keep the layer active during editing so the arrow line stays
+      // cleared behind the editing overlay.
+      final arrowLabel = element is ArrowElement
+          ? scene.findBoundText(element.id)
+          : null;
+      final hasArrowLabel =
+          arrowLabel != null && arrowLabel.text.isNotEmpty;
+      if (hasArrowLabel) {
+        canvas.saveLayer(null, Paint());
+      }
+
       ElementRenderer.render(canvas, element, adapter,
           resolvedImages: resolvedImages);
       _renderBoundText(canvas, element);
+
+      if (hasArrowLabel) {
+        canvas.restore();
+      }
 
       if (hasClip) {
         final frame = _findFrameElement(element.frameId!);
@@ -107,13 +124,17 @@ class StaticCanvasPainter extends CustomPainter {
   void _renderBoundText(Canvas canvas, Element element) {
     final boundText = scene.findBoundText(element.id);
     if (boundText == null || boundText.text.isEmpty) return;
-    // Skip bound text that is being edited
-    if (editingElementId != null && boundText.id == editingElementId) return;
+    final isEditing =
+        editingElementId != null && boundText.id == editingElementId;
 
     if (element is ArrowElement) {
-      _renderArrowLabel(canvas, element, boundText);
+      // Always clear the arrow behind the label (even during editing,
+      // so the overlay text isn't drawn over the arrow line).
+      _renderArrowLabel(canvas, element, boundText, skipText: isEditing);
     } else {
-      _renderShapeLabel(canvas, element, boundText);
+      if (!isEditing) {
+        _renderShapeLabel(canvas, element, boundText);
+      }
     }
   }
 
@@ -159,50 +180,41 @@ class StaticCanvasPainter extends CustomPainter {
     }
   }
 
-  /// Renders a label at the arrow's midpoint.
+  /// Renders a label centered on the arrow's midpoint, clearing the arrow
+  /// line behind the text (matching Excalidraw behavior).
+  ///
+  /// When [skipText] is true, only the clear rect is drawn (used during
+  /// editing so the overlay text isn't drawn over the arrow line).
   void _renderArrowLabel(
-      Canvas canvas, ArrowElement arrow, core.TextElement textElem) {
-    final mid = _computeArrowMidpoint(arrow);
+      Canvas canvas, ArrowElement arrow, core.TextElement textElem,
+      {bool skipText = false}) {
+    final mid = ArrowLabelUtils.computeArrowMidpoint(arrow);
 
     final painter = TextRenderer.buildTextPainter(textElem);
     painter.layout();
 
-    // Position above the midpoint
+    // Center text on midpoint
     final textX = mid.x - painter.width / 2;
-    final textY = mid.y - painter.height - 4;
-    painter.paint(canvas, Offset(textX, textY));
+    final textY = mid.y - painter.height / 2;
+
+    // Clear the arrow behind the text with padding — the arrow and label
+    // are wrapped in a saveLayer by the paint loop, so BlendMode.clear
+    // punches a transparent hole through the arrow pixels, letting the
+    // canvas background show through.
+    canvas.drawRect(
+      Rect.fromLTWH(
+        textX - boundTextPadding,
+        textY - boundTextPadding,
+        painter.width + boundTextPadding * 2,
+        painter.height + boundTextPadding * 2,
+      ),
+      Paint()..blendMode = ui.BlendMode.clear,
+    );
+
+    if (!skipText) {
+      painter.paint(canvas, Offset(textX, textY));
+    }
     painter.dispose();
-  }
-
-  /// Compute the midpoint along an arrow's polyline path.
-  static Point _computeArrowMidpoint(ArrowElement arrow) {
-    final pts = arrow.points
-        .map((p) => Point(p.x + arrow.x, p.y + arrow.y))
-        .toList();
-    if (pts.length < 2) {
-      return Point(arrow.x + arrow.width / 2, arrow.y + arrow.height / 2);
-    }
-
-    var totalLength = 0.0;
-    for (var i = 1; i < pts.length; i++) {
-      totalLength += pts[i - 1].distanceTo(pts[i]);
-    }
-
-    final halfLength = totalLength / 2;
-    var walked = 0.0;
-    for (var i = 1; i < pts.length; i++) {
-      final segLen = pts[i - 1].distanceTo(pts[i]);
-      if (walked + segLen >= halfLength) {
-        final remaining = halfLength - walked;
-        final t = segLen > 0 ? remaining / segLen : 0.0;
-        return Point(
-          pts[i - 1].x + (pts[i].x - pts[i - 1].x) * t,
-          pts[i - 1].y + (pts[i].y - pts[i - 1].y) * t,
-        );
-      }
-      walked += segLen;
-    }
-    return pts.last;
   }
 
   @override

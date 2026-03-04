@@ -948,16 +948,20 @@ class MarkdrawController extends ChangeNotifier {
   }
 
   List<Point>? buildPointHandles() {
-    if (!_isEditingLinear) return null;
     if (_editorState.selectedIds.length != 1) return null;
     final elem = _editorState.scene.getElementById(
       _editorState.selectedIds.first,
     );
     if (elem == null) return null;
     if (elem is LineElement) {
-      return elem.points
-          .map((p) => Point(elem.x + p.x, elem.y + p.y))
-          .toList();
+      // Always show endpoint handles for simple 2-point lines/arrows
+      // (their bounding box is hidden). For 3+ point lines, require
+      // double-click to enter linear editing mode.
+      if (elem.points.length <= 2 || _isEditingLinear) {
+        return elem.points
+            .map((p) => Point(elem.x + p.x, elem.y + p.y))
+            .toList();
+      }
     }
     return null;
   }

@@ -2,8 +2,8 @@
 import '../../core/elements/elements.dart';
 import '../../core/math/math.dart';
 
-/// Offset above the arrow line for label positioning.
-const double _labelOffset = 20.0;
+/// Padding cleared around label text on the arrow line (matches Excalidraw).
+const double boundTextPadding = 5.0;
 
 /// Utilities for computing arrow label (bound text) positions.
 class ArrowLabelUtils {
@@ -44,10 +44,9 @@ class ArrowLabelUtils {
     return pts.last;
   }
 
-  /// Compute the label position for [arrow] — midpoint offset above the
-  /// arrow line.
+  /// Compute the label position for [arrow] — centered on the midpoint
+  /// (matching Excalidraw behavior).
   static Point computeLabelPosition(ArrowElement arrow) {
-    final mid = computeArrowMidpoint(arrow);
-    return Point(mid.x, mid.y - _labelOffset);
+    return computeArrowMidpoint(arrow);
   }
 }

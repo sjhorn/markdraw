@@ -60,7 +60,8 @@ class DesktopToolbar extends StatelessWidget {
                   iconWidget: Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      const Icon(Icons.add_photo_alternate, size: 20),
+                      Icon(Icons.add_photo_alternate,
+                          size: 20, color: cs.onSurfaceVariant),
                       Positioned(
                         right: -6,
                         bottom: -3,

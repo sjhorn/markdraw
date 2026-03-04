@@ -46,12 +46,19 @@ class TextEditingOverlay extends StatelessWidget {
       _ => TextAlign.left,
     };
 
-    // For bound text, center the editor within the parent shape
+    // For bound text, center the editor within the parent shape.
+    // Arrow labels position above the arrow midpoint to match rendering.
     if (textElem != null && textElem.containerId != null) {
       final parent = controller.editorState.scene.getElementById(
         ElementId(textElem.containerId!),
       );
-      if (parent != null) {
+      if (parent != null && parent is ArrowElement) {
+        return _buildArrowLabelOverlay(
+          parent, zoom, fontSize, fontFamily, lineHeight,
+          textColor, flutterTextAlign,
+        );
+      }
+      if (parent != null && parent is! LineElement) {
         return _buildBoundTextOverlay(
           parent, textElem, zoom, fontSize, fontFamily, lineHeight,
           textColor, flutterTextAlign,
@@ -161,6 +168,36 @@ class TextEditingOverlay extends StatelessWidget {
             child: _buildEditableText(
               fontSize, fontFamily, lineHeight, textColor, flutterTextAlign,
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Arrow label overlay — centered on the arrow midpoint, matching
+  /// [StaticCanvasPainter._renderArrowLabel].
+  Widget _buildArrowLabelOverlay(
+    ArrowElement arrow,
+    double zoom,
+    double fontSize,
+    String fontFamily,
+    double lineHeight,
+    Color textColor,
+    TextAlign flutterTextAlign,
+  ) {
+    final mid = ArrowLabelUtils.computeArrowMidpoint(arrow);
+    final screenMid = controller.editorState.viewport.sceneToScreen(
+      Offset(mid.x, mid.y),
+    );
+
+    return Positioned(
+      left: screenMid.dx,
+      top: screenMid.dy,
+      child: FractionalTranslation(
+        translation: const Offset(-0.5, -0.5),
+        child: IntrinsicWidth(
+          child: _buildEditableText(
+            fontSize, fontFamily, lineHeight, textColor, flutterTextAlign,
           ),
         ),
       ),

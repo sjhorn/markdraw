@@ -91,13 +91,18 @@ class SelectTool implements Tool {
         selectedElements.every((e) => e.locked);
 
     // 1. Point/segment handle hit-test (line/arrow only, single selection)
-    if (selectedElements.length == 1 && !allLocked && context.isEditingLinear) {
+    //    For simple 2-point lines/arrows, handles are always visible so
+    //    hit-test without requiring linear editing mode.
+    if (selectedElements.length == 1 && !allLocked) {
       final elem = selectedElements.first;
+      final isLinearEditable = elem is LineElement &&
+          (elem.points.length <= 2 || context.isEditingLinear);
 
       // Point handle check first — always takes priority over segment drag
       // so that endpoint handles support binding on elbowed arrows.
-      final pointIndex =
-          _hitTestPointHandle(point, elem, context.interactionMode);
+      final pointIndex = isLinearEditable
+          ? _hitTestPointHandle(point, elem, context.interactionMode)
+          : null;
       if (pointIndex != null) {
         _dragMode = _DragMode.dragPoint;
         _activePointIndex = pointIndex;
@@ -110,7 +115,9 @@ class SelectTool implements Tool {
       }
 
       // For elbowed arrows, check segment hit after point handles
-      if (elem is ArrowElement && elem.elbowed) {
+      if (context.isEditingLinear &&
+          elem is ArrowElement &&
+          elem.elbowed) {
         final segIndex =
             _hitTestSegment(point, elem, context.interactionMode);
         if (segIndex != null) {
@@ -125,8 +132,9 @@ class SelectTool implements Tool {
       }
 
       // Midpoint handle hit-test: insert a new point at the midpoint
-      final midIdx =
-          _hitTestMidpointHandle(point, elem, context.interactionMode);
+      final midIdx = context.isEditingLinear
+          ? _hitTestMidpointHandle(point, elem, context.interactionMode)
+          : null;
       if (midIdx != null) {
         final line = elem as LineElement;
         final a = line.points[midIdx];

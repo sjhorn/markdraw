@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../elements/elements.dart';
 import '../math/math.dart';
 
@@ -116,6 +118,10 @@ class Scene {
   ///
   /// Bound text elements (containerId != null) are skipped — hit the parent
   /// shape instead.
+  /// Default hit tolerance for lines/arrows (in scene units).
+  /// Matches Excalidraw's ~7px threshold.
+  static const double _lineHitThreshold = 8.0;
+
   Element? getElementAtPoint(Point point) {
     final ordered = orderedElements.where((e) => !e.isDeleted).toList();
     // Iterate in reverse to find topmost (highest index) first.
@@ -123,9 +129,58 @@ class Scene {
       final e = ordered[i];
       // Skip bound text — users interact with the parent shape
       if (e is TextElement && e.containerId != null) continue;
-      final bounds = Bounds.fromLTWH(e.x, e.y, e.width, e.height);
-      if (bounds.containsPoint(point)) return e;
+
+      if (e is LineElement) {
+        if (_isPointNearLine(point, e, _lineHitThreshold)) return e;
+      } else {
+        final bounds = Bounds.fromLTWH(e.x, e.y, e.width, e.height);
+        if (bounds.containsPoint(point)) return e;
+      }
     }
     return null;
+  }
+
+  /// Returns true if [point] is within [threshold] of any segment of [line].
+  static bool _isPointNearLine(Point point, LineElement line, double threshold) {
+    final pts = line.points;
+    if (pts.isEmpty) return false;
+
+    // For rotated lines, transform the test point into local space.
+    var p = point;
+    if (line.angle != 0.0) {
+      final cx = line.x + line.width / 2;
+      final cy = line.y + line.height / 2;
+      final cos = math.cos(-line.angle);
+      final sin = math.sin(-line.angle);
+      final dx = point.x - cx;
+      final dy = point.y - cy;
+      p = Point(cx + dx * cos - dy * sin, cy + dx * sin + dy * cos);
+    }
+
+    // Single point — distance check.
+    if (pts.length == 1) {
+      final abs = Point(line.x + pts[0].x, line.y + pts[0].y);
+      return p.distanceTo(abs) <= threshold;
+    }
+
+    // Check each segment.
+    for (var i = 0; i < pts.length - 1; i++) {
+      final a = Point(line.x + pts[i].x, line.y + pts[i].y);
+      final b = Point(line.x + pts[i + 1].x, line.y + pts[i + 1].y);
+      if (_distToSegment(p, a, b) <= threshold) return true;
+    }
+    return false;
+  }
+
+  /// Minimum distance from [p] to the line segment [a]-[b].
+  static double _distToSegment(Point p, Point a, Point b) {
+    final dx = b.x - a.x;
+    final dy = b.y - a.y;
+    final lengthSq = dx * dx + dy * dy;
+    if (lengthSq == 0) return p.distanceTo(a);
+    final t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / lengthSq;
+    final clamped = t.clamp(0.0, 1.0);
+    final proj = Point(a.x + clamped * dx, a.y + clamped * dy);
+    return p.distanceTo(proj);
   }
 }
