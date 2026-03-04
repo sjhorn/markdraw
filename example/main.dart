@@ -4,7 +4,7 @@
 /// package and wires file_picker + platform I/O to the controller.
 ///
 /// Usage:
-///   cd example && flutter run tool_system_example.dart
+///   cd example && flutter run
 library;
 
 import 'package:flutter/material.dart' hide Element, SelectionOverlay;
