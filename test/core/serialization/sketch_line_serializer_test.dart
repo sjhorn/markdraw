@@ -115,7 +115,7 @@ void main() {
       expect(line, contains('stroke-width=3'));
       expect(line, contains('roughness=2'));
       expect(line, contains('opacity=0.5'));
-      expect(line, contains('angle=1.5'));
+      expect(line, contains('angle=86'));
       expect(line, contains('locked'));
       expect(line, contains('seed=99'));
     });

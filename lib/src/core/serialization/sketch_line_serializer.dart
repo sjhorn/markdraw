@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../elements/elements.dart';
 import '../math/math.dart';
 
@@ -288,7 +290,7 @@ class SketchLineSerializer {
       parts.add('rounded=${_formatNum(element.roundness!.value)}');
     }
     if (element.angle != 0.0) {
-      parts.add('angle=${_formatNum(element.angle)}');
+      parts.add('angle=${(element.angle * 180 / math.pi).round()}');
     }
     if (element.locked) {
       parts.add('locked');

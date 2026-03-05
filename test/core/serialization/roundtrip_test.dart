@@ -100,7 +100,7 @@ void main() {
       expect(parsed.roughness, original.roughness);
       expect(parsed.opacity, original.opacity);
       expect(parsed.roundness!.value, original.roundness!.value);
-      expect(parsed.angle, original.angle);
+      expect(parsed.angle, closeTo(original.angle, 0.02));
       expect(parsed.locked, original.locked);
       expect(parsed.seed, original.seed);
     });
@@ -305,7 +305,7 @@ ellipse id=db at 225,400 size 120x80 fill=#e8f5e9 seed=7
 
     test('sketch with non-default properties', () {
       const input = '''```sketch
-rect id=r at 10,20 size 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-style=hachure stroke-width=3 roughness=2 opacity=0.5 rounded=8 angle=1.5 locked seed=99
+rect id=r at 10,20 size 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-style=hachure stroke-width=3 roughness=2 opacity=0.5 rounded=8 angle=86 locked seed=99
 ```''';
       final parseResult = DocumentParser.parse(input);
       final output = DocumentSerializer.serialize(parseResult.value);

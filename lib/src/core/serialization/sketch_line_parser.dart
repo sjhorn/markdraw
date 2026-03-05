@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../elements/elements.dart';
 import '../math/math.dart';
 import 'parse_result.dart';
@@ -757,7 +759,7 @@ class _PropertyBag {
     final roughnessVal = namedDouble('roughness');
     final opacityVal = namedDouble('opacity');
     final roundedVal = namedDouble('rounded');
-    final angleVal = namedDouble('angle');
+    final angleDeg = namedDouble('angle');
     final seedVal = namedInt('seed');
     final isLocked = hasFlag('locked');
     final frameIdStr = namedString('frame');
@@ -777,7 +779,7 @@ class _PropertyBag {
       roundness: roundedVal != null
           ? Roundness.adaptive(value: roundedVal)
           : null,
-      angle: angleVal ?? 0.0,
+      angle: angleDeg != null ? angleDeg * math.pi / 180 : 0.0,
       locked: isLocked,
       seed: seedVal ?? 1,
       frameId: frameIdStr,

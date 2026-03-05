@@ -35,7 +35,7 @@ void main() {
 
     test('rectangle with all properties', () {
       final result = parser.parseLine(
-        'rect id=r at 10,20 size 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-style=hachure stroke-width=3 roughness=2 opacity=0.5 angle=1.5 locked seed=99',
+        'rect id=r at 10,20 size 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-style=hachure stroke-width=3 roughness=2 opacity=0.5 angle=86 locked seed=99',
         1,
       );
       final elem = result.value!;
@@ -50,7 +50,7 @@ void main() {
       expect(elem.strokeWidth, 3);
       expect(elem.roughness, 2);
       expect(elem.opacity, 0.5);
-      expect(elem.angle, 1.5);
+      expect(elem.angle, closeTo(86 * 3.14159265358979 / 180, 0.001));
       expect(elem.locked, isTrue);
       expect(elem.seed, 99);
     });
