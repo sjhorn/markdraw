@@ -323,6 +323,7 @@ class SketchLineSerializer {
   }
 
   /// Converts relative points to absolute by adding the element's position.
+  /// Rounds to integers for clean serialization.
   List<Point> _absolutePoints(Element element) {
     final pts = switch (element) {
       LineElement() => element.points,
@@ -330,7 +331,10 @@ class SketchLineSerializer {
       _ => <Point>[],
     };
     return pts
-        .map((p) => Point(p.x + element.x, p.y + element.y))
+        .map((p) => Point(
+              (p.x + element.x).roundToDouble(),
+              (p.y + element.y).roundToDouble(),
+            ))
         .toList();
   }
 
