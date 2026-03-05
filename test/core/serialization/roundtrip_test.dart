@@ -175,8 +175,8 @@ void main() {
     test('line round-trips', () {
       final original = LineElement(
         id: const ElementId('l1'),
-        x: 0,
-        y: 0,
+        x: 50,
+        y: 75,
         width: 100,
         height: 100,
         points: [const Point(0, 0), const Point(100, 0), const Point(100, 100)],
@@ -190,6 +190,8 @@ void main() {
       final line = serializer.serialize(original);
       final result = parser.parseLine(line, 1);
       final parsed = result.value! as LineElement;
+      expect(parsed.x, original.x);
+      expect(parsed.y, original.y);
       expect(parsed.points, hasLength(3));
       expect(parsed.points[0], const Point(0, 0));
       expect(parsed.points[1], const Point(100, 0));
@@ -202,8 +204,8 @@ void main() {
     test('arrow without bindings round-trips', () {
       final original = ArrowElement(
         id: const ElementId('a1'),
-        x: 0,
-        y: 0,
+        x: 30,
+        y: 60,
         width: 200,
         height: 0,
         points: [const Point(0, 0), const Point(200, 0)],
@@ -216,6 +218,8 @@ void main() {
       final line = serializer.serialize(original);
       final result = parser.parseLine(line, 1);
       final parsed = result.value! as ArrowElement;
+      expect(parsed.x, original.x);
+      expect(parsed.y, original.y);
       expect(parsed.points[0], const Point(0, 0));
       expect(parsed.points[1], const Point(200, 0));
       expect(parsed.startArrowhead, Arrowhead.bar);
@@ -225,8 +229,8 @@ void main() {
     test('freedraw round-trips', () {
       final original = FreedrawElement(
         id: const ElementId('f1'),
-        x: 0,
-        y: 0,
+        x: 100,
+        y: 200,
         width: 10,
         height: 8,
         points: [const Point(0, 0), const Point(5, 2), const Point(10, 8)],
@@ -240,8 +244,14 @@ void main() {
       final line = serializer.serialize(original);
       final result = parser.parseLine(line, 1);
       final parsed = result.value! as FreedrawElement;
+      expect(parsed.x, original.x);
+      expect(parsed.y, original.y);
+      expect(parsed.width, original.width);
+      expect(parsed.height, original.height);
       expect(parsed.points, hasLength(3));
       expect(parsed.points[0], const Point(0, 0));
+      expect(parsed.points[1], const Point(5, 2));
+      expect(parsed.points[2], const Point(10, 8));
       expect(parsed.pressures, [0.5, 0.7, 0.9]);
       expect(parsed.simulatePressure, isTrue);
       expect(parsed.strokeColor, '#1e1e1e');

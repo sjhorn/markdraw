@@ -383,6 +383,7 @@ class SketchLineParser {
     _registerAlias(id, elementId.value);
 
     final bounds = _boundsFromPoints(points);
+    final relPoints = _toRelativePoints(points, bounds.$1, bounds.$2);
 
     final element = LineElement(
       id: elementId,
@@ -390,7 +391,7 @@ class SketchLineParser {
       y: bounds.$2,
       width: bounds.$3,
       height: bounds.$4,
-      points: points,
+      points: relPoints,
       startArrowhead: startArrow,
       endArrowhead: endArrow,
       closed: isClosed,
@@ -441,6 +442,9 @@ class SketchLineParser {
     _registerAlias(id, elementId.value);
 
     final bounds = _boundsFromPoints(points);
+    final relPoints = hasBindings
+        ? points
+        : _toRelativePoints(points, bounds.$1, bounds.$2);
 
     // Parse arrow type: new 'arrow-type=' property first, legacy fallback second
     final arrowTypeStr = props.namedString('arrow-type');
@@ -468,7 +472,7 @@ class SketchLineParser {
       y: bounds.$2,
       width: bounds.$3,
       height: bounds.$4,
-      points: points,
+      points: relPoints,
       startArrowhead: startArrow,
       endArrowhead: endArrow,
       arrowType: arrowType,
@@ -513,6 +517,7 @@ class SketchLineParser {
     _registerAlias(id, elementId.value);
 
     final bounds = _boundsFromPoints(points);
+    final relPoints = _toRelativePoints(points, bounds.$1, bounds.$2);
 
     final element = FreedrawElement(
       id: elementId,
@@ -520,7 +525,7 @@ class SketchLineParser {
       y: bounds.$2,
       width: bounds.$3,
       height: bounds.$4,
-      points: points,
+      points: relPoints,
       pressures: pressures,
       simulatePressure: simulatePressure,
       strokeColor: common.strokeColor,
@@ -621,6 +626,11 @@ class SketchLineParser {
       }
     }
     return (alias, null);
+  }
+
+  /// Converts absolute points to relative by subtracting the origin offset.
+  List<Point> _toRelativePoints(List<Point> points, double ox, double oy) {
+    return points.map((p) => Point(p.x - ox, p.y - oy)).toList();
   }
 
   int _idCounter = 0;

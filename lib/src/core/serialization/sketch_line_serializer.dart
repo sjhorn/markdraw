@@ -133,7 +133,7 @@ class SketchLineSerializer {
   String _serializeLine(LineElement element, String? alias) {
     final parts = <String>['line'];
     _addId(parts, alias);
-    _addPoints(parts, element.points);
+    _addPoints(parts, _absolutePoints(element));
     _addArrowheads(parts, element.startArrowhead, element.endArrowhead, false);
     if (element.closed) {
       parts.add('closed');
@@ -182,7 +182,7 @@ class SketchLineSerializer {
         }
       }
     } else {
-      _addPoints(parts, element.points);
+      _addPoints(parts, _absolutePoints(element));
     }
 
     // Emit arrow type (omit for default 'sharp')
@@ -206,7 +206,7 @@ class SketchLineSerializer {
   String _serializeFreedraw(FreedrawElement element, String? alias) {
     final parts = <String>['freedraw'];
     _addId(parts, alias);
-    _addPoints(parts, element.points);
+    _addPoints(parts, _absolutePoints(element));
     if (element.pressures.isNotEmpty) {
       final pressureStr = element.pressures.map(_formatNum).join(',');
       parts.add('pressure=[$pressureStr]');
@@ -320,6 +320,18 @@ class SketchLineSerializer {
       return '@$px,$py';
     }
     return '@${_formatNum(fp.x)},${_formatNum(fp.y)}';
+  }
+
+  /// Converts relative points to absolute by adding the element's position.
+  List<Point> _absolutePoints(Element element) {
+    final pts = switch (element) {
+      LineElement() => element.points,
+      FreedrawElement() => element.points,
+      _ => <Point>[],
+    };
+    return pts
+        .map((p) => Point(p.x + element.x, p.y + element.y))
+        .toList();
   }
 
   /// Formats a number: integers without decimal, doubles with decimals.
