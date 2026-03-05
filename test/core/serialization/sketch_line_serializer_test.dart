@@ -351,7 +351,7 @@ void main() {
       );
       final line = serializer.serialize(line_);
       expect(line, contains('line'));
-      expect(line, contains('points=[[0,0],[100,0],[100,100]]'));
+      expect(line, contains('points=[0,0 100,0 100,100]'));
     });
 
     test('line with arrowheads', () {
@@ -560,7 +560,7 @@ void main() {
       );
       final line = serializer.serialize(freedraw);
       expect(line, contains('freedraw'));
-      expect(line, contains('points=[[0,0],[5,2],[10,8]]'));
+      expect(line, contains('points=[0,0 5,2 10,8]'));
     });
 
     test('freedraw with pressure', () {

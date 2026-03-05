@@ -701,7 +701,9 @@ class _PropertyBag {
     final match = RegExp(r'points=\[(.+?)\](?:\s|$)').firstMatch(line);
     if (match == null) return [];
     final inner = match.group(1)!;
-    final pointMatches = RegExp(r'\[([\d.+-]+),([\d.+-]+)\]').allMatches(inner);
+    // Support both new "x,y x,y" and legacy "[[x,y],[x,y]]" formats
+    final pointMatches =
+        RegExp(r'([\d.+-]+),([\d.+-]+)').allMatches(inner);
     return pointMatches.map((m) {
       return Point(double.parse(m.group(1)!), double.parse(m.group(2)!));
     }).toList();

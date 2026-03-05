@@ -234,8 +234,8 @@ class SketchLineSerializer {
 
   void _addPoints(List<String> parts, List<Point> points) {
     final pointsStr = points
-        .map((p) => '[${_formatNum(p.x)},${_formatNum(p.y)}]')
-        .join(',');
+        .map((p) => '${_formatNum(p.x)},${_formatNum(p.y)}')
+        .join(' ');
     parts.add('points=[$pointsStr]');
   }
 
