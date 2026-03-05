@@ -211,8 +211,8 @@ class SketchLineSerializer {
       final pressureStr = element.pressures.map(_formatNum).join(',');
       parts.add('pressure=[$pressureStr]');
     }
-    if (element.simulatePressure) {
-      parts.add('simulate-pressure');
+    if (!element.simulatePressure) {
+      parts.add('no-simulate-pressure');
     }
     _addCommonProperties(parts, element);
     return parts.join(' ');

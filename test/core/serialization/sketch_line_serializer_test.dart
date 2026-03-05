@@ -580,7 +580,7 @@ void main() {
       expect(line, contains('pressure=[0.5,0.7,0.9]'));
     });
 
-    test('freedraw with simulate-pressure', () {
+    test('freedraw omits simulate-pressure when true (default)', () {
       final freedraw = FreedrawElement(
         id: const ElementId('f1'),
         x: 0,
@@ -594,7 +594,24 @@ void main() {
         updated: 0,
       );
       final line = serializer.serialize(freedraw);
-      expect(line, contains('simulate-pressure'));
+      expect(line, isNot(contains('simulate-pressure')));
+    });
+
+    test('freedraw emits no-simulate-pressure when false', () {
+      final freedraw = FreedrawElement(
+        id: const ElementId('f1'),
+        x: 0,
+        y: 0,
+        width: 10,
+        height: 8,
+        points: [const Point(0, 0)],
+        simulatePressure: false,
+        seed: 30,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final line = serializer.serialize(freedraw);
+      expect(line, contains('no-simulate-pressure'));
     });
 
     test('freedraw with non-default color', () {

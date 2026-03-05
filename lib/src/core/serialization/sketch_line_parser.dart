@@ -510,7 +510,8 @@ class SketchLineParser {
     final id = props.id;
     final points = props.points;
     final pressures = props.pressures;
-    final simulatePressure = props.hasFlag('simulate-pressure');
+    // Default true; legacy 'simulate-pressure' flag also accepted
+    final simulatePressure = !props.hasFlag('no-simulate-pressure');
     final common = props.commonProperties;
 
     final elementId = ElementId(id ?? _generateId());
