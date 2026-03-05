@@ -66,6 +66,11 @@ class DocumentSerializer {
       reverseAliases[entry.value] = entry.key;
     }
 
+    // Build element lookup map for arrow binding pixel conversion
+    final elementMap = <String, Element>{
+      for (final element in section.elements) element.id.value: element,
+    };
+
     // Find bound text elements (those with containerId)
     final boundTextMap = <String, TextElement>{};
     for (final element in section.elements) {
@@ -90,7 +95,7 @@ class DocumentSerializer {
         // Serialize shape with label inlined
         final line = serializer.serializeWithLabel(
           element,
-          boundText.text,
+          boundText,
           alias: alias,
           aliasMap: reverseAliases,
         );
@@ -100,6 +105,7 @@ class DocumentSerializer {
           element,
           alias: alias,
           aliasMap: reverseAliases,
+          elementMap: elementMap,
         );
         buffer.writeln(line);
       }

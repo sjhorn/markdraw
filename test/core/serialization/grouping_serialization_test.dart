@@ -250,7 +250,17 @@ void main() {
         groupIds: const ['g1'],
         seed: 42,
       );
-      final line = serializer.serializeWithLabel(rect, 'Hello', alias: 'auth');
+      final labelElement = TextElement(
+        id: const ElementId('t1'),
+        x: 100,
+        y: 200,
+        width: 160,
+        height: 20,
+        text: 'Hello',
+        containerId: 'r1',
+        seed: 43,
+      );
+      final line = serializer.serializeWithLabel(rect, labelElement, alias: 'auth');
       expect(line, contains('group=g1'));
 
       // Parse it back

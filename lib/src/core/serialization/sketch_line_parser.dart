@@ -7,11 +7,15 @@ class PendingBinding {
   final String arrowElementId;
   final String? fromAlias;
   final String? toAlias;
+  final Point? fromFixedPoint;
+  final Point? toFixedPoint;
 
   PendingBinding({
     required this.arrowElementId,
     this.fromAlias,
     this.toAlias,
+    this.fromFixedPoint,
+    this.toFixedPoint,
   });
 }
 
@@ -81,6 +85,11 @@ class SketchLineParser {
     final warnings = <ParseWarning>[];
     final resolved = <ArrowElement>[];
 
+    // Build element lookup for pixel→normalized conversion
+    final elementMap = <String, Element>{
+      for (final e in elements) e.id.value: e,
+    };
+
     for (final binding in pendingBindings) {
       final arrowIdx = elements.indexWhere(
         (e) => e.id.value == binding.arrowElementId,
@@ -94,9 +103,12 @@ class SketchLineParser {
       if (binding.fromAlias != null) {
         final fromId = aliases[binding.fromAlias!];
         if (fromId != null) {
+          final fixedPoint = binding.fromFixedPoint != null
+              ? _pixelToNormalized(binding.fromFixedPoint!, elementMap[fromId])
+              : const Point(1, 0.5);
           startBinding = PointBinding(
             elementId: fromId,
-            fixedPoint: const Point(1, 0.5),
+            fixedPoint: fixedPoint,
           );
         } else {
           warnings.add(ParseWarning(
@@ -109,9 +121,12 @@ class SketchLineParser {
       if (binding.toAlias != null) {
         final toId = aliases[binding.toAlias!];
         if (toId != null) {
+          final fixedPoint = binding.toFixedPoint != null
+              ? _pixelToNormalized(binding.toFixedPoint!, elementMap[toId])
+              : const Point(0, 0.5);
           endBinding = PointBinding(
             elementId: toId,
-            fixedPoint: const Point(0, 0.5),
+            fixedPoint: fixedPoint,
           );
         } else {
           warnings.add(ParseWarning(
@@ -144,9 +159,7 @@ class SketchLineParser {
     final common = props.commonProperties;
 
     final elementId = ElementId(id ?? _generateId());
-    if (id != null) {
-      aliases[id] = elementId.value;
-    }
+    _registerAlias(id, elementId.value);
 
     final element = switch (keyword) {
       'rect' => RectangleElement(
@@ -226,9 +239,7 @@ class SketchLineParser {
     final label = props.quotedString ?? 'Frame';
 
     final elementId = ElementId(id ?? _generateId());
-    if (id != null) {
-      aliases[id] = elementId.value;
-    }
+    _registerAlias(id, elementId.value);
 
     final element = FrameElement(
       id: elementId,
@@ -281,9 +292,7 @@ class SketchLineParser {
     }
 
     final elementId = ElementId(id ?? _generateId());
-    if (id != null) {
-      aliases[id] = elementId.value;
-    }
+    _registerAlias(id, elementId.value);
 
     final element = ImageElement(
       id: elementId,
@@ -326,17 +335,17 @@ class SketchLineParser {
     final valignStr = props.namedString('valign');
     final verticalAlign = _parseVerticalAlign(valignStr);
 
+    final dims = props.size;
+
     final elementId = ElementId(id ?? _generateId());
-    if (id != null) {
-      aliases[id] = elementId.value;
-    }
+    _registerAlias(id, elementId.value);
 
     final element = TextElement(
       id: elementId,
       x: pos.$1,
       y: pos.$2,
-      width: 0,
-      height: 0,
+      width: dims.$1,
+      height: dims.$2,
       text: text ?? '',
       fontSize: fontSize,
       fontFamily: fontFamily,
@@ -371,9 +380,7 @@ class SketchLineParser {
     final isClosed = props.hasFlag('closed');
 
     final elementId = ElementId(id ?? _generateId());
-    if (id != null) {
-      aliases[id] = elementId.value;
-    }
+    _registerAlias(id, elementId.value);
 
     final bounds = _boundsFromPoints(points);
 
@@ -416,8 +423,10 @@ class SketchLineParser {
         ? _parseArrowhead(endArrowStr) ?? Arrowhead.arrow
         : Arrowhead.arrow;
 
-    final fromAlias = props.namedPositional('from');
-    final toAlias = props.namedPositional('to');
+    final fromRaw = props.namedPositional('from');
+    final toRaw = props.namedPositional('to');
+    final (fromAlias, fromFixedPoint) = _splitFixedPoint(fromRaw);
+    final (toAlias, toFixedPoint) = _splitFixedPoint(toRaw);
     final hasBindings = fromAlias != null || toAlias != null;
 
     List<Point> points;
@@ -429,9 +438,7 @@ class SketchLineParser {
     }
 
     final elementId = ElementId(id ?? _generateId());
-    if (id != null) {
-      aliases[id] = elementId.value;
-    }
+    _registerAlias(id, elementId.value);
 
     final bounds = _boundsFromPoints(points);
 
@@ -484,6 +491,8 @@ class SketchLineParser {
         arrowElementId: elementId.value,
         fromAlias: fromAlias,
         toAlias: toAlias,
+        fromFixedPoint: fromFixedPoint,
+        toFixedPoint: toFixedPoint,
       ));
     }
 
@@ -501,9 +510,7 @@ class SketchLineParser {
     final common = props.commonProperties;
 
     final elementId = ElementId(id ?? _generateId());
-    if (id != null) {
-      aliases[id] = elementId.value;
-    }
+    _registerAlias(id, elementId.value);
 
     final bounds = _boundsFromPoints(points);
 
@@ -582,6 +589,38 @@ class SketchLineParser {
       if (p.y > maxY) maxY = p.y;
     }
     return (minX, minY, maxX - minX, maxY - minY);
+  }
+
+  /// Registers an alias in the aliases map for binding resolution.
+  void _registerAlias(String? id, String elementIdValue) {
+    if (id != null) {
+      aliases[id] = elementIdValue;
+    }
+  }
+
+  /// Converts pixel coordinates back to normalized (0-1) using target dimensions.
+  Point _pixelToNormalized(Point pixel, Element? target) {
+    if (target != null && target.width != 0 && target.height != 0) {
+      return Point(pixel.x / target.width, pixel.y / target.height);
+    }
+    return pixel;
+  }
+
+  /// Splits 'alias@x,y' into (alias, Point(x,y)), or (alias, null) if no '@'.
+  (String?, Point?) _splitFixedPoint(String? raw) {
+    if (raw == null) return (null, null);
+    final atIdx = raw.indexOf('@');
+    if (atIdx < 0) return (raw, null);
+    final alias = raw.substring(0, atIdx);
+    final coords = raw.substring(atIdx + 1).split(',');
+    if (coords.length == 2) {
+      final x = double.tryParse(coords[0]);
+      final y = double.tryParse(coords[1]);
+      if (x != null && y != null) {
+        return (alias, Point(x, y));
+      }
+    }
+    return (alias, null);
   }
 
   int _idCounter = 0;
@@ -665,7 +704,7 @@ class _PropertyBag {
   }
 
   String? namedString(String name) {
-    final match = RegExp('$name=(\\S+)').firstMatch(line);
+    final match = RegExp('(?:^|\\s)$name=(\\S+)').firstMatch(line);
     return match?.group(1);
   }
 

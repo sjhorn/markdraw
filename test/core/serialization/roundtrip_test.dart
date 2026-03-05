@@ -32,6 +32,42 @@ void main() {
       expect(parsed.seed, original.seed);
     });
 
+    test('alias used as element ID when parsed', () {
+      final original = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        seed: 1,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final line = serializer.serialize(original, alias: 'myRect');
+      expect(line, contains('id=myRect'));
+      expect(line, isNot(contains('eid=')));
+      final result = parser.parseLine(line, 1);
+      final parsed = result.value! as RectangleElement;
+      expect(parsed.id.value, 'myRect');
+      expect(parser.aliases['myRect'], 'myRect');
+    });
+
+    test('element without alias has no id= in output', () {
+      final original = RectangleElement(
+        id: const ElementId('some-uuid'),
+        x: 10,
+        y: 20,
+        width: 50,
+        height: 60,
+        seed: 7,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final line = serializer.serialize(original);
+      expect(line, isNot(contains('id=')));
+      expect(line, isNot(contains('eid=')));
+    });
+
     test('rectangle with non-default properties round-trips', () {
       final original = RectangleElement(
         id: const ElementId('r1'),
@@ -132,6 +168,8 @@ void main() {
       expect(parsed.fontFamily, original.fontFamily);
       expect(parsed.textAlign, original.textAlign);
       expect(parsed.strokeColor, original.strokeColor);
+      expect(parsed.width, original.width);
+      expect(parsed.height, original.height);
     });
 
     test('line round-trips', () {
@@ -325,7 +363,7 @@ rect id=r at 10,20 size 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-styl
       expect(sketch.elements.first.y, 200);
     });
 
-    test('arrow bindings round-trip', () {
+    test('arrow bindings round-trip with default fixedPoints', () {
       final rect1 = RectangleElement(
         id: const ElementId('r1'),
         x: 100,
@@ -371,15 +409,209 @@ rect id=r at 10,20 size 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-styl
         aliases: {'auth': 'r1', 'gw': 'r2'},
       );
       final output = DocumentSerializer.serialize(doc);
-      final parsed = DocumentParser.parse(output);
 
+      // Default fixedPoints should NOT emit @x,y suffix
+      expect(output, contains('from auth to gw'));
+      expect(output, isNot(contains('@')));
+
+      final parsed = DocumentParser.parse(output);
       final sketch = parsed.value.sections.first as SketchSection;
-      // Find the arrow
+      final parsedArrow =
+          sketch.elements.whereType<ArrowElement>().first;
+      expect(parsedArrow.startBinding, isNotNull);
+      expect(parsedArrow.startBinding!.fixedPoint.x, 1.0);
+      expect(parsedArrow.startBinding!.fixedPoint.y, 0.5);
+      expect(parsedArrow.endBinding, isNotNull);
+      expect(parsedArrow.endBinding!.fixedPoint.x, 0.0);
+      expect(parsedArrow.endBinding!.fixedPoint.y, 0.5);
+    });
+
+    test('arrow bindings round-trip with non-default fixedPoints as pixels', () {
+      final rect1 = RectangleElement(
+        id: const ElementId('r1'),
+        x: 100,
+        y: 200,
+        width: 160,
+        height: 80,
+        seed: 1,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final rect2 = RectangleElement(
+        id: const ElementId('r2'),
+        x: 350,
+        y: 200,
+        width: 160,
+        height: 80,
+        seed: 2,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final arrow = ArrowElement(
+        id: const ElementId('a1'),
+        x: 260,
+        y: 240,
+        width: 90,
+        height: 0,
+        points: [const Point(0, 0), const Point(90, 0)],
+        startBinding: const PointBinding(
+          elementId: 'r1',
+          fixedPoint: Point(0.25, 0.75), // 40px, 60px on 160x80
+        ),
+        endBinding: const PointBinding(
+          elementId: 'r2',
+          fixedPoint: Point(0.5, 0), // 80px, 0px on 160x80
+        ),
+        seed: 3,
+        versionNonce: 1,
+        updated: 0,
+      );
+
+      final doc = MarkdrawDocument(
+        sections: [SketchSection([rect1, rect2, arrow])],
+        aliases: {'auth': 'r1', 'gw': 'r2'},
+      );
+      final output = DocumentSerializer.serialize(doc);
+
+      // Non-default fixedPoints should emit pixel @x,y suffix
+      expect(output, contains('from auth@40,60'));
+      expect(output, contains('to gw@80,0'));
+
+      final parsed = DocumentParser.parse(output);
+      final sketch = parsed.value.sections.first as SketchSection;
+      final parsedArrow =
+          sketch.elements.whereType<ArrowElement>().first;
+      expect(parsedArrow.startBinding, isNotNull);
+      expect(parsedArrow.startBinding!.fixedPoint.x, 0.25);
+      expect(parsedArrow.startBinding!.fixedPoint.y, 0.75);
+      expect(parsedArrow.endBinding, isNotNull);
+      expect(parsedArrow.endBinding!.fixedPoint.x, 0.5);
+      expect(parsedArrow.endBinding!.fixedPoint.y, 0.0);
+    });
+
+    test('arrow bindings round-trip via SceneDocumentConverter auto-aliases', () {
+      // Simulates the split-pane live sync scenario: canvas elements have
+      // UUID IDs and no manual aliases. SceneDocumentConverter auto-generates
+      // aliases like rect1, rect2, arrow1.
+      final rect1 = RectangleElement(
+        id: const ElementId('uuid-rect-1'),
+        x: 100,
+        y: 200,
+        width: 160,
+        height: 80,
+        seed: 1,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final rect2 = RectangleElement(
+        id: const ElementId('uuid-rect-2'),
+        x: 350,
+        y: 200,
+        width: 160,
+        height: 80,
+        seed: 2,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final arrow = ArrowElement(
+        id: const ElementId('uuid-arrow-1'),
+        x: 260,
+        y: 240,
+        width: 90,
+        height: 0,
+        points: [const Point(0, 0), const Point(90, 0)],
+        startBinding: const PointBinding(
+          elementId: 'uuid-rect-1',
+          fixedPoint: Point(1, 0.5),
+        ),
+        endBinding: const PointBinding(
+          elementId: 'uuid-rect-2',
+          fixedPoint: Point(0, 0.5),
+        ),
+        seed: 3,
+        versionNonce: 1,
+        updated: 0,
+      );
+
+      // Use SceneDocumentConverter to auto-generate aliases
+      final scene = Scene()
+          .addElement(rect1)
+          .addElement(rect2)
+          .addElement(arrow);
+      final doc = SceneDocumentConverter.sceneToDocument(scene);
+      final output = DocumentSerializer.serialize(doc);
+
+      // Verify human-friendly aliases are used
+      expect(output, contains('id=rect1'));
+      expect(output, contains('id=rect2'));
+      expect(output, contains('id=arrow1'));
+      expect(output, contains('from rect1'));
+      expect(output, contains('to rect2'));
+      expect(output, isNot(contains('eid=')));
+      expect(output, isNot(contains('uuid-')));
+
+      // Parse it back — bindings must resolve
+      final parsed = DocumentParser.parse(output);
+      final sketch = parsed.value.sections.first as SketchSection;
       final parsedArrows = sketch.elements.whereType<ArrowElement>().toList();
       expect(parsedArrows, hasLength(1));
       final parsedArrow = parsedArrows.first;
-      expect(parsedArrow.startBinding, isNotNull);
-      expect(parsedArrow.endBinding, isNotNull);
+      expect(parsedArrow.startBinding, isNotNull,
+          reason: 'startBinding should resolve via auto-alias');
+      expect(parsedArrow.endBinding, isNotNull,
+          reason: 'endBinding should resolve via auto-alias');
+    });
+
+    test('bound text properties round-trip', () {
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 100,
+        y: 200,
+        width: 160,
+        height: 80,
+        seed: 42,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final label = TextElement(
+        id: const ElementId('t1'),
+        x: 110,
+        y: 210,
+        width: 140,
+        height: 20,
+        text: 'Auth Service',
+        fontSize: 24,
+        fontFamily: 'Nunito',
+        textAlign: TextAlign.center,
+        verticalAlign: VerticalAlign.top,
+        containerId: 'r1',
+        seed: 43,
+        versionNonce: 1,
+        updated: 0,
+      );
+
+      final doc = MarkdrawDocument(
+        sections: [SketchSection([rect, label])],
+        aliases: {'auth': 'r1'},
+      );
+      final output = DocumentSerializer.serialize(doc);
+
+      // Verify text properties are serialized on shape line
+      expect(output, contains('text-size=24'));
+      expect(output, contains('text-font=Nunito'));
+      expect(output, contains('text-align=center'));
+      expect(output, contains('text-valign=top'));
+
+      final parsed = DocumentParser.parse(output);
+      final sketch = parsed.value.sections.first as SketchSection;
+      final texts = sketch.elements.whereType<TextElement>().toList();
+      expect(texts, hasLength(1));
+      expect(texts.first.text, 'Auth Service');
+      expect(texts.first.fontSize, 24);
+      expect(texts.first.fontFamily, 'Nunito');
+      expect(texts.first.textAlign, TextAlign.center);
+      expect(texts.first.verticalAlign, VerticalAlign.top);
+      expect(texts.first.containerId, isNotNull);
     });
 
     test('bound text labels round-trip', () {

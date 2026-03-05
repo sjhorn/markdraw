@@ -570,6 +570,7 @@ class MarkdrawController extends ChangeNotifier {
     _originalText = null;
     textEditingController.clear();
     keyboardFocusNode.requestFocus();
+    onSceneChanged?.call(_editorState.scene);
     notifyListeners();
   }
 
@@ -641,6 +642,7 @@ class MarkdrawController extends ChangeNotifier {
       _editorState =
           _editorState.applyResult(UpdateElementResult(updated));
     }
+    onSceneChanged?.call(_editorState.scene);
     notifyListeners();
   }
 

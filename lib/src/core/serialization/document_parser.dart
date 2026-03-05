@@ -194,6 +194,24 @@ class DocumentParser {
         if (result.value != null) {
           elements.add(result.value!);
 
+          // Extract text-* properties from the original line
+          final textFontSize =
+              _parseNamedDouble(line, 'text-size') ?? 20.0;
+          final textFontFamily =
+              _parseNamedString(line, 'text-font') ?? 'Excalifont';
+          final textAlignStr = _parseNamedString(line, 'text-align');
+          final textAlign = switch (textAlignStr) {
+            'center' => TextAlign.center,
+            'right' => TextAlign.right,
+            _ => TextAlign.left,
+          };
+          final textValignStr = _parseNamedString(line, 'text-valign');
+          final textVerticalAlign = switch (textValignStr) {
+            'top' => VerticalAlign.top,
+            'bottom' => VerticalAlign.bottom,
+            _ => VerticalAlign.middle,
+          };
+
           // Create bound text element
           final textElement = TextElement(
             id: ElementId.generate(),
@@ -202,6 +220,10 @@ class DocumentParser {
             width: result.value!.width,
             height: 20,
             text: label,
+            fontSize: textFontSize,
+            fontFamily: textFontFamily,
+            textAlign: textAlign,
+            verticalAlign: textVerticalAlign,
             containerId: result.value!.id.value,
             seed: result.value!.seed + 1,
           );
@@ -217,5 +239,18 @@ class DocumentParser {
     }
 
     return elements;
+  }
+
+  /// Extracts a named string property (e.g., "text-font=Nunito") from a line.
+  static String? _parseNamedString(String line, String name) {
+    final match = RegExp('(?:^|\\s)$name=(\\S+)').firstMatch(line);
+    return match?.group(1);
+  }
+
+  /// Extracts a named double property (e.g., "text-size=24") from a line.
+  static double? _parseNamedDouble(String line, String name) {
+    final str = _parseNamedString(line, name);
+    if (str == null) return null;
+    return double.tryParse(str);
   }
 }

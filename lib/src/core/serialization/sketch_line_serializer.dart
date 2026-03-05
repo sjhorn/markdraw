@@ -11,9 +11,10 @@ class SketchLineSerializer {
     Element element, {
     String? alias,
     Map<String, String> aliasMap = const {},
+    Map<String, Element> elementMap = const {},
   }) {
     return switch (element) {
-      ArrowElement() => _serializeArrow(element, alias, aliasMap),
+      ArrowElement() => _serializeArrow(element, alias, aliasMap, elementMap),
       LineElement() => _serializeLine(element, alias),
       FrameElement() => _serializeFrame(element, alias),
       ImageElement() => _serializeImage(element, alias),
@@ -29,7 +30,7 @@ class SketchLineSerializer {
   /// Serialize a shape element with a bound text label inlined.
   String serializeWithLabel(
     Element element,
-    String label, {
+    TextElement labelElement, {
     String? alias,
     Map<String, String> aliasMap = const {},
   }) {
@@ -39,20 +40,32 @@ class SketchLineSerializer {
       DiamondElement() => 'diamond',
       _ => element.type,
     };
-    return _serializeShapeWithLabel(keyword, element, alias, label);
+    return _serializeShapeWithLabel(keyword, element, alias, labelElement);
   }
 
   String _serializeShapeWithLabel(
     String keyword,
     Element element,
     String? alias,
-    String label,
+    TextElement labelElement,
   ) {
     final parts = <String>[keyword];
-    parts.add('"$label"');
+    parts.add('"${labelElement.text}"');
     _addId(parts, alias);
     _addPosition(parts, element.x, element.y);
     _addSize(parts, element.width, element.height);
+    if (labelElement.fontSize != 20.0) {
+      parts.add('text-size=${_formatNum(labelElement.fontSize)}');
+    }
+    if (labelElement.fontFamily != 'Excalifont') {
+      parts.add('text-font=${labelElement.fontFamily}');
+    }
+    if (labelElement.textAlign != TextAlign.left) {
+      parts.add('text-align=${labelElement.textAlign.name}');
+    }
+    if (labelElement.verticalAlign != VerticalAlign.middle) {
+      parts.add('text-valign=${labelElement.verticalAlign.name}');
+    }
     _addCommonProperties(parts, element);
     return parts.join(' ');
   }
@@ -100,6 +113,7 @@ class SketchLineSerializer {
     parts.add('"${element.text}"');
     _addId(parts, alias);
     _addPosition(parts, element.x, element.y);
+    _addSize(parts, element.width, element.height);
     if (element.fontSize != 20.0) {
       parts.add('size=${_formatNum(element.fontSize)}');
     }
@@ -132,6 +146,7 @@ class SketchLineSerializer {
     ArrowElement element,
     String? alias,
     Map<String, String> aliasMap,
+    Map<String, Element> elementMap,
   ) {
     final parts = <String>['arrow'];
     _addId(parts, alias);
@@ -144,13 +159,27 @@ class SketchLineSerializer {
         final fromAlias =
             aliasMap[element.startBinding!.elementId] ??
             element.startBinding!.elementId;
-        parts.add('from $fromAlias');
+        final fp = element.startBinding!.fixedPoint;
+        if (fp.x == 1.0 && fp.y == 0.5) {
+          parts.add('from $fromAlias');
+        } else {
+          final target = elementMap[element.startBinding!.elementId];
+          final fpSuffix = _fixedPointToPixelSuffix(fp, target);
+          parts.add('from $fromAlias$fpSuffix');
+        }
       }
       if (element.endBinding != null) {
         final toAlias =
             aliasMap[element.endBinding!.elementId] ??
             element.endBinding!.elementId;
-        parts.add('to $toAlias');
+        final fp = element.endBinding!.fixedPoint;
+        if (fp.x == 0.0 && fp.y == 0.5) {
+          parts.add('to $toAlias');
+        } else {
+          final target = elementMap[element.endBinding!.elementId];
+          final fpSuffix = _fixedPointToPixelSuffix(fp, target);
+          parts.add('to $toAlias$fpSuffix');
+        }
       }
     } else {
       _addPoints(parts, element.points);
@@ -280,6 +309,17 @@ class SketchLineSerializer {
       FillStyle.crossHatch => 'cross-hatch',
       FillStyle.zigzag => 'zigzag',
     };
+  }
+
+  /// Converts a normalized fixedPoint to a pixel @x,y suffix string.
+  /// Falls back to normalized values if the target element is unavailable.
+  String _fixedPointToPixelSuffix(Point fp, Element? target) {
+    if (target != null) {
+      final px = (fp.x * target.width).round();
+      final py = (fp.y * target.height).round();
+      return '@$px,$py';
+    }
+    return '@${_formatNum(fp.x)},${_formatNum(fp.y)}';
   }
 
   /// Formats a number: integers without decimal, doubles with decimals.
