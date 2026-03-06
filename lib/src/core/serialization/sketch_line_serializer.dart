@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import '../elements/elements.dart';
 import '../math/math.dart';
+import 'color_names.dart';
 
 /// Serializes a single Element to a .markdraw sketch line string.
 class SketchLineSerializer {
@@ -67,6 +68,9 @@ class SketchLineSerializer {
     }
     if (labelElement.verticalAlign != VerticalAlign.middle) {
       parts.add('text-valign=${labelElement.verticalAlign.name}');
+    }
+    if (labelElement.strokeColor != '#000000') {
+      parts.add('text-color=${formatColor(labelElement.strokeColor)}');
     }
     _addCommonProperties(parts, element);
     return parts.join(' ');
@@ -266,10 +270,10 @@ class SketchLineSerializer {
   void _addCommonProperties(List<String> parts, Element element,
       {bool isArrow = false}) {
     if (element.backgroundColor != 'transparent') {
-      parts.add('fill=${element.backgroundColor}');
+      parts.add('fill=${formatColor(element.backgroundColor)}');
     }
     if (element.strokeColor != '#000000') {
-      parts.add('color=${element.strokeColor}');
+      parts.add('color=${formatColor(element.strokeColor)}');
     }
     if (element.strokeStyle != StrokeStyle.solid) {
       parts.add('stroke=${element.strokeStyle.name}');

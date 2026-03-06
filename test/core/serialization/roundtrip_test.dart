@@ -303,11 +303,86 @@ ellipse id=db at 225,400 120x80 fill=#e8f5e9
 
     test('sketch with non-default properties', () {
       const input = '''```sketch
-rect id=r at 10,20 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-style=hachure stroke-width=3 roughness=2 opacity=0.5 rounded=8 angle=86 locked
+rect id=r at 10,20 50x60 fill=lime color=red stroke=dotted fill-style=hachure stroke-width=3 roughness=2 opacity=0.5 rounded=8 angle=86 locked
 ```''';
       final parseResult = DocumentParser.parse(input);
       final output = DocumentSerializer.serialize(parseResult.value);
       expect(output.trim(), input.trim());
+    });
+  });
+
+  group('Color format round-trips', () {
+    late SketchLineSerializer serializer;
+    late SketchLineParser parser;
+
+    setUp(() {
+      serializer = SketchLineSerializer();
+      parser = SketchLineParser();
+    });
+
+    test('#ff0000 serializes as red and parses back to #ff0000', () {
+      final original = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        strokeColor: '#ff0000',
+        seed: 1,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final line = serializer.serialize(original, alias: 'r');
+      expect(line, contains('color=red'));
+      final result = parser.parseLine(line, 1);
+      expect(result.value!.strokeColor, '#ff0000');
+    });
+
+    test('#cccccc serializes as #ccc and parses back to #cccccc', () {
+      final original = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        backgroundColor: '#cccccc',
+        seed: 1,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final line = serializer.serialize(original, alias: 'r');
+      expect(line, contains('fill=#ccc'));
+      final result = parser.parseLine(line, 1);
+      expect(result.value!.backgroundColor, '#cccccc');
+    });
+
+    test('non-shortenable hex round-trips unchanged', () {
+      final original = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        backgroundColor: '#e3f2fd',
+        seed: 1,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final line = serializer.serialize(original, alias: 'r');
+      expect(line, contains('fill=#e3f2fd'));
+      final result = parser.parseLine(line, 1);
+      expect(result.value!.backgroundColor, '#e3f2fd');
+    });
+
+    test('named color input parses and re-serializes as same name', () {
+      final result = parser.parseLine(
+        'rect id=r at 0,0 100x100 color=red',
+        1,
+      );
+      final parsed = result.value!;
+      expect(parsed.strokeColor, '#ff0000');
+      final line = serializer.serialize(parsed, alias: 'r');
+      expect(line, contains('color=red'));
     });
   });
 
@@ -592,6 +667,7 @@ rect id=r at 10,20 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-style=hac
         fontFamily: 'Nunito',
         textAlign: TextAlign.center,
         verticalAlign: VerticalAlign.top,
+        strokeColor: '#ff0000',
         containerId: 'r1',
         seed: 43,
         versionNonce: 1,
@@ -609,6 +685,7 @@ rect id=r at 10,20 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-style=hac
       expect(output, contains('text-font=Nunito'));
       expect(output, contains('text-align=center'));
       expect(output, contains('text-valign=top'));
+      expect(output, contains('text-color=red'));
 
       final parsed = DocumentParser.parse(output);
       final sketch = parsed.value.sections.first as SketchSection;
@@ -619,6 +696,7 @@ rect id=r at 10,20 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-style=hac
       expect(texts.first.fontFamily, 'Nunito');
       expect(texts.first.textAlign, TextAlign.center);
       expect(texts.first.verticalAlign, VerticalAlign.top);
+      expect(texts.first.strokeColor, '#ff0000');
       expect(texts.first.containerId, isNotNull);
     });
 

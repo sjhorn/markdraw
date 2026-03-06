@@ -79,7 +79,7 @@ void main() {
         updated: 0,
       );
       final line = serializer.serialize(rect);
-      expect(line, contains('color=#ff0000'));
+      expect(line, contains('color=red'));
       expect(line, contains('stroke=dashed'));
       expect(line, contains('stroke-width=4'));
     });
@@ -108,8 +108,8 @@ void main() {
       expect(line, contains('id=r'));
       expect(line, contains('at 10,20'));
       expect(line, contains('50x60'));
-      expect(line, contains('fill=#00ff00'));
-      expect(line, contains('color=#ff0000'));
+      expect(line, contains('fill=lime'));
+      expect(line, contains('color=red'));
       expect(line, contains('stroke=dotted'));
       expect(line, contains('fill-style=hachure'));
       expect(line, contains('stroke-width=3'));
@@ -632,6 +632,58 @@ void main() {
     });
   });
 
+  group('Color formatting', () {
+    test('named CSS color in output', () {
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        strokeColor: '#ff0000',
+        seed: 1,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final line = serializer.serialize(rect);
+      expect(line, contains('color=red'));
+      expect(line, isNot(contains('#ff0000')));
+    });
+
+    test('short hex when no name exists', () {
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        backgroundColor: '#cccccc',
+        seed: 1,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final line = serializer.serialize(rect);
+      expect(line, contains('fill=#ccc'));
+      expect(line, isNot(contains('#cccccc')));
+    });
+
+    test('full hex when not shortenable', () {
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        backgroundColor: '#e3f2fd',
+        seed: 1,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final line = serializer.serialize(rect);
+      expect(line, contains('fill=#e3f2fd'));
+    });
+  });
+
   group('Number formatting', () {
     test('integers without decimal point', () {
       final rect = RectangleElement(
@@ -769,6 +821,63 @@ void main() {
       );
       final line = serializer.serialize(rect);
       expect(line, isNot(contains('locked')));
+    });
+  });
+
+  group('Bound text color (serializeWithLabel)', () {
+    test('emits text-color when non-default', () {
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 50,
+        seed: 1,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final label = TextElement(
+        id: const ElementId('t1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 20,
+        text: 'Label',
+        strokeColor: '#ff0000',
+        containerId: 'r1',
+        seed: 2,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final line = serializer.serializeWithLabel(rect, label, alias: 'r');
+      expect(line, contains('text-color=red'));
+    });
+
+    test('omits text-color when default black', () {
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 50,
+        seed: 1,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final label = TextElement(
+        id: const ElementId('t1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 20,
+        text: 'Label',
+        containerId: 'r1',
+        seed: 2,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final line = serializer.serializeWithLabel(rect, label, alias: 'r');
+      expect(line, isNot(contains('text-color=')));
     });
   });
 }

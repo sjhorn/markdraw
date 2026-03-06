@@ -204,4 +204,28 @@ The auth service handles OAuth2 flows.''';
       expect(result.value.aliases, containsPair('db', isNotNull));
     });
   });
+
+  group('Bound text color', () {
+    test('parses text-color on shape with label', () {
+      const input = '''```sketch
+rect "Label" id=r at 0,0 100x50 text-color=red
+```''';
+      final result = DocumentParser.parse(input);
+      final sketch = result.value.sections.first as SketchSection;
+      final texts = sketch.elements.whereType<TextElement>().toList();
+      expect(texts, hasLength(1));
+      expect(texts.first.strokeColor, '#ff0000');
+    });
+
+    test('defaults to black when text-color omitted', () {
+      const input = '''```sketch
+rect "Label" id=r at 0,0 100x50
+```''';
+      final result = DocumentParser.parse(input);
+      final sketch = result.value.sections.first as SketchSection;
+      final texts = sketch.elements.whereType<TextElement>().toList();
+      expect(texts, hasLength(1));
+      expect(texts.first.strokeColor, '#000000');
+    });
+  });
 }

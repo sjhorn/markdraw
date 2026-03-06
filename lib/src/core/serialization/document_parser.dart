@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import '../elements/elements.dart';
+import 'color_names.dart';
 import 'document_section.dart';
 import 'frontmatter_parser.dart';
 import 'markdraw_document.dart';
@@ -211,6 +212,10 @@ class DocumentParser {
             'bottom' => VerticalAlign.bottom,
             _ => VerticalAlign.middle,
           };
+          final textColorStr = _parseNamedString(line, 'text-color');
+          final textColor = textColorStr != null
+              ? normalizeColor(textColorStr)
+              : '#000000';
 
           // Create bound text element
           final textElement = TextElement(
@@ -224,6 +229,7 @@ class DocumentParser {
             fontFamily: textFontFamily,
             textAlign: textAlign,
             verticalAlign: textVerticalAlign,
+            strokeColor: textColor,
             containerId: result.value!.id.value,
             seed: result.value!.seed + 1,
           );
