@@ -21,7 +21,7 @@ void main() {
       expect(line, contains('image'));
       expect(line, contains('id=photo'));
       expect(line, contains('at 100,200'));
-      expect(line, contains('size 400x300'));
+      expect(line, contains('400x300'));
       expect(line, contains('file=abc12345'));
       expect(line, isNot(contains('crop=')));
       expect(line, isNot(contains('scale=')));
@@ -64,7 +64,7 @@ void main() {
     test('parses image element line', () {
       final parser = SketchLineParser();
       final result = parser.parseLine(
-        'image id=photo at 100,200 size 400x300 file=abc12345 seed=42',
+        'image id=photo at 100,200 400x300 file=abc12345',
         1,
       );
       expect(result.value, isA<ImageElement>());
@@ -81,7 +81,7 @@ void main() {
     test('parses image with crop and scale', () {
       final parser = SketchLineParser();
       final result = parser.parseLine(
-        'image id=photo at 100,200 size 400x300 file=abc12345 crop=0.1,0.2,0.8,0.6 scale=1.5 seed=42',
+        'image id=photo at 100,200 400x300 file=abc12345 crop=0.1,0.2,0.8,0.6 scale=1.5',
         1,
       );
       final img = result.value! as ImageElement;
@@ -92,7 +92,7 @@ void main() {
     test('parses image without crop or scale', () {
       final parser = SketchLineParser();
       final result = parser.parseLine(
-        'image at 0,0 size 100x100 file=test123 seed=1',
+        'image at 0,0 100x100 file=test123',
         1,
       );
       final img = result.value! as ImageElement;
@@ -157,7 +157,7 @@ void main() {
   group('DocumentParser - files block', () {
     test('parses files block', () {
       const input = '''```sketch
-image at 100,200 size 400x300 file=abc12345 seed=42
+image at 100,200 400x300 file=abc12345
 ```
 
 ```files
@@ -173,8 +173,8 @@ abc12345 image/png AQID
 
     test('parses multiple files', () {
       const input = '''```sketch
-image at 0,0 size 100x100 file=abc12345 seed=42
-image at 200,0 size 100x100 file=def67890 seed=43
+image at 0,0 100x100 file=abc12345
+image at 200,0 100x100 file=def67890
 ```
 
 ```files

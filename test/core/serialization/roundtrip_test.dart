@@ -29,7 +29,6 @@ void main() {
       expect(parsed.y, original.y);
       expect(parsed.width, original.width);
       expect(parsed.height, original.height);
-      expect(parsed.seed, original.seed);
     });
 
     test('alias used as element ID when parsed', () {
@@ -102,7 +101,6 @@ void main() {
       expect(parsed.roundness!.value, original.roundness!.value);
       expect(parsed.angle, closeTo(original.angle, 0.02));
       expect(parsed.locked, original.locked);
-      expect(parsed.seed, original.seed);
     });
 
     test('ellipse round-trips', () {
@@ -295,8 +293,8 @@ void main() {
   group('Parse → serialize string equality', () {
     test('simple sketch block', () {
       const input = '''```sketch
-rect id=auth at 100,200 size 160x80 seed=42
-ellipse id=db at 225,400 size 120x80 fill=#e8f5e9 seed=7
+rect id=auth at 100,200 160x80
+ellipse id=db at 225,400 120x80 fill=#e8f5e9
 ```''';
       final parseResult = DocumentParser.parse(input);
       final output = DocumentSerializer.serialize(parseResult.value);
@@ -305,7 +303,7 @@ ellipse id=db at 225,400 size 120x80 fill=#e8f5e9 seed=7
 
     test('sketch with non-default properties', () {
       const input = '''```sketch
-rect id=r at 10,20 size 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-style=hachure stroke-width=3 roughness=2 opacity=0.5 rounded=8 angle=86 locked seed=99
+rect id=r at 10,20 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-style=hachure stroke-width=3 roughness=2 opacity=0.5 rounded=8 angle=86 locked
 ```''';
       final parseResult = DocumentParser.parse(input);
       final output = DocumentSerializer.serialize(parseResult.value);
@@ -810,10 +808,10 @@ grid: 20
 Here's how the services connect:
 
 ```sketch
-rect "Auth Service" id=auth at 100,200 size 160x80 fill=#e3f2fd rounded=8 seed=42
-rect "API Gateway" id=gateway at 350,200 size 160x80 fill=#fff3e0 rounded=8 seed=43
-arrow from auth to gateway stroke=dashed seed=20
-ellipse "Database" id=db at 225,400 size 120x80 fill=#e8f5e9 seed=7
+rect "Auth Service" id=auth at 100,200 160x80 fill=#e3f2fd rounded=8
+rect "API Gateway" id=gateway at 350,200 160x80 fill=#fff3e0 rounded=8
+arrow from auth to gateway stroke=dashed
+ellipse "Database" id=db at 225,400 120x80 fill=#e8f5e9
 ```
 
 The auth service handles OAuth2 flows. All inter-service

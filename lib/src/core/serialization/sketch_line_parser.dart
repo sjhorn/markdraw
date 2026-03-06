@@ -180,7 +180,6 @@ class SketchLineParser {
           roundness: common.roundness,
           angle: common.angle,
           locked: common.locked,
-          seed: common.seed,
           frameId: common.frameId,
           groupIds: common.groupIds,
         ),
@@ -200,7 +199,6 @@ class SketchLineParser {
           roundness: common.roundness,
           angle: common.angle,
           locked: common.locked,
-          seed: common.seed,
           frameId: common.frameId,
           groupIds: common.groupIds,
         ),
@@ -220,7 +218,6 @@ class SketchLineParser {
           roundness: common.roundness,
           angle: common.angle,
           locked: common.locked,
-          seed: common.seed,
           frameId: common.frameId,
           groupIds: common.groupIds,
         ),
@@ -260,7 +257,6 @@ class SketchLineParser {
       roundness: common.roundness,
       angle: common.angle,
       locked: common.locked,
-      seed: common.seed,
       frameId: common.frameId,
       groupIds: common.groupIds,
     );
@@ -314,7 +310,6 @@ class SketchLineParser {
       opacity: common.opacity,
       angle: common.angle,
       locked: common.locked,
-      seed: common.seed,
       frameId: common.frameId,
       groupIds: common.groupIds,
     );
@@ -362,7 +357,6 @@ class SketchLineParser {
       opacity: common.opacity,
       angle: common.angle,
       locked: common.locked,
-      seed: common.seed,
       frameId: common.frameId,
       groupIds: common.groupIds,
     );
@@ -406,7 +400,6 @@ class SketchLineParser {
       opacity: common.opacity,
       angle: common.angle,
       locked: common.locked,
-      seed: common.seed,
       frameId: common.frameId,
       groupIds: common.groupIds,
     );
@@ -487,7 +480,6 @@ class SketchLineParser {
       opacity: common.opacity,
       angle: common.angle,
       locked: common.locked,
-      seed: common.seed,
       frameId: common.frameId,
       groupIds: common.groupIds,
     );
@@ -540,7 +532,6 @@ class SketchLineParser {
       opacity: common.opacity,
       angle: common.angle,
       locked: common.locked,
-      seed: common.seed,
       frameId: common.frameId,
       groupIds: common.groupIds,
     );
@@ -653,7 +644,7 @@ class _CommonProperties {
   final Roundness? roundness;
   final double angle;
   final bool locked;
-  final int seed;
+
   final String? frameId;
   final List<String> groupIds;
 
@@ -668,7 +659,6 @@ class _CommonProperties {
     required this.roundness,
     required this.angle,
     required this.locked,
-    required this.seed,
     required this.frameId,
     required this.groupIds,
   });
@@ -689,8 +679,9 @@ class _PropertyBag {
   }
 
   (double, double) get size {
-    // Shape size: "size WxH"
-    final match = RegExp(r'size\s+([\d.]+)x([\d.]+)').firstMatch(line);
+    // Shape size: "WxH" (also accepts legacy "size WxH")
+    final match =
+        RegExp(r'(?:^|size\s+|\s)([\d.]+)x([\d.]+)(?:\s|$)').firstMatch(line);
     if (match == null) return (0, 0);
     return (double.parse(match.group(1)!), double.parse(match.group(2)!));
   }
@@ -760,7 +751,6 @@ class _PropertyBag {
     final opacityVal = namedDouble('opacity');
     final roundedVal = namedDouble('rounded');
     final angleDeg = namedDouble('angle');
-    final seedVal = namedInt('seed');
     final isLocked = hasFlag('locked');
     final frameIdStr = namedString('frame');
     final groupStr = namedString('group');
@@ -781,7 +771,6 @@ class _PropertyBag {
           : null,
       angle: angleDeg != null ? angleDeg * math.pi / 180 : 0.0,
       locked: isLocked,
-      seed: seedVal ?? 1,
       frameId: frameIdStr,
       groupIds: groupIds,
     );

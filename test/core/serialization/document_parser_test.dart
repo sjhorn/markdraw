@@ -37,8 +37,8 @@ Content here''';
 
     test('parses document with single sketch block', () {
       const input = '''```sketch
-rect id=auth at 100,200 size 160x80 seed=42
-ellipse id=db at 225,400 size 120x80 seed=7
+rect id=auth at 100,200 size 160x80
+ellipse id=db at 225,400 size 120x80
 ```''';
       final result = DocumentParser.parse(input);
       expect(result.value.sections, hasLength(1));
@@ -55,13 +55,13 @@ ellipse id=db at 225,400 size 120x80 seed=7
 Here's how the services connect:
 
 ```sketch
-rect id=auth at 100,200 size 160x80 seed=42
+rect id=auth at 100,200 size 160x80
 ```
 
 The auth service handles OAuth2 flows.
 
 ```sketch
-ellipse id=db at 225,400 size 120x80 seed=7
+ellipse id=db at 225,400 size 120x80
 ```''';
       final result = DocumentParser.parse(input);
       expect(result.value.sections, hasLength(4));
@@ -73,8 +73,8 @@ ellipse id=db at 225,400 size 120x80 seed=7
 
     test('registers aliases from sketch elements', () {
       const input = '''```sketch
-rect id=auth at 100,200 size 160x80 seed=42
-rect id=gateway at 350,200 size 160x80 seed=43
+rect id=auth at 100,200 size 160x80
+rect id=gateway at 350,200 size 160x80
 ```''';
       final result = DocumentParser.parse(input);
       expect(result.value.aliases, containsPair('auth', isNotNull));
@@ -83,9 +83,9 @@ rect id=gateway at 350,200 size 160x80 seed=43
 
     test('resolves arrow bindings', () {
       const input = '''```sketch
-rect id=auth at 100,200 size 160x80 seed=42
-rect id=gateway at 350,200 size 160x80 seed=43
-arrow from auth to gateway seed=20
+rect id=auth at 100,200 size 160x80
+rect id=gateway at 350,200 size 160x80
+arrow from auth to gateway
 ```''';
       final result = DocumentParser.parse(input);
       final sketch = result.value.sections.first as SketchSection;
@@ -96,7 +96,7 @@ arrow from auth to gateway seed=20
 
     test('parses rect with inline label into shape + bound text', () {
       const input = '''```sketch
-rect "Auth Service" id=auth at 100,200 size 160x80 seed=42
+rect "Auth Service" id=auth at 100,200 size 160x80
 ```''';
       final result = DocumentParser.parse(input);
       final sketch = result.value.sections.first as SketchSection;
@@ -117,7 +117,7 @@ grid: 10
 ---
 
 ```sketch
-rect at 0,0 size 100x100 seed=1
+rect at 0,0 size 100x100
 ```''';
       final result = DocumentParser.parse(input);
       expect(result.value.settings.background, '#000000');
@@ -127,7 +127,7 @@ rect at 0,0 size 100x100 seed=1
     test('unknown keywords in sketch produce warnings', () {
       const input = '''```sketch
 polygon at 0,0 size 100x100
-rect at 0,0 size 100x100 seed=1
+rect at 0,0 size 100x100
 ```''';
       final result = DocumentParser.parse(input);
       expect(result.warnings, hasLength(1));
@@ -148,7 +148,7 @@ rect at 0,0 size 100x100 seed=1
     test('sketch with comments skips comment lines', () {
       const input = '''```sketch
 # This is a comment
-rect at 0,0 size 100x100 seed=1
+rect at 0,0 size 100x100
 ```''';
       final result = DocumentParser.parse(input);
       final sketch = result.value.sections.first as SketchSection;
@@ -157,13 +157,13 @@ rect at 0,0 size 100x100 seed=1
 
     test('allElements returns elements from all sections', () {
       const input = '''```sketch
-rect id=a at 0,0 size 100x100 seed=1
+rect id=a at 0,0 size 100x100
 ```
 
 Some prose
 
 ```sketch
-ellipse id=b at 200,200 size 50x50 seed=2
+ellipse id=b at 200,200 size 50x50
 ```''';
       final result = DocumentParser.parse(input);
       expect(result.value.allElements, hasLength(2));
@@ -181,10 +181,10 @@ grid: 20
 Here's how the services connect:
 
 ```sketch
-rect "Auth Service" id=auth at 100,200 size 160x80 fill=#e3f2fd rounded=8 seed=42
-rect "API Gateway" id=gateway at 350,200 size 160x80 fill=#fff3e0 rounded=8 seed=43
-arrow from auth to gateway stroke=dashed seed=20
-ellipse "Database" id=db at 225,400 size 120x80 fill=#e8f5e9 seed=7
+rect "Auth Service" id=auth at 100,200 size 160x80 fill=#e3f2fd rounded=8
+rect "API Gateway" id=gateway at 350,200 size 160x80 fill=#fff3e0 rounded=8
+arrow from auth to gateway stroke=dashed
+ellipse "Database" id=db at 225,400 size 120x80 fill=#e8f5e9
 ```
 
 The auth service handles OAuth2 flows.''';

@@ -24,8 +24,8 @@ void main() {
       expect(line, contains('"Section A"'));
       expect(line, contains('id=sec'));
       expect(line, contains('at 100,200'));
-      expect(line, contains('size 400x300'));
-      expect(line, contains('seed=42'));
+      expect(line, contains('400x300'));
+      expect(line, isNot(contains('seed=')));
     });
 
     test('serializes frame element with default label', () {
@@ -73,7 +73,7 @@ void main() {
     test('parses frame element', () {
       final parser = SketchLineParser();
       final result =
-          parser.parseLine('frame "Section A" id=sec at 100,200 size 400x300 seed=42', 1);
+          parser.parseLine('frame "Section A" id=sec at 100,200 size 400x300', 1);
       final element = result.value;
       expect(element, isA<FrameElement>());
       final frame = element as FrameElement;
@@ -82,13 +82,12 @@ void main() {
       expect(frame.y, 200);
       expect(frame.width, 400);
       expect(frame.height, 300);
-      expect(frame.seed, 42);
     });
 
     test('parses frame with default label when no quoted string', () {
       final parser = SketchLineParser();
       final result =
-          parser.parseLine('frame id=f1 at 0,0 size 200x100 seed=1', 1);
+          parser.parseLine('frame id=f1 at 0,0 size 200x100', 1);
       final frame = result.value as FrameElement;
       expect(frame.label, 'Frame');
     });
@@ -96,7 +95,7 @@ void main() {
     test('parses frameId on child element', () {
       final parser = SketchLineParser();
       final result = parser.parseLine(
-          'rect id=box at 120,220 size 80x40 frame=sec seed=7', 1);
+          'rect id=box at 120,220 size 80x40 frame=sec', 1);
       final element = result.value!;
       expect(element.frameId, 'sec');
     });
@@ -104,7 +103,7 @@ void main() {
     test('frameId is null when absent', () {
       final parser = SketchLineParser();
       final result =
-          parser.parseLine('rect id=box at 120,220 size 80x40 seed=7', 1);
+          parser.parseLine('rect id=box at 120,220 size 80x40', 1);
       final element = result.value!;
       expect(element.frameId, isNull);
     });
@@ -130,7 +129,6 @@ void main() {
       expect(parsed.y, 200);
       expect(parsed.width, 400);
       expect(parsed.height, 300);
-      expect(parsed.seed, 42);
     });
 
     test('frame element without alias round-trips', () {

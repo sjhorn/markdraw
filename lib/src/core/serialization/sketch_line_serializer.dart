@@ -231,7 +231,7 @@ class SketchLineSerializer {
   }
 
   void _addSize(List<String> parts, double width, double height) {
-    parts.add('size ${_formatNum(width)}x${_formatNum(height)}');
+    parts.add('${_formatNum(width)}x${_formatNum(height)}');
   }
 
   void _addPoints(List<String> parts, List<Point> points) {
@@ -301,7 +301,8 @@ class SketchLineSerializer {
     if (element.groupIds.isNotEmpty) {
       parts.add('group=${element.groupIds.join(',')}');
     }
-    parts.add('seed=${element.seed}');
+    // seed is intentionally omitted — it's auto-generated from a random value
+    // and only affects rough-drawing wobble, not document semantics.
   }
 
   String _fillStyleName(FillStyle style) {

@@ -10,7 +10,7 @@ void main() {
 
   group('Rectangle parsing', () {
     test('basic rectangle', () {
-      final result = parser.parseLine('rect id=auth at 100,200 size 160x80 seed=42', 1);
+      final result = parser.parseLine('rect id=auth at 100,200 size 160x80', 1);
       expect(result.value, isNotNull);
       final elem = result.value!;
       expect(elem, isA<RectangleElement>());
@@ -18,13 +18,12 @@ void main() {
       expect(elem.y, 200);
       expect(elem.width, 160);
       expect(elem.height, 80);
-      expect(elem.seed, 42);
       expect(result.warnings, isEmpty);
     });
 
     test('rectangle with fill and rounded', () {
       final result = parser.parseLine(
-        'rect id=auth at 100,200 size 160x80 fill=#e3f2fd rounded=8 seed=42',
+        'rect id=auth at 100,200 size 160x80 fill=#e3f2fd rounded=8',
         1,
       );
       final elem = result.value! as RectangleElement;
@@ -35,7 +34,7 @@ void main() {
 
     test('rectangle with all properties', () {
       final result = parser.parseLine(
-        'rect id=r at 10,20 size 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-style=hachure stroke-width=3 roughness=2 opacity=0.5 angle=86 locked seed=99',
+        'rect id=r at 10,20 size 50x60 fill=#00ff00 color=#ff0000 stroke=dotted fill-style=hachure stroke-width=3 roughness=2 opacity=0.5 angle=86 locked',
         1,
       );
       final elem = result.value!;
@@ -52,12 +51,11 @@ void main() {
       expect(elem.opacity, 0.5);
       expect(elem.angle, closeTo(86 * 3.14159265358979 / 180, 0.001));
       expect(elem.locked, isTrue);
-      expect(elem.seed, 99);
     });
 
     test('cross-hatch fill style parses', () {
       final result = parser.parseLine(
-        'rect at 0,0 size 100x100 fill-style=cross-hatch seed=1',
+        'rect at 0,0 size 100x100 fill-style=cross-hatch',
         1,
       );
       expect(result.value!.fillStyle, FillStyle.crossHatch);
@@ -67,7 +65,7 @@ void main() {
   group('Ellipse parsing', () {
     test('basic ellipse', () {
       final result = parser.parseLine(
-        'ellipse id=db at 225,400 size 120x80 seed=7',
+        'ellipse id=db at 225,400 size 120x80',
         1,
       );
       expect(result.value, isA<EllipseElement>());
@@ -77,7 +75,7 @@ void main() {
 
     test('ellipse with fill', () {
       final result = parser.parseLine(
-        'ellipse id=db at 225,400 size 120x80 fill=#e8f5e9 seed=7',
+        'ellipse id=db at 225,400 size 120x80 fill=#e8f5e9',
         1,
       );
       expect(result.value!.backgroundColor, '#e8f5e9');
@@ -87,7 +85,7 @@ void main() {
   group('Diamond parsing', () {
     test('basic diamond', () {
       final result = parser.parseLine(
-        'diamond at 50,50 size 100x100 seed=3',
+        'diamond at 50,50 size 100x100',
         1,
       );
       expect(result.value, isA<DiamondElement>());
@@ -99,7 +97,7 @@ void main() {
   group('Text parsing', () {
     test('basic text', () {
       final result = parser.parseLine(
-        'text "High Priority" at 100,50 seed=5',
+        'text "High Priority" at 100,50',
         1,
       );
       expect(result.value, isA<TextElement>());
@@ -111,7 +109,7 @@ void main() {
 
     test('text with font size', () {
       final result = parser.parseLine(
-        'text "Big" at 0,0 size=36 seed=5',
+        'text "Big" at 0,0 size=36',
         1,
       );
       final text = result.value! as TextElement;
@@ -120,7 +118,7 @@ void main() {
 
     test('text with font family', () {
       final result = parser.parseLine(
-        'text "Custom" at 0,0 font=Cascadia seed=5',
+        'text "Custom" at 0,0 font=Cascadia',
         1,
       );
       final text = result.value! as TextElement;
@@ -129,7 +127,7 @@ void main() {
 
     test('text with alignment', () {
       final result = parser.parseLine(
-        'text "Centered" at 0,0 align=center seed=5',
+        'text "Centered" at 0,0 align=center',
         1,
       );
       final text = result.value! as TextElement;
@@ -138,14 +136,14 @@ void main() {
 
     test('text with color', () {
       final result = parser.parseLine(
-        'text "Red" at 100,50 color=#d32f2f seed=5',
+        'text "Red" at 100,50 color=#d32f2f',
         1,
       );
       expect(result.value!.strokeColor, '#d32f2f');
     });
 
     test('text defaults to Excalifont font and 20 size', () {
-      final result = parser.parseLine('text "Hello" at 0,0 seed=1', 1);
+      final result = parser.parseLine('text "Hello" at 0,0', 1);
       final text = result.value! as TextElement;
       expect(text.fontSize, 20);
       expect(text.fontFamily, 'Excalifont');
@@ -155,7 +153,7 @@ void main() {
 
     test('text with valign=top', () {
       final result = parser.parseLine(
-        'text "Top" at 0,0 valign=top seed=5',
+        'text "Top" at 0,0 valign=top',
         1,
       );
       final text = result.value! as TextElement;
@@ -164,7 +162,7 @@ void main() {
 
     test('text with valign=bottom', () {
       final result = parser.parseLine(
-        'text "Bottom" at 0,0 valign=bottom seed=5',
+        'text "Bottom" at 0,0 valign=bottom',
         1,
       );
       final text = result.value! as TextElement;
@@ -175,7 +173,7 @@ void main() {
   group('Line parsing', () {
     test('basic line', () {
       final result = parser.parseLine(
-        'line points=[[0,0],[100,0],[100,100]] seed=10',
+        'line points=[[0,0],[100,0],[100,100]]',
         1,
       );
       expect(result.value, isA<LineElement>());
@@ -188,7 +186,7 @@ void main() {
 
     test('line with arrowheads', () {
       final result = parser.parseLine(
-        'line points=[[0,0],[100,0]] start-arrow=dot end-arrow=triangle seed=10',
+        'line points=[[0,0],[100,0]] start-arrow=dot end-arrow=triangle',
         1,
       );
       final line = result.value! as LineElement;
@@ -198,7 +196,7 @@ void main() {
 
     test('line with stroke style', () {
       final result = parser.parseLine(
-        'line points=[[0,0],[100,100]] stroke=dotted seed=10',
+        'line points=[[0,0],[100,100]] stroke=dotted',
         1,
       );
       expect(result.value!.strokeStyle, StrokeStyle.dotted);
@@ -208,7 +206,7 @@ void main() {
   group('Arrow parsing', () {
     test('arrow with from/to bindings', () {
       final result = parser.parseLine(
-        'arrow from auth to gateway seed=20',
+        'arrow from auth to gateway',
         1,
       );
       expect(result.value, isA<ArrowElement>());
@@ -218,7 +216,7 @@ void main() {
 
     test('arrow with points (no bindings)', () {
       final result = parser.parseLine(
-        'arrow points=[[0,0],[200,0]] seed=20',
+        'arrow points=[[0,0],[200,0]]',
         1,
       );
       final arrow = result.value! as ArrowElement;
@@ -229,7 +227,7 @@ void main() {
 
     test('arrow with non-default arrowheads', () {
       final result = parser.parseLine(
-        'arrow points=[[0,0],[200,0]] start-arrow=bar end-arrow=dot seed=20',
+        'arrow points=[[0,0],[200,0]] start-arrow=bar end-arrow=dot',
         1,
       );
       final arrow = result.value! as ArrowElement;
@@ -239,7 +237,7 @@ void main() {
 
     test('arrow default endArrowhead is arrow', () {
       final result = parser.parseLine(
-        'arrow points=[[0,0],[200,0]] seed=20',
+        'arrow points=[[0,0],[200,0]]',
         1,
       );
       final arrow = result.value! as ArrowElement;
@@ -248,7 +246,7 @@ void main() {
 
     test('arrow with stroke style', () {
       final result = parser.parseLine(
-        'arrow from auth to gateway stroke=dashed seed=20',
+        'arrow from auth to gateway stroke=dashed',
         1,
       );
       expect(result.value!.strokeStyle, StrokeStyle.dashed);
@@ -256,7 +254,7 @@ void main() {
 
     test('arrow from/to stored as binding aliases', () {
       parser.parseLine(
-        'arrow from auth to gateway seed=20',
+        'arrow from auth to gateway',
         1,
       );
       expect(parser.pendingBindings, isNotEmpty);
@@ -275,7 +273,7 @@ void main() {
       };
       for (final entry in cases.entries) {
         final result = parser.parseLine(
-          'line points=[[0,0],[100,0]] end-arrow=${entry.key} seed=10',
+          'line points=[[0,0],[100,0]] end-arrow=${entry.key}',
           1,
         );
         final line = result.value! as LineElement;
@@ -289,7 +287,7 @@ void main() {
 
     test('parses new arrowhead types as start-arrow on arrow', () {
       final result = parser.parseLine(
-        'arrow points=[[0,0],[100,0]] start-arrow=crowfootMany end-arrow=crowfootOne seed=10',
+        'arrow points=[[0,0],[100,0]] start-arrow=crowfootMany end-arrow=crowfootOne',
         1,
       );
       final arrow = result.value! as ArrowElement;
@@ -301,7 +299,7 @@ void main() {
   group('Freedraw parsing', () {
     test('basic freedraw', () {
       final result = parser.parseLine(
-        'freedraw points=[[0,0],[5,2],[10,8]] seed=30',
+        'freedraw points=[[0,0],[5,2],[10,8]]',
         1,
       );
       expect(result.value, isA<FreedrawElement>());
@@ -314,7 +312,7 @@ void main() {
 
     test('freedraw with pressure', () {
       final result = parser.parseLine(
-        'freedraw points=[[0,0],[5,2],[10,8]] pressure=[0.5,0.7,0.9] seed=30',
+        'freedraw points=[[0,0],[5,2],[10,8]] pressure=[0.5,0.7,0.9]',
         1,
       );
       final fd = result.value! as FreedrawElement;
@@ -323,7 +321,7 @@ void main() {
 
     test('freedraw with simulate-pressure', () {
       final result = parser.parseLine(
-        'freedraw points=[[0,0]] simulate-pressure seed=30',
+        'freedraw points=[[0,0]] simulate-pressure',
         1,
       );
       final fd = result.value! as FreedrawElement;
@@ -332,7 +330,7 @@ void main() {
 
     test('freedraw with color', () {
       final result = parser.parseLine(
-        'freedraw points=[[0,0]] color=#1e1e1e seed=30',
+        'freedraw points=[[0,0]] color=#1e1e1e',
         1,
       );
       expect(result.value!.strokeColor, '#1e1e1e');
@@ -341,12 +339,12 @@ void main() {
 
   group('Alias registration', () {
     test('id= registers alias', () {
-      parser.parseLine('rect id=auth at 100,200 size 160x80 seed=1', 1);
+      parser.parseLine('rect id=auth at 100,200 size 160x80', 1);
       expect(parser.aliases, containsPair('auth', isNotNull));
     });
 
     test('element without id does not register alias', () {
-      parser.parseLine('rect at 100,200 size 160x80 seed=1', 1);
+      parser.parseLine('rect at 100,200 size 160x80', 1);
       expect(parser.aliases, isEmpty);
     });
   });
@@ -381,7 +379,7 @@ void main() {
   group('Number parsing', () {
     test('decimal positions parsed correctly', () {
       final result = parser.parseLine(
-        'rect at 100.5,200.25 size 160x80 seed=1',
+        'rect at 100.5,200.25 size 160x80',
         1,
       );
       expect(result.value!.x, 100.5);

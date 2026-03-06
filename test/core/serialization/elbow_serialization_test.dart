@@ -61,7 +61,7 @@ void main() {
     test('parse arrow-type=sharp-elbow', () {
       final parser = SketchLineParser();
       const line =
-          'arrow id=a1 points=[[0,0],[0,50],[100,50]] arrow-type=sharp-elbow seed=1';
+          'arrow id=a1 points=[[0,0],[0,50],[100,50]] arrow-type=sharp-elbow';
       final result = parser.parseLine(line, 1);
 
       expect(result.value, isA<ArrowElement>());
@@ -73,7 +73,7 @@ void main() {
     test('parse legacy elbowed flag', () {
       final parser = SketchLineParser();
       const line =
-          'arrow id=a1 points=[[0,0],[0,50],[100,50]] elbowed seed=1';
+          'arrow id=a1 points=[[0,0],[0,50],[100,50]] elbowed';
       final result = parser.parseLine(line, 1);
 
       expect(result.value, isA<ArrowElement>());
@@ -84,7 +84,7 @@ void main() {
 
     test('parse non-elbowed arrow', () {
       final parser = SketchLineParser();
-      const line = 'arrow id=a2 points=[[0,0],[100,100]] seed=1';
+      const line = 'arrow id=a2 points=[[0,0],[100,100]]';
       final result = parser.parseLine(line, 1);
 
       expect(result.value, isA<ArrowElement>());

@@ -21,7 +21,7 @@ void main() {
         updated: 0,
       );
       final line = serializer.serialize(rect, alias: 'auth');
-      expect(line, 'rect id=auth at 100,200 size 160x80 seed=42');
+      expect(line, 'rect id=auth at 100,200 160x80');
     });
 
     test('rectangle with fill and rounded', () {
@@ -40,7 +40,7 @@ void main() {
       final line = serializer.serialize(rect, alias: 'auth');
       expect(
         line,
-        'rect id=auth at 100,200 size 160x80 fill=#e3f2fd rounded=8 seed=42',
+        'rect id=auth at 100,200 160x80 fill=#e3f2fd rounded=8',
       );
     });
 
@@ -107,7 +107,7 @@ void main() {
       final line = serializer.serialize(rect, alias: 'r');
       expect(line, contains('id=r'));
       expect(line, contains('at 10,20'));
-      expect(line, contains('size 50x60'));
+      expect(line, contains('50x60'));
       expect(line, contains('fill=#00ff00'));
       expect(line, contains('color=#ff0000'));
       expect(line, contains('stroke=dotted'));
@@ -117,7 +117,7 @@ void main() {
       expect(line, contains('opacity=0.5'));
       expect(line, contains('angle=86'));
       expect(line, contains('locked'));
-      expect(line, contains('seed=99'));
+      expect(line, isNot(contains('seed=')));
     });
 
     test('crossHatch fillStyle serializes as cross-hatch', () {
@@ -150,7 +150,7 @@ void main() {
         updated: 0,
       );
       final line = serializer.serialize(ellipse, alias: 'db');
-      expect(line, 'ellipse id=db at 225,400 size 120x80 seed=7');
+      expect(line, 'ellipse id=db at 225,400 120x80');
     });
 
     test('ellipse with fill', () {
@@ -168,7 +168,7 @@ void main() {
       final line = serializer.serialize(ellipse, alias: 'db');
       expect(
         line,
-        'ellipse id=db at 225,400 size 120x80 fill=#e8f5e9 seed=7',
+        'ellipse id=db at 225,400 120x80 fill=#e8f5e9',
       );
     });
   });
@@ -188,7 +188,7 @@ void main() {
       final line = serializer.serialize(diamond);
       expect(line, contains('diamond'));
       expect(line, contains('at 50,50'));
-      expect(line, contains('size 100x100'));
+      expect(line, contains('100x100'));
     });
   });
 

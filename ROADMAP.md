@@ -66,10 +66,10 @@ grid: 20
 Here's how the services connect:
 
 ```sketch
-rect "Auth Service" id=auth at 100,200 size 160x80 fill=#e3f2fd rounded
-rect "API Gateway" id=gateway at 350,200 size 160x80 fill=#fff3e0 rounded
+rect "Auth Service" id=auth at 100,200 160x80 fill=#e3f2fd rounded
+rect "API Gateway" id=gateway at 350,200 160x80 fill=#fff3e0 rounded
 arrow from auth to gateway label="JWT tokens" stroke=dashed
-ellipse "Database" id=db at 225,400 size 120x80 fill=#e8f5e9
+ellipse "Database" id=db at 225,400 120x80 fill=#e8f5e9
 arrow from gateway to db label="queries"
 ```
 
@@ -92,6 +92,8 @@ line points=[[0,0],[100,0],[100,100]] closed stroke=dotted
 5. **Mixed content** — prose markdown sections interleave freely with `sketch` blocks
 6. **YAML frontmatter** — canvas-level settings (background, grid, zoom)
 7. **Git-friendly** — text diffs show meaningful changes
+8. **Human units** — angles use integer degrees (`angle=86`), not radians
+9. **Rendering-only fields omitted** — `seed` (rough drawing wobble) is auto-generated at load time; not serialized because our renderer already differs from Excalidraw's, making seed preservation meaningless
 
 ---
 

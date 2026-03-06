@@ -59,7 +59,7 @@ void main() {
     test('parses group= with single groupId', () {
       final parser = SketchLineParser();
       final result = parser.parseLine(
-        'rect id=auth at 100,200 size 160x80 group=g1 seed=42',
+        'rect id=auth at 100,200 size 160x80 group=g1',
         1,
       );
       expect(result.value, isNotNull);
@@ -69,7 +69,7 @@ void main() {
     test('parses group= with comma-separated groupIds', () {
       final parser = SketchLineParser();
       final result = parser.parseLine(
-        'rect id=auth at 100,200 size 160x80 group=inner,outer seed=42',
+        'rect id=auth at 100,200 size 160x80 group=inner,outer',
         1,
       );
       expect(result.value, isNotNull);
@@ -79,7 +79,7 @@ void main() {
     test('defaults to empty groupIds when group= absent', () {
       final parser = SketchLineParser();
       final result = parser.parseLine(
-        'rect id=auth at 100,200 size 160x80 seed=42',
+        'rect id=auth at 100,200 size 160x80',
         1,
       );
       expect(result.value, isNotNull);

@@ -56,7 +56,7 @@ void main() {
     test('parse closed line', () {
       final parser = SketchLineParser();
       const text =
-          'line id=l1 points=[[0,0],[100,0],[50,100],[0,0]] closed seed=1';
+          'line id=l1 points=[[0,0],[100,0],[50,100],[0,0]] closed';
       final result = parser.parseLine(text, 1);
 
       expect(result.value, isA<LineElement>());
@@ -66,7 +66,7 @@ void main() {
 
     test('parse open line', () {
       final parser = SketchLineParser();
-      const text = 'line id=l2 points=[[0,0],[100,100]] seed=1';
+      const text = 'line id=l2 points=[[0,0],[100,100]]';
       final result = parser.parseLine(text, 1);
 
       expect(result.value, isA<LineElement>());

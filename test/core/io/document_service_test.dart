@@ -23,7 +23,7 @@ DocumentService _createService(Map<String, String> fs) {
 }
 
 const _markdrawContent = '''```sketch
-rect id=r1 at 10,20 size 100x50
+rect id=r1 at 10,20 100x50
 ```''';
 
 String _excalidrawContent() {
@@ -517,13 +517,13 @@ String _allElementsExcalidraw() {
 /// Markdraw format with all 7 element types.
 String _allElementsMarkdraw() {
   return '''```sketch
-rect id=r1 at 10,20 size 100x50 seed=42
-ellipse id=e1 at 10,20 size 100x50 seed=43
-diamond id=d1 at 10,20 size 100x50 seed=44
-text "Hello" at 10,20 size 100x50 seed=45
-line points=[[0,0],[100,50]] at 10,20 size 100x50 seed=46
-arrow points=[[0,0],[200,100]] at 10,20 size 100x50 seed=47 endArrowhead=arrow
-freedraw points=[[0,0],[5,2],[10,8]] pressure=[0.5,0.7,0.9] at 10,20 size 100x50 seed=48
+rect id=r1 at 10,20 100x50
+ellipse id=e1 at 10,20 100x50
+diamond id=d1 at 10,20 100x50
+text "Hello" at 10,20 100x50
+line points=[[0,0],[100,50]] at 10,20 100x50
+arrow points=[[0,0],[200,100]] at 10,20 100x50 endArrowhead=arrow
+freedraw points=[[0,0],[5,2],[10,8]] pressure=[0.5,0.7,0.9] at 10,20 100x50
 ```''';
 }
 
