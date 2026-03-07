@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:markdraw/markdraw.dart' hide TextAlign;
 
 /// Tests for sketch line extraction logic used by MarkdrawSplitPane.
 ///
@@ -76,6 +77,70 @@ void main() {
         extractSketchLines(doc),
         'rect at 0,0 100x50\n\narrow from r1 to r2',
       );
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Parse status — tests the DocumentParser.parse() behavior that drives
+  // the status bar in _syncTextToCanvas.
+  // ---------------------------------------------------------------------------
+
+  /// Wraps sketch lines with frontmatter + fences, same as _syncTextToCanvas.
+  ParseResult<MarkdrawDocument> parseSketchText(String text) {
+    final wrapped = '---\nmarkdraw: 1\nbackground: "#ffffff"\n---\n\n'
+        '```markdraw\n$text\n```';
+    return DocumentParser.parse(wrapped);
+  }
+
+  group('parse status', () {
+    test('valid input produces no warnings', () {
+      final result = parseSketchText('rect at 0,0 100x50');
+      expect(result.warnings, isEmpty);
+    });
+
+    test('unknown keyword produces a warning', () {
+      final result = parseSketchText('bogus at 0,0 100x50');
+      expect(result.warnings, isNotEmpty);
+      expect(
+        result.warnings.first.message,
+        contains('Unknown keyword'),
+      );
+    });
+
+    test('multiple unknown keywords produce multiple warnings', () {
+      final result = parseSketchText('foo at 0,0 100x50\nbar at 1,1 50x50');
+      expect(result.warnings.length, 2);
+    });
+
+    test('valid lines mixed with unknown keywords', () {
+      final result = parseSketchText(
+        'rect at 0,0 100x50\nbogus at 1,1 50x50\nellipse at 200,100 80x80',
+      );
+      expect(result.warnings.length, 1);
+      // Valid elements still parsed
+      final elements = result.value.sections
+          .whereType<SketchSection>()
+          .expand((s) => s.elements)
+          .toList();
+      expect(elements.length, 2);
+    });
+
+    test('unresolved arrow alias produces warning', () {
+      final result = parseSketchText('arrow from nonexistent to nowhere');
+      expect(
+        result.warnings.any((w) => w.message.contains('Unresolved alias')),
+        isTrue,
+      );
+    });
+
+    test('empty text produces no warnings', () {
+      final result = DocumentParser.parse('');
+      expect(result.warnings, isEmpty);
+    });
+
+    test('warnings include line numbers', () {
+      final result = parseSketchText('bogus at 0,0 100x50');
+      expect(result.warnings.first.line, greaterThan(0));
     });
   });
 }

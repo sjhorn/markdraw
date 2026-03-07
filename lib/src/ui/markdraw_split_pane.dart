@@ -49,6 +49,11 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
   bool _isDraggingDivider = false;
   String _lastSyncedText = '';
 
+  // Parse status
+  List<ParseWarning> _parseWarnings = [];
+  bool _hasParseError = false;
+  String _parseErrorMessage = '';
+
   // Flash animations
   late final AnimationController _canvasFlash;
   late final AnimationController _textFlash;
@@ -171,6 +176,11 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
     try {
       if (text.trim().isEmpty) {
         widget.controller.loadScene(Scene());
+        setState(() {
+          _parseWarnings = [];
+          _hasParseError = false;
+          _parseErrorMessage = '';
+        });
       } else {
         final bg = widget.controller.canvasBackgroundColor;
         final wrapped = '---\nmarkdraw: 1\nbackground: "$bg"\n---\n\n'
@@ -179,10 +189,19 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
         final doc = parseResult.value;
         final scene = SceneDocumentConverter.documentToScene(doc);
         widget.controller.loadScene(scene, background: bg);
+        setState(() {
+          _parseWarnings = parseResult.warnings;
+          _hasParseError = false;
+          _parseErrorMessage = '';
+        });
       }
       _canvasFlash.forward(from: 0);
-    } catch (_) {
-      // Parse errors silently ignored — user may be mid-edit.
+    } catch (e) {
+      // Parse error — canvas keeps last successful state.
+      setState(() {
+        _hasParseError = true;
+        _parseErrorMessage = e.toString();
+      });
     }
     _isSyncing = false;
   }
@@ -272,6 +291,9 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
                     controller: _codeController,
                     focusNode: _textFocusNode,
                     onCopyMarkdown: _onCopyMarkdown,
+                    parseWarnings: _parseWarnings,
+                    hasParseError: _hasParseError,
+                    parseErrorMessage: _parseErrorMessage,
                   ),
                   _FlashOverlay(animation: _textFlash),
                 ],
@@ -293,11 +315,17 @@ class _TextPane extends StatelessWidget {
     required this.controller,
     required this.focusNode,
     required this.onCopyMarkdown,
+    required this.parseWarnings,
+    required this.hasParseError,
+    required this.parseErrorMessage,
   });
 
   final CodeLineEditingController controller;
   final FocusNode focusNode;
   final VoidCallback onCopyMarkdown;
+  final List<ParseWarning> parseWarnings;
+  final bool hasParseError;
+  final String parseErrorMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -353,9 +381,12 @@ class _TextPane extends StatelessWidget {
         Expanded(
           child: CodeAutocomplete(
             viewBuilder: buildAutocompleteView,
-            promptsBuilder: DefaultCodeAutocompletePromptsBuilder(
-              language: langMarkdraw,
-              keywordPrompts: markdrawPrompts,
+            promptsBuilder: ElementIdPromptsBuilder(
+              delegate: DefaultCodeAutocompletePromptsBuilder(
+                language: langMarkdraw,
+                keywordPrompts: markdrawPrompts,
+              ),
+              controller: controller,
             ),
             child: CodeEditor(
               controller: controller,
@@ -392,8 +423,110 @@ class _TextPane extends StatelessWidget {
             ),
           ),
         ),
+        // Parse status bar
+        _ParseStatusBar(
+          parseWarnings: parseWarnings,
+          hasParseError: hasParseError,
+          parseErrorMessage: parseErrorMessage,
+        ),
       ],
     );
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Parse status bar — shows OK / warnings / error
+// -----------------------------------------------------------------------------
+
+class _ParseStatusBar extends StatelessWidget {
+  const _ParseStatusBar({
+    required this.parseWarnings,
+    required this.hasParseError,
+    required this.parseErrorMessage,
+  });
+
+  final List<ParseWarning> parseWarnings;
+  final bool hasParseError;
+  final String parseErrorMessage;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    final Color dotColor;
+    final String label;
+    final String? detail;
+
+    if (hasParseError) {
+      dotColor = Colors.red;
+      label = 'Parse error';
+      detail = parseErrorMessage;
+    } else if (parseWarnings.isNotEmpty) {
+      dotColor = Colors.amber;
+      final count = parseWarnings.length;
+      label = '$count warning${count == 1 ? '' : 's'}';
+      detail = parseWarnings.first.message;
+    } else {
+      dotColor = Colors.green;
+      label = 'OK';
+      detail = null;
+    }
+
+    return Tooltip(
+      message: _tooltipMessage(),
+      child: Container(
+        height: 28,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest,
+          border: Border(
+            top: BorderSide(color: theme.dividerColor),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: dotColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontFamily: 'monospace',
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            if (detail != null) ...[
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  detail,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontFamily: 'monospace',
+                    color: theme.colorScheme.onSurfaceVariant.withAlpha(160),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _tooltipMessage() {
+    if (hasParseError) return parseErrorMessage;
+    if (parseWarnings.isEmpty) return 'No issues';
+    return parseWarnings.map((w) => 'Line ${w.line}: ${w.message}').join('\n');
   }
 }
 
