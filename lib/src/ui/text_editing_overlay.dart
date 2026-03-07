@@ -113,12 +113,15 @@ class TextEditingOverlay extends StatelessWidget {
             padding: EdgeInsets.all(pad),
             child: Align(
               alignment: switch (textElem.verticalAlign) {
-                VerticalAlign.top => Alignment.topCenter,
-                VerticalAlign.middle => Alignment.center,
-                VerticalAlign.bottom => Alignment.bottomCenter,
+                VerticalAlign.top => Alignment.topLeft,
+                VerticalAlign.middle => Alignment.centerLeft,
+                VerticalAlign.bottom => Alignment.bottomLeft,
               },
-              child: _buildEditableText(
-                fontSize, fontFamily, lineHeight, textColor, flutterTextAlign,
+              child: SizedBox(
+                width: double.infinity,
+                child: _buildEditableText(
+                  fontSize, fontFamily, lineHeight, textColor, flutterTextAlign,
+                ),
               ),
             ),
           ),
