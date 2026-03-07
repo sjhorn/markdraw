@@ -96,7 +96,9 @@ class TextEditingOverlay extends StatelessWidget {
     );
     final parentW = parent.width * zoom;
     final parentH = parent.height * zoom;
-    final hPad = parentW * 0.05;
+    // Match the fixed 5px padding used by _renderShapeLabel in
+    // StaticCanvasPainter (boundTextPadding = 5.0).
+    final pad = 5.0 * zoom;
 
     return Positioned(
       left: parentTopLeft.dx,
@@ -108,7 +110,7 @@ class TextEditingOverlay extends StatelessWidget {
           width: parentW,
           height: parentH,
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: hPad, vertical: 4),
+            padding: EdgeInsets.all(pad),
             child: Align(
               alignment: switch (textElem.verticalAlign) {
                 VerticalAlign.top => Alignment.topCenter,
