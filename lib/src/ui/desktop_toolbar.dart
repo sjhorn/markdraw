@@ -5,7 +5,7 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../markdraw.dart' hide TextAlign;
 
-/// Desktop top toolbar with tool buttons, undo/redo, and tool lock.
+/// Desktop top toolbar with tool buttons and tool lock.
 class DesktopToolbar extends StatelessWidget {
   final MarkdrawController controller;
   final VoidCallback? onImportImage;
@@ -42,18 +42,6 @@ class DesktopToolbar extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _toolbarButton(
-            cs: cs,
-            icon: Icons.undo,
-            tooltip: 'Undo (Ctrl+Z)',
-            onPressed: controller.undo,
-          ),
-          _toolbarButton(
-            cs: cs,
-            icon: Icons.redo,
-            tooltip: 'Redo (Ctrl+Shift+Z)',
-            onPressed: controller.redo,
-          ),
           _toolbarButton(
             cs: cs,
             icon: controller.toolLocked ? Icons.lock : Icons.lock_open,

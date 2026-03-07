@@ -40,6 +40,35 @@ class ZoomControls extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
+            icon: const Icon(Icons.undo, size: 16),
+            onPressed: controller.undo,
+            tooltip: 'Undo (Ctrl+Z)',
+            constraints:
+                const BoxConstraints(minWidth: 32, minHeight: 32),
+            iconSize: 16,
+            padding: EdgeInsets.zero,
+          ),
+          IconButton(
+            icon: const Icon(Icons.redo, size: 16),
+            onPressed: controller.redo,
+            tooltip: 'Redo (Ctrl+Shift+Z)',
+            constraints:
+                const BoxConstraints(minWidth: 32, minHeight: 32),
+            iconSize: 16,
+            padding: EdgeInsets.zero,
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: SizedBox(
+              height: 16,
+              child: VerticalDivider(
+                width: 1,
+                thickness: 1,
+                color: Theme.of(context).dividerColor,
+              ),
+            ),
+          ),
+          IconButton(
             icon: const Icon(Icons.remove, size: 16),
             onPressed: () => controller.zoomOut(getCanvasSize()),
             tooltip: 'Zoom out (Ctrl+\u2212)',
