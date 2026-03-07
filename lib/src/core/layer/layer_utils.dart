@@ -36,7 +36,7 @@ class LayerUtils {
   /// Move selected elements above all others.
   static List<Element> bringToFront(Scene scene, Set<ElementId> ids) {
     if (ids.isEmpty) return [];
-    final ordered = _orderedActive(scene);
+    final (ordered, indexUpdates) = _ensuredOrderedActive(scene);
     final selected = <Element>[];
     final others = <Element>[];
     for (final e in ordered) {
@@ -46,7 +46,7 @@ class LayerUtils {
         others.add(e);
       }
     }
-    if (selected.isEmpty || others.isEmpty) return [];
+    if (selected.isEmpty || others.isEmpty) return indexUpdates;
 
     // Already at front?
     final topIndex = others.last.index;
@@ -54,14 +54,20 @@ class LayerUtils {
         topIndex != null &&
         selected.first.index!.compareTo(topIndex) > 0 &&
         selected.length == 1) {
-      return [];
+      return indexUpdates;
     }
 
     final keys =
         FractionalIndex.generateNKeys(selected.length, after: topIndex);
-    final results = <Element>[];
+    final results = <Element>[...indexUpdates];
+    final indexUpdateIds = indexUpdates.map((e) => e.id).toSet();
     for (var i = 0; i < selected.length; i++) {
-      results.add(selected[i].copyWith(index: keys[i]));
+      final updated = selected[i].copyWith(index: keys[i]);
+      if (indexUpdateIds.contains(updated.id)) {
+        // Replace the index-assignment entry with the final position
+        results.removeWhere((e) => e.id == updated.id);
+      }
+      results.add(updated);
     }
     return results;
   }
@@ -69,7 +75,7 @@ class LayerUtils {
   /// Move selected elements below all others.
   static List<Element> sendToBack(Scene scene, Set<ElementId> ids) {
     if (ids.isEmpty) return [];
-    final ordered = _orderedActive(scene);
+    final (ordered, indexUpdates) = _ensuredOrderedActive(scene);
     final selected = <Element>[];
     final others = <Element>[];
     for (final e in ordered) {
@@ -79,14 +85,19 @@ class LayerUtils {
         others.add(e);
       }
     }
-    if (selected.isEmpty || others.isEmpty) return [];
+    if (selected.isEmpty || others.isEmpty) return indexUpdates;
 
     final bottomIndex = others.first.index;
     final keys =
         FractionalIndex.generateNKeys(selected.length, before: bottomIndex);
-    final results = <Element>[];
+    final results = <Element>[...indexUpdates];
+    final indexUpdateIds = indexUpdates.map((e) => e.id).toSet();
     for (var i = 0; i < selected.length; i++) {
-      results.add(selected[i].copyWith(index: keys[i]));
+      final updated = selected[i].copyWith(index: keys[i]);
+      if (indexUpdateIds.contains(updated.id)) {
+        results.removeWhere((e) => e.id == updated.id);
+      }
+      results.add(updated);
     }
     return results;
   }
@@ -94,11 +105,12 @@ class LayerUtils {
   /// Move selected elements one position forward (up) in the stack.
   static List<Element> bringForward(Scene scene, Set<ElementId> ids) {
     if (ids.isEmpty) return [];
-    final ordered = _orderedActive(scene);
+    final (ordered, indexUpdates) = _ensuredOrderedActive(scene);
 
     // Find the first non-selected element that is above any selected element
     // and swap positions.
-    final results = <Element>[];
+    final results = <Element>[...indexUpdates];
+    final indexUpdateIds = indexUpdates.map((e) => e.id).toSet();
     for (var i = ordered.length - 1; i >= 0; i--) {
       if (!ids.contains(ordered[i].id)) continue;
 
@@ -112,14 +124,24 @@ class LayerUtils {
       // Swap indices between ordered[i] and ordered[j]
       final above = ordered[j];
       final current = ordered[i];
-      final aboveIdx = above.index;
-      final currentIdx = current.index;
-      results.add(current.copyWith(index: aboveIdx ?? 'V'));
-      results.add(above.copyWith(index: currentIdx ?? '0'));
+      final aboveIdx = above.index!;
+      final currentIdx = current.index!;
+      final updatedCurrent = current.copyWith(index: aboveIdx);
+      final updatedAbove = above.copyWith(index: currentIdx);
+
+      // Replace any index-assignment entries for these elements
+      if (indexUpdateIds.contains(current.id)) {
+        results.removeWhere((e) => e.id == current.id);
+      }
+      if (indexUpdateIds.contains(above.id)) {
+        results.removeWhere((e) => e.id == above.id);
+      }
+      results.add(updatedCurrent);
+      results.add(updatedAbove);
 
       // Update the ordered list so subsequent swaps see the new state
-      ordered[i] = above.copyWith(index: currentIdx ?? '0');
-      ordered[j] = current.copyWith(index: aboveIdx ?? 'V');
+      ordered[i] = updatedAbove;
+      ordered[j] = updatedCurrent;
       break;
     }
     return results;
@@ -128,9 +150,10 @@ class LayerUtils {
   /// Move selected elements one position backward (down) in the stack.
   static List<Element> sendBackward(Scene scene, Set<ElementId> ids) {
     if (ids.isEmpty) return [];
-    final ordered = _orderedActive(scene);
+    final (ordered, indexUpdates) = _ensuredOrderedActive(scene);
 
-    final results = <Element>[];
+    final results = <Element>[...indexUpdates];
+    final indexUpdateIds = indexUpdates.map((e) => e.id).toSet();
     for (var i = 0; i < ordered.length; i++) {
       if (!ids.contains(ordered[i].id)) continue;
 
@@ -143,27 +166,54 @@ class LayerUtils {
 
       final below = ordered[j];
       final current = ordered[i];
-      final belowIdx = below.index;
-      final currentIdx = current.index;
-      results.add(current.copyWith(index: belowIdx ?? '0'));
-      results.add(below.copyWith(index: currentIdx ?? 'V'));
+      final belowIdx = below.index!;
+      final currentIdx = current.index!;
+      final updatedCurrent = current.copyWith(index: belowIdx);
+      final updatedBelow = below.copyWith(index: currentIdx);
 
-      ordered[i] = below.copyWith(index: currentIdx ?? 'V');
-      ordered[j] = current.copyWith(index: belowIdx ?? '0');
+      if (indexUpdateIds.contains(current.id)) {
+        results.removeWhere((e) => e.id == current.id);
+      }
+      if (indexUpdateIds.contains(below.id)) {
+        results.removeWhere((e) => e.id == below.id);
+      }
+      results.add(updatedCurrent);
+      results.add(updatedBelow);
+
+      ordered[i] = updatedBelow;
+      ordered[j] = updatedCurrent;
       break;
     }
     return results;
   }
 
-  /// Get active elements ordered by fractional index.
-  static List<Element> _orderedActive(Scene scene) {
+  /// Get active elements ordered by fractional index, ensuring all have indices.
+  ///
+  /// Returns a tuple of (ordered elements, index-assignment updates).
+  /// The second list contains elements that had null indices and were assigned
+  /// new ones — the caller must include these in its result.
+  static (List<Element>, List<Element>) _ensuredOrderedActive(Scene scene) {
     final active = scene.activeElements;
-    active.sort((a, b) {
-      if (a.index == null && b.index == null) return 0;
-      if (a.index == null) return 1;
-      if (b.index == null) return -1;
-      return a.index!.compareTo(b.index!);
-    });
-    return active;
+    final withIndex = active.where((e) => e.index != null).toList()
+      ..sort((a, b) => a.index!.compareTo(b.index!));
+    final withoutIndex = active.where((e) => e.index == null).toList();
+
+    if (withoutIndex.isEmpty) return (withIndex, []);
+
+    final lastIndex = withIndex.isNotEmpty ? withIndex.last.index : null;
+    final keys =
+        FractionalIndex.generateNKeys(withoutIndex.length, after: lastIndex);
+
+    final indexUpdates = <Element>[];
+    final indexed = <Element>[];
+    for (var i = 0; i < withoutIndex.length; i++) {
+      final updated = withoutIndex[i].copyWith(index: keys[i]);
+      indexUpdates.add(updated);
+      indexed.add(updated);
+    }
+
+    final all = [...withIndex, ...indexed];
+    all.sort((a, b) => a.index!.compareTo(b.index!));
+    return (all, indexUpdates);
   }
 }

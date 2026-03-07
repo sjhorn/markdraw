@@ -665,7 +665,7 @@ rect id=r at 10,20 50x60 fill=lime color=red stroke=dotted fill-style=hachure st
         text: 'Auth Service',
         fontSize: 24,
         fontFamily: 'Nunito',
-        textAlign: TextAlign.center,
+        textAlign: TextAlign.left,
         verticalAlign: VerticalAlign.top,
         strokeColor: '#ff0000',
         containerId: 'r1',
@@ -681,9 +681,10 @@ rect id=r at 10,20 50x60 fill=lime color=red stroke=dotted fill-style=hachure st
       final output = DocumentSerializer.serialize(doc);
 
       // Verify text properties are serialized on shape line
+      // (center is the default for bound text, so left must be emitted)
       expect(output, contains('text-size=24'));
       expect(output, contains('text-font=Nunito'));
-      expect(output, contains('text-align=center'));
+      expect(output, contains('text-align=left'));
       expect(output, contains('text-valign=top'));
       expect(output, contains('text-color=red'));
 
@@ -694,7 +695,7 @@ rect id=r at 10,20 50x60 fill=lime color=red stroke=dotted fill-style=hachure st
       expect(texts.first.text, 'Auth Service');
       expect(texts.first.fontSize, 24);
       expect(texts.first.fontFamily, 'Nunito');
-      expect(texts.first.textAlign, TextAlign.center);
+      expect(texts.first.textAlign, TextAlign.left);
       expect(texts.first.verticalAlign, VerticalAlign.top);
       expect(texts.first.strokeColor, '#ff0000');
       expect(texts.first.containerId, isNotNull);
@@ -870,6 +871,270 @@ rect id=r at 10,20 50x60 fill=lime color=red stroke=dotted fill-style=hachure st
         sketch.elements.whereType<FreedrawElement>().length,
         1,
       );
+    });
+
+    test('arrow with label round-trips', () {
+      final rect1 = RectangleElement(
+        id: const ElementId('r1'),
+        x: 100,
+        y: 200,
+        width: 160,
+        height: 80,
+        seed: 42,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final rect2 = RectangleElement(
+        id: const ElementId('r2'),
+        x: 400,
+        y: 200,
+        width: 160,
+        height: 80,
+        seed: 43,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final arrow = ArrowElement(
+        id: const ElementId('a1'),
+        x: 260,
+        y: 240,
+        width: 140,
+        height: 0,
+        points: [const Point(0, 0), const Point(140, 0)],
+        startBinding: const PointBinding(
+          elementId: 'r1',
+          fixedPoint: Point(1, 0.5),
+        ),
+        endBinding: const PointBinding(
+          elementId: 'r2',
+          fixedPoint: Point(0, 0.5),
+        ),
+        arrowType: ArrowType.round,
+        startArrowhead: Arrowhead.dot,
+        strokeStyle: StrokeStyle.dashed,
+        seed: 44,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final label = TextElement(
+        id: const ElementId('t1'),
+        x: 300,
+        y: 230,
+        width: 60,
+        height: 20,
+        text: 'calls',
+        fontSize: 16,
+        containerId: 'a1',
+        seed: 45,
+        versionNonce: 1,
+        updated: 0,
+      );
+
+      final doc = MarkdrawDocument(
+        sections: [SketchSection([rect1, rect2, arrow, label])],
+        aliases: {'auth': 'r1', 'gw': 'r2', 'conn': 'a1'},
+      );
+      final output = DocumentSerializer.serialize(doc);
+
+      // Verify arrow-specific data is present
+      expect(output, contains('arrow "calls"'));
+      expect(output, contains('from auth'));
+      expect(output, contains('to gw'));
+      expect(output, contains('arrow-type=round'));
+      expect(output, contains('start-arrow=dot'));
+      expect(output, contains('stroke=dashed'));
+      expect(output, contains('text-size=16'));
+
+      // Parse back
+      final parsed = DocumentParser.parse(output);
+      expect(parsed.warnings, isEmpty);
+      final sketch = parsed.value.sections.first as SketchSection;
+
+      final arrows = sketch.elements.whereType<ArrowElement>().toList();
+      expect(arrows, hasLength(1));
+      expect(arrows.first.startBinding, isNotNull);
+      expect(arrows.first.endBinding, isNotNull);
+      expect(arrows.first.arrowType, ArrowType.round);
+      expect(arrows.first.startArrowhead, Arrowhead.dot);
+      expect(arrows.first.strokeStyle, StrokeStyle.dashed);
+
+      final texts = sketch.elements.whereType<TextElement>().toList();
+      expect(texts, hasLength(1));
+      expect(texts.first.text, 'calls');
+      expect(texts.first.fontSize, 16);
+      expect(texts.first.containerId, isNotNull);
+    });
+
+    test('arrow with partial binding round-trips (start bound, end free)', () {
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 100,
+        y: 200,
+        width: 160,
+        height: 80,
+        seed: 42,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final arrow = ArrowElement(
+        id: const ElementId('a1'),
+        x: 0,
+        y: 0,
+        width: 500,
+        height: 300,
+        points: [const Point(0, 0), const Point(500, 300)],
+        startBinding: const PointBinding(
+          elementId: 'r1',
+          fixedPoint: Point(1, 0.5),
+        ),
+        seed: 44,
+        versionNonce: 1,
+        updated: 0,
+      );
+
+      final doc = MarkdrawDocument(
+        sections: [SketchSection([rect, arrow])],
+        aliases: {'auth': 'r1', 'conn': 'a1'},
+      );
+      final output = DocumentSerializer.serialize(doc);
+
+      // Verify partial binding serialization
+      expect(output, contains('from auth'));
+      expect(output, contains('to 500,300'));
+
+      // Parse back
+      final parsed = DocumentParser.parse(output);
+      expect(parsed.warnings, isEmpty);
+      final sketch = parsed.value.sections.first as SketchSection;
+
+      final arrows = sketch.elements.whereType<ArrowElement>().toList();
+      expect(arrows, hasLength(1));
+      expect(arrows.first.startBinding, isNotNull);
+      expect(arrows.first.endBinding, isNull);
+
+      // Re-serialize should preserve the partial binding
+      final output2 = DocumentSerializer.serialize(parsed.value);
+      expect(output2, contains('from auth'));
+      expect(output2, contains('to 500,300'));
+    });
+
+    test('arrow with partial binding round-trips (start free, end bound)', () {
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 400,
+        y: 200,
+        width: 160,
+        height: 80,
+        seed: 42,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final arrow = ArrowElement(
+        id: const ElementId('a1'),
+        x: 0,
+        y: 0,
+        width: 400,
+        height: 200,
+        points: [const Point(50, 50), const Point(0, 0)],
+        endBinding: const PointBinding(
+          elementId: 'r1',
+          fixedPoint: Point(0, 0.5),
+        ),
+        seed: 44,
+        versionNonce: 1,
+        updated: 0,
+      );
+
+      final doc = MarkdrawDocument(
+        sections: [SketchSection([rect, arrow])],
+        aliases: {'dest': 'r1', 'conn': 'a1'},
+      );
+      final output = DocumentSerializer.serialize(doc);
+
+      // Verify partial binding serialization
+      expect(output, contains('from 50,50'));
+      expect(output, contains('to dest'));
+
+      // Parse back
+      final parsed = DocumentParser.parse(output);
+      expect(parsed.warnings, isEmpty);
+      final sketch = parsed.value.sections.first as SketchSection;
+
+      final arrows = sketch.elements.whereType<ArrowElement>().toList();
+      expect(arrows, hasLength(1));
+      expect(arrows.first.startBinding, isNull);
+      expect(arrows.first.endBinding, isNotNull);
+    });
+  });
+
+  group('Z-order round-trip', () {
+    test('document round-trip preserves element z-order', () {
+      // Create a scene with elements in a specific visual order
+      final rect1 = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 50,
+        index: 'A',
+      );
+      final ellipse = EllipseElement(
+        id: const ElementId('e1'),
+        x: 50, y: 50, width: 80, height: 80,
+        index: 'B',
+      );
+      final rect2 = RectangleElement(
+        id: const ElementId('r2'),
+        x: 100, y: 0, width: 100, height: 50,
+        index: 'C',
+      );
+
+      final scene = Scene()
+          .addElement(rect1)
+          .addElement(ellipse)
+          .addElement(rect2);
+
+      // Convert to document and serialize
+      final doc = SceneDocumentConverter.sceneToDocument(scene);
+      final text = DocumentSerializer.serialize(doc);
+
+      // Parse back and convert to scene
+      final parsed = DocumentParser.parse(text);
+      final restoredScene =
+          SceneDocumentConverter.documentToScene(parsed.value);
+
+      // Verify z-order is preserved: r1 < e1 < r2
+      final ordered =
+          restoredScene.orderedElements.where((e) => !e.isDeleted).toList();
+      expect(ordered, hasLength(3));
+      // First in text = bottom of stack (smallest index)
+      expect(ordered[0], isA<RectangleElement>());
+      expect(ordered[0].x, 0); // rect1
+      expect(ordered[1], isA<EllipseElement>());
+      expect(ordered[2], isA<RectangleElement>());
+      expect(ordered[2].x, 100); // rect2
+
+      // All should have non-null indices
+      for (final e in ordered) {
+        expect(e.index, isNotNull);
+      }
+      expect(ordered[0].index!.compareTo(ordered[1].index!), lessThan(0));
+      expect(ordered[1].index!.compareTo(ordered[2].index!), lessThan(0));
+    });
+
+    test('parsed elements get fractional indices from document order', () {
+      const input = '''```sketch
+rect id=bottom at 0,0 100x50
+ellipse id=middle at 50,50 80x80
+rect id=top at 100,0 100x50
+```''';
+      final parsed = DocumentParser.parse(input);
+      final scene = SceneDocumentConverter.documentToScene(parsed.value);
+
+      final ordered =
+          scene.orderedElements.where((e) => !e.isDeleted).toList();
+      expect(ordered, hasLength(3));
+      // All should have indices in document order
+      expect(ordered[0].id.value, 'bottom');
+      expect(ordered[1].id.value, 'middle');
+      expect(ordered[2].id.value, 'top');
     });
   });
 

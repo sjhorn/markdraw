@@ -152,4 +152,104 @@ void main() {
       expect(updated, isEmpty);
     });
   });
+
+  group('Layer operations with null indices', () {
+    test('bringToFront works with all null-index elements', () {
+      final scene = Scene()
+          .addElement(makeRect('a'))
+          .addElement(makeRect('b'))
+          .addElement(makeRect('c'));
+      final updated =
+          LayerUtils.bringToFront(scene, {const ElementId('a')});
+
+      // Should assign indices to all elements and move 'a' to front
+      final aResult = updated.firstWhere((e) => e.id == const ElementId('a'));
+      expect(aResult.index, isNotNull);
+
+      // All elements in the result should have indices
+      for (final e in updated) {
+        expect(e.index, isNotNull);
+      }
+
+      // 'a' should be above all others
+      final others = updated.where((e) => e.id != const ElementId('a'));
+      for (final o in others) {
+        expect(aResult.index!.compareTo(o.index!), greaterThan(0));
+      }
+    });
+
+    test('sendToBack works with all null-index elements', () {
+      final scene = Scene()
+          .addElement(makeRect('a'))
+          .addElement(makeRect('b'))
+          .addElement(makeRect('c'));
+      final updated =
+          LayerUtils.sendToBack(scene, {const ElementId('c')});
+
+      final cResult = updated.firstWhere((e) => e.id == const ElementId('c'));
+      expect(cResult.index, isNotNull);
+
+      // 'c' should be below all others
+      final others = updated.where((e) => e.id != const ElementId('c'));
+      for (final o in others) {
+        expect(cResult.index!.compareTo(o.index!), lessThan(0));
+      }
+    });
+
+    test('bringForward works with all null-index elements', () {
+      final scene = Scene()
+          .addElement(makeRect('a'))
+          .addElement(makeRect('b'))
+          .addElement(makeRect('c'));
+      final updated =
+          LayerUtils.bringForward(scene, {const ElementId('a')});
+
+      // All results should have non-null indices
+      for (final e in updated) {
+        expect(e.index, isNotNull);
+      }
+
+      // 'a' should have swapped with the element above it
+      final aResult = updated.firstWhere((e) => e.id == const ElementId('a'));
+      final bResult = updated.firstWhere((e) => e.id == const ElementId('b'));
+      expect(aResult.index!.compareTo(bResult.index!), greaterThan(0));
+    });
+
+    test('sendBackward works with all null-index elements', () {
+      final scene = Scene()
+          .addElement(makeRect('a'))
+          .addElement(makeRect('b'))
+          .addElement(makeRect('c'));
+      final updated =
+          LayerUtils.sendBackward(scene, {const ElementId('c')});
+
+      for (final e in updated) {
+        expect(e.index, isNotNull);
+      }
+
+      // 'c' should have swapped with the element below it
+      final cResult = updated.firstWhere((e) => e.id == const ElementId('c'));
+      final bResult = updated.firstWhere((e) => e.id == const ElementId('b'));
+      expect(cResult.index!.compareTo(bResult.index!), lessThan(0));
+    });
+
+    test('bringToFront works with mixed null and non-null indices', () {
+      final scene = Scene()
+          .addElement(makeRect('a', index: 'A'))
+          .addElement(makeRect('b'))
+          .addElement(makeRect('c', index: 'C'));
+      final updated =
+          LayerUtils.bringToFront(scene, {const ElementId('a')});
+
+      final aResult = updated.firstWhere((e) => e.id == const ElementId('a'));
+      expect(aResult.index, isNotNull);
+
+      // 'a' should be above both 'b' (newly indexed) and 'c' (index 'C')
+      for (final e in updated) {
+        if (e.id != const ElementId('a')) {
+          expect(aResult.index!.compareTo(e.index!), greaterThan(0));
+        }
+      }
+    });
+  });
 }
