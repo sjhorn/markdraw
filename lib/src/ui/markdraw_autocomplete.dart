@@ -4,6 +4,30 @@ library;
 import 'package:flutter/material.dart';
 import 'package:re_editor/re_editor.dart';
 
+/// Element keywords that trigger auto-ID insertion on autocomplete.
+const Set<String> elementKeywords = {
+  'rect', 'ellipse', 'diamond', 'line', 'arrow',
+  'text', 'freedraw', 'frame', 'image',
+};
+
+/// Returns the next available element ID for [keyword] given [currentText].
+///
+/// Scans [currentText] for existing `id=` values matching `<keyword><N>` and
+/// returns the first unused `<keyword><N>` starting from 1.
+String nextElementId(String keyword, String currentText) {
+  final existing = <int>{};
+  final pattern = RegExp(r'\bid=(' + RegExp.escape(keyword) + r')(\d+)\b');
+  for (final match in pattern.allMatches(currentText)) {
+    final n = int.tryParse(match.group(2)!);
+    if (n != null) existing.add(n);
+  }
+  var i = 1;
+  while (existing.contains(i)) {
+    i++;
+  }
+  return '$keyword$i';
+}
+
 /// All keyword prompts for .markdraw autocomplete.
 const List<CodeKeywordPrompt> markdrawPrompts = [
   // Element keywords
@@ -102,6 +126,54 @@ const List<CodeKeywordPrompt> markdrawPrompts = [
   CodeKeywordPrompt(word: 'magenta'),
   CodeKeywordPrompt(word: 'transparent'),
 ];
+
+/// A prompts builder that wraps another builder and enhances element keyword
+/// prompts with auto-generated `id=` suffixes.
+///
+/// When the delegate returns prompts for element keywords (e.g. `rect`),
+/// they are replaced with [CodeFieldPrompt]s whose [customAutocomplete]
+/// inserts `rect id=rect1` (with the index auto-incremented). This works
+/// for both Enter key and mouse click selection.
+class ElementIdPromptsBuilder implements CodeAutocompletePromptsBuilder {
+  ElementIdPromptsBuilder({
+    required this.delegate,
+    required this.controller,
+  });
+
+  final CodeAutocompletePromptsBuilder delegate;
+  final CodeLineEditingController controller;
+
+  @override
+  CodeAutocompleteEditingValue? build(
+    BuildContext context,
+    CodeLine codeLine,
+    CodeLineSelection selection,
+  ) {
+    final value = delegate.build(context, codeLine, selection);
+    if (value == null) return null;
+
+    final currentText = controller.text;
+    final enhancedPrompts = value.prompts.map((prompt) {
+      if (prompt is CodeKeywordPrompt &&
+          elementKeywords.contains(prompt.word)) {
+        final id = nextElementId(prompt.word, currentText);
+        final enhanced = '${prompt.word} id=$id';
+        return CodeFieldPrompt(
+          word: prompt.word,
+          type: '',
+          customAutocomplete: CodeAutocompleteResult(
+            word: enhanced,
+            input: '',
+            selection: TextSelection.collapsed(offset: enhanced.length),
+          ),
+        );
+      }
+      return prompt;
+    }).toList();
+
+    return value.copyWith(prompts: enhancedPrompts);
+  }
+}
 
 /// Builds the autocomplete suggestion dropdown.
 ///

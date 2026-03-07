@@ -73,6 +73,61 @@ void main() {
     });
   });
 
+  group('elementKeywords', () {
+    test('contains all element types', () {
+      expect(elementKeywords, containsAll([
+        'rect', 'ellipse', 'diamond', 'line', 'arrow',
+        'text', 'freedraw', 'frame', 'image',
+      ]));
+    });
+
+    test('does not contain non-element keywords', () {
+      expect(elementKeywords, isNot(contains('fill')));
+      expect(elementKeywords, isNot(contains('at')));
+      expect(elementKeywords, isNot(contains('solid')));
+    });
+  });
+
+  group('nextElementId', () {
+    test('empty text returns keyword1', () {
+      expect(nextElementId('rect', ''), 'rect1');
+    });
+
+    test('text with rect1 returns rect2', () {
+      expect(nextElementId('rect', 'rect id=rect1 at 0,0 size 100x50'), 'rect2');
+    });
+
+    test('fills gap — rect1 and rect3 returns rect2', () {
+      const text = 'rect id=rect1 at 0,0 size 100x50\n'
+          'rect id=rect3 at 10,10 size 100x50';
+      expect(nextElementId('rect', text), 'rect2');
+    });
+
+    test('different prefixes do not interfere', () {
+      const text = 'ellipse id=ellipse1 at 0,0 size 50x50\n'
+          'ellipse id=ellipse2 at 10,10 size 50x50';
+      expect(nextElementId('rect', text), 'rect1');
+    });
+
+    test('multiline text scans all lines', () {
+      const text = 'rect id=rect1 at 0,0 size 100x50\n'
+          'ellipse id=ellipse1 at 50,50 size 80x80\n'
+          'rect id=rect2 at 200,200 size 100x50';
+      expect(nextElementId('rect', text), 'rect3');
+    });
+
+    test('works for all element keywords', () {
+      for (final kw in elementKeywords) {
+        expect(nextElementId(kw, ''), '${kw}1');
+      }
+    });
+
+    test('handles id values with keyword prefix but non-numeric suffix', () {
+      // id=rectFoo should not be treated as a taken numeric ID
+      expect(nextElementId('rect', 'rect id=rectFoo at 0,0 size 100x50'), 'rect1');
+    });
+  });
+
   group('prompt matching', () {
     test('prompt matches prefix', () {
       final rectPrompt = markdrawPrompts.firstWhere((p) => p.word == 'rect');
