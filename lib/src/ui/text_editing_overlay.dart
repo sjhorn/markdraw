@@ -98,7 +98,11 @@ class TextEditingOverlay extends StatelessWidget {
     final parentH = parent.height * zoom;
     // Match the fixed 5px padding used by _renderShapeLabel in
     // StaticCanvasPainter (boundTextPadding = 5.0).
+    // Flutter's RenderEditable subtracts an internal caret margin
+    // (_kCaretGap + cursorWidth/2 = 2px) from the text layout width,
+    // so we reduce horizontal padding to compensate.
     final pad = 5.0 * zoom;
+    final hPad = pad - 2.0;
 
     return Positioned(
       left: parentTopLeft.dx,
@@ -110,7 +114,7 @@ class TextEditingOverlay extends StatelessWidget {
           width: parentW,
           height: parentH,
           child: Padding(
-            padding: EdgeInsets.all(pad),
+            padding: EdgeInsets.symmetric(horizontal: hPad, vertical: pad),
             child: Align(
               alignment: switch (textElem.verticalAlign) {
                 VerticalAlign.top => Alignment.topLeft,
