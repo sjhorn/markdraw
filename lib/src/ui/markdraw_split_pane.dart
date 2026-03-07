@@ -175,7 +175,7 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
     _isSyncing = true;
     try {
       if (text.trim().isEmpty) {
-        widget.controller.loadScene(Scene());
+        widget.controller.applyScene(Scene());
         setState(() {
           _parseWarnings = [];
           _hasParseError = false;
@@ -188,7 +188,7 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
         final parseResult = DocumentParser.parse(wrapped);
         final doc = parseResult.value;
         final scene = SceneDocumentConverter.documentToScene(doc);
-        widget.controller.loadScene(scene, background: bg);
+        widget.controller.applyScene(scene, background: bg);
         setState(() {
           _parseWarnings = parseResult.warnings;
           _hasParseError = false;

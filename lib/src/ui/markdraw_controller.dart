@@ -217,6 +217,7 @@ class MarkdrawController extends ChangeNotifier {
     final undone = _historyManager.undo(_editorState.scene);
     if (undone != null) {
       _editorState = _editorState.copyWith(scene: undone);
+      onSceneChanged?.call(_editorState.scene);
       notifyListeners();
     }
   }
@@ -225,6 +226,7 @@ class MarkdrawController extends ChangeNotifier {
     final redone = _historyManager.redo(_editorState.scene);
     if (redone != null) {
       _editorState = _editorState.copyWith(scene: redone);
+      onSceneChanged?.call(_editorState.scene);
       notifyListeners();
     }
   }
@@ -1130,6 +1132,19 @@ class MarkdrawController extends ChangeNotifier {
 
   void loadScene(Scene scene, {String? background}) {
     _historyManager.clear();
+    _editorState = _editorState.copyWith(scene: scene, selectedIds: {});
+    if (background != null) {
+      _canvasBackgroundColor = background;
+    }
+    notifyListeners();
+  }
+
+  /// Replaces the scene while preserving undo/redo history.
+  ///
+  /// Unlike [loadScene], this pushes the current scene onto the undo stack
+  /// so the change can be undone. Used by the split-pane text editor.
+  void applyScene(Scene scene, {String? background}) {
+    _historyManager.push(_editorState.scene);
     _editorState = _editorState.copyWith(scene: scene, selectedIds: {});
     if (background != null) {
       _canvasBackgroundColor = background;
