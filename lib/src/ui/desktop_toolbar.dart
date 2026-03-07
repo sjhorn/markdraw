@@ -54,6 +54,13 @@ class DesktopToolbar extends StatelessWidget {
             tooltip: 'Redo (Ctrl+Shift+Z)',
             onPressed: controller.redo,
           ),
+          _toolbarButton(
+            cs: cs,
+            icon: controller.toolLocked ? Icons.lock : Icons.lock_open,
+            tooltip: 'Keep tool active (Q)',
+            onPressed: controller.toggleToolLocked,
+            isActive: controller.toolLocked,
+          ),
           _toolbarDivider(context),
           for (final type in ToolType.values)
             if (type != ToolType.frame) ...[
@@ -117,14 +124,6 @@ class DesktopToolbar extends StatelessWidget {
                 isActive: activeType == type,
               ),
             ],
-          _toolbarDivider(context),
-          _toolbarButton(
-            cs: cs,
-            icon: controller.toolLocked ? Icons.lock : Icons.lock_open,
-            tooltip: 'Keep tool active (Q)',
-            onPressed: controller.toggleToolLocked,
-            isActive: controller.toolLocked,
-          ),
           if (showMarkdownButton) ...[
             _toolbarDivider(context),
             _toolbarButton(

@@ -1,6 +1,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../markdraw.dart' hide TextAlign;
 
@@ -42,6 +43,6 @@ IconData iconFor(ToolType type, {bool isActive = false}) {
     ToolType.text => Icons.text_fields,
     ToolType.hand => Icons.pan_tool_outlined,
     ToolType.frame => Icons.crop_free,
-    ToolType.eraser => Icons.auto_fix_off,
+    ToolType.eraser => Symbols.ink_eraser,
   };
 }

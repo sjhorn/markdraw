@@ -397,8 +397,11 @@ class SketchLineSerializer {
   String _formatNum(num value) {
     if (value is int) return value.toString();
     final d = value.toDouble();
-    if (d == d.truncateToDouble()) {
-      return d.toInt().toString();
+    // Round near-integer values to avoid floating point noise from trig
+    // (e.g., rotated resize producing 150.00000000000001 instead of 150).
+    final rounded = d.roundToDouble();
+    if ((d - rounded).abs() < 1e-10) {
+      return rounded.toInt().toString();
     }
     return d.toString();
   }
