@@ -649,8 +649,14 @@ class SelectTool implements Tool {
       }
     }
 
-    final newW = newRight - newLeft;
-    final newH = newBottom - newTop;
+    var newW = newRight - newLeft;
+    var newH = newBottom - newTop;
+
+    // Round dimensions for rotated elements to avoid trig noise
+    if (angle != 0.0) {
+      newW = newW.roundToDouble();
+      newH = newH.roundToDouble();
+    }
 
     // For rotated elements, adjust x/y to keep the anchor point (opposite
     // the dragged handle) fixed in world space. Changing width/height shifts
@@ -678,8 +684,8 @@ class SelectTool implements Tool {
       final newCx = anchorWx - (newAX * cosA - newAY * sinA);
       final newCy = anchorWy - (newAX * sinA + newAY * cosA);
 
-      newLeft = newCx - newW / 2;
-      newTop = newCy - newH / 2;
+      newLeft = (newCx - newW / 2).roundToDouble();
+      newTop = (newCy - newH / 2).roundToDouble();
     }
 
     final newBounds = Bounds.fromLTWH(newLeft, newTop, newW, newH);
@@ -869,8 +875,8 @@ class SelectTool implements Tool {
         elem.y + elem.height / 2,
       );
       final rotated = _rotatePoint(elemCenter, unionCenter, angleDelta);
-      final newX = rotated.x - elem.width / 2;
-      final newY = rotated.y - elem.height / 2;
+      final newX = (rotated.x - elem.width / 2).roundToDouble();
+      final newY = (rotated.y - elem.height / 2).roundToDouble();
 
       final moved = elem.copyWith(
         x: newX,
