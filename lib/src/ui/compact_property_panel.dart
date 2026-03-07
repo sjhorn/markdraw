@@ -27,8 +27,13 @@ void showCompactPropertyPanel(
           final bt = controller.editorState.scene.findBoundText(e.id);
           if (bt != null) boundText.add(bt);
         }
-        final style = PropertyPanelState.fromElements(elements,
+        var style = PropertyPanelState.fromElements(elements,
             boundTextElements: boundText);
+        // When editing bound text, show the text's strokeColor instead of the
+        // parent shape's so the color picker reflects the text color.
+        if (isEditingText && boundText.length == 1) {
+          style = style.copyWith(strokeColor: boundText.first.strokeColor);
+        }
         final isLocked = style.locked == true;
         final showFullTextProps = style.hasText &&
             (!style.hasArrowBoundText ||

@@ -1,44 +1,36 @@
-/// Split-pane example: live bidirectional sync between canvas and .markdraw text.
-///
-/// Demonstrates the human-readable `.markdraw` format — draw on the left,
-/// see markdown on the right; edit the markdown, see updates on the canvas.
-///
-/// Usage:
-///   cd example && flutter run -t split_pane_example.dart
+/// Split-pane widget for live bidirectional sync between canvas and .markdraw text.
 library;
 
 import 'dart:async';
 
 import 'package:flutter/material.dart' hide Element, SelectionOverlay;
 
-import 'package:markdraw/markdraw.dart' hide TextAlign;
+import '../../markdraw.dart' hide TextAlign;
 
-void main() {
-  runApp(MarkdrawApp(
-    title: 'Markdraw — Split Pane',
-    home: (context, themeMode, onThemeModeChanged) => _SplitPanePage(
-      themeMode: themeMode,
-      onThemeModeChanged: onThemeModeChanged,
-    ),
-  ));
-}
-
-class _SplitPanePage extends StatefulWidget {
-  const _SplitPanePage({
-    required this.themeMode,
-    required this.onThemeModeChanged,
+/// A split pane that shows the editor canvas on the left and a live
+/// `.markdraw` text editor on the right, with bidirectional sync.
+///
+/// Canvas changes are reflected in the text pane immediately.
+/// Text edits are parsed and applied to the canvas after a 150ms debounce.
+class MarkdrawSplitPane extends StatefulWidget {
+  const MarkdrawSplitPane({
+    super.key,
+    required this.controller,
+    required this.child,
   });
 
-  final ThemeMode themeMode;
-  final void Function(ThemeMode) onThemeModeChanged;
+  /// The editor controller to sync with.
+  final MarkdrawController controller;
+
+  /// The editor content (typically the Stack from MarkdrawEditor._buildBody).
+  final Widget child;
 
   @override
-  State<_SplitPanePage> createState() => _SplitPanePageState();
+  State<MarkdrawSplitPane> createState() => _MarkdrawSplitPaneState();
 }
 
-class _SplitPanePageState extends State<_SplitPanePage>
+class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
     with TickerProviderStateMixin {
-  final _controller = MarkdrawController();
   final _textController = TextEditingController();
   final _textFocusNode = FocusNode();
 
@@ -46,6 +38,7 @@ class _SplitPanePageState extends State<_SplitPanePage>
   Timer? _debounceTimer;
   double _splitRatio = 0.5;
   bool _isDraggingDivider = false;
+  String _lastSyncedText = '';
 
   // Flash animations
   late final AnimationController _canvasFlash;
@@ -70,8 +63,28 @@ class _SplitPanePageState extends State<_SplitPanePage>
 
     _textController.addListener(_onTextChanged);
 
-    // Seed the text pane with the initial (empty) scene.
+    // Wire up scene change listener.
+    _previousOnSceneChanged = widget.controller.onSceneChanged;
+    widget.controller.onSceneChanged = _onSceneChanged;
+
+    // Seed the text pane with the current scene.
     _syncCanvasToText();
+  }
+
+  // Store the previous callback so we can chain it.
+  void Function(Scene)? _previousOnSceneChanged;
+
+  @override
+  void didUpdateWidget(MarkdrawSplitPane oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.controller != oldWidget.controller) {
+      // Restore old controller's callback.
+      oldWidget.controller.onSceneChanged = _previousOnSceneChanged;
+      // Re-wire to new controller.
+      _previousOnSceneChanged = widget.controller.onSceneChanged;
+      widget.controller.onSceneChanged = _onSceneChanged;
+      _syncCanvasToText();
+    }
   }
 
   @override
@@ -81,7 +94,8 @@ class _SplitPanePageState extends State<_SplitPanePage>
     _textFocusNode.dispose();
     _canvasFlash.dispose();
     _textFlash.dispose();
-    _controller.dispose();
+    // Restore the previous callback.
+    widget.controller.onSceneChanged = _previousOnSceneChanged;
     super.dispose();
   }
 
@@ -90,14 +104,17 @@ class _SplitPanePageState extends State<_SplitPanePage>
   // ---------------------------------------------------------------------------
 
   void _onSceneChanged(Scene scene) {
+    _previousOnSceneChanged?.call(scene);
     if (_isSyncing) return;
     _syncCanvasToText();
-    _triggerTextFlash();
+    _textFlash.forward(from: 0);
   }
 
   void _syncCanvasToText() {
     _isSyncing = true;
-    _textController.text = _controller.serializeScene();
+    final text = widget.controller.serializeScene();
+    _textController.text = text;
+    _lastSyncedText = text;
     _isSyncing = false;
   }
 
@@ -107,6 +124,9 @@ class _SplitPanePageState extends State<_SplitPanePage>
 
   void _onTextChanged() {
     if (_isSyncing) return;
+    final currentText = _textController.text;
+    if (currentText == _lastSyncedText) return;
+    _lastSyncedText = currentText;
     _debounceTimer?.cancel();
     _debounceTimer = Timer(const Duration(milliseconds: _debounceMs), () {
       _syncTextToCanvas();
@@ -118,30 +138,19 @@ class _SplitPanePageState extends State<_SplitPanePage>
     _isSyncing = true;
     try {
       if (text.trim().isEmpty) {
-        _controller.loadScene(Scene());
+        widget.controller.loadScene(Scene());
       } else {
         final parseResult = DocumentParser.parse(text);
         final doc = parseResult.value;
         final scene = SceneDocumentConverter.documentToScene(doc);
-        _controller.loadScene(scene, background: doc.settings.background);
+        widget.controller
+            .loadScene(scene, background: doc.settings.background);
       }
-      _triggerCanvasFlash();
+      _canvasFlash.forward(from: 0);
     } catch (_) {
       // Parse errors silently ignored — user may be mid-edit.
     }
     _isSyncing = false;
-  }
-
-  // ---------------------------------------------------------------------------
-  // Flash overlays
-  // ---------------------------------------------------------------------------
-
-  void _triggerCanvasFlash() {
-    _canvasFlash.forward(from: 0);
-  }
-
-  void _triggerTextFlash() {
-    _textFlash.forward(from: 0);
   }
 
   // ---------------------------------------------------------------------------
@@ -150,85 +159,74 @@ class _SplitPanePageState extends State<_SplitPanePage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final totalWidth = constraints.maxWidth;
-          final usableWidth = totalWidth - _dividerWidth;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final totalWidth = constraints.maxWidth;
+        final usableWidth = totalWidth - _dividerWidth;
 
-          // Clamp split ratio so each pane has at least _minPaneWidth.
-          final minRatio = _minPaneWidth / usableWidth;
-          final maxRatio = 1.0 - minRatio;
-          final clampedRatio = _splitRatio.clamp(minRatio, maxRatio);
+        // Clamp split ratio so each pane has at least _minPaneWidth.
+        final minRatio = _minPaneWidth / usableWidth;
+        final maxRatio = 1.0 - minRatio;
+        final clampedRatio = _splitRatio.clamp(minRatio, maxRatio);
 
-          final leftWidth = usableWidth * clampedRatio;
+        final leftWidth = usableWidth * clampedRatio;
 
-          return Row(
-            children: [
-              // --- Canvas pane ---
-              ClipRect(
-                child: SizedBox(
+        return Row(
+          children: [
+            // --- Canvas pane ---
+            ClipRect(
+              child: SizedBox(
                 width: leftWidth,
                 child: Stack(
                   children: [
-                    MarkdrawEditor(
-                      controller: _controller,
-                      onSceneChanged: _onSceneChanged,
-                      onThemeModeChanged: widget.onThemeModeChanged,
-                      currentThemeMode: widget.themeMode,
-                      config: const MarkdrawEditorConfig(
-                        showMenu: false,
-                        showHelpButton: false,
-                      ),
-                    ),
+                    widget.child,
                     _FlashOverlay(animation: _canvasFlash),
                   ],
                 ),
               ),
-              ),
+            ),
 
-              // --- Draggable divider ---
-              MouseRegion(
-                cursor: SystemMouseCursors.resizeColumn,
-                child: GestureDetector(
-                  onHorizontalDragStart: (_) {
-                    setState(() => _isDraggingDivider = true);
-                  },
-                  onHorizontalDragUpdate: (details) {
-                    setState(() {
-                      final newLeft = (leftWidth + details.delta.dx)
-                          .clamp(_minPaneWidth, usableWidth - _minPaneWidth);
-                      _splitRatio = newLeft / usableWidth;
-                    });
-                  },
-                  onHorizontalDragEnd: (_) {
-                    setState(() => _isDraggingDivider = false);
-                  },
-                  child: Container(
-                    width: _dividerWidth,
-                    color: _isDraggingDivider
-                        ? Theme.of(context).colorScheme.primary.withAlpha(80)
-                        : Theme.of(context).dividerColor,
+            // --- Draggable divider ---
+            MouseRegion(
+              cursor: SystemMouseCursors.resizeColumn,
+              child: GestureDetector(
+                onHorizontalDragStart: (_) {
+                  setState(() => _isDraggingDivider = true);
+                },
+                onHorizontalDragUpdate: (details) {
+                  setState(() {
+                    final newLeft = (leftWidth + details.delta.dx)
+                        .clamp(_minPaneWidth, usableWidth - _minPaneWidth);
+                    _splitRatio = newLeft / usableWidth;
+                  });
+                },
+                onHorizontalDragEnd: (_) {
+                  setState(() => _isDraggingDivider = false);
+                },
+                child: Container(
+                  width: _dividerWidth,
+                  color: _isDraggingDivider
+                      ? Theme.of(context).colorScheme.primary.withAlpha(80)
+                      : Theme.of(context).dividerColor,
+                ),
+              ),
+            ),
+
+            // --- Text pane ---
+            Expanded(
+              child: Stack(
+                children: [
+                  _TextPane(
+                    controller: _textController,
+                    focusNode: _textFocusNode,
                   ),
-                ),
+                  _FlashOverlay(animation: _textFlash),
+                ],
               ),
-
-              // --- Text pane ---
-              Expanded(
-                child: Stack(
-                  children: [
-                    _TextPane(
-                      controller: _textController,
-                      focusNode: _textFocusNode,
-                    ),
-                    _FlashOverlay(animation: _textFlash),
-                  ],
-                ),
-              ),
-            ],
-          );
-        },
-      ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -263,7 +261,8 @@ class _TextPane extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(Icons.code, size: 16, color: theme.colorScheme.onSurfaceVariant),
+              Icon(Icons.code,
+                  size: 16, color: theme.colorScheme.onSurfaceVariant),
               const SizedBox(width: 8),
               Text(
                 '.markdraw',

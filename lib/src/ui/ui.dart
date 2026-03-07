@@ -19,6 +19,7 @@ export 'library_panel.dart';
 export 'markdraw_app.dart';
 export 'markdraw_controller.dart';
 export 'markdraw_editor.dart';
+export 'markdraw_split_pane.dart';
 export 'markdraw_file_handler.dart';
 export 'platform_io.dart';
 export 'markdraw_editor_config.dart';

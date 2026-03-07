@@ -23,6 +23,7 @@ Cross-platform: iOS, Android, Web, macOS, Windows, Linux.
 - Keyboard shortcuts for every tool
 - Pinch-to-zoom and scroll-wheel zoom
 - Dark mode theming
+- Live markdown split-pane editor with bidirectional sync
 - Human-readable `.markdraw` file format (git-friendly, diffable)
 
 ## Quick Start
@@ -173,6 +174,7 @@ MarkdrawEditorConfig(
   showZoomControls: true,
   showHelpButton: true,
   showLibraryPanel: true,
+  showMarkdownButton: true,
   showMenu: true,
   compactBreakpoint: 600.0,
   minZoom: 0.1,

@@ -543,6 +543,101 @@ void main() {
         );
       }
     });
+    test('arrow with label emits arrow-specific data', () {
+      final arrow = ArrowElement(
+        id: const ElementId('a1'),
+        x: 0,
+        y: 0,
+        width: 200,
+        height: 0,
+        points: [const Point(0, 0), const Point(200, 0)],
+        startBinding: const PointBinding(
+          elementId: 'r1',
+          fixedPoint: Point(1, 0.5),
+        ),
+        endBinding: const PointBinding(
+          elementId: 'r2',
+          fixedPoint: Point(0, 0.5),
+        ),
+        arrowType: ArrowType.round,
+        startArrowhead: Arrowhead.dot,
+        seed: 20,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final label = TextElement(
+        id: const ElementId('t1'),
+        x: 80,
+        y: -10,
+        width: 40,
+        height: 20,
+        text: 'calls',
+        fontSize: 16,
+        seed: 21,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final line = serializer.serializeWithLabel(
+        arrow,
+        label,
+        alias: 'conn',
+        aliasMap: {'r1': 'auth', 'r2': 'gw'},
+      );
+      expect(line, startsWith('arrow "calls"'));
+      expect(line, contains('from auth'));
+      expect(line, contains('to gw'));
+      expect(line, contains('arrow-type=round'));
+      expect(line, contains('start-arrow=dot'));
+      expect(line, contains('text-size=16'));
+    });
+
+    test('arrow with partial binding emits coordinate for unbound end', () {
+      final arrow = ArrowElement(
+        id: const ElementId('a1'),
+        x: 0,
+        y: 0,
+        width: 500,
+        height: 300,
+        points: [const Point(0, 0), const Point(500, 300)],
+        startBinding: const PointBinding(
+          elementId: 'r1',
+          fixedPoint: Point(1, 0.5),
+        ),
+        seed: 20,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final line = serializer.serialize(
+        arrow,
+        aliasMap: {'r1': 'auth'},
+      );
+      expect(line, contains('from auth'));
+      expect(line, contains('to 500,300'));
+    });
+
+    test('arrow with partial binding emits coordinate for unbound start', () {
+      final arrow = ArrowElement(
+        id: const ElementId('a1'),
+        x: 0,
+        y: 0,
+        width: 400,
+        height: 200,
+        points: [const Point(100, 50), const Point(0, 0)],
+        endBinding: const PointBinding(
+          elementId: 'r2',
+          fixedPoint: Point(0, 0.5),
+        ),
+        seed: 20,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final line = serializer.serialize(
+        arrow,
+        aliasMap: {'r2': 'dest'},
+      );
+      expect(line, contains('from 100,50'));
+      expect(line, contains('to dest'));
+    });
   });
 
   group('FreedrawElement', () {

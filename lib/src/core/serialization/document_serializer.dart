@@ -98,6 +98,7 @@ class DocumentSerializer {
           boundText,
           alias: alias,
           aliasMap: reverseAliases,
+          elementMap: elementMap,
         );
         buffer.writeln(line);
       } else {

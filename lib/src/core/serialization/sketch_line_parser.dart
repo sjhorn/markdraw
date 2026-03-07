@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import '../elements/elements.dart';
 import '../math/math.dart';
+import 'color_names.dart';
 import 'parse_result.dart';
 
 /// A pending arrow binding to be resolved after all elements are parsed.
@@ -421,14 +422,44 @@ class SketchLineParser {
 
     final fromRaw = props.namedPositional('from');
     final toRaw = props.namedPositional('to');
-    final (fromAlias, fromFixedPoint) = _splitFixedPoint(fromRaw);
-    final (toAlias, toFixedPoint) = _splitFixedPoint(toRaw);
+
+    // Distinguish coordinate endpoints (e.g. "500,300") from alias bindings
+    String? fromAlias;
+    Point? fromFixedPoint;
+    Point? fromCoord;
+    String? toAlias;
+    Point? toFixedPoint;
+    Point? toCoord;
+
+    if (fromRaw != null && _isCoordinate(fromRaw)) {
+      final parts = fromRaw.split(',');
+      fromCoord = Point(double.parse(parts[0]), double.parse(parts[1]));
+    } else {
+      final result = _splitFixedPoint(fromRaw);
+      fromAlias = result.$1;
+      fromFixedPoint = result.$2;
+    }
+
+    if (toRaw != null && _isCoordinate(toRaw)) {
+      final parts = toRaw.split(',');
+      toCoord = Point(double.parse(parts[0]), double.parse(parts[1]));
+    } else {
+      final result = _splitFixedPoint(toRaw);
+      toAlias = result.$1;
+      toFixedPoint = result.$2;
+    }
+
     final hasBindings = fromAlias != null || toAlias != null;
 
     List<Point> points;
     if (hasBindings) {
-      // Placeholder points — will be computed when bindings resolve
-      points = [const Point(0, 0), const Point(0, 0)];
+      // Use actual coordinates for unbound ends, placeholders for bound ends
+      final startPt = fromCoord ?? const Point(0, 0);
+      final endPt = toCoord ?? const Point(0, 0);
+      points = [startPt, endPt];
+    } else if (fromCoord != null || toCoord != null) {
+      // Both ends are coordinates (no bindings)
+      points = [fromCoord ?? const Point(0, 0), toCoord ?? const Point(0, 0)];
     } else {
       points = props.points;
     }
@@ -605,6 +636,10 @@ class SketchLineParser {
     return pixel;
   }
 
+  /// Returns true if the value is a coordinate pair like "500,300" or "-10.5,20".
+  static final _coordRegExp = RegExp(r'^-?[\d.]+,-?[\d.]+$');
+  bool _isCoordinate(String value) => _coordRegExp.hasMatch(value);
+
   /// Splits 'alias@x,y' into (alias, Point(x,y)), or (alias, null) if no '@'.
   (String?, Point?) _splitFixedPoint(String? raw) {
     if (raw == null) return (null, null);
@@ -759,8 +794,8 @@ class _PropertyBag {
         : <String>[];
 
     return _CommonProperties(
-      strokeColor: colorStr ?? '#000000',
-      backgroundColor: fillStr ?? 'transparent',
+      strokeColor: colorStr != null ? normalizeColor(colorStr) : '#000000',
+      backgroundColor: fillStr != null ? normalizeColor(fillStr) : 'transparent',
       fillStyle: _parseFillStyle(fillStyleStr),
       strokeWidth: strokeWidthVal ?? 2.0,
       strokeStyle: _parseStrokeStyle(strokeStr),

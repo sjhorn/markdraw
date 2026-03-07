@@ -1,6 +1,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../markdraw.dart' hide TextAlign;
 
@@ -8,11 +9,13 @@ import '../../markdraw.dart' hide TextAlign;
 class DesktopToolbar extends StatelessWidget {
   final MarkdrawController controller;
   final VoidCallback? onImportImage;
+  final bool showMarkdownButton;
 
   const DesktopToolbar({
     super.key,
     required this.controller,
     this.onImportImage,
+    this.showMarkdownButton = true,
   });
 
   @override
@@ -122,6 +125,16 @@ class DesktopToolbar extends StatelessWidget {
             onPressed: controller.toggleToolLocked,
             isActive: controller.toolLocked,
           ),
+          if (showMarkdownButton) ...[
+            _toolbarDivider(context),
+            _toolbarButton(
+              cs: cs,
+              icon: Symbols.markdown,
+              tooltip: 'Markdown panel',
+              onPressed: controller.toggleMarkdownPanel,
+              isActive: controller.showMarkdownPanel,
+            ),
+          ],
         ],
       ),
     );

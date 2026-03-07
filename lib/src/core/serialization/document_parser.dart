@@ -10,7 +10,7 @@ import 'parse_result.dart';
 import 'sketch_line_parser.dart';
 
 /// Keywords that can have inline labels (e.g., rect "Label" ...).
-const _labelableKeywords = {'rect', 'ellipse', 'diamond'};
+const _labelableKeywords = {'rect', 'ellipse', 'diamond', 'arrow'};
 
 /// Parses a .markdraw format string into a MarkdrawDocument.
 class DocumentParser {
@@ -202,9 +202,9 @@ class DocumentParser {
               _parseNamedString(line, 'text-font') ?? 'Excalifont';
           final textAlignStr = _parseNamedString(line, 'text-align');
           final textAlign = switch (textAlignStr) {
-            'center' => TextAlign.center,
+            'left' => TextAlign.left,
             'right' => TextAlign.right,
-            _ => TextAlign.left,
+            _ => TextAlign.center,
           };
           final textValignStr = _parseNamedString(line, 'text-valign');
           final textVerticalAlign = switch (textValignStr) {

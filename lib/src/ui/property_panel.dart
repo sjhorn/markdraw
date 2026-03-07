@@ -31,6 +31,11 @@ class PropertyPanel extends StatelessWidget {
       }
       style = PropertyPanelState.fromElements(elements,
           boundTextElements: boundText);
+      // When editing bound text, show the text's strokeColor instead of the
+      // parent shape's so the color picker reflects the text color.
+      if (isEditingText && boundText.length == 1) {
+        style = style.copyWith(strokeColor: boundText.first.strokeColor);
+      }
       isLocked = style.locked == true;
       showFullTextProps = style.hasText &&
           (!style.hasArrowBoundText ||

@@ -50,6 +50,7 @@ class MarkdrawController extends ChangeNotifier {
   // UI state
   List<LibraryItem> _libraryItems = [];
   bool _showLibraryPanel = false;
+  bool _showMarkdownPanel = false;
   bool _toolLocked = false;
   bool _isCompact = false;
   bool _isEditingLinear = false;
@@ -97,6 +98,7 @@ class MarkdrawController extends ChangeNotifier {
 
   List<LibraryItem> get libraryItems => _libraryItems;
   bool get showLibraryPanel => _showLibraryPanel;
+  bool get showMarkdownPanel => _showMarkdownPanel;
   bool get toolLocked => _toolLocked;
   bool get isCompact => _isCompact;
   bool get isEditingLinear => _isEditingLinear;
@@ -879,27 +881,43 @@ class MarkdrawController extends ChangeNotifier {
     }
 
     _historyManager.push(_editorState.scene);
-    final result = PropertyPanelState.applyStyle(elements, style);
+
+    // When editing bound text, strokeColor targets the text, not the shape.
+    final editingBoundText = _editingTextElementId != null
+        ? _editorState.scene.getElementById(_editingTextElementId!)
+        : null;
+    final isEditingBoundText =
+        editingBoundText is TextElement && editingBoundText.containerId != null;
+
+    // Apply style to selected elements — but exclude strokeColor from the
+    // parent shape when the user is editing its bound text.
+    final shapeStyle = isEditingBoundText && style.strokeColor != null
+        ? style.copyWith(clearStrokeColor: true)
+        : style;
+    final result = PropertyPanelState.applyStyle(elements, shapeStyle);
     applyResult(result);
 
     // Also apply text properties to bound text of selected containers
     if (style.fontSize != null ||
         style.fontFamily != null ||
         style.textAlign != null ||
-        style.verticalAlign != null) {
+        style.verticalAlign != null ||
+        style.strokeColor != null) {
       for (final e in elements) {
         final bt = _editorState.scene.findBoundText(e.id);
         if (bt != null) {
-          applyResult(
-            UpdateElementResult(
-              bt.copyWithText(
-                fontSize: style.fontSize,
-                fontFamily: style.fontFamily,
-                textAlign: style.textAlign,
-                verticalAlign: style.verticalAlign,
-              ),
-            ),
+          var updated = bt.copyWithText(
+            fontSize: style.fontSize,
+            fontFamily: style.fontFamily,
+            textAlign: style.textAlign,
+            verticalAlign: style.verticalAlign,
           );
+          if (style.strokeColor != null) {
+            updated = updated.copyWith(
+              strokeColor: style.strokeColor,
+            );
+          }
+          applyResult(UpdateElementResult(updated));
         }
       }
     }
@@ -1137,6 +1155,11 @@ class MarkdrawController extends ChangeNotifier {
 
   void pushHistory() {
     _historyManager.push(_editorState.scene);
+  }
+
+  void toggleMarkdownPanel() {
+    _showMarkdownPanel = !_showMarkdownPanel;
+    notifyListeners();
   }
 
   void toggleToolLocked() {

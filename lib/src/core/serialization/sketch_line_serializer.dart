@@ -36,7 +36,13 @@ class SketchLineSerializer {
     TextElement labelElement, {
     String? alias,
     Map<String, String> aliasMap = const {},
+    Map<String, Element> elementMap = const {},
   }) {
+    if (element is ArrowElement) {
+      return _serializeArrowWithLabel(
+        element, alias, aliasMap, elementMap, labelElement,
+      );
+    }
     final keyword = switch (element) {
       RectangleElement() => 'rect',
       EllipseElement() => 'ellipse',
@@ -57,13 +63,36 @@ class SketchLineSerializer {
     _addId(parts, alias);
     _addPosition(parts, element.x, element.y);
     _addSize(parts, element.width, element.height);
+    _addTextProperties(parts, labelElement);
+    _addCommonProperties(parts, element);
+    return parts.join(' ');
+  }
+
+  String _serializeArrowWithLabel(
+    ArrowElement element,
+    String? alias,
+    Map<String, String> aliasMap,
+    Map<String, Element> elementMap,
+    TextElement labelElement,
+  ) {
+    final parts = <String>['arrow'];
+    parts.add('"${labelElement.text}"');
+    _addId(parts, alias);
+
+    _addArrowBody(parts, element, aliasMap, elementMap);
+    _addTextProperties(parts, labelElement);
+    _addCommonProperties(parts, element, isArrow: true);
+    return parts.join(' ');
+  }
+
+  void _addTextProperties(List<String> parts, TextElement labelElement) {
     if (labelElement.fontSize != 20.0) {
       parts.add('text-size=${_formatNum(labelElement.fontSize)}');
     }
     if (labelElement.fontFamily != 'Excalifont') {
       parts.add('text-font=${labelElement.fontFamily}');
     }
-    if (labelElement.textAlign != TextAlign.left) {
+    if (labelElement.textAlign != TextAlign.center) {
       parts.add('text-align=${labelElement.textAlign.name}');
     }
     if (labelElement.verticalAlign != VerticalAlign.middle) {
@@ -72,8 +101,6 @@ class SketchLineSerializer {
     if (labelElement.strokeColor != '#000000') {
       parts.add('text-color=${formatColor(labelElement.strokeColor)}');
     }
-    _addCommonProperties(parts, element);
-    return parts.join(' ');
   }
 
   String _serializeFrame(FrameElement element, String? alias) {
@@ -157,10 +184,23 @@ class SketchLineSerializer {
     final parts = <String>['arrow'];
     _addId(parts, alias);
 
+    _addArrowBody(parts, element, aliasMap, elementMap);
+    _addCommonProperties(parts, element, isArrow: true);
+    return parts.join(' ');
+  }
+
+  /// Adds arrow-specific parts: bindings/points, arrow type, arrowheads.
+  void _addArrowBody(
+    List<String> parts,
+    ArrowElement element,
+    Map<String, String> aliasMap,
+    Map<String, Element> elementMap,
+  ) {
     final hasBindings =
         element.startBinding != null || element.endBinding != null;
 
     if (hasBindings) {
+      // Start end
       if (element.startBinding != null) {
         final fromAlias =
             aliasMap[element.startBinding!.elementId] ??
@@ -173,7 +213,13 @@ class SketchLineSerializer {
           final fpSuffix = _fixedPointToPixelSuffix(fp, target);
           parts.add('from $fromAlias$fpSuffix');
         }
+      } else {
+        // Unbound start — emit start coordinate
+        final startPt = _absolutePoints(element).first;
+        parts.add('from ${_formatNum(startPt.x)},${_formatNum(startPt.y)}');
       }
+
+      // End end
       if (element.endBinding != null) {
         final toAlias =
             aliasMap[element.endBinding!.elementId] ??
@@ -186,6 +232,10 @@ class SketchLineSerializer {
           final fpSuffix = _fixedPointToPixelSuffix(fp, target);
           parts.add('to $toAlias$fpSuffix');
         }
+      } else {
+        // Unbound end — emit end coordinate
+        final endPt = _absolutePoints(element).last;
+        parts.add('to ${_formatNum(endPt.x)},${_formatNum(endPt.y)}');
       }
     } else {
       _addPoints(parts, _absolutePoints(element));
@@ -205,8 +255,6 @@ class SketchLineSerializer {
 
     // Arrow default endArrowhead is Arrowhead.arrow, so only emit non-defaults
     _addArrowheads(parts, element.startArrowhead, element.endArrowhead, true);
-    _addCommonProperties(parts, element, isArrow: true);
-    return parts.join(' ');
   }
 
   String _serializeFreedraw(FreedrawElement element, String? alias) {

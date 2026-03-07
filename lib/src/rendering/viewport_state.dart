@@ -27,10 +27,13 @@ class ViewportState {
   }
 
   /// Converts a screen-space pixel position to scene coordinates.
+  ///
+  /// Results are rounded to whole numbers to avoid subpixel fractional
+  /// coordinates flowing into element positions and the serialization format.
   Offset screenToScene(Offset screenPoint) {
     return Offset(
-      screenPoint.dx / zoom + offset.dx,
-      screenPoint.dy / zoom + offset.dy,
+      (screenPoint.dx / zoom + offset.dx).roundToDouble(),
+      (screenPoint.dy / zoom + offset.dy).roundToDouble(),
     );
   }
 

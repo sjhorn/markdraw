@@ -90,6 +90,39 @@ class ElementStyle {
     this.canBreakPolygon = false,
     this.locked,
   });
+
+  ElementStyle copyWith({
+    String? strokeColor,
+    bool clearStrokeColor = false,
+  }) {
+    return ElementStyle(
+      strokeColor: clearStrokeColor ? null : (strokeColor ?? this.strokeColor),
+      backgroundColor: backgroundColor,
+      strokeWidth: strokeWidth,
+      strokeStyle: strokeStyle,
+      fillStyle: fillStyle,
+      roughness: roughness,
+      opacity: opacity,
+      roundness: roundness,
+      hasRoundness: hasRoundness,
+      hasText: hasText,
+      hasArrows: hasArrows,
+      hasShapeBoundText: hasShapeBoundText,
+      hasArrowBoundText: hasArrowBoundText,
+      hasLines: hasLines,
+      startArrowhead: startArrowhead,
+      startArrowheadNone: startArrowheadNone,
+      endArrowhead: endArrowhead,
+      endArrowheadNone: endArrowheadNone,
+      fontSize: fontSize,
+      fontFamily: fontFamily,
+      textAlign: textAlign,
+      verticalAlign: verticalAlign,
+      arrowType: arrowType,
+      canBreakPolygon: canBreakPolygon,
+      locked: locked,
+    );
+  }
 }
 
 /// Pure-logic class that reads selected elements and produces style state

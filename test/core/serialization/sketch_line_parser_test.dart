@@ -294,6 +294,29 @@ void main() {
       expect(arrow.startArrowhead, Arrowhead.crowfootMany);
       expect(arrow.endArrowhead, Arrowhead.crowfootOne);
     });
+
+    test('arrow with coordinate endpoint (partial binding)', () {
+      final result = parser.parseLine(
+        'arrow from auth to 500,300',
+        1,
+      );
+      expect(result.value, isA<ArrowElement>());
+      // 'from auth' creates a pending binding, 'to 500,300' is a coordinate
+      expect(parser.pendingBindings, hasLength(1));
+      expect(parser.pendingBindings.first.fromAlias, 'auth');
+      expect(parser.pendingBindings.first.toAlias, isNull);
+    });
+
+    test('arrow with coordinate start (partial binding)', () {
+      final result = parser.parseLine(
+        'arrow from 100,50 to dest',
+        1,
+      );
+      expect(result.value, isA<ArrowElement>());
+      expect(parser.pendingBindings, hasLength(1));
+      expect(parser.pendingBindings.first.fromAlias, isNull);
+      expect(parser.pendingBindings.first.toAlias, 'dest');
+    });
   });
 
   group('Freedraw parsing', () {
@@ -373,6 +396,56 @@ void main() {
       final result = parser.parseLine('   ', 1);
       expect(result.value, isNull);
       expect(result.warnings, isEmpty);
+    });
+  });
+
+  group('Named colors and short hex', () {
+    test('CSS named color parses to hex', () {
+      final result = parser.parseLine(
+        'rect at 0,0 100x100 color=red',
+        1,
+      );
+      expect(result.value!.strokeColor, '#ff0000');
+    });
+
+    test('CSS named fill parses to hex', () {
+      final result = parser.parseLine(
+        'rect at 0,0 100x100 fill=cornflowerblue',
+        1,
+      );
+      expect(result.value!.backgroundColor, '#6495ed');
+    });
+
+    test('named color is case-insensitive', () {
+      final result = parser.parseLine(
+        'rect at 0,0 100x100 color=Red',
+        1,
+      );
+      expect(result.value!.strokeColor, '#ff0000');
+    });
+
+    test('short hex expands to full hex', () {
+      final result = parser.parseLine(
+        'rect at 0,0 100x100 fill=#ccc',
+        1,
+      );
+      expect(result.value!.backgroundColor, '#cccccc');
+    });
+
+    test('full hex passes through', () {
+      final result = parser.parseLine(
+        'rect at 0,0 100x100 fill=#e3f2fd',
+        1,
+      );
+      expect(result.value!.backgroundColor, '#e3f2fd');
+    });
+
+    test('legacy full hex still works (backward compat)', () {
+      final result = parser.parseLine(
+        'rect at 0,0 100x100 color=#ff0000',
+        1,
+      );
+      expect(result.value!.strokeColor, '#ff0000');
     });
   });
 

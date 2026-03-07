@@ -15,6 +15,7 @@ class MarkdrawEditorConfig {
     this.showZoomControls = true,
     this.showHelpButton = true,
     this.showLibraryPanel = true,
+    this.showMarkdownButton = true,
     this.showMenu = true,
     this.compactBreakpoint = 600.0,
     this.minZoom = 0.1,
@@ -48,6 +49,9 @@ class MarkdrawEditorConfig {
 
   /// Whether to show the library panel.
   final bool showLibraryPanel;
+
+  /// Whether to show the markdown split-pane toggle button in the toolbar.
+  final bool showMarkdownButton;
 
   /// Whether to show the menu.
   final bool showMenu;

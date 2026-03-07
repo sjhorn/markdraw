@@ -122,8 +122,19 @@ void main() {
       const original = Offset(300, 250);
       final scene = state.screenToScene(original);
       final back = state.sceneToScreen(scene);
-      expect(back.dx, closeTo(original.dx, 1e-10));
-      expect(back.dy, closeTo(original.dy, 1e-10));
+      // Rounding in screenToScene introduces up to ±0.5 per axis
+      expect(back.dx, closeTo(original.dx, 1.0));
+      expect(back.dy, closeTo(original.dy, 1.0));
+    });
+
+    test('screenToScene returns whole numbers at non-integer zoom', () {
+      const state = ViewportState(zoom: 1.5);
+      // 100 / 1.5 = 66.666… → rounds to 67
+      final result = state.screenToScene(const Offset(100, 100));
+      expect(result.dx, 67.0);
+      expect(result.dy, 67.0);
+      expect(result.dx % 1, 0.0);
+      expect(result.dy % 1, 0.0);
     });
   });
 

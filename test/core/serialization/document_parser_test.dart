@@ -228,4 +228,73 @@ rect "Label" id=r at 0,0 100x50
       expect(texts.first.strokeColor, '#000000');
     });
   });
+
+  group('Arrow label parsing', () {
+    test('parses arrow with inline label into arrow + bound text', () {
+      const input = '''```sketch
+rect id=auth at 100,200 160x80
+rect id=gw at 400,200 160x80
+arrow "calls" from auth to gw
+```''';
+      final result = DocumentParser.parse(input);
+      expect(result.warnings, isEmpty);
+      final sketch = result.value.sections.first as SketchSection;
+      final arrows = sketch.elements.whereType<ArrowElement>().toList();
+      expect(arrows, hasLength(1));
+      expect(arrows.first.startBinding, isNotNull);
+      expect(arrows.first.endBinding, isNotNull);
+
+      final texts = sketch.elements.whereType<TextElement>().toList();
+      expect(texts, hasLength(1));
+      expect(texts.first.text, 'calls');
+      expect(texts.first.containerId, isNotNull);
+    });
+
+    test('parses arrow with inline label and text properties', () {
+      const input = '''```sketch
+rect id=auth at 100,200 160x80
+rect id=gw at 400,200 160x80
+arrow "API" from auth to gw text-size=16 text-color=red
+```''';
+      final result = DocumentParser.parse(input);
+      expect(result.warnings, isEmpty);
+      final sketch = result.value.sections.first as SketchSection;
+
+      final texts = sketch.elements.whereType<TextElement>().toList();
+      expect(texts, hasLength(1));
+      expect(texts.first.text, 'API');
+      expect(texts.first.fontSize, 16);
+      expect(texts.first.strokeColor, '#ff0000');
+    });
+  });
+
+  group('Partial binding parsing', () {
+    test('parses arrow with coordinate endpoint', () {
+      const input = '''```sketch
+rect id=auth at 100,200 160x80
+arrow from auth to 500,300
+```''';
+      final result = DocumentParser.parse(input);
+      expect(result.warnings, isEmpty);
+      final sketch = result.value.sections.first as SketchSection;
+      final arrows = sketch.elements.whereType<ArrowElement>().toList();
+      expect(arrows, hasLength(1));
+      expect(arrows.first.startBinding, isNotNull);
+      expect(arrows.first.endBinding, isNull);
+    });
+
+    test('parses arrow with coordinate start', () {
+      const input = '''```sketch
+rect id=dest at 400,200 160x80
+arrow from 100,50 to dest
+```''';
+      final result = DocumentParser.parse(input);
+      expect(result.warnings, isEmpty);
+      final sketch = result.value.sections.first as SketchSection;
+      final arrows = sketch.elements.whereType<ArrowElement>().toList();
+      expect(arrows, hasLength(1));
+      expect(arrows.first.startBinding, isNull);
+      expect(arrows.first.endBinding, isNotNull);
+    });
+  });
 }

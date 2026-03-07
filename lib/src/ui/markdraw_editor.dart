@@ -112,7 +112,10 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
       child: Focus(
         focusNode: _controller.keyboardFocusNode,
         autofocus: true,
-        onKeyEvent: (_, event) {
+        onKeyEvent: (node, event) {
+          // Don't intercept keys when a descendant (e.g. markdown text pane)
+          // has focus — only handle when the editor itself has primary focus.
+          if (!node.hasPrimaryFocus) return KeyEventResult.ignored;
           handleKeyEvent(
             event: event,
             controller: _controller,
@@ -149,7 +152,7 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
 
   Widget _buildBody() {
     final isCompact = _controller.isCompact;
-    return Stack(
+    Widget body = Stack(
       children: [
         // Full-bleed canvas + desktop library panel
         Row(
@@ -187,6 +190,7 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
                 child: DesktopToolbar(
                   controller: _controller,
                   onImportImage: widget.onImportImage,
+                  showMarkdownButton: widget.config.showMarkdownButton,
                 ),
               ),
             ),
@@ -261,5 +265,9 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
           ),
       ],
     );
+    if (!isCompact && _controller.showMarkdownPanel) {
+      body = MarkdrawSplitPane(controller: _controller, child: body);
+    }
+    return body;
   }
 }
