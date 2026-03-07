@@ -31,6 +31,6 @@ class ClipboardCodec {
 
   /// Returns true if [text] looks like it contains markdraw sketch blocks.
   static bool isMarkdrawText(String text) {
-    return text.contains('```sketch');
+    return text.contains('```markdraw') || text.contains('```sketch');
   }
 }

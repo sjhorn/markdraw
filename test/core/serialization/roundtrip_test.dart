@@ -292,7 +292,7 @@ void main() {
 
   group('Parse → serialize string equality', () {
     test('simple sketch block', () {
-      const input = '''```sketch
+      const input = '''```markdraw
 rect id=auth at 100,200 160x80
 ellipse id=db at 225,400 120x80 fill=#e8f5e9
 ```''';
@@ -302,7 +302,7 @@ ellipse id=db at 225,400 120x80 fill=#e8f5e9
     });
 
     test('sketch with non-default properties', () {
-      const input = '''```sketch
+      const input = '''```markdraw
 rect id=r at 10,20 50x60 fill=lime color=red stroke=dotted fill-style=hachure stroke-width=3 roughness=2 opacity=0.5 rounded=8 angle=86 locked
 ```''';
       final parseResult = DocumentParser.parse(input);
@@ -1120,7 +1120,7 @@ rect id=r at 10,20 50x60 fill=lime color=red stroke=dotted fill-style=hachure st
     });
 
     test('parsed elements get fractional indices from document order', () {
-      const input = '''```sketch
+      const input = '''```markdraw
 rect id=bottom at 0,0 100x50
 ellipse id=middle at 50,50 80x80
 rect id=top at 100,0 100x50
@@ -1150,7 +1150,7 @@ grid: 20
 
 Here's how the services connect:
 
-```sketch
+```markdraw
 rect "Auth Service" id=auth at 100,200 160x80 fill=#e3f2fd rounded=8
 rect "API Gateway" id=gateway at 350,200 160x80 fill=#fff3e0 rounded=8
 arrow from auth to gateway stroke=dashed
@@ -1199,7 +1199,7 @@ communication uses mTLS.''';
       expect(output, contains('markdraw: 1'));
       expect(output, contains('grid: 20'));
       expect(output, contains('# Architecture Overview'));
-      expect(output, contains('```sketch'));
+      expect(output, contains('```markdraw'));
       expect(output, contains('rect "Auth Service"'));
       expect(output, contains('from auth to gateway'));
       expect(output, contains('mTLS'));

@@ -15,7 +15,7 @@ void main() {
         ),
       ];
       final text = ClipboardCodec.serialize(elements);
-      expect(text, contains('```sketch'));
+      expect(text, contains('```markdraw'));
       expect(text, contains('```'));
       expect(text, contains('rect'));
     });
@@ -72,7 +72,7 @@ void main() {
 
     test('isMarkdrawText detects sketch blocks', () {
       expect(
-        ClipboardCodec.isMarkdrawText('```sketch\nrect id=r1 at 0,0 size 100x80\n```'),
+        ClipboardCodec.isMarkdrawText('```markdraw\nrect id=r1 at 0,0 size 100x80\n```'),
         isTrue,
       );
     });
@@ -109,12 +109,12 @@ void main() {
 
     test('empty list produces valid but empty sketch block', () {
       final text = ClipboardCodec.serialize([]);
-      expect(text, contains('```sketch'));
+      expect(text, contains('```markdraw'));
       expect(text, contains('```'));
     });
 
     test('malformed input returns null', () {
-      final parsed = ClipboardCodec.parse('```sketch\n!!invalid!!\n```');
+      final parsed = ClipboardCodec.parse('```markdraw\n!!invalid!!\n```');
       // Should either return empty list or null gracefully
       expect(parsed == null || parsed.isEmpty, isTrue);
     });

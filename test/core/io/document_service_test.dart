@@ -22,7 +22,7 @@ DocumentService _createService(Map<String, String> fs) {
   );
 }
 
-const _markdrawContent = '''```sketch
+const _markdrawContent = '''```markdraw
 rect id=r1 at 10,20 100x50
 ```''';
 
@@ -248,7 +248,7 @@ void main() {
       expect(fs.containsKey('/docs/output.markdraw'), isTrue);
       final content = fs['/docs/output.markdraw']!;
       expect(content, contains('rect'));
-      expect(content, contains('sketch'));
+      expect(content, contains('markdraw'));
     });
 
     test('saves as .excalidraw format', () async {
@@ -516,7 +516,7 @@ String _allElementsExcalidraw() {
 
 /// Markdraw format with all 7 element types.
 String _allElementsMarkdraw() {
-  return '''```sketch
+  return '''```markdraw
 rect id=r1 at 10,20 100x50
 ellipse id=e1 at 10,20 100x50
 diamond id=d1 at 10,20 100x50

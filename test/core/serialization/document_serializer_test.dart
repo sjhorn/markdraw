@@ -44,7 +44,7 @@ void main() {
         aliases: {'auth': 'r1'},
       );
       final output = DocumentSerializer.serialize(doc);
-      expect(output, contains('```sketch'));
+      expect(output, contains('```markdraw'));
       expect(output, contains('rect id=auth'));
       expect(output, contains('```'));
     });
@@ -73,7 +73,7 @@ void main() {
 
       // Check order: prose, then sketch block, then prose
       final archIdx = lines.indexWhere((l) => l.contains('# Architecture'));
-      final sketchStartIdx = lines.indexWhere((l) => l == '```sketch');
+      final sketchStartIdx = lines.indexWhere((l) => l == '```markdraw');
       final sketchEndIdx = lines.indexWhere(
         (l) => l == '```',
         sketchStartIdx + 1,
@@ -232,7 +232,7 @@ List<String> _extractSketchLines(String output) {
   final result = <String>[];
   var inSketch = false;
   for (final line in lines) {
-    if (line == '```sketch') {
+    if (line == '```markdraw') {
       inSketch = true;
       continue;
     }

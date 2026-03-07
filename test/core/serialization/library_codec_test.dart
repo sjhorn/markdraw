@@ -30,7 +30,7 @@ void main() {
         expect(output, contains('name: "Blue Box"'));
         expect(output, contains('status: published'));
         expect(output, contains('created: 1708715821000'));
-        expect(output, contains('```sketch'));
+        expect(output, contains('```markdraw'));
         expect(output, contains('rect'));
       });
 
@@ -110,7 +110,7 @@ status: published
 created: 1708715821000
 ---
 
-```sketch
+```markdraw
 rect at 0,0 size 100x50
 ```''';
 
@@ -133,7 +133,7 @@ status: unpublished
 created: 0
 ---
 
-```sketch
+```markdraw
 rect at 0,0 size 100x50
 ```
 
@@ -144,7 +144,7 @@ status: unpublished
 created: 0
 ---
 
-```sketch
+```markdraw
 ellipse at 0,0 size 80x80
 ```''';
 
@@ -164,7 +164,7 @@ status: unpublished
 created: 0
 ---
 
-```sketch
+```markdraw
 image at 0,0 size 200x150 file=file-abc
 ```
 

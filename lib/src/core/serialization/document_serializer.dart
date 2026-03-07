@@ -80,7 +80,7 @@ class DocumentSerializer {
     }
 
     final serializer = SketchLineSerializer();
-    buffer.writeln('```sketch');
+    buffer.writeln('```markdraw');
 
     for (final element in section.elements) {
       // Skip bound text — it's inlined on the parent shape

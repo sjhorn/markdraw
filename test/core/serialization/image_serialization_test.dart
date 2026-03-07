@@ -156,7 +156,7 @@ void main() {
 
   group('DocumentParser - files block', () {
     test('parses files block', () {
-      const input = '''```sketch
+      const input = '''```markdraw
 image at 100,200 400x300 file=abc12345
 ```
 
@@ -172,7 +172,7 @@ abc12345 image/png AQID
     });
 
     test('parses multiple files', () {
-      const input = '''```sketch
+      const input = '''```markdraw
 image at 0,0 100x100 file=abc12345
 image at 200,0 100x100 file=def67890
 ```

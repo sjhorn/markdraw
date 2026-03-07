@@ -19,6 +19,8 @@ dependencies:
   web: ^1.1.0
   google_fonts: ^6.2.1
   material_symbols_icons: ^4.2815.0
+  re_editor: ^0.8.0
+  re_highlight: ^0.0.3
 
 dev_dependencies:
   flutter_test:

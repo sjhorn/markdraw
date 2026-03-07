@@ -4,14 +4,23 @@ library;
 import 'dart:async';
 
 import 'package:flutter/material.dart' hide Element, SelectionOverlay;
+import 'package:flutter/services.dart';
+import 'package:material_symbols_icons/symbols.dart';
+import 'package:re_editor/re_editor.dart';
+import 'package:re_highlight/styles/atom-one-dark.dart';
+import 'package:re_highlight/styles/atom-one-light.dart';
 
 import '../../markdraw.dart' hide TextAlign;
 
 /// A split pane that shows the editor canvas on the left and a live
-/// `.markdraw` text editor on the right, with bidirectional sync.
+/// sketch text editor on the right, with bidirectional sync.
 ///
 /// Canvas changes are reflected in the text pane immediately.
 /// Text edits are parsed and applied to the canvas after a 150ms debounce.
+///
+/// The text pane shows only sketch element lines (no frontmatter, no fences,
+/// no files block). A "copy as markdown" button wraps the content in a
+/// `` ```markdraw `` fence for pasting into markdown documents.
 class MarkdrawSplitPane extends StatefulWidget {
   const MarkdrawSplitPane({
     super.key,
@@ -31,7 +40,7 @@ class MarkdrawSplitPane extends StatefulWidget {
 
 class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
     with TickerProviderStateMixin {
-  final _textController = TextEditingController();
+  final _codeController = CodeLineEditingController();
   final _textFocusNode = FocusNode();
 
   bool _isSyncing = false;
@@ -61,7 +70,7 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
       duration: const Duration(milliseconds: 300),
     );
 
-    _textController.addListener(_onTextChanged);
+    _codeController.addListener(_onTextChanged);
 
     // Wire up scene change listener.
     _previousOnSceneChanged = widget.controller.onSceneChanged;
@@ -90,7 +99,7 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
   @override
   void dispose() {
     _debounceTimer?.cancel();
-    _textController.dispose();
+    _codeController.dispose();
     _textFocusNode.dispose();
     _canvasFlash.dispose();
     _textFlash.dispose();
@@ -100,7 +109,7 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
   }
 
   // ---------------------------------------------------------------------------
-  // Sync: canvas → text (immediate)
+  // Sync: canvas → text (immediate, sketch lines only)
   // ---------------------------------------------------------------------------
 
   void _onSceneChanged(Scene scene) {
@@ -112,10 +121,33 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
 
   void _syncCanvasToText() {
     _isSyncing = true;
-    final text = widget.controller.serializeScene();
-    _textController.text = text;
-    _lastSyncedText = text;
+    final fullText = widget.controller.serializeScene();
+    final sketchLines = _extractSketchLines(fullText);
+    _codeController.text = sketchLines;
+    _lastSyncedText = sketchLines;
     _isSyncing = false;
+  }
+
+  /// Extracts the lines between `` ```markdraw `` and `` ``` `` fences.
+  static String _extractSketchLines(String fullText) {
+    final lines = fullText.split('\n');
+    final buffer = StringBuffer();
+    var inSketch = false;
+    for (final line in lines) {
+      if (line.trim() == '```markdraw') {
+        inSketch = true;
+        continue;
+      }
+      if (line.trim() == '```' && inSketch) {
+        inSketch = false;
+        continue;
+      }
+      if (inSketch) {
+        if (buffer.isNotEmpty) buffer.write('\n');
+        buffer.write(line);
+      }
+    }
+    return buffer.toString();
   }
 
   // ---------------------------------------------------------------------------
@@ -124,7 +156,7 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
 
   void _onTextChanged() {
     if (_isSyncing) return;
-    final currentText = _textController.text;
+    final currentText = _codeController.text;
     if (currentText == _lastSyncedText) return;
     _lastSyncedText = currentText;
     _debounceTimer?.cancel();
@@ -134,23 +166,43 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
   }
 
   void _syncTextToCanvas() {
-    final text = _textController.text;
+    final text = _codeController.text;
     _isSyncing = true;
     try {
       if (text.trim().isEmpty) {
         widget.controller.loadScene(Scene());
       } else {
-        final parseResult = DocumentParser.parse(text);
+        final bg = widget.controller.canvasBackgroundColor;
+        final wrapped = '---\nmarkdraw: 1\nbackground: "$bg"\n---\n\n'
+            '```markdraw\n$text\n```';
+        final parseResult = DocumentParser.parse(wrapped);
         final doc = parseResult.value;
         final scene = SceneDocumentConverter.documentToScene(doc);
-        widget.controller
-            .loadScene(scene, background: doc.settings.background);
+        widget.controller.loadScene(scene, background: bg);
       }
       _canvasFlash.forward(from: 0);
     } catch (_) {
       // Parse errors silently ignored — user may be mid-edit.
     }
     _isSyncing = false;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Copy as markdown
+  // ---------------------------------------------------------------------------
+
+  void _onCopyMarkdown() {
+    final text = _codeController.text;
+    final markdown = '```markdraw\n$text\n```';
+    Clipboard.setData(ClipboardData(text: markdown));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Copied as markdown'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -217,8 +269,9 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
               child: Stack(
                 children: [
                   _TextPane(
-                    controller: _textController,
+                    controller: _codeController,
                     focusNode: _textFocusNode,
+                    onCopyMarkdown: _onCopyMarkdown,
                   ),
                   _FlashOverlay(animation: _textFlash),
                 ],
@@ -239,14 +292,18 @@ class _TextPane extends StatelessWidget {
   const _TextPane({
     required this.controller,
     required this.focusNode,
+    required this.onCopyMarkdown,
   });
 
-  final TextEditingController controller;
+  final CodeLineEditingController controller;
   final FocusNode focusNode;
+  final VoidCallback onCopyMarkdown;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Column(
       children: [
         // Header bar
@@ -265,31 +322,73 @@ class _TextPane extends StatelessWidget {
                   size: 16, color: theme.colorScheme.onSurfaceVariant),
               const SizedBox(width: 8),
               Text(
-                '.markdraw',
+                'markdraw',
                 style: theme.textTheme.labelLarge?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                   fontFamily: 'monospace',
                 ),
               ),
+              const Spacer(),
+              Tooltip(
+                message: 'Copy as markdown',
+                child: IconButton(
+                  icon: Icon(
+                    Symbols.markdown,
+                    size: 20,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  onPressed: onCopyMarkdown,
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
-        // Text editor
+        // Code editor
         Expanded(
-          child: TextField(
-            controller: controller,
-            focusNode: focusNode,
-            maxLines: null,
-            expands: true,
-            textAlignVertical: TextAlignVertical.top,
-            style: const TextStyle(
-              fontFamily: 'monospace',
-              fontSize: 13,
-              height: 1.5,
+          child: CodeAutocomplete(
+            viewBuilder: buildAutocompleteView,
+            promptsBuilder: DefaultCodeAutocompletePromptsBuilder(
+              language: langMarkdraw,
+              keywordPrompts: markdrawPrompts,
             ),
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.all(12),
+            child: CodeEditor(
+              controller: controller,
+              focusNode: focusNode,
+              style: CodeEditorStyle(
+                fontSize: 13,
+                fontFamily: 'monospace',
+                fontHeight: 1.5,
+                codeTheme: CodeHighlightTheme(
+                  languages: {
+                    'markdraw':
+                        CodeHighlightThemeMode(mode: langMarkdraw),
+                  },
+                  theme: isDark ? atomOneDarkTheme : atomOneLightTheme,
+                ),
+              ),
+              indicatorBuilder:
+                  (context, editingController, chunkController, notifier) {
+                return DefaultCodeLineNumber(
+                  controller: editingController,
+                  notifier: notifier,
+                  textStyle: TextStyle(
+                    fontSize: 12,
+                    color: theme.colorScheme.onSurfaceVariant
+                        .withAlpha(120),
+                  ),
+                );
+              },
+              sperator: Container(
+                width: 1,
+                color: theme.dividerColor,
+              ),
+              padding: const EdgeInsets.all(8),
             ),
           ),
         ),

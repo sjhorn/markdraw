@@ -44,7 +44,8 @@ class DocumentParser {
     final files = <String, ImageFile>{};
 
     while (i < lines.length) {
-      if (lines[i].trim() == '```sketch') {
+      if (lines[i].trim() == '```markdraw' ||
+            lines[i].trim() == '```sketch') {
         // Flush prose
         _flushProse(proseBuffer, sections);
         proseBuffer = StringBuffer();

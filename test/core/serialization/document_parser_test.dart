@@ -35,8 +35,8 @@ Content here''';
       expect(result.value.sections.first, isA<ProseSection>());
     });
 
-    test('parses document with single sketch block', () {
-      const input = '''```sketch
+    test('parses document with single markdraw block', () {
+      const input = '''```markdraw
 rect id=auth at 100,200 size 160x80
 ellipse id=db at 225,400 size 120x80
 ```''';
@@ -49,18 +49,30 @@ ellipse id=db at 225,400 size 120x80
       expect(sketch.elements[1], isA<EllipseElement>());
     });
 
+    test('parses legacy ```sketch fence for backward compatibility', () {
+      const input = '''```sketch
+rect id=r at 10,20 50x60
+```''';
+      final result = DocumentParser.parse(input);
+      expect(result.value.sections, hasLength(1));
+      expect(result.value.sections.first, isA<SketchSection>());
+      final sketch = result.value.sections.first as SketchSection;
+      expect(sketch.elements, hasLength(1));
+      expect(sketch.elements[0], isA<RectangleElement>());
+    });
+
     test('parses interleaved prose and sketch', () {
       const input = '''# Architecture
 
 Here's how the services connect:
 
-```sketch
+```markdraw
 rect id=auth at 100,200 size 160x80
 ```
 
 The auth service handles OAuth2 flows.
 
-```sketch
+```markdraw
 ellipse id=db at 225,400 size 120x80
 ```''';
       final result = DocumentParser.parse(input);
@@ -72,7 +84,7 @@ ellipse id=db at 225,400 size 120x80
     });
 
     test('registers aliases from sketch elements', () {
-      const input = '''```sketch
+      const input = '''```markdraw
 rect id=auth at 100,200 size 160x80
 rect id=gateway at 350,200 size 160x80
 ```''';
@@ -82,7 +94,7 @@ rect id=gateway at 350,200 size 160x80
     });
 
     test('resolves arrow bindings', () {
-      const input = '''```sketch
+      const input = '''```markdraw
 rect id=auth at 100,200 size 160x80
 rect id=gateway at 350,200 size 160x80
 arrow from auth to gateway
@@ -95,7 +107,7 @@ arrow from auth to gateway
     });
 
     test('parses rect with inline label into shape + bound text', () {
-      const input = '''```sketch
+      const input = '''```markdraw
 rect "Auth Service" id=auth at 100,200 size 160x80
 ```''';
       final result = DocumentParser.parse(input);
@@ -116,7 +128,7 @@ background: "#000000"
 grid: 10
 ---
 
-```sketch
+```markdraw
 rect at 0,0 size 100x100
 ```''';
       final result = DocumentParser.parse(input);
@@ -125,7 +137,7 @@ rect at 0,0 size 100x100
     });
 
     test('unknown keywords in sketch produce warnings', () {
-      const input = '''```sketch
+      const input = '''```markdraw
 polygon at 0,0 size 100x100
 rect at 0,0 size 100x100
 ```''';
@@ -138,7 +150,7 @@ rect at 0,0 size 100x100
     });
 
     test('empty sketch block produces empty section', () {
-      const input = '''```sketch
+      const input = '''```markdraw
 ```''';
       final result = DocumentParser.parse(input);
       final sketch = result.value.sections.first as SketchSection;
@@ -146,7 +158,7 @@ rect at 0,0 size 100x100
     });
 
     test('sketch with comments skips comment lines', () {
-      const input = '''```sketch
+      const input = '''```markdraw
 # This is a comment
 rect at 0,0 size 100x100
 ```''';
@@ -156,13 +168,13 @@ rect at 0,0 size 100x100
     });
 
     test('allElements returns elements from all sections', () {
-      const input = '''```sketch
+      const input = '''```markdraw
 rect id=a at 0,0 size 100x100
 ```
 
 Some prose
 
-```sketch
+```markdraw
 ellipse id=b at 200,200 size 50x50
 ```''';
       final result = DocumentParser.parse(input);
@@ -180,7 +192,7 @@ grid: 20
 
 Here's how the services connect:
 
-```sketch
+```markdraw
 rect "Auth Service" id=auth at 100,200 size 160x80 fill=#e3f2fd rounded=8
 rect "API Gateway" id=gateway at 350,200 size 160x80 fill=#fff3e0 rounded=8
 arrow from auth to gateway stroke=dashed
@@ -207,7 +219,7 @@ The auth service handles OAuth2 flows.''';
 
   group('Bound text color', () {
     test('parses text-color on shape with label', () {
-      const input = '''```sketch
+      const input = '''```markdraw
 rect "Label" id=r at 0,0 100x50 text-color=red
 ```''';
       final result = DocumentParser.parse(input);
@@ -218,7 +230,7 @@ rect "Label" id=r at 0,0 100x50 text-color=red
     });
 
     test('defaults to black when text-color omitted', () {
-      const input = '''```sketch
+      const input = '''```markdraw
 rect "Label" id=r at 0,0 100x50
 ```''';
       final result = DocumentParser.parse(input);
@@ -231,7 +243,7 @@ rect "Label" id=r at 0,0 100x50
 
   group('Arrow label parsing', () {
     test('parses arrow with inline label into arrow + bound text', () {
-      const input = '''```sketch
+      const input = '''```markdraw
 rect id=auth at 100,200 160x80
 rect id=gw at 400,200 160x80
 arrow "calls" from auth to gw
@@ -251,7 +263,7 @@ arrow "calls" from auth to gw
     });
 
     test('parses arrow with inline label and text properties', () {
-      const input = '''```sketch
+      const input = '''```markdraw
 rect id=auth at 100,200 160x80
 rect id=gw at 400,200 160x80
 arrow "API" from auth to gw text-size=16 text-color=red
@@ -270,7 +282,7 @@ arrow "API" from auth to gw text-size=16 text-color=red
 
   group('Partial binding parsing', () {
     test('parses arrow with coordinate endpoint', () {
-      const input = '''```sketch
+      const input = '''```markdraw
 rect id=auth at 100,200 160x80
 arrow from auth to 500,300
 ```''';
@@ -284,7 +296,7 @@ arrow from auth to 500,300
     });
 
     test('parses arrow with coordinate start', () {
-      const input = '''```sketch
+      const input = '''```markdraw
 rect id=dest at 400,200 160x80
 arrow from 100,50 to dest
 ```''';
