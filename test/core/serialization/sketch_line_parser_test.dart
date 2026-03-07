@@ -459,4 +459,143 @@ void main() {
       expect(result.value!.y, 200.25);
     });
   });
+
+  // Verifies the autocomplete-generated format: keyword id=keywordN ...
+  group('id= immediately after keyword', () {
+    test('rect id=rect1 parses correctly', () {
+      final result = parser.parseLine(
+        'rect id=rect1 at 10,20 size 100x50',
+        1,
+      );
+      final elem = result.value!;
+      expect(elem, isA<RectangleElement>());
+      expect(elem.x, 10);
+      expect(elem.y, 20);
+      expect(elem.width, 100);
+      expect(elem.height, 50);
+    });
+
+    test('ellipse id=ellipse1 parses correctly', () {
+      final result = parser.parseLine(
+        'ellipse id=ellipse1 at 30,40 size 80x60',
+        1,
+      );
+      final elem = result.value!;
+      expect(elem, isA<EllipseElement>());
+      expect(elem.x, 30);
+      expect(elem.y, 40);
+      expect(elem.width, 80);
+      expect(elem.height, 60);
+    });
+
+    test('diamond id=diamond1 parses correctly', () {
+      final result = parser.parseLine(
+        'diamond id=diamond1 at 50,60 size 90x70',
+        1,
+      );
+      final elem = result.value!;
+      expect(elem, isA<DiamondElement>());
+      expect(elem.x, 50);
+      expect(elem.y, 60);
+      expect(elem.width, 90);
+      expect(elem.height, 70);
+    });
+
+    test('text id=text1 with quoted string after id parses correctly', () {
+      final result = parser.parseLine(
+        'text id=text1 "Hello world" at 5,15',
+        1,
+      );
+      final elem = result.value! as TextElement;
+      expect(elem.text, 'Hello world');
+      expect(elem.x, 5);
+      expect(elem.y, 15);
+    });
+
+    test('line id=line1 parses correctly', () {
+      final result = parser.parseLine(
+        'line id=line1 points=[[0,0],[100,200]]',
+        1,
+      );
+      final elem = result.value! as LineElement;
+      expect(elem.points.length, 2);
+      expect(elem.points[0].x, 0);
+      expect(elem.points[1].x, 100);
+    });
+
+    test('arrow id=arrow1 with points parses correctly', () {
+      final result = parser.parseLine(
+        'arrow id=arrow1 points=[[0,0],[200,100]]',
+        1,
+      );
+      final elem = result.value! as ArrowElement;
+      expect(elem.points.length, 2);
+      expect(elem.endArrowhead, Arrowhead.arrow);
+    });
+
+    test('arrow id=arrow1 with from/to parses correctly', () {
+      // First create targets to bind to.
+      parser.parseLine('rect id=src at 0,0 size 50x50', 1);
+      parser.parseLine('rect id=dst at 200,200 size 50x50', 2);
+
+      final result = parser.parseLine(
+        'arrow id=arrow1 from src to dst',
+        3,
+      );
+      expect(result.value, isNotNull);
+      expect(result.value, isA<ArrowElement>());
+    });
+
+    test('freedraw id=freedraw1 parses correctly', () {
+      final result = parser.parseLine(
+        'freedraw id=freedraw1 points=[[0,0],[5,2],[10,8]]',
+        1,
+      );
+      final elem = result.value! as FreedrawElement;
+      expect(elem.points.length, 3);
+    });
+
+    test('frame id=frame1 parses correctly', () {
+      final result = parser.parseLine(
+        'frame id=frame1 at 0,0 size 400x300',
+        1,
+      );
+      final elem = result.value! as FrameElement;
+      expect(elem.x, 0);
+      expect(elem.y, 0);
+      expect(elem.width, 400);
+      expect(elem.height, 300);
+      expect(elem.label, 'Frame'); // default label
+    });
+
+    test('frame id=frame1 with label parses correctly', () {
+      final result = parser.parseLine(
+        'frame id=frame1 "My Frame" at 10,20 size 300x200',
+        1,
+      );
+      final elem = result.value! as FrameElement;
+      expect(elem.label, 'My Frame');
+      expect(elem.x, 10);
+      expect(elem.y, 20);
+    });
+
+    test('image id=image1 parses correctly', () {
+      final result = parser.parseLine(
+        'image id=image1 at 100,200 size 400x300 file=abc12345',
+        1,
+      );
+      final elem = result.value! as ImageElement;
+      expect(elem.x, 100);
+      expect(elem.y, 200);
+      expect(elem.width, 400);
+      expect(elem.height, 300);
+      expect(elem.fileId, 'abc12345');
+    });
+
+    test('id alias is registered and usable for bindings', () {
+      parser.parseLine('rect id=rect1 at 0,0 size 50x50', 1);
+      final result = parser.parseLine('arrow id=arrow1 from rect1 to 200,200', 2);
+      expect(result.value, isNotNull);
+    });
+  });
 }

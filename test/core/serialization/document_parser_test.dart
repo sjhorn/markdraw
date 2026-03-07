@@ -241,6 +241,79 @@ rect "Label" id=r at 0,0 100x50
     });
   });
 
+  group('Bound text with id before label', () {
+    test('rect id=rect1 "test" parses shape + bound text', () {
+      const input = '''```markdraw
+rect id=rect1 "test" at 100,100 size 100x100
+```''';
+      final result = DocumentParser.parse(input);
+      final sketch = result.value.sections.first as SketchSection;
+      expect(sketch.elements, hasLength(2));
+      expect(sketch.elements[0], isA<RectangleElement>());
+      final rect = sketch.elements[0] as RectangleElement;
+      expect(rect.x, 100);
+      expect(rect.y, 100);
+      expect(sketch.elements[1], isA<TextElement>());
+      final text = sketch.elements[1] as TextElement;
+      expect(text.text, 'test');
+      expect(text.containerId, rect.id.value);
+    });
+
+    test('ellipse id=ellipse1 "label" parses shape + bound text', () {
+      const input = '''```markdraw
+ellipse id=ellipse1 "label" at 50,50 size 80x60
+```''';
+      final result = DocumentParser.parse(input);
+      final sketch = result.value.sections.first as SketchSection;
+      expect(sketch.elements, hasLength(2));
+      expect(sketch.elements[0], isA<EllipseElement>());
+      final text = sketch.elements[1] as TextElement;
+      expect(text.text, 'label');
+      expect(text.containerId, isNotNull);
+    });
+
+    test('diamond id=diamond1 "label" parses shape + bound text', () {
+      const input = '''```markdraw
+diamond id=diamond1 "label" at 50,50 size 80x60
+```''';
+      final result = DocumentParser.parse(input);
+      final sketch = result.value.sections.first as SketchSection;
+      expect(sketch.elements, hasLength(2));
+      expect(sketch.elements[0], isA<DiamondElement>());
+      final text = sketch.elements[1] as TextElement;
+      expect(text.text, 'label');
+      expect(text.containerId, isNotNull);
+    });
+
+    test('arrow id=arrow1 "label" with from/to parses arrow + bound text', () {
+      const input = '''```markdraw
+rect id=a at 0,0 size 50x50
+rect id=b at 200,200 size 50x50
+arrow id=arrow1 "calls" from a to b
+```''';
+      final result = DocumentParser.parse(input);
+      final sketch = result.value.sections.first as SketchSection;
+      final arrows = sketch.elements.whereType<ArrowElement>().toList();
+      expect(arrows, hasLength(1));
+      final texts = sketch.elements.whereType<TextElement>().toList();
+      expect(texts, hasLength(1));
+      expect(texts.first.text, 'calls');
+      expect(texts.first.containerId, isNotNull);
+    });
+
+    test('shape with id before label preserves text properties', () {
+      const input = '''```markdraw
+rect id=rect1 "styled" at 0,0 size 100x50 text-size=24 text-color=blue
+```''';
+      final result = DocumentParser.parse(input);
+      final sketch = result.value.sections.first as SketchSection;
+      final text = sketch.elements[1] as TextElement;
+      expect(text.text, 'styled');
+      expect(text.fontSize, 24);
+      expect(text.strokeColor, '#0000ff');
+    });
+  });
+
   group('Arrow label parsing', () {
     test('parses arrow with inline label into arrow + bound text', () {
       const input = '''```markdraw

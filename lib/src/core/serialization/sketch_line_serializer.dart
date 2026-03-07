@@ -59,8 +59,8 @@ class SketchLineSerializer {
     TextElement labelElement,
   ) {
     final parts = <String>[keyword];
-    parts.add('"${labelElement.text}"');
     _addId(parts, alias);
+    parts.add('"${labelElement.text}"');
     _addPosition(parts, element.x, element.y);
     _addSize(parts, element.width, element.height);
     _addTextProperties(parts, labelElement);
@@ -76,8 +76,8 @@ class SketchLineSerializer {
     TextElement labelElement,
   ) {
     final parts = <String>['arrow'];
-    parts.add('"${labelElement.text}"');
     _addId(parts, alias);
+    parts.add('"${labelElement.text}"');
 
     _addArrowBody(parts, element, aliasMap, elementMap);
     _addTextProperties(parts, labelElement);
@@ -105,8 +105,8 @@ class SketchLineSerializer {
 
   String _serializeFrame(FrameElement element, String? alias) {
     final parts = <String>['frame'];
-    parts.add('"${element.label}"');
     _addId(parts, alias);
+    parts.add('"${element.label}"');
     _addPosition(parts, element.x, element.y);
     _addSize(parts, element.width, element.height);
     _addCommonProperties(parts, element);
@@ -143,8 +143,8 @@ class SketchLineSerializer {
 
   String _serializeText(TextElement element, String? alias) {
     final parts = <String>['text'];
-    parts.add('"${element.text}"');
     _addId(parts, alias);
+    parts.add('"${element.text}"');
     _addPosition(parts, element.x, element.y);
     _addSize(parts, element.width, element.height);
     if (element.fontSize != 20.0) {

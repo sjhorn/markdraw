@@ -583,7 +583,7 @@ void main() {
         alias: 'conn',
         aliasMap: {'r1': 'auth', 'r2': 'gw'},
       );
-      expect(line, startsWith('arrow "calls"'));
+      expect(line, startsWith('arrow id=conn "calls"'));
       expect(line, contains('from auth'));
       expect(line, contains('to gw'));
       expect(line, contains('arrow-type=round'));

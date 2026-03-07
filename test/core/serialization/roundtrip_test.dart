@@ -732,7 +732,7 @@ rect id=r at 10,20 50x60 fill=lime color=red stroke=dotted fill-style=hachure st
       final output = DocumentSerializer.serialize(doc);
 
       // Verify the serialized output has inline label
-      expect(output, contains('rect "Auth Service" id=auth'));
+      expect(output, contains('rect id=auth "Auth Service"'));
 
       final parsed = DocumentParser.parse(output);
       final sketch = parsed.value.sections.first as SketchSection;
@@ -937,7 +937,7 @@ rect id=r at 10,20 50x60 fill=lime color=red stroke=dotted fill-style=hachure st
       final output = DocumentSerializer.serialize(doc);
 
       // Verify arrow-specific data is present
-      expect(output, contains('arrow "calls"'));
+      expect(output, contains('arrow id=conn "calls"'));
       expect(output, contains('from auth'));
       expect(output, contains('to gw'));
       expect(output, contains('arrow-type=round'));
@@ -1200,7 +1200,7 @@ communication uses mTLS.''';
       expect(output, contains('grid: 20'));
       expect(output, contains('# Architecture Overview'));
       expect(output, contains('```markdraw'));
-      expect(output, contains('rect "Auth Service"'));
+      expect(output, contains('rect id=auth "Auth Service"'));
       expect(output, contains('from auth to gateway'));
       expect(output, contains('mTLS'));
     });

@@ -176,20 +176,23 @@ class DocumentParser {
       final line = lines[i].trim();
       if (line.isEmpty || line.startsWith('#')) continue;
 
-      // Check for inline label on shapes: keyword "Label" ...
+      // Check for inline label on shapes: keyword [props] "Label" ...
       // Only applies to shape types (not text, which naturally has quotes)
+      // The quoted string may appear immediately after keyword or after
+      // properties like id=... (e.g. rect id=rect1 "Label" at 0,0 100x50).
       final labelMatch = RegExp(
-        r'^(\w+)\s+"([^"]+)"\s+(.*)',
+        r'^(\w+)\s+(.*?)"([^"]+)"\s*(.*)',
       ).firstMatch(line);
 
       if (labelMatch != null &&
           _labelableKeywords.contains(labelMatch.group(1)!.toLowerCase())) {
         final keyword = labelMatch.group(1)!;
-        final label = labelMatch.group(2)!;
-        final rest = labelMatch.group(3)!;
+        final before = labelMatch.group(2)!; // props before the label (may be empty)
+        final label = labelMatch.group(3)!;
+        final after = labelMatch.group(4)!; // props after the label
 
         // Parse the shape without the label
-        final shapeLine = '$keyword $rest';
+        final shapeLine = '$keyword $before$after';
         final result = parser.parseLine(shapeLine, i + 1);
         warnings.addAll(result.warnings);
 

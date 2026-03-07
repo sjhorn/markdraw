@@ -125,7 +125,7 @@ void main() {
       );
       final output = DocumentSerializer.serialize(doc);
       // Bound text should be inlined as label on the shape
-      expect(output, contains('rect "Auth Service" id=auth'));
+      expect(output, contains('rect id=auth "Auth Service"'));
       // The bound text element should NOT appear as a separate line
       final sketchLines = _extractSketchLines(output);
       expect(
