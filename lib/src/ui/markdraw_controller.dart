@@ -1152,6 +1152,19 @@ class MarkdrawController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Replaces the scene without pushing to the undo stack.
+  ///
+  /// Used for coalescing rapid edits (e.g. consecutive text-pane keystrokes)
+  /// into a single undo entry. Call [applyScene] first to create the undo
+  /// point, then [replaceScene] for subsequent updates in the same session.
+  void replaceScene(Scene scene, {String? background}) {
+    _editorState = _editorState.copyWith(scene: scene, selectedIds: {});
+    if (background != null) {
+      _canvasBackgroundColor = background;
+    }
+    notifyListeners();
+  }
+
   void clear() {
     _historyManager.clear();
     _editorState = _editorState.copyWith(

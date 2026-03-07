@@ -67,6 +67,46 @@ void main() {
     });
   });
 
+  group('replaceScene', () {
+    test('does not push to undo stack', () {
+      final controller = MarkdrawController();
+      addTearDown(controller.dispose);
+
+      controller.replaceScene(_sceneWithRect());
+
+      expect(controller.historyManager.canUndo, isFalse);
+      expect(controller.editorState.scene.activeElements.length, 1);
+    });
+
+    test('applyScene then replaceScene creates single undo entry', () {
+      final controller = MarkdrawController();
+      addTearDown(controller.dispose);
+
+      final original = controller.editorState.scene;
+
+      // First edit pushes to undo
+      controller.applyScene(_sceneWithRect());
+      expect(controller.historyManager.undoCount, 1);
+
+      // Subsequent edits replace without pushing
+      final scene2 = Scene().addElement(
+        EllipseElement(
+          id: const ElementId('e1'),
+          x: 10,
+          y: 10,
+          width: 80,
+          height: 80,
+        ),
+      );
+      controller.replaceScene(scene2);
+      expect(controller.historyManager.undoCount, 1);
+
+      // Undo goes back to original (before first applyScene)
+      controller.undo();
+      expect(identical(controller.editorState.scene, original), isTrue);
+    });
+  });
+
   group('undo triggers onSceneChanged', () {
     test('calls onSceneChanged callback', () {
       final controller = MarkdrawController();

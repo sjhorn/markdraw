@@ -48,6 +48,7 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
   double _splitRatio = 0.5;
   bool _isDraggingDivider = false;
   String _lastSyncedText = '';
+  bool _hasPushedForSession = false;
 
   // Parse status
   List<ParseWarning> _parseWarnings = [];
@@ -60,7 +61,7 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
 
   static const _minPaneWidth = 280.0;
   static const _dividerWidth = 8.0;
-  static const _debounceMs = 150;
+  static const _debounceMs = 500;
 
   @override
   void initState() {
@@ -120,6 +121,7 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
   void _onSceneChanged(Scene scene) {
     _previousOnSceneChanged?.call(scene);
     if (_isSyncing) return;
+    _hasPushedForSession = false;
     _syncCanvasToText();
     _textFlash.forward(from: 0);
   }
@@ -156,7 +158,7 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
   }
 
   // ---------------------------------------------------------------------------
-  // Sync: text → canvas (debounced 150ms)
+  // Sync: text → canvas (debounced 500ms)
   // ---------------------------------------------------------------------------
 
   void _onTextChanged() {
@@ -175,7 +177,12 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
     _isSyncing = true;
     try {
       if (text.trim().isEmpty) {
-        widget.controller.applyScene(Scene());
+        if (_hasPushedForSession) {
+          widget.controller.replaceScene(Scene());
+        } else {
+          widget.controller.applyScene(Scene());
+          _hasPushedForSession = true;
+        }
         setState(() {
           _parseWarnings = [];
           _hasParseError = false;
@@ -188,7 +195,12 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
         final parseResult = DocumentParser.parse(wrapped);
         final doc = parseResult.value;
         final scene = SceneDocumentConverter.documentToScene(doc);
-        widget.controller.applyScene(scene, background: bg);
+        if (_hasPushedForSession) {
+          widget.controller.replaceScene(scene, background: bg);
+        } else {
+          widget.controller.applyScene(scene, background: bg);
+          _hasPushedForSession = true;
+        }
         setState(() {
           _parseWarnings = parseResult.warnings;
           _hasParseError = false;
