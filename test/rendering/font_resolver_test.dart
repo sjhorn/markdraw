@@ -113,13 +113,10 @@ void main() {
         FontResolver.defaultForCategory[FontCategory.handDrawn],
         'Excalifont',
       );
-      expect(
-        FontResolver.defaultForCategory[FontCategory.normal],
-        'Helvetica',
-      );
+      expect(FontResolver.defaultForCategory[FontCategory.normal], 'Nunito');
       expect(
         FontResolver.defaultForCategory[FontCategory.code],
-        'Cascadia',
+        'Source Code Pro',
       );
     });
 

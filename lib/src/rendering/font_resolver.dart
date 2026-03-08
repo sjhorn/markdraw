@@ -108,13 +108,10 @@ class FontResolver {
       fontCategories[fontFamily] ?? FontCategory.normal;
 
   /// Default font for each category (used by quick-access buttons).
-  ///
-  /// These must match the parser aliases in sketch_line_parser.dart:
-  /// hand-drawn → Excalifont, normal → Helvetica, code → Cascadia.
   static const defaultForCategory = <FontCategory, String>{
     FontCategory.handDrawn: 'Excalifont',
-    FontCategory.normal: 'Helvetica',
-    FontCategory.code: 'Cascadia',
+    FontCategory.normal: 'Nunito',
+    FontCategory.code: 'Source Code Pro',
   };
 
   /// Resolves a font family name to a [TextStyle].
