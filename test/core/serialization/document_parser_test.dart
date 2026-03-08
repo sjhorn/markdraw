@@ -312,6 +312,46 @@ rect id=rect1 "styled" at 0,0 size 100x50 text-size=24 text-color=blue
       expect(text.fontSize, 24);
       expect(text.strokeColor, '#0000ff');
     });
+
+    test('bound text with quoted font name', () {
+      const input = '''```markdraw
+rect "Label" at 0,0 100x50 text-font="Lilita One"
+```''';
+      final result = DocumentParser.parse(input);
+      final sketch = result.value.sections.first as SketchSection;
+      final text = sketch.elements[1] as TextElement;
+      expect(text.fontFamily, 'Lilita One');
+    });
+
+    test('bound text with font alias hand-drawn', () {
+      const input = '''```markdraw
+rect "Label" at 0,0 100x50 text-font=hand-drawn
+```''';
+      final result = DocumentParser.parse(input);
+      final sketch = result.value.sections.first as SketchSection;
+      final text = sketch.elements[1] as TextElement;
+      expect(text.fontFamily, 'Excalifont');
+    });
+
+    test('bound text with named font size', () {
+      const input = '''```markdraw
+rect "Label" at 0,0 100x50 text-size=large
+```''';
+      final result = DocumentParser.parse(input);
+      final sketch = result.value.sections.first as SketchSection;
+      final text = sketch.elements[1] as TextElement;
+      expect(text.fontSize, 28.0);
+    });
+
+    test('bound text with font-size alias', () {
+      const input = '''```markdraw
+rect "Label" at 0,0 100x50 font-size=small
+```''';
+      final result = DocumentParser.parse(input);
+      final sketch = result.value.sections.first as SketchSection;
+      final text = sketch.elements[1] as TextElement;
+      expect(text.fontSize, 16.0);
+    });
   });
 
   group('Arrow label parsing', () {

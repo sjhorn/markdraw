@@ -78,6 +78,19 @@ void main() {
       expect(result, isNotNull);
     });
 
+    test('parses hyphenated property keys as attr, not keyword', () {
+      final result = html('text-font=Nunito');
+      // text-font should be highlighted as attr, not split into keyword + junk
+      expect(result, contains('attr'));
+      // 'text' should NOT be highlighted as a keyword here
+      expect(result, isNot(contains('keyword')));
+    });
+
+    test('text keyword still works standalone', () {
+      final result = html('text "Hello" at 0,0 100x50');
+      expect(result, contains('keyword'));
+    });
+
     test('produces rich output for complex line', () {
       final result =
           html('rect "Label" id=r1 at 10,20 50x60 fill=#ff0000 locked');
@@ -85,6 +98,41 @@ void main() {
       expect(result, contains('string'));
       expect(result, contains('attr'));
       expect(result, contains('number'));
+    });
+
+    test('font=hand-drawn highlights key as attr and value as string', () {
+      final result = html('font=hand-drawn');
+      expect(result, contains('attr'));
+      expect(result, contains('string'));
+    });
+
+    test('font-size=small highlights key as attr and value as string', () {
+      final result = html('font-size=small');
+      expect(result, contains('attr'));
+      expect(result, contains('string'));
+    });
+
+    test('font-size=xl highlights value as string', () {
+      final result = html('font-size=xl');
+      expect(result, contains('string'));
+    });
+
+    test('quoted property value after = highlights as string', () {
+      final result = html('font="Lilita One"');
+      expect(result, contains('attr'));
+      expect(result, contains('string'));
+    });
+
+    test('known value aliases all highlight as string', () {
+      for (final alias in [
+        'hand-drawn', 'normal', 'code',
+        'small', 'medium', 'large', 'extra-large',
+        's', 'm', 'l', 'xl',
+      ]) {
+        final result = html('prop=$alias');
+        expect(result, contains('string'),
+            reason: '$alias should highlight as string');
+      }
     });
   });
 }

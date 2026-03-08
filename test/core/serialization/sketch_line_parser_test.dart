@@ -168,6 +168,116 @@ void main() {
       final text = result.value! as TextElement;
       expect(text.verticalAlign, VerticalAlign.bottom);
     });
+
+    test('text with quoted font name containing spaces', () {
+      final result = parser.parseLine(
+        'text "Hello" at 0,0 font="Lilita One"',
+        1,
+      );
+      final text = result.value! as TextElement;
+      expect(text.fontFamily, 'Lilita One');
+    });
+
+    test('font=hand-drawn resolves to Excalifont', () {
+      final result = parser.parseLine(
+        'text "Hello" at 0,0 font=hand-drawn',
+        1,
+      );
+      final text = result.value! as TextElement;
+      expect(text.fontFamily, 'Excalifont');
+    });
+
+    test('font=normal resolves to Helvetica', () {
+      final result = parser.parseLine(
+        'text "Hello" at 0,0 font=normal',
+        1,
+      );
+      final text = result.value! as TextElement;
+      expect(text.fontFamily, 'Helvetica');
+    });
+
+    test('font=code resolves to Cascadia', () {
+      final result = parser.parseLine(
+        'text "Hello" at 0,0 font=code',
+        1,
+      );
+      final text = result.value! as TextElement;
+      expect(text.fontFamily, 'Cascadia');
+    });
+
+    test('font=Nunito passes through unchanged', () {
+      final result = parser.parseLine(
+        'text "Hello" at 0,0 font=Nunito',
+        1,
+      );
+      final text = result.value! as TextElement;
+      expect(text.fontFamily, 'Nunito');
+    });
+
+    test('font-size=small resolves to 16', () {
+      final result = parser.parseLine(
+        'text "Hello" at 0,0 font-size=small',
+        1,
+      );
+      final text = result.value! as TextElement;
+      expect(text.fontSize, 16.0);
+    });
+
+    test('font-size=xl resolves to 36', () {
+      final result = parser.parseLine(
+        'text "Hello" at 0,0 font-size=xl',
+        1,
+      );
+      final text = result.value! as TextElement;
+      expect(text.fontSize, 36.0);
+    });
+
+    test('font-size=medium resolves to 20', () {
+      final result = parser.parseLine(
+        'text "Hello" at 0,0 font-size=medium',
+        1,
+      );
+      final text = result.value! as TextElement;
+      expect(text.fontSize, 20.0);
+    });
+
+    test('font-size=large resolves to 28', () {
+      final result = parser.parseLine(
+        'text "Hello" at 0,0 font-size=large',
+        1,
+      );
+      final text = result.value! as TextElement;
+      expect(text.fontSize, 28.0);
+    });
+
+    test('font-size short aliases work (s, m, l)', () {
+      for (final entry in {'s': 16.0, 'm': 20.0, 'l': 28.0}.entries) {
+        final result = parser.parseLine(
+          'text "Hello" at 0,0 font-size=${entry.key}',
+          1,
+        );
+        final text = result.value! as TextElement;
+        expect(text.fontSize, entry.value, reason: 'font-size=${entry.key}');
+      }
+    });
+
+    test('numeric size= still works as before', () {
+      final result = parser.parseLine(
+        'text "Hello" at 0,0 size=24',
+        1,
+      );
+      final text = result.value! as TextElement;
+      expect(text.fontSize, 24.0);
+    });
+
+    test('font-size takes precedence over size', () {
+      final result = parser.parseLine(
+        'text "Hello" at 0,0 font-size=large size=12',
+        1,
+      );
+      final text = result.value! as TextElement;
+      expect(text.fontSize, 28.0);
+    });
   });
 
   group('Line parsing', () {

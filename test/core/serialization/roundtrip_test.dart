@@ -1205,4 +1205,65 @@ communication uses mTLS.''';
       expect(output, contains('mTLS'));
     });
   });
+
+  group('Font quoting and aliases round-trip', () {
+    late SketchLineSerializer serializer;
+    late SketchLineParser parser;
+
+    setUp(() {
+      serializer = SketchLineSerializer();
+      parser = SketchLineParser();
+    });
+
+    test('text with quoted font round-trips', () {
+      final original = TextElement(
+        id: const ElementId('t1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 30,
+        text: 'Hi',
+        fontFamily: 'Lilita One',
+        seed: 1,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final line = serializer.serialize(original, alias: 't');
+      expect(line, contains('font="Lilita One"'));
+
+      final result = parser.parseLine(line, 1);
+      final parsed = result.value! as TextElement;
+      expect(parsed.fontFamily, 'Lilita One');
+    });
+
+    test('font=hand-drawn parses then serializes without font= (default Excalifont)', () {
+      final result = parser.parseLine(
+        'text "Hi" at 0,0 font=hand-drawn',
+        1,
+      );
+      final parsed = result.value! as TextElement;
+      expect(parsed.fontFamily, 'Excalifont');
+
+      // Excalifont is the default, so serializer omits font=
+      final line = serializer.serialize(parsed);
+      expect(line, isNot(contains('font=')));
+    });
+
+    test('font=code parses to Cascadia and round-trips', () {
+      final result = parser.parseLine(
+        'text "Hi" at 0,0 font=code',
+        1,
+      );
+      final parsed = result.value! as TextElement;
+      expect(parsed.fontFamily, 'Cascadia');
+
+      final line = serializer.serialize(parsed);
+      expect(line, contains('font=Cascadia'));
+
+      // Re-parse the serialized line
+      final result2 = parser.parseLine(line, 1);
+      final reparsed = result2.value! as TextElement;
+      expect(reparsed.fontFamily, 'Cascadia');
+    });
+  });
 }

@@ -25,7 +25,7 @@ final langMarkdraw = Mode(
     Mode(
       scope: 'keyword',
       begin:
-          r'\b(rect|ellipse|diamond|line|arrow|text|freedraw|frame|image)\b',
+          r'\b(rect|ellipse|diamond|line|arrow|text|freedraw|frame|image)\b(?!-)',
     ),
 
     // Position keywords
@@ -38,6 +38,20 @@ final langMarkdraw = Mode(
     Mode(
       scope: 'attr',
       begin: r'[a-z][a-z0-9-]*(?==)',
+    ),
+
+    // Known property values after '=' (font aliases, named sizes)
+    Mode(
+      scope: 'string',
+      begin:
+          r'(?<==)(hand-drawn|normal|code|small|medium|large|extra-large|s|m|l|xl)\b',
+    ),
+
+    // Quoted property values: key="value with spaces"
+    Mode(
+      scope: 'string',
+      begin: r'(?<==)"',
+      end: r'"',
     ),
 
     // Hex colors: #RRGGBB (after comment to avoid false match)

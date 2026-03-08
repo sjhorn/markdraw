@@ -90,7 +90,7 @@ class SketchLineSerializer {
       parts.add('text-size=${_formatNum(labelElement.fontSize)}');
     }
     if (labelElement.fontFamily != 'Excalifont') {
-      parts.add('text-font=${labelElement.fontFamily}');
+      parts.add('text-font=${_quoteIfNeeded(labelElement.fontFamily)}');
     }
     if (labelElement.textAlign != TextAlign.center) {
       parts.add('text-align=${labelElement.textAlign.name}');
@@ -151,7 +151,7 @@ class SketchLineSerializer {
       parts.add('size=${_formatNum(element.fontSize)}');
     }
     if (element.fontFamily != 'Excalifont') {
-      parts.add('font=${element.fontFamily}');
+      parts.add('font=${_quoteIfNeeded(element.fontFamily)}');
     }
     if (element.textAlign != TextAlign.left) {
       parts.add('align=${element.textAlign.name}');
@@ -392,6 +392,10 @@ class SketchLineSerializer {
             ))
         .toList();
   }
+
+  /// Wraps a value in quotes if it contains spaces.
+  String _quoteIfNeeded(String value) =>
+      value.contains(' ') ? '"$value"' : value;
 
   /// Formats a number: integers without decimal, doubles with decimals.
   String _formatNum(num value) {

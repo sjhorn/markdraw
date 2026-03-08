@@ -5,6 +5,28 @@ import '../math/math.dart';
 import 'color_names.dart';
 import 'parse_result.dart';
 
+/// Font category aliases for shorthand font names.
+const _fontAliases = {
+  'hand-drawn': 'Excalifont',
+  'normal': 'Helvetica',
+  'code': 'Cascadia',
+};
+
+/// Resolves a font alias to its actual font name, or returns the value as-is.
+String _resolveFontAlias(String value) => _fontAliases[value] ?? value;
+
+/// Named font size aliases.
+const _namedFontSizes = {
+  'small': 16.0,
+  's': 16.0,
+  'medium': 20.0,
+  'm': 20.0,
+  'large': 28.0,
+  'l': 28.0,
+  'extra-large': 36.0,
+  'xl': 36.0,
+};
+
 /// A pending arrow binding to be resolved after all elements are parsed.
 class PendingBinding {
   final String arrowElementId;
@@ -326,8 +348,11 @@ class SketchLineParser {
     final pos = props.position;
     final common = props.commonProperties;
     final text = props.quotedString;
-    final fontSize = props.namedDouble('size') ?? 20.0;
-    final fontFamily = props.namedString('font') ?? 'Excalifont';
+    final fontSize = _namedFontSizes[props.namedString('font-size')]
+        ?? props.namedDouble('size')
+        ?? 20.0;
+    final fontFamily =
+        _resolveFontAlias(props.namedString('font') ?? 'Excalifont');
     final alignStr = props.namedString('align');
     final textAlign = _parseTextAlign(alignStr);
     final valignStr = props.namedString('valign');
@@ -745,6 +770,10 @@ class _PropertyBag {
   }
 
   String? namedString(String name) {
+    // Try quoted value first: name="value with spaces"
+    final quoted = RegExp('(?:^|\\s)$name="([^"]*)"').firstMatch(line);
+    if (quoted != null) return quoted.group(1);
+    // Fall back to unquoted: name=value
     final match = RegExp('(?:^|\\s)$name=(\\S+)').firstMatch(line);
     return match?.group(1);
   }

@@ -317,6 +317,41 @@ void main() {
       expect(line, contains('color=#d32f2f'));
     });
 
+    test('text with font containing spaces is quoted', () {
+      final text = TextElement(
+        id: const ElementId('t1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 30,
+        text: 'Hello',
+        fontFamily: 'Lilita One',
+        seed: 5,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final line = serializer.serialize(text);
+      expect(line, contains('font="Lilita One"'));
+    });
+
+    test('text with single-word font is unquoted', () {
+      final text = TextElement(
+        id: const ElementId('t1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 30,
+        text: 'Hello',
+        fontFamily: 'Cascadia',
+        seed: 5,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final line = serializer.serialize(text);
+      expect(line, contains('font=Cascadia'));
+      expect(line, isNot(contains('"Cascadia"')));
+    });
+
     test('text with containerId is emitted', () {
       final text = TextElement(
         id: const ElementId('t1'),
@@ -973,6 +1008,34 @@ void main() {
       );
       final line = serializer.serializeWithLabel(rect, label, alias: 'r');
       expect(line, isNot(contains('text-color=')));
+    });
+
+    test('bound text font with spaces is quoted', () {
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 50,
+        seed: 1,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final label = TextElement(
+        id: const ElementId('t1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 20,
+        text: 'Label',
+        fontFamily: 'Source Code Pro',
+        containerId: 'r1',
+        seed: 2,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final line = serializer.serializeWithLabel(rect, label, alias: 'r');
+      expect(line, contains('text-font="Source Code Pro"'));
     });
   });
 }

@@ -12,6 +12,28 @@ import 'sketch_line_parser.dart';
 /// Keywords that can have inline labels (e.g., rect "Label" ...).
 const _labelableKeywords = {'rect', 'ellipse', 'diamond', 'arrow'};
 
+/// Font category aliases for shorthand font names (bound text).
+const _fontAliases = {
+  'hand-drawn': 'Excalifont',
+  'normal': 'Helvetica',
+  'code': 'Cascadia',
+};
+
+/// Resolves a font alias to its actual font name, or returns the value as-is.
+String _resolveFontAlias(String value) => _fontAliases[value] ?? value;
+
+/// Named font size aliases (bound text).
+const _namedFontSizes = {
+  'small': 16.0,
+  's': 16.0,
+  'medium': 20.0,
+  'm': 20.0,
+  'large': 28.0,
+  'l': 28.0,
+  'extra-large': 36.0,
+  'xl': 36.0,
+};
+
 /// Parses a .markdraw format string into a MarkdrawDocument.
 class DocumentParser {
   static ParseResult<MarkdrawDocument> parse(String input) {
@@ -201,9 +223,12 @@ class DocumentParser {
 
           // Extract text-* properties from the original line
           final textFontSize =
-              _parseNamedDouble(line, 'text-size') ?? 20.0;
-          final textFontFamily =
-              _parseNamedString(line, 'text-font') ?? 'Excalifont';
+              _namedFontSizes[_parseNamedString(line, 'text-size')]
+              ?? _namedFontSizes[_parseNamedString(line, 'font-size')]
+              ?? _parseNamedDouble(line, 'text-size')
+              ?? 20.0;
+          final textFontFamily = _resolveFontAlias(
+              _parseNamedString(line, 'text-font') ?? 'Excalifont');
           final textAlignStr = _parseNamedString(line, 'text-align');
           final textAlign = switch (textAlignStr) {
             'left' => TextAlign.left,
@@ -252,7 +277,12 @@ class DocumentParser {
   }
 
   /// Extracts a named string property (e.g., "text-font=Nunito") from a line.
+  /// Supports quoted values: text-font="Lilita One".
   static String? _parseNamedString(String line, String name) {
+    // Try quoted value first: name="value with spaces"
+    final quoted = RegExp('(?:^|\\s)$name="([^"]*)"').firstMatch(line);
+    if (quoted != null) return quoted.group(1);
+    // Fall back to unquoted: name=value
     final match = RegExp('(?:^|\\s)$name=(\\S+)').firstMatch(line);
     return match?.group(1);
   }
