@@ -70,6 +70,8 @@ class HamburgerMenu extends StatelessWidget {
               controller.showLibraryPanel = !controller.showLibraryPanel;
             case 'import_image':
               onImportImage?.call();
+            case 'toggle_grid':
+              controller.toggleGrid();
             case 'frame_tool':
               controller.switchTool(ToolType.frame);
           }
@@ -113,6 +115,31 @@ class HamburgerMenu extends StatelessWidget {
             _menuItem(context, 'import_image', Icons.add_photo_alternate,
                 'Import Image', '9'),
           const PopupMenuDivider(),
+          PopupMenuItem<String>(
+            value: 'toggle_grid',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.grid_on,
+                  size: 18,
+                  color: controller.gridSize != null
+                      ? cs.primary
+                      : cs.onSurfaceVariant,
+                ),
+                const SizedBox(width: 12),
+                const Expanded(child: Text('Grid')),
+                Text(
+                  "Ctrl+'",
+                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                ),
+                if (controller.gridSize != null)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: Icon(Icons.check, size: 16, color: cs.primary),
+                  ),
+              ],
+            ),
+          ),
           _menuItem(
               context, 'frame_tool', Icons.crop_free, 'Frame Tool', 'F'),
           if (onThemeModeChanged != null) ...[

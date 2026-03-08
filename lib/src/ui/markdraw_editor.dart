@@ -108,6 +108,7 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
         onZoomIn: () => _controller.zoomIn(_getCanvasSize()),
         onZoomOut: () => _controller.zoomOut(_getCanvasSize()),
         onResetZoom: _controller.resetZoom,
+        onToggleGrid: _controller.toggleGrid,
       ),
       child: Focus(
         focusNode: _controller.keyboardFocusNode,

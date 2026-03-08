@@ -18,6 +18,7 @@ Map<ShortcutActivator, VoidCallback> buildShortcutBindings({
   required VoidCallback onZoomIn,
   required VoidCallback onZoomOut,
   required VoidCallback onResetZoom,
+  VoidCallback? onToggleGrid,
 }) {
   return {
     const SingleActivator(LogicalKeyboardKey.keyS, meta: true): onSave,
@@ -50,6 +51,12 @@ Map<ShortcutActivator, VoidCallback> buildShortcutBindings({
     const SingleActivator(LogicalKeyboardKey.minus, control: true): onZoomOut,
     const SingleActivator(LogicalKeyboardKey.digit0, control: true):
         onResetZoom,
+    if (onToggleGrid != null) ...{
+      const SingleActivator(LogicalKeyboardKey.quote, meta: true):
+          onToggleGrid,
+      const SingleActivator(LogicalKeyboardKey.quote, control: true):
+          onToggleGrid,
+    },
   };
 }
 
@@ -125,6 +132,12 @@ void handleKeyEvent({
     if (elements.length == 1 && onShowLinkDialog != null) {
       onShowLinkDialog(elements.first);
     }
+    return;
+  }
+
+  // Grid toggle: Ctrl+' (matches Excalidraw)
+  if (ctrl && key == LogicalKeyboardKey.quote) {
+    controller.toggleGrid();
     return;
   }
 

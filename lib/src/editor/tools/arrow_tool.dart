@@ -4,6 +4,7 @@ import 'dart:ui';
 import '../../core/elements/elements.dart';
 import '../../core/math/math.dart';
 import '../bindings/bindings.dart';
+import '../grid_snap.dart';
 import '../tool_result.dart';
 import '../tool_type.dart';
 import 'tool.dart';
@@ -46,6 +47,7 @@ class ArrowTool implements Tool {
         snappedPoint = BindingUtils.resolveBindingPoint(target, binding);
         _startBinding = binding;
       } else {
+        snappedPoint = snapToGrid(point, context.gridSize);
         _startBinding = null;
       }
 
@@ -91,6 +93,7 @@ class ArrowTool implements Tool {
           snappedPoint = BindingUtils.resolveBindingPoint(target, binding);
           _endBinding = binding;
         } else {
+          snappedPoint = snapToGrid(point, context.gridSize);
           _endBinding = null;
         }
 
@@ -118,6 +121,7 @@ class ArrowTool implements Tool {
       snappedPoint = BindingUtils.resolveBindingPoint(target, binding);
       _endBinding = binding;
     } else {
+      snappedPoint = snapToGrid(point, context.gridSize);
       _endBinding = null;
     }
 

@@ -80,6 +80,7 @@ class ToolContext {
   final List<Element> clipboard;
   final InteractionMode interactionMode;
   final bool isEditingLinear;
+  final int? gridSize;
 
   ToolContext({
     required this.scene,
@@ -88,6 +89,7 @@ class ToolContext {
     this.clipboard = const [],
     this.interactionMode = InteractionMode.pointer,
     this.isEditingLinear = false,
+    this.gridSize,
   }) : selectedIds = Set.unmodifiable(selectedIds);
 }
 

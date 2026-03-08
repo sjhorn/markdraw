@@ -57,6 +57,7 @@ class MarkdrawController extends ChangeNotifier {
   bool _fontPickerOpen = false;
   ElementStyle _defaultStyle = const ElementStyle();
   String _canvasBackgroundColor = '#ffffff';
+  int? _gridSize;
 
   // Drag coalescing
   Scene? _sceneBeforeDrag;
@@ -105,6 +106,7 @@ class MarkdrawController extends ChangeNotifier {
   bool get fontPickerOpen => _fontPickerOpen;
   ElementStyle get defaultStyle => _defaultStyle;
   String get canvasBackgroundColor => _canvasBackgroundColor;
+  int? get gridSize => _gridSize;
 
   ElementId? get editingTextElementId => _editingTextElementId;
   FocusNode get textFocusNode => _textFocusNode;
@@ -130,6 +132,7 @@ class MarkdrawController extends ChangeNotifier {
     clipboard: _editorState.clipboard,
     interactionMode: interactionMode,
     isEditingLinear: _isEditingLinear,
+    gridSize: _gridSize,
   );
 
   List<Element> get selectedElements {
@@ -1200,13 +1203,21 @@ class MarkdrawController extends ChangeNotifier {
     }
   }
 
+  void toggleGrid() {
+    _gridSize = _gridSize == null ? 20 : null;
+    notifyListeners();
+  }
+
   // --- Convenience methods for serialization / export / import ---
 
   /// Serializes the current scene to a string in the given [format].
   String serializeScene({DocumentFormat format = DocumentFormat.markdraw}) {
     final doc = SceneDocumentConverter.sceneToDocument(
       _editorState.scene,
-      settings: CanvasSettings(background: _canvasBackgroundColor),
+      settings: CanvasSettings(
+        background: _canvasBackgroundColor,
+        grid: _gridSize,
+      ),
     );
     return switch (format) {
       DocumentFormat.markdraw => DocumentSerializer.serialize(doc),
@@ -1224,6 +1235,7 @@ class MarkdrawController extends ChangeNotifier {
       _ => throw ArgumentError('Use importLibraryFromContent for library files'),
     };
     _canvasBackgroundColor = parseResult.value.settings.background;
+    _gridSize = parseResult.value.settings.grid;
     loadScene(SceneDocumentConverter.documentToScene(parseResult.value));
   }
 

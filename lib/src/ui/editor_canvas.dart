@@ -58,6 +58,8 @@ class EditorCanvas extends StatelessWidget {
                     previewElement: controller.buildPreviewElement(toolOverlay),
                     editingElementId: controller.editingTextElementId,
                     resolvedImages: controller.resolveImages(),
+                    gridSize: controller.gridSize,
+                    isDarkBackground: _isDark(controller.canvasBackgroundColor),
                   ),
                   foregroundPainter: InteractiveCanvasPainter(
                     viewport: controller.editorState.viewport,
@@ -108,6 +110,12 @@ class EditorCanvas extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Checks if a hex background color is dark (luminance < 0.5).
+bool _isDark(String hexColor) {
+  final c = parseColor(hexColor);
+  return c.computeLuminance() < 0.5;
 }
 
 /// Floating button that opens the compact property panel bottom sheet.

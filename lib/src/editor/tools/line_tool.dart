@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import '../../core/elements/elements.dart';
 import '../../core/math/math.dart';
+import '../grid_snap.dart';
 import '../tool_result.dart';
 import '../tool_type.dart';
 import 'tool.dart';
@@ -27,7 +28,7 @@ class LineTool implements Tool {
   @override
   ToolResult? onPointerDown(Point point, ToolContext context) {
     if (_points.isEmpty) {
-      _points.add(point);
+      _points.add(snapToGrid(point, context.gridSize));
       _isDragCreating = true;
       _dragOrigin = point;
     }
@@ -68,7 +69,7 @@ class LineTool implements Tool {
       final dy = point.y - origin.y;
       final distance = math.sqrt(dx * dx + dy * dy);
       if (distance > 2.0) {
-        _points.add(point);
+        _points.add(snapToGrid(point, context.gridSize));
         _previewPoint = null;
         return _finalize();
       }
@@ -84,7 +85,7 @@ class LineTool implements Tool {
       return _finalizeAsClosed();
     }
 
-    _points.add(point);
+    _points.add(snapToGrid(point, context.gridSize));
     _previewPoint = null;
 
     if (isDoubleClick && _points.length >= 2) {

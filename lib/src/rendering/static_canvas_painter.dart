@@ -35,6 +35,12 @@ class StaticCanvasPainter extends CustomPainter {
   /// Decoded images keyed by fileId, passed through to ElementRenderer.
   final Map<String, ui.Image>? resolvedImages;
 
+  /// Grid size in scene units; null means no grid.
+  final int? gridSize;
+
+  /// Whether the canvas background is dark (affects grid line colors).
+  final bool isDarkBackground;
+
   const StaticCanvasPainter({
     required this.scene,
     required this.adapter,
@@ -42,6 +48,8 @@ class StaticCanvasPainter extends CustomPainter {
     this.previewElement,
     this.editingElementId,
     this.resolvedImages,
+    this.gridSize,
+    this.isDarkBackground = false,
   });
 
   @override
@@ -51,6 +59,11 @@ class StaticCanvasPainter extends CustomPainter {
     // Apply viewport transform: scale then translate
     canvas.scale(viewport.zoom);
     canvas.translate(-viewport.offset.dx, -viewport.offset.dy);
+
+    // Render grid behind elements
+    if (gridSize != null) {
+      _renderGrid(canvas, size, gridSize!);
+    }
 
     final visible = cullElements(scene.orderedElements, viewport, size);
     for (final element in visible) {
@@ -217,11 +230,58 @@ class StaticCanvasPainter extends CustomPainter {
     painter.dispose();
   }
 
+  void _renderGrid(Canvas canvas, Size size, int gridSize) {
+    final g = gridSize.toDouble();
+
+    // Compute visible range in scene coordinates
+    final left = viewport.offset.dx;
+    final top = viewport.offset.dy;
+    final right = left + size.width / viewport.zoom;
+    final bottom = top + size.height / viewport.zoom;
+
+    final lineColor = isDarkBackground
+        ? const Color(0xFF3A3A3A)
+        : const Color(0xFFE0E0E0);
+    final boldColor = isDarkBackground
+        ? const Color(0xFF4A4A4A)
+        : const Color(0xFFCCCCCC);
+
+    final paint = Paint()
+      ..color = lineColor
+      ..strokeWidth = 1.0 / viewport.zoom;
+
+    final boldPaint = Paint()
+      ..color = boldColor
+      ..strokeWidth = 1.0 / viewport.zoom;
+
+    final startX = (left / g).floor() * g;
+    final startY = (top / g).floor() * g;
+
+    for (var x = startX; x <= right; x += g) {
+      final isBold = (x / g).round() % 5 == 0;
+      canvas.drawLine(
+        Offset(x, top),
+        Offset(x, bottom),
+        isBold ? boldPaint : paint,
+      );
+    }
+    for (var y = startY; y <= bottom; y += g) {
+      final isBold = (y / g).round() % 5 == 0;
+      canvas.drawLine(
+        Offset(left, y),
+        Offset(right, y),
+        isBold ? boldPaint : paint,
+      );
+    }
+  }
+
   @override
   bool shouldRepaint(covariant StaticCanvasPainter oldDelegate) {
     return !identical(scene, oldDelegate.scene) ||
         !identical(adapter, oldDelegate.adapter) ||
         viewport != oldDelegate.viewport ||
-        !identical(previewElement, oldDelegate.previewElement);
+        !identical(previewElement, oldDelegate.previewElement) ||
+        gridSize != oldDelegate.gridSize ||
+        isDarkBackground != oldDelegate.isDarkBackground;
   }
 }

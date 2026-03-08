@@ -61,6 +61,7 @@ void showHelpDialog(BuildContext context) {
                       _shortcutRow(context, 'Reset zoom', '$mod + 0'),
                       _shortcutRow(context, 'Zoom to fit', 'Shift + 1'),
                       _shortcutRow(context, 'Zoom to selection', 'Shift + 2'),
+                      _shortcutRow(context, 'Toggle grid', "$mod + '"),
                       _shortcutRow(context, 'Toggle theme', 'Alt + Shift + D'),
                     ]),
                     const SizedBox(height: 16),

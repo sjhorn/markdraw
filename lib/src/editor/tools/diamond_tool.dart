@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import '../../core/elements/elements.dart';
 import '../../core/math/math.dart';
+import '../grid_snap.dart';
 import '../tool_result.dart';
 import '../tool_type.dart';
 import 'tool.dart';
@@ -19,8 +20,8 @@ class DiamondTool implements Tool {
 
   @override
   ToolResult? onPointerDown(Point point, ToolContext context) {
-    _start = point;
-    _current = point;
+    _start = snapToGrid(point, context.gridSize);
+    _current = _start;
     return null;
   }
 
@@ -28,7 +29,7 @@ class DiamondTool implements Tool {
   ToolResult? onPointerMove(Point point, ToolContext context,
       {Offset? screenDelta}) {
     if (_start == null) return null;
-    _current = point;
+    _current = snapToGrid(point, context.gridSize);
     return null;
   }
 
@@ -37,16 +38,17 @@ class DiamondTool implements Tool {
     final start = _start;
     if (start == null) return null;
 
-    _current = point;
-    if (start.distanceTo(point) < _minDragDistance) {
+    final snapped = snapToGrid(point, context.gridSize);
+    _current = snapped;
+    if (start.distanceTo(snapped) < _minDragDistance) {
       reset();
       return null;
     }
 
-    final x = math.min(start.x, point.x);
-    final y = math.min(start.y, point.y);
-    final w = (start.x - point.x).abs();
-    final h = (start.y - point.y).abs();
+    final x = math.min(start.x, snapped.x);
+    final y = math.min(start.y, snapped.y);
+    final w = (start.x - snapped.x).abs();
+    final h = (start.y - snapped.y).abs();
 
     final element = DiamondElement(
       id: ElementId.generate(),

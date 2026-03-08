@@ -8,6 +8,7 @@ import '../../core/math/math.dart';
 import '../../core/scene/scene_exports.dart';
 import '../../rendering/interactive/interactive.dart';
 import '../bindings/bindings.dart';
+import '../grid_snap.dart';
 import '../tool_result.dart';
 import '../tool_type.dart';
 import 'tool.dart';
@@ -305,8 +306,18 @@ class SelectTool implements Tool {
     final hit = _hitElement;
     if (hit == null) return null;
 
-    final dx = current.x - down.x;
-    final dy = current.y - down.y;
+    var dx = current.x - down.x;
+    var dy = current.y - down.y;
+
+    // Snap element position to grid (Ctrl disables)
+    if (context.gridSize != null && !_shiftDown) {
+      final startElem = _startElements?.firstWhere((e) => e.id == hit.id,
+          orElse: () => hit) ?? hit;
+      final snappedX = snapValue(startElem.x + dx, context.gridSize);
+      final snappedY = snapValue(startElem.y + dy, context.gridSize);
+      dx = snappedX - startElem.x;
+      dy = snappedY - startElem.y;
+    }
 
     final selectedElements = _getSelectedElements(context);
     final isSelected = context.selectedIds.contains(hit.id);
@@ -588,6 +599,34 @@ class SelectTool implements Tool {
         newBottom += dy;
       case HandleType.rotation:
         return null;
+    }
+
+    // Snap resize edges to grid
+    if (context.gridSize != null && angle == 0.0) {
+      switch (_activeHandle!) {
+        case HandleType.topLeft:
+          newLeft = snapValue(newLeft, context.gridSize);
+          newTop = snapValue(newTop, context.gridSize);
+        case HandleType.topCenter:
+          newTop = snapValue(newTop, context.gridSize);
+        case HandleType.topRight:
+          newRight = snapValue(newRight, context.gridSize);
+          newTop = snapValue(newTop, context.gridSize);
+        case HandleType.middleLeft:
+          newLeft = snapValue(newLeft, context.gridSize);
+        case HandleType.middleRight:
+          newRight = snapValue(newRight, context.gridSize);
+        case HandleType.bottomLeft:
+          newLeft = snapValue(newLeft, context.gridSize);
+          newBottom = snapValue(newBottom, context.gridSize);
+        case HandleType.bottomCenter:
+          newBottom = snapValue(newBottom, context.gridSize);
+        case HandleType.bottomRight:
+          newRight = snapValue(newRight, context.gridSize);
+          newBottom = snapValue(newBottom, context.gridSize);
+        case HandleType.rotation:
+          break;
+      }
     }
 
     // Enforce minimum size
@@ -969,14 +1008,26 @@ class SelectTool implements Tool {
             );
           }
         } else {
-          // No target — clear binding if was bound
+          // No target — grid snap if enabled
+          if (context.gridSize != null) {
+            final snapped = snapToGrid(absPoint, context.gridSize);
+            final snappedRel = Point(
+              snapped.x - updated.x,
+              snapped.y - updated.y,
+            );
+            final snappedPoints = List<Point>.of(normalizedPoints);
+            snappedPoints[_activePointIndex!] = snappedRel;
+            updated = _normalizeLineElement(updated, snappedPoints);
+          }
+
+          // Clear binding if was bound
           if (isFirst && (line as ArrowElement).startBinding != null) {
-            updated = (updated).copyWithArrow(
+            updated = (updated as ArrowElement).copyWithArrow(
               clearStartBinding: true,
             );
           }
           if (isLast && (line as ArrowElement).endBinding != null) {
-            updated = (updated).copyWithArrow(
+            updated = (updated as ArrowElement).copyWithArrow(
               clearEndBinding: true,
             );
           }

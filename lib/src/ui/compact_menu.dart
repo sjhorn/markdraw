@@ -101,8 +101,15 @@ class CompactMenuButton extends StatelessWidget {
                 Navigator.pop(ctx);
                 onShowLibrary!();
               }),
-            if (onImportImage != null || onShowLibrary != null)
-              const Divider(),
+            _compactMenuItem(
+              controller.gridSize != null ? Icons.grid_on : Icons.grid_off,
+              'Grid ${controller.gridSize != null ? "On" : "Off"}',
+              () {
+                Navigator.pop(ctx);
+                controller.toggleGrid();
+              },
+            ),
+            const Divider(),
             if (onThemeModeChanged != null)
               _buildCompactThemeRow(ctx),
             _buildCompactCanvasBackgroundRow(ctx),

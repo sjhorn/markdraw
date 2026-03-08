@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import '../../core/elements/elements.dart';
 import '../../core/math/math.dart';
+import '../grid_snap.dart';
 import '../tool_result.dart';
 import '../tool_type.dart';
 import 'tool.dart';
@@ -23,8 +24,8 @@ class FrameTool implements Tool {
 
   @override
   ToolResult? onPointerDown(Point point, ToolContext context) {
-    _start = point;
-    _current = point;
+    _start = snapToGrid(point, context.gridSize);
+    _current = _start;
     // Count existing frames to generate the label
     _frameCount = context.scene.activeElements
         .where((e) => e.type == 'frame')
@@ -36,7 +37,7 @@ class FrameTool implements Tool {
   ToolResult? onPointerMove(Point point, ToolContext context,
       {Offset? screenDelta}) {
     if (_start == null) return null;
-    _current = point;
+    _current = snapToGrid(point, context.gridSize);
     return null;
   }
 
@@ -44,17 +45,18 @@ class FrameTool implements Tool {
   ToolResult? onPointerUp(Point point, ToolContext context) {
     final start = _start;
     if (start == null) return null;
-    _current = point;
+    final snapped = snapToGrid(point, context.gridSize);
+    _current = snapped;
 
-    if (start.distanceTo(point) < _minDragDistance) {
+    if (start.distanceTo(snapped) < _minDragDistance) {
       reset();
       return null;
     }
 
-    final x = math.min(start.x, point.x);
-    final y = math.min(start.y, point.y);
-    final w = (start.x - point.x).abs();
-    final h = (start.y - point.y).abs();
+    final x = math.min(start.x, snapped.x);
+    final y = math.min(start.y, snapped.y);
+    final w = (start.x - snapped.x).abs();
+    final h = (start.y - snapped.y).abs();
 
     final element = FrameElement(
       id: ElementId.generate(),
