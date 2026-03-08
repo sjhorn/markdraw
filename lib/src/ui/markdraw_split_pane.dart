@@ -45,8 +45,9 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
 
   bool _isSyncing = false;
   Timer? _debounceTimer;
-  double _splitRatio = 0.5;
+  double _splitRatio = 0.8;
   bool _isDraggingDivider = false;
+  bool _dockBottom = false;
   String _lastSyncedText = '';
   bool _hasPushedForSession = false;
 
@@ -240,77 +241,125 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
   // Build
   // ---------------------------------------------------------------------------
 
+  Widget _buildTextPane() {
+    return Stack(
+      children: [
+        _TextPane(
+          controller: _codeController,
+          focusNode: _textFocusNode,
+          onCopyMarkdown: _onCopyMarkdown,
+          parseWarnings: _parseWarnings,
+          hasParseError: _hasParseError,
+          parseErrorMessage: _parseErrorMessage,
+          dockBottom: _dockBottom,
+          onDockChanged: (bottom) => setState(() => _dockBottom = bottom),
+        ),
+        _FlashOverlay(animation: _textFlash),
+      ],
+    );
+  }
+
+  Widget _buildCanvasPane() {
+    return Stack(
+      children: [
+        widget.child,
+        _FlashOverlay(animation: _canvasFlash),
+      ],
+    );
+  }
+
+  Widget _buildDivider(BuildContext context, double primarySize,
+      double usableSize) {
+    final dividerColor = _isDraggingDivider
+        ? Theme.of(context).colorScheme.primary.withAlpha(80)
+        : Theme.of(context).dividerColor;
+
+    if (_dockBottom) {
+      return MouseRegion(
+        cursor: SystemMouseCursors.resizeRow,
+        child: GestureDetector(
+          onVerticalDragStart: (_) {
+            setState(() => _isDraggingDivider = true);
+          },
+          onVerticalDragUpdate: (details) {
+            setState(() {
+              final newTop = (primarySize + details.delta.dy)
+                  .clamp(_minPaneWidth, usableSize - _minPaneWidth);
+              _splitRatio = newTop / usableSize;
+            });
+          },
+          onVerticalDragEnd: (_) {
+            setState(() => _isDraggingDivider = false);
+          },
+          child: Container(height: _dividerWidth, color: dividerColor),
+        ),
+      );
+    }
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.resizeColumn,
+      child: GestureDetector(
+        onHorizontalDragStart: (_) {
+          setState(() => _isDraggingDivider = true);
+        },
+        onHorizontalDragUpdate: (details) {
+          setState(() {
+            final newLeft = (primarySize + details.delta.dx)
+                .clamp(_minPaneWidth, usableSize - _minPaneWidth);
+            _splitRatio = newLeft / usableSize;
+          });
+        },
+        onHorizontalDragEnd: (_) {
+          setState(() => _isDraggingDivider = false);
+        },
+        child: Container(width: _dividerWidth, color: dividerColor),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        if (_dockBottom) {
+          final totalHeight = constraints.maxHeight;
+          final usableHeight = totalHeight - _dividerWidth;
+          final minRatio = _minPaneWidth / usableHeight;
+          final maxRatio = 1.0 - minRatio;
+          final clampedRatio = _splitRatio.clamp(minRatio, maxRatio);
+          final topHeight = usableHeight * clampedRatio;
+
+          return Column(
+            children: [
+              ClipRect(
+                child: SizedBox(
+                  height: topHeight,
+                  child: _buildCanvasPane(),
+                ),
+              ),
+              _buildDivider(context, topHeight, usableHeight),
+              Expanded(child: _buildTextPane()),
+            ],
+          );
+        }
+
         final totalWidth = constraints.maxWidth;
         final usableWidth = totalWidth - _dividerWidth;
-
-        // Clamp split ratio so each pane has at least _minPaneWidth.
         final minRatio = _minPaneWidth / usableWidth;
         final maxRatio = 1.0 - minRatio;
         final clampedRatio = _splitRatio.clamp(minRatio, maxRatio);
-
         final leftWidth = usableWidth * clampedRatio;
 
         return Row(
           children: [
-            // --- Canvas pane ---
             ClipRect(
               child: SizedBox(
                 width: leftWidth,
-                child: Stack(
-                  children: [
-                    widget.child,
-                    _FlashOverlay(animation: _canvasFlash),
-                  ],
-                ),
+                child: _buildCanvasPane(),
               ),
             ),
-
-            // --- Draggable divider ---
-            MouseRegion(
-              cursor: SystemMouseCursors.resizeColumn,
-              child: GestureDetector(
-                onHorizontalDragStart: (_) {
-                  setState(() => _isDraggingDivider = true);
-                },
-                onHorizontalDragUpdate: (details) {
-                  setState(() {
-                    final newLeft = (leftWidth + details.delta.dx)
-                        .clamp(_minPaneWidth, usableWidth - _minPaneWidth);
-                    _splitRatio = newLeft / usableWidth;
-                  });
-                },
-                onHorizontalDragEnd: (_) {
-                  setState(() => _isDraggingDivider = false);
-                },
-                child: Container(
-                  width: _dividerWidth,
-                  color: _isDraggingDivider
-                      ? Theme.of(context).colorScheme.primary.withAlpha(80)
-                      : Theme.of(context).dividerColor,
-                ),
-              ),
-            ),
-
-            // --- Text pane ---
-            Expanded(
-              child: Stack(
-                children: [
-                  _TextPane(
-                    controller: _codeController,
-                    focusNode: _textFocusNode,
-                    onCopyMarkdown: _onCopyMarkdown,
-                    parseWarnings: _parseWarnings,
-                    hasParseError: _hasParseError,
-                    parseErrorMessage: _parseErrorMessage,
-                  ),
-                  _FlashOverlay(animation: _textFlash),
-                ],
-              ),
-            ),
+            _buildDivider(context, leftWidth, usableWidth),
+            Expanded(child: _buildTextPane()),
           ],
         );
       },
@@ -330,6 +379,8 @@ class _TextPane extends StatelessWidget {
     required this.parseWarnings,
     required this.hasParseError,
     required this.parseErrorMessage,
+    required this.dockBottom,
+    required this.onDockChanged,
   });
 
   final CodeLineEditingController controller;
@@ -338,6 +389,8 @@ class _TextPane extends StatelessWidget {
   final List<ParseWarning> parseWarnings;
   final bool hasParseError;
   final String parseErrorMessage;
+  final bool dockBottom;
+  final ValueChanged<bool> onDockChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -369,6 +422,44 @@ class _TextPane extends StatelessWidget {
                 ),
               ),
               const Spacer(),
+              Tooltip(
+                message: 'Dock right',
+                child: IconButton(
+                  icon: Icon(
+                    Icons.vertical_split,
+                    size: 18,
+                    color: dockBottom
+                        ? theme.colorScheme.onSurfaceVariant
+                        : theme.colorScheme.primary,
+                  ),
+                  onPressed: () => onDockChanged(false),
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                ),
+              ),
+              Tooltip(
+                message: 'Dock bottom',
+                child: IconButton(
+                  icon: Icon(
+                    Icons.horizontal_split,
+                    size: 18,
+                    color: dockBottom
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurfaceVariant,
+                  ),
+                  onPressed: () => onDockChanged(true),
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                ),
+              ),
               Tooltip(
                 message: 'Copy as markdown',
                 child: IconButton(
@@ -427,10 +518,7 @@ class _TextPane extends StatelessWidget {
                   ),
                 );
               },
-              sperator: Container(
-                width: 1,
-                color: theme.dividerColor,
-              ),
+              sperator: const SizedBox.shrink(),
               padding: const EdgeInsets.all(8),
             ),
           ),
