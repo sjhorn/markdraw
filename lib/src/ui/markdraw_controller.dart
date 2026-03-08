@@ -59,6 +59,9 @@ class MarkdrawController extends ChangeNotifier {
   String _canvasBackgroundColor = '#ffffff';
   int? _gridSize;
 
+  // Copied style for paste-style
+  ElementStyle? _copiedStyle;
+
   // Drag coalescing
   Scene? _sceneBeforeDrag;
 
@@ -107,6 +110,7 @@ class MarkdrawController extends ChangeNotifier {
   ElementStyle get defaultStyle => _defaultStyle;
   String get canvasBackgroundColor => _canvasBackgroundColor;
   int? get gridSize => _gridSize;
+  ElementStyle? get copiedStyle => _copiedStyle;
 
   ElementId? get editingTextElementId => _editingTextElementId;
   FocusNode get textFocusNode => _textFocusNode;
@@ -1237,6 +1241,63 @@ class MarkdrawController extends ChangeNotifier {
     }
 
     applyStyleChange(ElementStyle(fontSize: newSize));
+  }
+
+  /// Copies the style from the first selected element.
+  void copyStyle() {
+    final elements = selectedElements;
+    if (elements.isEmpty) return;
+    final e = elements.first;
+    _copiedStyle = ElementStyle(
+      strokeColor: e.strokeColor,
+      backgroundColor: e.backgroundColor,
+      strokeWidth: e.strokeWidth,
+      strokeStyle: e.strokeStyle,
+      fillStyle: e.fillStyle,
+      roughness: e.roughness,
+      opacity: e.opacity,
+      fontSize: e is TextElement ? e.fontSize : null,
+      fontFamily: e is TextElement ? e.fontFamily : null,
+    );
+  }
+
+  /// Applies the previously copied style to the current selection.
+  void pasteStyle() {
+    if (_copiedStyle == null) return;
+    final elements = selectedElements;
+    if (elements.isEmpty) return;
+    applyStyleChange(_copiedStyle!);
+  }
+
+  /// Pastes clipboard text as a new TextElement at viewport center.
+  Future<void> pasteAsPlaintext(Size canvasSize) async {
+    final text = await _clipboardService.readText();
+    if (text == null || text.trim().isEmpty) return;
+
+    final centerScene = _editorState.viewport.screenToScene(
+      Offset(canvasSize.width / 2, canvasSize.height / 2),
+    );
+
+    final textElem = TextElement(
+      id: ElementId.generate(),
+      x: centerScene.dx,
+      y: centerScene.dy,
+      width: 10,
+      height: 10,
+      text: text.trim(),
+    );
+
+    final (w, h) = TextRenderer.measure(textElem);
+    final sized = textElem.copyWith(
+      width: math.max(w + 4, 20.0),
+      height: math.max(h, textElem.fontSize * textElem.lineHeight),
+    );
+
+    _historyManager.push(_editorState.scene);
+    applyResult(CompoundResult([
+      AddElementResult(applyDefaultStyleToElement(sized)),
+      SetSelectionResult({sized.id}),
+    ]));
   }
 
   /// Clears the canvas, pushing the current scene to undo history.

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import '../../core/alignment/alignment_utils.dart';
+import '../../core/alignment/flip_utils.dart';
 import '../../core/elements/elements.dart';
 import '../../core/groups/groups.dart';
 import '../../core/layer/layer_utils.dart';
@@ -1433,6 +1434,43 @@ class SelectTool implements Tool {
       return CompoundResult([
         for (final e in updated) UpdateElementResult(e),
       ]);
+    }
+
+    // Shift+H: Flip horizontal
+    if (shift && !ctrl && (key == 'h' || key == 'H')) {
+      if (selectedElements.isEmpty) return null;
+      if (selectedElements.every((e) => e.locked)) return null;
+      final flipped = FlipUtils.flipHorizontal(selectedElements);
+      if (flipped.isEmpty) return null;
+      return CompoundResult([
+        for (final e in flipped) UpdateElementResult(e),
+      ]);
+    }
+
+    // Shift+V: Flip vertical
+    if (shift && !ctrl && (key == 'v' || key == 'V')) {
+      if (selectedElements.isEmpty) return null;
+      if (selectedElements.every((e) => e.locked)) return null;
+      final flipped = FlipUtils.flipVertical(selectedElements);
+      if (flipped.isEmpty) return null;
+      return CompoundResult([
+        for (final e in flipped) UpdateElementResult(e),
+      ]);
+    }
+
+    // Tab / Shift+Tab: Cycle shape type
+    if (!ctrl && key == 'Tab') {
+      if (selectedElements.isEmpty) return null;
+      if (selectedElements.every((e) => e.locked)) return null;
+      final results = <ToolResult>[];
+      for (final e in selectedElements) {
+        final converted = ShapeConverter.cycleShape(e, reverse: shift);
+        if (converted != null) {
+          results.add(UpdateElementResult(converted));
+        }
+      }
+      if (results.isEmpty) return null;
+      return results.length == 1 ? results.first : CompoundResult(results);
     }
 
     // Ctrl+Shift+Arrow: Alignment shortcuts

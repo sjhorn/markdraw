@@ -119,6 +119,22 @@ void handleKeyEvent({
     return;
   }
 
+  // Copy/paste styles: Ctrl+Alt+C / Ctrl+Alt+V (before regular Ctrl+C/V)
+  if (ctrl && alt && !shift && key == LogicalKeyboardKey.keyC) {
+    controller.copyStyle();
+    return;
+  }
+  if (ctrl && alt && !shift && key == LogicalKeyboardKey.keyV) {
+    controller.pasteStyle();
+    return;
+  }
+
+  // Paste as plaintext: Ctrl+Shift+V
+  if (ctrl && shift && key == LogicalKeyboardKey.keyV) {
+    controller.pasteAsPlaintext(getCanvasSize());
+    return;
+  }
+
   // Undo/redo
   if (ctrl && key == LogicalKeyboardKey.keyZ) {
     if (shift) {
@@ -253,6 +269,8 @@ void handleKeyEvent({
     keyName = 'ArrowUp';
   } else if (key == LogicalKeyboardKey.arrowDown) {
     keyName = 'ArrowDown';
+  } else if (key == LogicalKeyboardKey.tab) {
+    keyName = 'Tab';
   } else if (key.keyLabel.length == 1) {
     keyName = key.keyLabel.toLowerCase();
   }
