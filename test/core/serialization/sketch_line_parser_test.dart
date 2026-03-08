@@ -187,22 +187,22 @@ void main() {
       expect(text.fontFamily, 'Excalifont');
     });
 
-    test('font=normal resolves to Helvetica', () {
+    test('font=normal resolves to Nunito', () {
       final result = parser.parseLine(
         'text "Hello" at 0,0 font=normal',
         1,
       );
       final text = result.value! as TextElement;
-      expect(text.fontFamily, 'Helvetica');
+      expect(text.fontFamily, 'Nunito');
     });
 
-    test('font=code resolves to Cascadia', () {
+    test('font=code resolves to Source Code Pro', () {
       final result = parser.parseLine(
         'text "Hello" at 0,0 font=code',
         1,
       );
       final text = result.value! as TextElement;
-      expect(text.fontFamily, 'Cascadia');
+      expect(text.fontFamily, 'Source Code Pro');
     });
 
     test('font=Nunito passes through unchanged', () {

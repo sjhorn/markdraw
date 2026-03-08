@@ -224,7 +224,7 @@ void main() {
         updated: 0,
       );
       final line = serializer.serialize(text);
-      expect(line, contains('size=36'));
+      expect(line, contains('size=xl'));
     });
 
     test('text does not emit size= when fontSize is default', () {
@@ -243,7 +243,7 @@ void main() {
       expect(line, isNot(contains('size=')));
     });
 
-    test('text with non-default font', () {
+    test('text with non-default font uses alias when available', () {
       final text = TextElement(
         id: const ElementId('t1'),
         x: 0,
@@ -251,13 +251,30 @@ void main() {
         width: 100,
         height: 30,
         text: 'Custom',
-        fontFamily: 'Cascadia',
+        fontFamily: 'Nunito',
         seed: 5,
         versionNonce: 1,
         updated: 0,
       );
       final line = serializer.serialize(text);
-      expect(line, contains('font=Cascadia'));
+      expect(line, contains('font=normal'));
+    });
+
+    test('text with font without alias uses font name', () {
+      final text = TextElement(
+        id: const ElementId('t1'),
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 30,
+        text: 'Custom',
+        fontFamily: 'Assistant',
+        seed: 5,
+        versionNonce: 1,
+        updated: 0,
+      );
+      final line = serializer.serialize(text);
+      expect(line, contains('font=Assistant'));
     });
 
     test('text with non-default alignment', () {
@@ -334,7 +351,7 @@ void main() {
       expect(line, contains('font="Lilita One"'));
     });
 
-    test('text with single-word font is unquoted', () {
+    test('text with single-word font without alias is unquoted', () {
       final text = TextElement(
         id: const ElementId('t1'),
         x: 0,
@@ -342,14 +359,14 @@ void main() {
         width: 100,
         height: 30,
         text: 'Hello',
-        fontFamily: 'Cascadia',
+        fontFamily: 'Assistant',
         seed: 5,
         versionNonce: 1,
         updated: 0,
       );
       final line = serializer.serialize(text);
-      expect(line, contains('font=Cascadia'));
-      expect(line, isNot(contains('"Cascadia"')));
+      expect(line, contains('font=Assistant'));
+      expect(line, isNot(contains('"Assistant"')));
     });
 
     test('text with containerId is emitted', () {
@@ -623,7 +640,7 @@ void main() {
       expect(line, contains('to gw'));
       expect(line, contains('arrow-type=round'));
       expect(line, contains('start-arrow=dot'));
-      expect(line, contains('text-size=16'));
+      expect(line, contains('text-size=s'));
     });
 
     test('arrow with partial binding emits coordinate for unbound end', () {
@@ -1035,7 +1052,7 @@ void main() {
         updated: 0,
       );
       final line = serializer.serializeWithLabel(rect, label, alias: 'r');
-      expect(line, contains('text-font="Source Code Pro"'));
+      expect(line, contains('text-font=code'));
     });
   });
 }

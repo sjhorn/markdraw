@@ -4,6 +4,27 @@ import '../elements/elements.dart';
 import '../math/math.dart';
 import 'color_names.dart';
 
+/// Reverse mapping: font family → category alias for serialization.
+const _fontToAlias = {
+  'Excalifont': 'hand-drawn',
+  'Nunito': 'normal',
+  'Source Code Pro': 'code',
+};
+
+/// Returns the named size alias for a preset font size, or null.
+String? _sizeAlias(double size) {
+  // Use exact int comparison to avoid floating-point issues
+  final i = size.toInt();
+  if (size != i.toDouble()) return null;
+  return switch (i) {
+    16 => 's',
+    20 => 'm',
+    28 => 'l',
+    36 => 'xl',
+    _ => null,
+  };
+}
+
 /// Serializes a single Element to a .markdraw sketch line string.
 class SketchLineSerializer {
   /// Serialize an element to a single sketch line.
@@ -87,10 +108,16 @@ class SketchLineSerializer {
 
   void _addTextProperties(List<String> parts, TextElement labelElement) {
     if (labelElement.fontSize != 20.0) {
-      parts.add('text-size=${_formatNum(labelElement.fontSize)}');
+      final sizeAlias = _sizeAlias(labelElement.fontSize);
+      parts.add(sizeAlias != null
+          ? 'text-size=$sizeAlias'
+          : 'text-size=${_formatNum(labelElement.fontSize)}');
     }
     if (labelElement.fontFamily != 'Excalifont') {
-      parts.add('text-font=${_quoteIfNeeded(labelElement.fontFamily)}');
+      final fontAlias = _fontToAlias[labelElement.fontFamily];
+      parts.add(fontAlias != null
+          ? 'text-font=$fontAlias'
+          : 'text-font=${_quoteIfNeeded(labelElement.fontFamily)}');
     }
     if (labelElement.textAlign != TextAlign.center) {
       parts.add('text-align=${labelElement.textAlign.name}');
@@ -148,10 +175,16 @@ class SketchLineSerializer {
     _addPosition(parts, element.x, element.y);
     _addSize(parts, element.width, element.height);
     if (element.fontSize != 20.0) {
-      parts.add('size=${_formatNum(element.fontSize)}');
+      final sizeAlias = _sizeAlias(element.fontSize);
+      parts.add(sizeAlias != null
+          ? 'size=$sizeAlias'
+          : 'size=${_formatNum(element.fontSize)}');
     }
     if (element.fontFamily != 'Excalifont') {
-      parts.add('font=${_quoteIfNeeded(element.fontFamily)}');
+      final fontAlias = _fontToAlias[element.fontFamily];
+      parts.add(fontAlias != null
+          ? 'font=$fontAlias'
+          : 'font=${_quoteIfNeeded(element.fontFamily)}');
     }
     if (element.textAlign != TextAlign.left) {
       parts.add('align=${element.textAlign.name}');

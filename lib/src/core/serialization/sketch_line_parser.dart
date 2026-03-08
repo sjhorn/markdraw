@@ -8,8 +8,8 @@ import 'parse_result.dart';
 /// Font category aliases for shorthand font names.
 const _fontAliases = {
   'hand-drawn': 'Excalifont',
-  'normal': 'Helvetica',
-  'code': 'Cascadia',
+  'normal': 'Nunito',
+  'code': 'Source Code Pro',
 };
 
 /// Resolves a font alias to its actual font name, or returns the value as-is.

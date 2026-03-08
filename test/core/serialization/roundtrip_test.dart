@@ -683,7 +683,7 @@ rect id=r at 10,20 50x60 fill=lime color=red stroke=dotted fill-style=hachure st
       // Verify text properties are serialized on shape line
       // (center is the default for bound text, so left must be emitted)
       expect(output, contains('text-size=24'));
-      expect(output, contains('text-font=Nunito'));
+      expect(output, contains('text-font=normal'));
       expect(output, contains('text-align=left'));
       expect(output, contains('text-valign=top'));
       expect(output, contains('text-color=red'));
@@ -943,7 +943,7 @@ rect id=r at 10,20 50x60 fill=lime color=red stroke=dotted fill-style=hachure st
       expect(output, contains('arrow-type=round'));
       expect(output, contains('start-arrow=dot'));
       expect(output, contains('stroke=dashed'));
-      expect(output, contains('text-size=16'));
+      expect(output, contains('text-size=s'));
 
       // Parse back
       final parsed = DocumentParser.parse(output);
@@ -1249,21 +1249,170 @@ communication uses mTLS.''';
       expect(line, isNot(contains('font=')));
     });
 
-    test('font=code parses to Cascadia and round-trips', () {
+    test('font=code round-trips via alias', () {
       final result = parser.parseLine(
         'text "Hi" at 0,0 font=code',
         1,
       );
       final parsed = result.value! as TextElement;
-      expect(parsed.fontFamily, 'Cascadia');
+      expect(parsed.fontFamily, 'Source Code Pro');
 
+      // Serializer writes the alias back
       final line = serializer.serialize(parsed);
-      expect(line, contains('font=Cascadia'));
+      expect(line, contains('font=code'));
 
       // Re-parse the serialized line
       final result2 = parser.parseLine(line, 1);
       final reparsed = result2.value! as TextElement;
-      expect(reparsed.fontFamily, 'Cascadia');
+      expect(reparsed.fontFamily, 'Source Code Pro');
+    });
+
+    test('font=normal round-trips via alias', () {
+      final result = parser.parseLine(
+        'text "Hi" at 0,0 font=normal',
+        1,
+      );
+      final parsed = result.value! as TextElement;
+      expect(parsed.fontFamily, 'Nunito');
+
+      final line = serializer.serialize(parsed);
+      expect(line, contains('font=normal'));
+
+      final result2 = parser.parseLine(line, 1);
+      final reparsed = result2.value! as TextElement;
+      expect(reparsed.fontFamily, 'Nunito');
+    });
+  });
+
+  group('Toolbar category fonts match parser aliases (standalone text)', () {
+    late SketchLineSerializer serializer;
+    late SketchLineParser parser;
+
+    setUp(() {
+      serializer = SketchLineSerializer();
+      parser = SketchLineParser();
+    });
+
+    test('hand-drawn category font matches alias', () {
+      final font = FontResolver.defaultForCategory[FontCategory.handDrawn]!;
+
+      // Alias resolves to same font as toolbar default
+      final result = parser.parseLine(
+        'text "Hello" at 0,0 font=hand-drawn', 1,
+      );
+      expect((result.value! as TextElement).fontFamily, font);
+    });
+
+    test('normal category font matches alias', () {
+      final font = FontResolver.defaultForCategory[FontCategory.normal]!;
+
+      final result = parser.parseLine(
+        'text "Hello" at 0,0 font=normal', 1,
+      );
+      expect((result.value! as TextElement).fontFamily, font);
+
+      // Toolbar-created text round-trips
+      final text = TextElement(
+        id: const ElementId('t1'),
+        x: 0, y: 0, width: 100, height: 30,
+        text: 'Hello', fontFamily: font,
+        seed: 1, versionNonce: 1, updated: 0,
+      );
+      final line = serializer.serialize(text);
+      final reparsed = parser.parseLine(line, 1);
+      expect((reparsed.value! as TextElement).fontFamily, font);
+    });
+
+    test('code category font matches alias', () {
+      final font = FontResolver.defaultForCategory[FontCategory.code]!;
+
+      final result = parser.parseLine(
+        'text "Hello" at 0,0 font=code', 1,
+      );
+      expect((result.value! as TextElement).fontFamily, font);
+
+      final text = TextElement(
+        id: const ElementId('t1'),
+        x: 0, y: 0, width: 100, height: 30,
+        text: 'Hello', fontFamily: font,
+        seed: 1, versionNonce: 1, updated: 0,
+      );
+      final line = serializer.serialize(text);
+      final reparsed = parser.parseLine(line, 1);
+      expect((reparsed.value! as TextElement).fontFamily, font);
+    });
+  });
+
+  group('Toolbar category fonts match parser aliases (bound text)', () {
+    test('hand-drawn alias on bound text matches toolbar default', () {
+      final font = FontResolver.defaultForCategory[FontCategory.handDrawn]!;
+
+      const input = '```markdraw\n'
+          'rect "Label" at 0,0 100x50 text-font=hand-drawn\n'
+          '```';
+      final result = DocumentParser.parse(input);
+      final sketch = result.value.sections.first as SketchSection;
+      final text = sketch.elements[1] as TextElement;
+      expect(text.fontFamily, font);
+    });
+
+    test('normal alias on bound text matches toolbar default', () {
+      final font = FontResolver.defaultForCategory[FontCategory.normal]!;
+
+      const input = '```markdraw\n'
+          'rect "Label" at 0,0 100x50 text-font=normal\n'
+          '```';
+      final result = DocumentParser.parse(input);
+      final sketch = result.value.sections.first as SketchSection;
+      final text = sketch.elements[1] as TextElement;
+      expect(text.fontFamily, font);
+
+      // Re-serialize and re-parse
+      final serializer = SketchLineSerializer();
+      final line = serializer.serializeWithLabel(
+        sketch.elements[0], text, alias: 'r',
+      );
+      final reparsed = DocumentParser.parse('```markdraw\n$line\n```');
+      final retext = (reparsed.value.sections.first as SketchSection)
+          .elements[1] as TextElement;
+      expect(retext.fontFamily, font);
+    });
+
+    test('code alias on bound text matches toolbar default', () {
+      final font = FontResolver.defaultForCategory[FontCategory.code]!;
+
+      const input = '```markdraw\n'
+          'rect "Label" at 0,0 100x50 text-font=code\n'
+          '```';
+      final result = DocumentParser.parse(input);
+      final sketch = result.value.sections.first as SketchSection;
+      final text = sketch.elements[1] as TextElement;
+      expect(text.fontFamily, font);
+
+      final serializer = SketchLineSerializer();
+      final line = serializer.serializeWithLabel(
+        sketch.elements[0], text, alias: 'r',
+      );
+      expect(line, contains('text-font=code'));
+
+      final reparsed = DocumentParser.parse('```markdraw\n$line\n```');
+      final retext = (reparsed.value.sections.first as SketchSection)
+          .elements[1] as TextElement;
+      expect(retext.fontFamily, font);
+    });
+
+    test('named font sizes match toolbar presets for bound text', () {
+      final sizeMap = {'small': 16.0, 'medium': 20.0, 'large': 28.0, 'extra-large': 36.0};
+      for (final entry in sizeMap.entries) {
+        final input = '```markdraw\n'
+            'rect "Label" at 0,0 100x50 text-size=${entry.key}\n'
+            '```';
+        final result = DocumentParser.parse(input);
+        final sketch = result.value.sections.first as SketchSection;
+        final text = sketch.elements[1] as TextElement;
+        expect(text.fontSize, entry.value,
+            reason: 'text-size=${entry.key} should be ${entry.value}');
+      }
     });
   });
 }

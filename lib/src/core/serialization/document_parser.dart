@@ -15,8 +15,8 @@ const _labelableKeywords = {'rect', 'ellipse', 'diamond', 'arrow'};
 /// Font category aliases for shorthand font names (bound text).
 const _fontAliases = {
   'hand-drawn': 'Excalifont',
-  'normal': 'Helvetica',
-  'code': 'Cascadia',
+  'normal': 'Nunito',
+  'code': 'Source Code Pro',
 };
 
 /// Resolves a font alias to its actual font name, or returns the value as-is.
