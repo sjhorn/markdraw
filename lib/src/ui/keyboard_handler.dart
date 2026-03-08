@@ -18,7 +18,6 @@ Map<ShortcutActivator, VoidCallback> buildShortcutBindings({
   required VoidCallback onZoomIn,
   required VoidCallback onZoomOut,
   required VoidCallback onResetZoom,
-  VoidCallback? onToggleGrid,
 }) {
   return {
     const SingleActivator(LogicalKeyboardKey.keyS, meta: true): onSave,
@@ -51,12 +50,8 @@ Map<ShortcutActivator, VoidCallback> buildShortcutBindings({
     const SingleActivator(LogicalKeyboardKey.minus, control: true): onZoomOut,
     const SingleActivator(LogicalKeyboardKey.digit0, control: true):
         onResetZoom,
-    if (onToggleGrid != null) ...{
-      const SingleActivator(LogicalKeyboardKey.quote, meta: true):
-          onToggleGrid,
-      const SingleActivator(LogicalKeyboardKey.quote, control: true):
-          onToggleGrid,
-    },
+    // Grid toggle is handled in handleKeyEvent — not here, because Cmd+'
+    // is NOT intercepted by macOS (unlike Cmd+S/Z) and would double-fire.
   };
 }
 
@@ -83,6 +78,7 @@ void handleKeyEvent({
   final shift = HardwareKeyboard.instance.isShiftPressed;
   final ctrl = HardwareKeyboard.instance.isControlPressed ||
       HardwareKeyboard.instance.isMetaPressed;
+
 
   // Undo/redo
   if (ctrl && key == LogicalKeyboardKey.keyZ) {
@@ -135,8 +131,11 @@ void handleKeyEvent({
     return;
   }
 
-  // Grid toggle: Ctrl+' (matches Excalidraw)
-  if (ctrl && key == LogicalKeyboardKey.quote) {
+  // Grid toggle: Ctrl/Cmd+' (matches Excalidraw which uses event.code)
+  if (ctrl &&
+      (key == LogicalKeyboardKey.quoteSingle ||
+          key == LogicalKeyboardKey.quote ||
+          event.physicalKey == PhysicalKeyboardKey.quote)) {
     controller.toggleGrid();
     return;
   }

@@ -1,5 +1,6 @@
 library;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../../markdraw.dart' hide TextAlign;
@@ -32,6 +33,9 @@ class HamburgerMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final isMac =
+        Theme.of(context).platform == TargetPlatform.macOS || kIsWeb;
+    final mod = isMac ? 'Cmd' : 'Ctrl';
     return Container(
       decoration: BoxDecoration(
         color: cs.surface,
@@ -78,17 +82,17 @@ class HamburgerMenu extends StatelessWidget {
         },
         itemBuilder: (context) => [
           if (onOpen != null)
-            _menuItem(context, 'open', Icons.folder_open, 'Open', 'Ctrl+O'),
+            _menuItem(context, 'open', Icons.folder_open, 'Open', '$mod+O'),
           if (onSave != null)
-            _menuItem(context, 'save', Icons.save, 'Save', 'Ctrl+S'),
+            _menuItem(context, 'save', Icons.save, 'Save', '$mod+S'),
           if (onSaveAs != null)
             _menuItem(
-                context, 'save_as', Icons.save_as, 'Save As', 'Ctrl+Shift+S'),
+                context, 'save_as', Icons.save_as, 'Save As', '$mod+Shift+S'),
           if (onOpen != null || onSave != null || onSaveAs != null)
             const PopupMenuDivider(),
           if (onExportPng != null)
             _menuItem(
-                context, 'export_png', Icons.image, 'Export PNG', 'Ctrl+Shift+E'),
+                context, 'export_png', Icons.image, 'Export PNG', '$mod+Shift+E'),
           if (onExportSvg != null)
             _menuItem(context, 'export_svg', Icons.code, 'Export SVG', null),
           if (onExportPng != null || onExportSvg != null)
@@ -129,7 +133,7 @@ class HamburgerMenu extends StatelessWidget {
                 const SizedBox(width: 12),
                 const Expanded(child: Text('Grid')),
                 Text(
-                  "Ctrl+'",
+                  "$mod+'",
                   style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
                 ),
                 if (controller.gridSize != null)
