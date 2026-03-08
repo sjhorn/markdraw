@@ -80,6 +80,10 @@ class HamburgerMenu extends StatelessWidget {
               controller.switchTool(ToolType.frame);
             case 'reset_canvas':
               controller.resetCanvas();
+            case 'zen_mode':
+              controller.toggleZenMode();
+            case 'view_mode':
+              controller.toggleViewMode();
           }
         },
         itemBuilder: (context) => [
@@ -150,6 +154,55 @@ class HamburgerMenu extends StatelessWidget {
               context, 'frame_tool', Icons.crop_free, 'Frame Tool', 'F'),
           _menuItem(context, 'reset_canvas', Icons.delete_sweep,
               'Reset Canvas', '$mod+Del'),
+          const PopupMenuDivider(),
+          PopupMenuItem<String>(
+            value: 'zen_mode',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.self_improvement,
+                  size: 18,
+                  color: controller.zenMode
+                      ? cs.primary
+                      : cs.onSurfaceVariant,
+                ),
+                const SizedBox(width: 12),
+                const Expanded(child: Text('Zen Mode')),
+                Text('Alt+Z',
+                    style:
+                        TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+                if (controller.zenMode)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: Icon(Icons.check, size: 16, color: cs.primary),
+                  ),
+              ],
+            ),
+          ),
+          PopupMenuItem<String>(
+            value: 'view_mode',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.visibility,
+                  size: 18,
+                  color: controller.viewMode
+                      ? cs.primary
+                      : cs.onSurfaceVariant,
+                ),
+                const SizedBox(width: 12),
+                const Expanded(child: Text('View Mode')),
+                Text('Alt+R',
+                    style:
+                        TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+                if (controller.viewMode)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: Icon(Icons.check, size: 16, color: cs.primary),
+                  ),
+              ],
+            ),
+          ),
           if (onThemeModeChanged != null) ...[
             const PopupMenuDivider(),
             PopupMenuItem<String>(

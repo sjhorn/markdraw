@@ -12,6 +12,9 @@ import 'package:markdraw/markdraw.dart' as core show TextAlign;
 import 'package:markdraw/markdraw.dart' hide TextAlign;
 
 
+/// Which color picker to open programmatically.
+enum ColorPickerTarget { stroke, background, font }
+
 /// Controller for [MarkdrawEditor]. Holds all editor state and logic.
 ///
 /// Can be created internally by the widget or provided externally
@@ -55,6 +58,10 @@ class MarkdrawController extends ChangeNotifier {
   bool _isCompact = false;
   bool _isEditingLinear = false;
   bool _fontPickerOpen = false;
+  bool _zenMode = false;
+  bool _viewMode = false;
+  ToolType? _toolBeforeViewMode;
+  ColorPickerTarget? _pendingColorPicker;
   ElementStyle _defaultStyle = const ElementStyle();
   String _canvasBackgroundColor = '#ffffff';
   int? _gridSize;
@@ -111,6 +118,9 @@ class MarkdrawController extends ChangeNotifier {
   String get canvasBackgroundColor => _canvasBackgroundColor;
   int? get gridSize => _gridSize;
   ElementStyle? get copiedStyle => _copiedStyle;
+  bool get zenMode => _zenMode;
+  bool get viewMode => _viewMode;
+  ColorPickerTarget? get pendingColorPicker => _pendingColorPicker;
 
   ElementId? get editingTextElementId => _editingTextElementId;
   FocusNode get textFocusNode => _textFocusNode;
@@ -207,6 +217,8 @@ class MarkdrawController extends ChangeNotifier {
   // --- Tool management ---
 
   void switchTool(ToolType type) {
+    // In view mode, only the hand tool is allowed
+    if (_viewMode && type != ToolType.hand) return;
     _activeTool.reset();
     _activeTool = createTool(type);
     _editorState = _editorState.copyWith(
@@ -1309,6 +1321,37 @@ class MarkdrawController extends ChangeNotifier {
     );
     onSceneChanged?.call(_editorState.scene);
     notifyListeners();
+  }
+
+  /// Toggles zen mode — hides all chrome.
+  void toggleZenMode() {
+    _zenMode = !_zenMode;
+    notifyListeners();
+  }
+
+  /// Toggles view (read-only) mode — forces hand tool, blocks switching.
+  void toggleViewMode() {
+    _viewMode = !_viewMode;
+    if (_viewMode) {
+      _toolBeforeViewMode = _editorState.activeToolType;
+      switchTool(ToolType.hand);
+      _editorState = _editorState.copyWith(selectedIds: {});
+    } else {
+      switchTool(_toolBeforeViewMode ?? ToolType.select);
+      _toolBeforeViewMode = null;
+    }
+    notifyListeners();
+  }
+
+  /// Requests programmatic opening of a color picker.
+  void requestColorPicker(ColorPickerTarget target) {
+    _pendingColorPicker = target;
+    notifyListeners();
+  }
+
+  /// Clears the pending color picker request.
+  void clearPendingColorPicker() {
+    _pendingColorPicker = null;
   }
 
   // --- Convenience methods for serialization / export / import ---

@@ -82,6 +82,21 @@ void handleKeyEvent({
 
   final alt = HardwareKeyboard.instance.isAltPressed;
 
+  // Zen mode: Alt+Z
+  if (alt && !ctrl && !shift && key == LogicalKeyboardKey.keyZ) {
+    controller.toggleZenMode();
+    return;
+  }
+
+  // View mode: Alt+R
+  if (alt && !ctrl && !shift && key == LogicalKeyboardKey.keyR) {
+    controller.toggleViewMode();
+    return;
+  }
+
+  // Block tool shortcuts when in view mode (except hand tool)
+  if (controller.viewMode) return;
+
   // Page scrolling: PgDn/PgUp pans viewport by canvas height (Shift for horizontal)
   if (key == LogicalKeyboardKey.pageDown ||
       key == LogicalKeyboardKey.pageUp) {
@@ -227,6 +242,27 @@ void handleKeyEvent({
   // Tool lock toggle (Q)
   if (!ctrl && !shift && key == LogicalKeyboardKey.keyQ) {
     controller.toggleToolLocked();
+    return;
+  }
+
+  // Color picker shortcuts: S (stroke), G (background) — select tool only
+  if (!ctrl && !shift && !alt &&
+      controller.editorState.activeToolType == ToolType.select) {
+    if (key == LogicalKeyboardKey.keyS) {
+      controller.requestColorPicker(ColorPickerTarget.stroke);
+      return;
+    }
+    if (key == LogicalKeyboardKey.keyG) {
+      controller.requestColorPicker(ColorPickerTarget.background);
+      return;
+    }
+  }
+
+  // Font picker shortcut: Shift+F — select tool only
+  if (!ctrl && shift && !alt &&
+      controller.editorState.activeToolType == ToolType.select &&
+      key == LogicalKeyboardKey.keyF) {
+    controller.requestColorPicker(ColorPickerTarget.font);
     return;
   }
 

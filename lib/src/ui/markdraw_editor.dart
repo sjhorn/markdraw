@@ -152,13 +152,15 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
 
   Widget _buildBody() {
     final isCompact = _controller.isCompact;
+    final showChrome = !_controller.zenMode;
     Widget body = Stack(
       children: [
         // Full-bleed canvas + desktop library panel
         Row(
           children: [
             Expanded(child: EditorCanvas(controller: _controller)),
-            if (!isCompact &&
+            if (showChrome &&
+                !isCompact &&
                 _controller.showLibraryPanel &&
                 widget.config.showLibraryPanel)
               LibraryPanel(
@@ -169,7 +171,7 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
           ],
         ),
         // Toolbar
-        if (widget.config.showToolbar) ...[
+        if (showChrome && widget.config.showToolbar) ...[
           if (isCompact)
             Positioned(
               bottom: 12,
@@ -228,7 +230,8 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
           ],
         ],
         // Floating property panel — desktop left side
-        if (!isCompact &&
+        if (showChrome &&
+            !isCompact &&
             widget.config.showPropertyPanel &&
             (_controller.selectedElements.isNotEmpty ||
                 _controller.isCreationTool))
@@ -239,7 +242,7 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
             child: PropertyPanel(controller: _controller),
           ),
         // Compact menu button
-        if (isCompact && widget.config.showMenu)
+        if (showChrome && isCompact && widget.config.showMenu)
           Positioned(
             top: 12,
             left: 12,
@@ -261,6 +264,26 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
                   : null,
               onThemeModeChanged: widget.onThemeModeChanged,
               currentThemeMode: widget.currentThemeMode,
+            ),
+          ),
+        // View mode indicator
+        if (_controller.viewMode)
+          Positioned(
+            top: 12,
+            right: 12,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Text(
+                'View Mode',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                ),
+              ),
             ),
           ),
       ],
