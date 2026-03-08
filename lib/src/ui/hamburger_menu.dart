@@ -78,6 +78,8 @@ class HamburgerMenu extends StatelessWidget {
               controller.toggleGrid();
             case 'frame_tool':
               controller.switchTool(ToolType.frame);
+            case 'reset_canvas':
+              controller.resetCanvas();
           }
         },
         itemBuilder: (context) => [
@@ -146,6 +148,8 @@ class HamburgerMenu extends StatelessWidget {
           ),
           _menuItem(
               context, 'frame_tool', Icons.crop_free, 'Frame Tool', 'F'),
+          _menuItem(context, 'reset_canvas', Icons.delete_sweep,
+              'Reset Canvas', '$mod+Del'),
           if (onThemeModeChanged != null) ...[
             const PopupMenuDivider(),
             PopupMenuItem<String>(

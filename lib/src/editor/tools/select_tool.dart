@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
+import '../../core/alignment/alignment_utils.dart';
 import '../../core/elements/elements.dart';
 import '../../core/groups/groups.dart';
 import '../../core/layer/layer_utils.dart';
@@ -1431,6 +1432,25 @@ class SelectTool implements Tool {
       if (updated.isEmpty) return null;
       return CompoundResult([
         for (final e in updated) UpdateElementResult(e),
+      ]);
+    }
+
+    // Ctrl+Shift+Arrow: Alignment shortcuts
+    if (ctrl && shift &&
+        (key == 'ArrowLeft' || key == 'ArrowRight' ||
+            key == 'ArrowUp' || key == 'ArrowDown')) {
+      if (selectedElements.length < 2) return null;
+      if (selectedElements.every((e) => e.locked)) return null;
+      final aligned = switch (key) {
+        'ArrowLeft' => AlignmentUtils.alignLeft(selectedElements),
+        'ArrowRight' => AlignmentUtils.alignRight(selectedElements),
+        'ArrowUp' => AlignmentUtils.alignTop(selectedElements),
+        'ArrowDown' => AlignmentUtils.alignBottom(selectedElements),
+        _ => <Element>[],
+      };
+      if (aligned.isEmpty) return null;
+      return CompoundResult([
+        for (final e in aligned) UpdateElementResult(e),
       ]);
     }
 

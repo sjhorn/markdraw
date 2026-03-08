@@ -80,6 +80,45 @@ void handleKeyEvent({
       HardwareKeyboard.instance.isMetaPressed;
 
 
+  final alt = HardwareKeyboard.instance.isAltPressed;
+
+  // Page scrolling: PgDn/PgUp pans viewport by canvas height (Shift for horizontal)
+  if (key == LogicalKeyboardKey.pageDown ||
+      key == LogicalKeyboardKey.pageUp) {
+    final size = getCanvasSize();
+    final down = key == LogicalKeyboardKey.pageDown;
+    if (shift) {
+      controller.panViewport(
+        down ? size.width / controller.editorState.viewport.zoom : -size.width / controller.editorState.viewport.zoom,
+        0,
+      );
+    } else {
+      controller.panViewport(
+        0,
+        down ? size.height / controller.editorState.viewport.zoom : -size.height / controller.editorState.viewport.zoom,
+      );
+    }
+    return;
+  }
+
+  // Reset canvas: Ctrl+Delete
+  if (ctrl && !shift && key == LogicalKeyboardKey.delete) {
+    controller.resetCanvas();
+    return;
+  }
+
+  // Font size cycling: Ctrl+Shift+< / Ctrl+Shift+>
+  if (ctrl && shift &&
+      (key == LogicalKeyboardKey.comma ||
+          key == LogicalKeyboardKey.period ||
+          key == LogicalKeyboardKey.less ||
+          key == LogicalKeyboardKey.greater)) {
+    final increase = key == LogicalKeyboardKey.period ||
+        key == LogicalKeyboardKey.greater;
+    controller.cycleFontSize(increase: increase);
+    return;
+  }
+
   // Undo/redo
   if (ctrl && key == LogicalKeyboardKey.keyZ) {
     if (shift) {
@@ -141,7 +180,6 @@ void handleKeyEvent({
   }
 
   // Alt+Shift+D: toggle theme
-  final alt = HardwareKeyboard.instance.isAltPressed;
   if (alt && shift && key == LogicalKeyboardKey.keyD) {
     final current = getCurrentThemeMode();
     onThemeToggle(switch (current) {

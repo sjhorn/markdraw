@@ -1208,6 +1208,48 @@ class MarkdrawController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Pans the viewport by the given scene-coordinate deltas.
+  void panViewport(double dx, double dy) {
+    final viewport = _editorState.viewport;
+    final newViewport = ViewportState(
+      offset: Offset(viewport.offset.dx + dx, viewport.offset.dy + dy),
+      zoom: viewport.zoom,
+    );
+    applyResult(UpdateViewportResult(newViewport));
+  }
+
+  /// Cycles font size through presets [16, 20, 28, 36].
+  void cycleFontSize({required bool increase}) {
+    const presets = [16.0, 20.0, 28.0, 36.0];
+    final current = _defaultStyle.fontSize ?? 20.0;
+
+    double newSize;
+    if (increase) {
+      newSize = presets.firstWhere(
+        (s) => s > current,
+        orElse: () => presets.last,
+      );
+    } else {
+      newSize = presets.lastWhere(
+        (s) => s < current,
+        orElse: () => presets.first,
+      );
+    }
+
+    applyStyleChange(ElementStyle(fontSize: newSize));
+  }
+
+  /// Clears the canvas, pushing the current scene to undo history.
+  void resetCanvas() {
+    _historyManager.push(_editorState.scene);
+    _editorState = _editorState.copyWith(
+      scene: Scene(),
+      selectedIds: {},
+    );
+    onSceneChanged?.call(_editorState.scene);
+    notifyListeners();
+  }
+
   // --- Convenience methods for serialization / export / import ---
 
   /// Serializes the current scene to a string in the given [format].
