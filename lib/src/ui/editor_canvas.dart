@@ -6,10 +6,17 @@ import 'package:markdraw/markdraw.dart' hide TextAlign;
 
 
 /// The main canvas area with pointer/gesture handling.
-class EditorCanvas extends StatelessWidget {
+class EditorCanvas extends StatefulWidget {
   final MarkdrawController controller;
 
   const EditorCanvas({super.key, required this.controller});
+
+  @override
+  State<EditorCanvas> createState() => _EditorCanvasState();
+}
+
+class _EditorCanvasState extends State<EditorCanvas> {
+  MarkdrawController get controller => widget.controller;
 
   @override
   Widget build(BuildContext context) {
@@ -78,6 +85,9 @@ class EditorCanvas extends StatelessWidget {
                         : controller.buildSegmentMidpoints(),
                     creationPoints: toolOverlay?.creationPoints,
                     creationBounds: toolOverlay?.creationBounds,
+                    laserTrail: controller.activeTool is LaserTool
+                        ? (controller.activeTool as LaserTool).activeTrail
+                        : null,
                   ),
                   child: const SizedBox.expand(),
                 ),

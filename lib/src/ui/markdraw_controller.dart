@@ -135,7 +135,11 @@ class MarkdrawController extends ChangeNotifier {
       _isCompact ? InteractionMode.touch : InteractionMode.pointer;
 
   bool get isCreationTool => switch (_editorState.activeToolType) {
-    ToolType.select || ToolType.hand || ToolType.eraser => false,
+    ToolType.select ||
+    ToolType.hand ||
+    ToolType.eraser ||
+    ToolType.laser ||
+    ToolType.eyedropper => false,
     _ => true,
   };
 
@@ -160,6 +164,8 @@ class MarkdrawController extends ChangeNotifier {
     return switch (_editorState.activeToolType) {
       ToolType.select || ToolType.hand => SystemMouseCursors.basic,
       ToolType.eraser => SystemMouseCursors.none,
+      ToolType.laser => SystemMouseCursors.precise,
+      ToolType.eyedropper => SystemMouseCursors.precise,
       _ => SystemMouseCursors.precise,
     };
   }

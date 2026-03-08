@@ -44,5 +44,7 @@ IconData iconFor(ToolType type, {bool isActive = false}) {
     ToolType.hand => Icons.pan_tool_outlined,
     ToolType.frame => Icons.crop_free,
     ToolType.eraser => Symbols.ink_eraser,
+    ToolType.laser => Icons.flashlight_on,
+    ToolType.eyedropper => Icons.colorize,
   };
 }

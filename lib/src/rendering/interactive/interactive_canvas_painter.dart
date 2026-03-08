@@ -3,9 +3,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 
 import '../../core/math/math.dart';
+import '../../editor/tools/laser_tool.dart';
 import '../viewport_state.dart';
 import 'handle.dart';
 import 'interaction_mode.dart';
+import 'laser_renderer.dart';
 import 'selection_overlay.dart';
 import 'selection_renderer.dart';
 import 'snap_line.dart';
@@ -33,6 +35,7 @@ class InteractiveCanvasPainter extends CustomPainter {
   final Bounds? bindTargetBounds;
   final double bindTargetAngle;
   final Point? closeIndicatorCenter;
+  final List<LaserPoint>? laserTrail;
 
   const InteractiveCanvasPainter({
     required this.viewport,
@@ -49,6 +52,7 @@ class InteractiveCanvasPainter extends CustomPainter {
     this.bindTargetBounds,
     this.bindTargetAngle = 0.0,
     this.closeIndicatorCenter,
+    this.laserTrail,
   });
 
   @override
@@ -174,6 +178,11 @@ class InteractiveCanvasPainter extends CustomPainter {
     }
 
     canvas.restore();
+
+    // Laser trail — drawn in screen space (after restore)
+    if (laserTrail != null && laserTrail!.length >= 2) {
+      LaserRenderer.draw(canvas, laserTrail!, viewport);
+    }
   }
 
   @override
@@ -191,6 +200,7 @@ class InteractiveCanvasPainter extends CustomPainter {
         !listEquals(creationPoints, oldDelegate.creationPoints) ||
         !listEquals(pointHandles, oldDelegate.pointHandles) ||
         !listEquals(midpointHandles, oldDelegate.midpointHandles) ||
-        !listEquals(segmentMidpoints, oldDelegate.segmentMidpoints);
+        !listEquals(segmentMidpoints, oldDelegate.segmentMidpoints) ||
+        laserTrail != oldDelegate.laserTrail;
   }
 }

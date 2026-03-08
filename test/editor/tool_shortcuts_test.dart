@@ -71,7 +71,7 @@ void main() {
 
     test('all ToolType values have a shortcut', () {
       final reachable = <ToolType>{};
-      for (final c in '1234567890fhvrdoalpt e'.split('')) {
+      for (final c in '1234567890fhvrdoalpt eki'.split('')) {
         final t = toolTypeForKey(c);
         if (t != null) reachable.add(t);
       }

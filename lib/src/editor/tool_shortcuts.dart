@@ -20,6 +20,8 @@ ToolType? toolTypeForKey(String key) {
     'f' => ToolType.frame,
     'h' => ToolType.hand,
     '0' || 'e' => ToolType.eraser,
+    'k' => ToolType.laser,
+    'i' => ToolType.eyedropper,
     _ => null,
   };
 }
@@ -39,5 +41,7 @@ String? shortcutForToolType(ToolType type) {
     ToolType.frame => 'F',
     ToolType.hand => 'H',
     ToolType.eraser => '0',
+    ToolType.laser => 'K',
+    ToolType.eyedropper => 'I',
   };
 }
