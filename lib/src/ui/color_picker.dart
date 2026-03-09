@@ -53,7 +53,7 @@ class ColorSwatch extends StatelessWidget {
 }
 
 /// The 6th swatch that shows the active color and opens a full palette popup.
-class ColorPickerButton extends StatelessWidget {
+class ColorPickerButton extends StatefulWidget {
   final String color;
   final bool isActive;
   final ValueChanged<String> onColorSelected;
@@ -68,6 +68,12 @@ class ColorPickerButton extends StatelessWidget {
   /// Canvas size for eyedropper rendering.
   final Size? canvasSize;
 
+  /// When true, the palette popup opens automatically on build.
+  final bool autoOpen;
+
+  /// Called when the auto-opened popup is shown (to clear the trigger flag).
+  final VoidCallback? onAutoOpened;
+
   const ColorPickerButton({
     super.key,
     required this.color,
@@ -76,6 +82,8 @@ class ColorPickerButton extends StatelessWidget {
     this.onRenderScene,
     this.onSampleColor,
     this.canvasSize,
+    this.autoOpen = false,
+    this.onAutoOpened,
   });
 
   static const paletteColors = [
@@ -94,25 +102,59 @@ class ColorPickerButton extends StatelessWidget {
   ];
 
   @override
+  State<ColorPickerButton> createState() => _ColorPickerButtonState();
+}
+
+class _ColorPickerButtonState extends State<ColorPickerButton> {
+  OverlayEntry? _overlayEntry;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.autoOpen) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _showPalettePopup();
+      });
+    }
+  }
+
+  @override
+  void didUpdateWidget(ColorPickerButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.autoOpen && !oldWidget.autoOpen && _overlayEntry == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _showPalettePopup();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final parsed = parseColor(color);
-    final isTransparent = color == 'transparent';
+    final parsed = parseColor(widget.color);
+    final isTransparent = widget.color == 'transparent';
     final isLight = !isTransparent && (parsed.r + parsed.g + parsed.b) > 1.8;
     return GestureDetector(
-      onTap: () => _showPalettePopup(context),
+      onTap: _showPalettePopup,
       child: Container(
         width: 24,
         height: 24,
         decoration: BoxDecoration(
           color: isTransparent ? cs.surface : parsed,
           border: Border.all(
-            color: isActive
+            color: widget.isActive
                 ? cs.primary
                 : (isLight || isTransparent)
                     ? cs.outlineVariant
                     : cs.outlineVariant,
-            width: isActive ? 2 : 1,
+            width: widget.isActive ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(4),
         ),
@@ -123,27 +165,33 @@ class ColorPickerButton extends StatelessWidget {
     );
   }
 
-  void _showPalettePopup(BuildContext context) {
+  void _showPalettePopup() {
+    if (_overlayEntry != null) return;
     final renderBox = context.findRenderObject() as RenderBox;
     final offset = renderBox.localToGlobal(Offset.zero);
     final overlay = Overlay.of(context);
 
-    late OverlayEntry entry;
-    entry = OverlayEntry(
+    _overlayEntry = OverlayEntry(
       builder: (ctx) => ColorPaletteOverlay(
         anchor: offset,
-        currentColor: color,
+        currentColor: widget.color,
         onSelect: (c) {
-          entry.remove();
-          onColorSelected(c);
+          _removeOverlay();
+          widget.onColorSelected(c);
         },
-        onDismiss: () => entry.remove(),
-        onRenderScene: onRenderScene,
-        onSampleColor: onSampleColor,
-        canvasSize: canvasSize,
+        onDismiss: _removeOverlay,
+        onRenderScene: widget.onRenderScene,
+        onSampleColor: widget.onSampleColor,
+        canvasSize: widget.canvasSize,
       ),
     );
-    overlay.insert(entry);
+    overlay.insert(_overlayEntry!);
+    widget.onAutoOpened?.call();
+  }
+
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
   }
 }
 
@@ -465,26 +513,25 @@ class _ColorPaletteOverlayState extends State<ColorPaletteOverlay> {
 
   Widget _buildEyedropperButton() {
     final cs = Theme.of(context).colorScheme;
-    return SizedBox(
-      width: 28,
-      height: 28,
-      child: Material(
-        color: _eyedropperActive ? cs.primaryContainer : Colors.transparent,
-        borderRadius: BorderRadius.circular(4),
-        child: InkWell(
+    return GestureDetector(
+      onTap: () {
+        if (_eyedropperActive) {
+          _deactivateEyedropper();
+        } else {
+          _activateEyedropper();
+        }
+      },
+      child: Container(
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          color: _eyedropperActive ? cs.primaryContainer : Colors.transparent,
           borderRadius: BorderRadius.circular(4),
-          onTap: () {
-            if (_eyedropperActive) {
-              _deactivateEyedropper();
-            } else {
-              _activateEyedropper();
-            }
-          },
-          child: Icon(
-            Icons.colorize,
-            size: 16,
-            color: _eyedropperActive ? cs.onPrimaryContainer : cs.onSurface,
-          ),
+        ),
+        child: Icon(
+          Icons.colorize,
+          size: 16,
+          color: _eyedropperActive ? cs.onPrimaryContainer : cs.onSurface,
         ),
       ),
     );

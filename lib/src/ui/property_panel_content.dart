@@ -70,6 +70,7 @@ class PropertyPanelContent extends StatelessWidget {
           onSelect: (c) =>
               controller.applyStyleChange(ElementStyle(strokeColor: c)),
           quickPicks: strokeQuickPicks,
+          target: ColorPickerTarget.stroke,
         ),
         const SizedBox(height: 8),
         if (showFullTextProps) ...[
@@ -105,6 +106,7 @@ class PropertyPanelContent extends StatelessWidget {
           onSelect: (c) =>
               controller.applyStyleChange(ElementStyle(strokeColor: c)),
           quickPicks: strokeQuickPicks,
+          target: ColorPickerTarget.stroke,
         ),
         if (!textOnly) ...[
           const SizedBox(height: 8),
@@ -115,6 +117,7 @@ class PropertyPanelContent extends StatelessWidget {
             onSelect: (c) => controller
                 .applyStyleChange(ElementStyle(backgroundColor: c)),
             quickPicks: backgroundQuickPicks,
+            target: ColorPickerTarget.background,
           ),
           const SizedBox(height: 8),
           _buildSectionLabel(context, 'Fill style'),
@@ -217,8 +220,11 @@ class PropertyPanelContent extends StatelessWidget {
     required String? selected,
     required ValueChanged<String> onSelect,
     required List<String> quickPicks,
+    ColorPickerTarget? target,
   }) {
     final isQuickPick = quickPicks.contains(selected);
+    final shouldAutoOpen =
+        target != null && controller.pendingColorPicker == target;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -245,6 +251,8 @@ class PropertyPanelContent extends StatelessWidget {
               canvasSize != null ? controller.renderSceneImage : null,
           onSampleColor: controller.sampleColorFromImage,
           canvasSize: canvasSize,
+          autoOpen: shouldAutoOpen,
+          onAutoOpened: controller.clearPendingColorPicker,
         ),
       ],
     );

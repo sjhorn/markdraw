@@ -21,6 +21,17 @@ void main() {
     return image;
   }
 
+  /// Finds the Container wrapping the eyedropper icon and returns its
+  /// background color from the BoxDecoration.
+  Color? eyedropperButtonColor(WidgetTester tester) {
+    final container = tester.widget<Container>(find.ancestor(
+      of: find.byIcon(Icons.colorize),
+      matching: find.byType(Container),
+    ).first);
+    final decoration = container.decoration as BoxDecoration?;
+    return decoration?.color;
+  }
+
   Widget buildOverlay({
     required String currentColor,
     required ValueChanged<String> onSelect,
@@ -84,13 +95,8 @@ void main() {
       await tester.tap(find.byIcon(Icons.colorize));
       await tester.pumpAndSettle();
 
-      // Eyedropper button should now have primaryContainer background
-      // (indicates active state)
-      final material = tester.widget<Material>(find.ancestor(
-        of: find.byIcon(Icons.colorize),
-        matching: find.byType(Material),
-      ).first);
-      expect(material.color, isNot(Colors.transparent));
+      // Active state shows non-transparent background
+      expect(eyedropperButtonColor(tester), isNot(Colors.transparent));
     });
 
     testWidgets('I key toggles eyedropper mode', (tester) async {
@@ -107,22 +113,13 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.keyI);
       await tester.pumpAndSettle();
 
-      // Should be active — the colorize icon Material has non-transparent color
-      var material = tester.widget<Material>(find.ancestor(
-        of: find.byIcon(Icons.colorize),
-        matching: find.byType(Material),
-      ).first);
-      expect(material.color, isNot(Colors.transparent));
+      expect(eyedropperButtonColor(tester), isNot(Colors.transparent));
 
       // Press I again to deactivate
       await tester.sendKeyEvent(LogicalKeyboardKey.keyI);
       await tester.pumpAndSettle();
 
-      material = tester.widget<Material>(find.ancestor(
-        of: find.byIcon(Icons.colorize),
-        matching: find.byType(Material),
-      ).first);
-      expect(material.color, Colors.transparent);
+      expect(eyedropperButtonColor(tester), Colors.transparent);
     });
 
     testWidgets('Escape deactivates eyedropper without closing palette',
@@ -150,11 +147,7 @@ void main() {
       expect(dismissed, isFalse);
 
       // Eyedropper should be deactivated
-      final material = tester.widget<Material>(find.ancestor(
-        of: find.byIcon(Icons.colorize),
-        matching: find.byType(Material),
-      ).first);
-      expect(material.color, Colors.transparent);
+      expect(eyedropperButtonColor(tester), Colors.transparent);
     });
   });
 
@@ -179,6 +172,28 @@ void main() {
 
       // The overlay should have the eyedropper button
       expect(find.byIcon(Icons.colorize), findsOneWidget);
+    });
+  });
+
+  group('ColorPickerButton autoOpen', () {
+    testWidgets('autoOpen opens palette popup automatically', (tester) async {
+      var autoOpenedCalled = false;
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: ColorPickerButton(
+            color: '#ff0000',
+            isActive: false,
+            onColorSelected: (_) {},
+            autoOpen: true,
+            onAutoOpened: () => autoOpenedCalled = true,
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      // Palette should be visible (has the hex input)
+      expect(find.byType(TextField), findsOneWidget);
+      expect(autoOpenedCalled, isTrue);
     });
   });
 }
