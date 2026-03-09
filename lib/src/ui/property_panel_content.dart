@@ -916,42 +916,52 @@ class PropertyPanelContent extends StatelessWidget {
     );
     final isCompact = controller.isCompact;
     if (isCompact) {
-      return Row(
-        children: [
-          _buildFontCategoryButtons(context, current, currentCategory),
-          Container(
-            width: 1,
-            height: 24,
-            color: Theme.of(context).dividerColor,
-            margin: const EdgeInsets.symmetric(horizontal: 6),
-          ),
-          IconToggleChip(
-            isSelected: controller.fontPickerOpen,
-            onTap: () => _showCompactFontPicker(context, current),
-            tooltip: 'More fonts',
-            child: const Icon(Icons.more_horiz, size: 18),
-          ),
-        ],
+      return _AutoOpenFontPicker(
+        controller: controller,
+        current: current,
+        child: Row(
+          children: [
+            _buildFontCategoryButtons(context, current, currentCategory),
+            Container(
+              width: 1,
+              height: 24,
+              color: Theme.of(context).dividerColor,
+              margin: const EdgeInsets.symmetric(horizontal: 6),
+            ),
+            IconToggleChip(
+              isSelected: controller.fontPickerOpen,
+              onTap: () => _showCompactFontPicker(context, current),
+              tooltip: 'More fonts',
+              child: const Icon(Icons.more_horiz, size: 18),
+            ),
+          ],
+        ),
+        onAutoOpen: () => _showCompactFontPicker(context, current),
       );
     }
-    return Row(
-      children: [
-        _buildFontCategoryButtons(context, current, currentCategory),
-        Container(
-          width: 1,
-          height: 24,
-          color: Theme.of(context).dividerColor,
-          margin: const EdgeInsets.symmetric(horizontal: 6),
+    return Builder(
+      builder: (innerContext) => _AutoOpenFontPicker(
+        controller: controller,
+        current: current,
+        onAutoOpen: () => _showFontPickerOverlay(innerContext, current),
+        child: Row(
+          children: [
+            _buildFontCategoryButtons(context, current, currentCategory),
+            Container(
+              width: 1,
+              height: 24,
+              color: Theme.of(context).dividerColor,
+              margin: const EdgeInsets.symmetric(horizontal: 6),
+            ),
+            IconToggleChip(
+              isSelected: controller.fontPickerOpen,
+              onTap: () => _showFontPickerOverlay(innerContext, current),
+              tooltip: 'More fonts',
+              child: const Icon(Icons.more_horiz, size: 18),
+            ),
+          ],
         ),
-        Builder(
-          builder: (context) => IconToggleChip(
-            isSelected: controller.fontPickerOpen,
-            onTap: () => _showFontPickerOverlay(context, current),
-            tooltip: 'More fonts',
-            child: const Icon(Icons.more_horiz, size: 18),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -1160,4 +1170,49 @@ class PropertyPanelContent extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Auto-opens the font picker when [controller.pendingColorPicker] is [ColorPickerTarget.font].
+class _AutoOpenFontPicker extends StatefulWidget {
+  final MarkdrawController controller;
+  final String? current;
+  final Widget child;
+  final VoidCallback onAutoOpen;
+
+  const _AutoOpenFontPicker({
+    required this.controller,
+    required this.current,
+    required this.child,
+    required this.onAutoOpen,
+  });
+
+  @override
+  State<_AutoOpenFontPicker> createState() => _AutoOpenFontPickerState();
+}
+
+class _AutoOpenFontPickerState extends State<_AutoOpenFontPicker> {
+  @override
+  void initState() {
+    super.initState();
+    _maybeAutoOpen();
+  }
+
+  @override
+  void didUpdateWidget(_AutoOpenFontPicker oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _maybeAutoOpen();
+  }
+
+  void _maybeAutoOpen() {
+    if (widget.controller.pendingColorPicker == ColorPickerTarget.font &&
+        !widget.controller.fontPickerOpen) {
+      widget.controller.clearPendingColorPicker();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) widget.onAutoOpen();
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
