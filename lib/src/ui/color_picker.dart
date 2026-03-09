@@ -311,6 +311,7 @@ class _ColorPaletteOverlayState extends State<ColorPaletteOverlay> {
             Positioned.fill(
               child: MouseRegion(
                 cursor: SystemMouseCursors.precise,
+                onHover: (e) => _onPointerMove(e.position),
                 child: Listener(
                   behavior: HitTestBehavior.opaque,
                   onPointerMove: (e) => _onPointerMove(e.position),
