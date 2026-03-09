@@ -236,21 +236,20 @@ class _ColorPaletteOverlayState extends State<ColorPaletteOverlay> {
   String? _previewColor;
   ui.Image? _cachedImage;
 
-  final _focusNode = FocusNode();
-
   @override
   void initState() {
     super.initState();
     _hexController = TextEditingController(
       text: widget.currentColor == 'transparent' ? '' : widget.currentColor,
     );
+    HardwareKeyboard.instance.addHandler(_onHardwareKey);
   }
 
   @override
   void dispose() {
+    HardwareKeyboard.instance.removeHandler(_onHardwareKey);
     _hexController.dispose();
     _cachedImage?.dispose();
-    _focusNode.dispose();
     super.dispose();
   }
 
@@ -304,13 +303,13 @@ class _ColorPaletteOverlayState extends State<ColorPaletteOverlay> {
     }
   }
 
-  KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
-    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+  bool _onHardwareKey(KeyEvent event) {
+    if (event is! KeyDownEvent) return false;
 
     if (event.logicalKey == LogicalKeyboardKey.escape) {
       if (_eyedropperActive) {
         _deactivateEyedropper();
-        return KeyEventResult.handled;
+        return true;
       }
     }
 
@@ -321,11 +320,11 @@ class _ColorPaletteOverlayState extends State<ColorPaletteOverlay> {
         } else {
           _activateEyedropper();
         }
-        return KeyEventResult.handled;
+        return true;
       }
     }
 
-    return KeyEventResult.ignored;
+    return false;
   }
 
   @override
@@ -348,12 +347,8 @@ class _ColorPaletteOverlayState extends State<ColorPaletteOverlay> {
       top = widget.anchor.dy - popupHeight - 4;
     }
 
-    return Focus(
-      focusNode: _focusNode,
-      autofocus: true,
-      onKeyEvent: _onKeyEvent,
-      child: Stack(
-        children: [
+    return Stack(
+      children: [
           // Dismiss backdrop / eyedropper capture layer
           if (_eyedropperActive)
             Positioned.fill(
@@ -469,8 +464,7 @@ class _ColorPaletteOverlayState extends State<ColorPaletteOverlay> {
                 ),
               ),
             ),
-        ],
-      ),
+      ],
     );
   }
 
