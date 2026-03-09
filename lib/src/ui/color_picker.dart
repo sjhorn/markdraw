@@ -1,6 +1,9 @@
 library;
 
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'color_utils.dart';
 import 'style_icon_painters.dart';
@@ -55,11 +58,24 @@ class ColorPickerButton extends StatelessWidget {
   final bool isActive;
   final ValueChanged<String> onColorSelected;
 
+  /// Callback for eyedropper pixel sampling; null hides the eyedropper button.
+  final Future<ui.Image?> Function(Size canvasSize)? onRenderScene;
+
+  /// Callback to sample a color from a pre-rendered image.
+  final Future<String?> Function(ui.Image image, Offset position)?
+      onSampleColor;
+
+  /// Canvas size for eyedropper rendering.
+  final Size? canvasSize;
+
   const ColorPickerButton({
     super.key,
     required this.color,
     required this.isActive,
     required this.onColorSelected,
+    this.onRenderScene,
+    this.onSampleColor,
+    this.canvasSize,
   });
 
   static const paletteColors = [
@@ -122,6 +138,9 @@ class ColorPickerButton extends StatelessWidget {
           onColorSelected(c);
         },
         onDismiss: () => entry.remove(),
+        onRenderScene: onRenderScene,
+        onSampleColor: onSampleColor,
+        canvasSize: canvasSize,
       ),
     );
     overlay.insert(entry);
@@ -135,12 +154,25 @@ class ColorPaletteOverlay extends StatefulWidget {
   final ValueChanged<String> onSelect;
   final VoidCallback onDismiss;
 
+  /// Callback to render scene to an image for eyedropper; null hides button.
+  final Future<ui.Image?> Function(Size canvasSize)? onRenderScene;
+
+  /// Callback to sample a color from a pre-rendered image.
+  final Future<String?> Function(ui.Image image, Offset position)?
+      onSampleColor;
+
+  /// Canvas size for eyedropper rendering.
+  final Size? canvasSize;
+
   const ColorPaletteOverlay({
     super.key,
     required this.anchor,
     required this.currentColor,
     required this.onSelect,
     required this.onDismiss,
+    this.onRenderScene,
+    this.onSampleColor,
+    this.canvasSize,
   });
 
   @override
@@ -149,6 +181,14 @@ class ColorPaletteOverlay extends StatefulWidget {
 
 class _ColorPaletteOverlayState extends State<ColorPaletteOverlay> {
   late final TextEditingController _hexController;
+
+  // Eyedropper mode state
+  bool _eyedropperActive = false;
+  Offset? _cursorPosition;
+  String? _previewColor;
+  ui.Image? _cachedImage;
+
+  final _focusNode = FocusNode();
 
   @override
   void initState() {
@@ -161,7 +201,83 @@ class _ColorPaletteOverlayState extends State<ColorPaletteOverlay> {
   @override
   void dispose() {
     _hexController.dispose();
+    _cachedImage?.dispose();
+    _focusNode.dispose();
     super.dispose();
+  }
+
+  bool get _hasEyedropper =>
+      widget.onRenderScene != null &&
+      widget.onSampleColor != null &&
+      widget.canvasSize != null;
+
+  Future<void> _activateEyedropper() async {
+    if (!_hasEyedropper) return;
+    final image = await widget.onRenderScene!(widget.canvasSize!);
+    if (image == null || !mounted) return;
+    setState(() {
+      _cachedImage = image;
+      _eyedropperActive = true;
+      _previewColor = null;
+      _cursorPosition = null;
+    });
+  }
+
+  void _deactivateEyedropper() {
+    _cachedImage?.dispose();
+    setState(() {
+      _cachedImage = null;
+      _eyedropperActive = false;
+      _previewColor = null;
+      _cursorPosition = null;
+    });
+  }
+
+  Future<void> _onPointerMove(Offset position) async {
+    if (!_eyedropperActive || _cachedImage == null) return;
+    setState(() => _cursorPosition = position);
+
+    final color = await widget.onSampleColor!(_cachedImage!, position);
+    if (!mounted || !_eyedropperActive) return;
+    setState(() {
+      _previewColor = color;
+      if (color != null) {
+        _hexController.text = color;
+      }
+    });
+  }
+
+  void _onPointerUp(Offset position) {
+    if (!_eyedropperActive) return;
+    final color = _previewColor;
+    if (color != null) {
+      _deactivateEyedropper();
+      widget.onSelect(color);
+    }
+  }
+
+  KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+
+    if (event.logicalKey == LogicalKeyboardKey.escape) {
+      if (_eyedropperActive) {
+        _deactivateEyedropper();
+        return KeyEventResult.handled;
+      }
+    }
+
+    if (event.logicalKey == LogicalKeyboardKey.keyI) {
+      if (_hasEyedropper) {
+        if (_eyedropperActive) {
+          _deactivateEyedropper();
+        } else {
+          _activateEyedropper();
+        }
+        return KeyEventResult.handled;
+      }
+    }
+
+    return KeyEventResult.ignored;
   }
 
   @override
@@ -184,97 +300,192 @@ class _ColorPaletteOverlayState extends State<ColorPaletteOverlay> {
       top = widget.anchor.dy - popupHeight - 4;
     }
 
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: GestureDetector(
-            onTap: widget.onDismiss,
-            behavior: HitTestBehavior.opaque,
-            child: const SizedBox.expand(),
-          ),
-        ),
-        Positioned(
-          left: left,
-          top: top,
-          child: Material(
-            elevation: 8,
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              width: popupWidth,
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(8),
+    return Focus(
+      focusNode: _focusNode,
+      autofocus: true,
+      onKeyEvent: _onKeyEvent,
+      child: Stack(
+        children: [
+          // Dismiss backdrop / eyedropper capture layer
+          if (_eyedropperActive)
+            Positioned.fill(
+              child: MouseRegion(
+                cursor: SystemMouseCursors.precise,
+                child: Listener(
+                  behavior: HitTestBehavior.opaque,
+                  onPointerMove: (e) => _onPointerMove(e.position),
+                  onPointerDown: (e) => _onPointerMove(e.position),
+                  onPointerUp: (e) => _onPointerUp(e.position),
+                  child: const SizedBox.expand(),
+                ),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  GestureDetector(
-                    onTap: () => widget.onSelect('transparent'),
-                    child: Container(
-                      width: swatchSize,
-                      height: swatchSize,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        border: Border.all(
-                          color: widget.currentColor == 'transparent'
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.outlineVariant,
-                          width:
-                              widget.currentColor == 'transparent' ? 2 : 1,
-                        ),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: CustomPaint(painter: DiagonalLinePainter()),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  for (final row in ColorPickerButton.paletteColors)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: spacing),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          for (final hex in row)
-                            Padding(
-                              padding: const EdgeInsets.only(right: spacing),
-                              child: _buildGridSwatch(hex, swatchSize),
-                            ),
-                        ],
-                      ),
-                    ),
-                  const SizedBox(height: 4),
-                  SizedBox(
-                    height: 32,
-                    child: TextField(
-                      controller: _hexController,
-                      decoration: InputDecoration(
-                        hintText: '#rrggbb',
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 6,
-                        ),
-                        border: OutlineInputBorder(
+            )
+          else
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: widget.onDismiss,
+                behavior: HitTestBehavior.opaque,
+                child: const SizedBox.expand(),
+              ),
+            ),
+
+          // Palette popup
+          Positioned(
+            left: left,
+            top: top,
+            child: Material(
+              elevation: 8,
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                width: popupWidth,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    GestureDetector(
+                      onTap: () => widget.onSelect('transparent'),
+                      child: Container(
+                        width: swatchSize,
+                        height: swatchSize,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          border: Border.all(
+                            color: widget.currentColor == 'transparent'
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .outlineVariant,
+                            width: widget.currentColor == 'transparent'
+                                ? 2
+                                : 1,
+                          ),
                           borderRadius: BorderRadius.circular(4),
                         ),
+                        child: CustomPaint(painter: DiagonalLinePainter()),
                       ),
-                      style: const TextStyle(fontSize: 13),
-                      onSubmitted: (value) {
-                        final hex = value.trim();
-                        if (_isValidHex(hex)) {
-                          widget.onSelect(hex);
-                        }
-                      },
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    for (final row in ColorPickerButton.paletteColors)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: spacing),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            for (final hex in row)
+                              Padding(
+                                padding:
+                                    const EdgeInsets.only(right: spacing),
+                                child:
+                                    _buildGridSwatch(hex, swatchSize),
+                              ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 4),
+                    _buildHexInputRow(),
+                  ],
+                ),
               ),
             ),
           ),
+
+          // Eyedropper color preview swatch following cursor
+          if (_eyedropperActive &&
+              _cursorPosition != null &&
+              _previewColor != null)
+            Positioned(
+              left: _cursorPosition!.dx + 20,
+              top: _cursorPosition!.dy + 20,
+              child: IgnorePointer(
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: parseColor(_previewColor!),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.white, width: 2),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x40000000),
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHexInputRow() {
+    return SizedBox(
+      height: 32,
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _hexController,
+              decoration: InputDecoration(
+                hintText: '#rrggbb',
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 6,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              style: const TextStyle(fontSize: 13),
+              onSubmitted: (value) {
+                final hex = value.trim();
+                if (_isValidHex(hex)) {
+                  widget.onSelect(hex);
+                }
+              },
+            ),
+          ),
+          if (_hasEyedropper) ...[
+            const SizedBox(width: 4),
+            _buildEyedropperButton(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEyedropperButton() {
+    final cs = Theme.of(context).colorScheme;
+    return SizedBox(
+      width: 28,
+      height: 28,
+      child: Material(
+        color: _eyedropperActive ? cs.primaryContainer : Colors.transparent,
+        borderRadius: BorderRadius.circular(4),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(4),
+          onTap: () {
+            if (_eyedropperActive) {
+              _deactivateEyedropper();
+            } else {
+              _activateEyedropper();
+            }
+          },
+          child: Icon(
+            Icons.colorize,
+            size: 16,
+            color: _eyedropperActive ? cs.onPrimaryContainer : cs.onSurface,
+          ),
         ),
-      ],
+      ),
     );
   }
 

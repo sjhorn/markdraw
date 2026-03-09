@@ -72,6 +72,7 @@ void showCompactPropertyPanel(
                   showFullTextProps: showFullTextProps,
                   isEditingText: isEditingText,
                   textOnly: textOnly,
+                  canvasSize: MediaQuery.of(context).size,
                 ),
               ],
             ),

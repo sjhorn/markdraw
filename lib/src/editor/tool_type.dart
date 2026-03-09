@@ -15,5 +15,4 @@ enum ToolType {
   frame,
   eraser,
   laser,
-  eyedropper,
 }

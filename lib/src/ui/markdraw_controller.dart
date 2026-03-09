@@ -138,8 +138,7 @@ class MarkdrawController extends ChangeNotifier {
     ToolType.select ||
     ToolType.hand ||
     ToolType.eraser ||
-    ToolType.laser ||
-    ToolType.eyedropper => false,
+    ToolType.laser => false,
     _ => true,
   };
 
@@ -165,7 +164,6 @@ class MarkdrawController extends ChangeNotifier {
       ToolType.select || ToolType.hand => SystemMouseCursors.basic,
       ToolType.eraser => SystemMouseCursors.none,
       ToolType.laser => SystemMouseCursors.precise,
-      ToolType.eyedropper => SystemMouseCursors.precise,
       _ => SystemMouseCursors.precise,
     };
   }
@@ -1358,6 +1356,65 @@ class MarkdrawController extends ChangeNotifier {
   /// Clears the pending color picker request.
   void clearPendingColorPicker() {
     _pendingColorPicker = null;
+  }
+
+  // --- Eyedropper sampling ---
+
+  /// Renders the scene to an offscreen image for pixel sampling.
+  ///
+  /// Call once when entering eyedropper mode, then use [sampleColorFromImage]
+  /// to read pixels without re-rendering.
+  Future<ui.Image?> renderSceneImage(Size canvasSize) async {
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+
+    // Fill with canvas background
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, canvasSize.width, canvasSize.height),
+      Paint()..color = parseColor(_canvasBackgroundColor),
+    );
+
+    final painter = StaticCanvasPainter(
+      scene: _editorState.scene,
+      adapter: _adapter,
+      viewport: _editorState.viewport,
+      resolvedImages: resolveImages(),
+    );
+    painter.paint(canvas, canvasSize);
+
+    final picture = recorder.endRecording();
+    final image = await picture.toImage(
+      canvasSize.width.ceil(),
+      canvasSize.height.ceil(),
+    );
+    picture.dispose();
+    return image;
+  }
+
+  /// Reads the pixel color at [screenPosition] from a pre-rendered [image].
+  ///
+  /// Returns a hex color string like '#ff0000', or null if out of bounds.
+  Future<String?> sampleColorFromImage(
+    ui.Image image,
+    Offset screenPosition,
+  ) async {
+    final px = screenPosition.dx.round();
+    final py = screenPosition.dy.round();
+    if (px < 0 || py < 0 || px >= image.width || py >= image.height) {
+      return null;
+    }
+
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    if (byteData == null) return null;
+
+    final offset = (py * image.width + px) * 4;
+    final r = byteData.getUint8(offset);
+    final g = byteData.getUint8(offset + 1);
+    final b = byteData.getUint8(offset + 2);
+
+    return '#${r.toRadixString(16).padLeft(2, '0')}'
+        '${g.toRadixString(16).padLeft(2, '0')}'
+        '${b.toRadixString(16).padLeft(2, '0')}';
   }
 
   // --- Convenience methods for serialization / export / import ---

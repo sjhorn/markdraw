@@ -3,7 +3,6 @@ import 'arrow_tool.dart';
 import 'diamond_tool.dart';
 import 'ellipse_tool.dart';
 import 'eraser_tool.dart';
-import 'eyedropper_tool.dart';
 import 'frame_tool.dart';
 import 'freedraw_tool.dart';
 import 'hand_tool.dart';
@@ -29,6 +28,5 @@ Tool createTool(ToolType type) {
     ToolType.frame => FrameTool(),
     ToolType.eraser => EraserTool(),
     ToolType.laser => LaserTool(),
-    ToolType.eyedropper => EyedropperTool(),
   };
 }

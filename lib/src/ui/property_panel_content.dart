@@ -16,6 +16,7 @@ class PropertyPanelContent extends StatelessWidget {
   final bool showFullTextProps;
   final bool isEditingText;
   final bool textOnly;
+  final Size? canvasSize;
 
   const PropertyPanelContent({
     super.key,
@@ -26,6 +27,7 @@ class PropertyPanelContent extends StatelessWidget {
     required this.showFullTextProps,
     required this.isEditingText,
     this.textOnly = false,
+    this.canvasSize,
   });
 
   @override
@@ -239,6 +241,10 @@ class PropertyPanelContent extends StatelessWidget {
           color: selected ?? '#000000',
           isActive: !isQuickPick,
           onColorSelected: onSelect,
+          onRenderScene:
+              canvasSize != null ? controller.renderSceneImage : null,
+          onSampleColor: controller.sampleColorFromImage,
+          canvasSize: canvasSize,
         ),
       ],
     );

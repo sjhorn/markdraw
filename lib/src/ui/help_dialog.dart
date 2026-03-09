@@ -53,7 +53,6 @@ void showHelpDialog(BuildContext context) {
                       _shortcutRow(context, 'Eraser', '0 / E'),
                       _shortcutRow(context, 'Frame', 'F'),
                       _shortcutRow(context, 'Laser pointer', 'K'),
-                      _shortcutRow(context, 'Eye dropper', 'I'),
                       _shortcutRow(context, 'Lock tool', 'Q'),
                     ]),
                     const SizedBox(height: 16),
