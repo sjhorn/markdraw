@@ -49,6 +49,8 @@ class MarkdrawController extends ChangeNotifier {
   final _historyManager = HistoryManager();
   final ClipboardService _clipboardService = const FlutterClipboardService();
   final _imageCache = ImageElementCache();
+  final _flowchartCreator = FlowchartCreator();
+  final _flowchartNavigator = FlowchartNavigator();
 
   // UI state
   List<LibraryItem> _libraryItems = [];
@@ -1375,6 +1377,58 @@ class MarkdrawController extends ChangeNotifier {
       _toolBeforeViewMode = null;
     }
     notifyListeners();
+  }
+
+  // --- Flowchart ---
+
+  FlowchartCreator get flowchartCreator => _flowchartCreator;
+
+  /// Creates flowchart node(s) from the selected node in [direction].
+  void flowchartCreate(LinkDirection direction) {
+    final selected = selectedElements;
+    if (selected.length != 1 || !FlowchartUtils.isFlowchartNode(selected.first)) {
+      return;
+    }
+    _flowchartCreator.createNodes(
+      startNode: selected.first,
+      direction: direction,
+      scene: _editorState.scene,
+    );
+    notifyListeners();
+  }
+
+  /// Commits pending flowchart elements to the scene.
+  void flowchartCommit() {
+    if (!_flowchartCreator.isCreating) return;
+    _historyManager.push(_editorState.scene);
+    applyResult(_flowchartCreator.commit());
+  }
+
+  /// Cancels pending flowchart creation, discarding preview elements.
+  void flowchartCancel() {
+    if (!_flowchartCreator.isCreating) return;
+    _flowchartCreator.clear();
+    notifyListeners();
+  }
+
+  /// Navigates to a connected flowchart node in [direction].
+  void flowchartNavigate(LinkDirection direction) {
+    final selected = selectedElements;
+    if (selected.length != 1) return;
+    final targetId = _flowchartNavigator.exploreByDirection(
+      selected.first,
+      _editorState.scene,
+      direction,
+    );
+    if (targetId != null) {
+      applyResult(SetSelectionResult({targetId}));
+    }
+  }
+
+  /// Ends flowchart navigation, clearing visited state.
+  void flowchartNavigateEnd() {
+    if (!_flowchartNavigator.isExploring) return;
+    _flowchartNavigator.clear();
   }
 
   /// Requests programmatic opening of a color picker.

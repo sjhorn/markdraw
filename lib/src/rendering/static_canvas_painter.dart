@@ -35,6 +35,9 @@ class StaticCanvasPainter extends CustomPainter {
   /// Decoded images keyed by fileId, passed through to ElementRenderer.
   final Map<String, ui.Image>? resolvedImages;
 
+  /// Pending flowchart elements rendered at 50% opacity as a preview.
+  final List<Element>? pendingElements;
+
   /// Grid size in scene units; null means no grid.
   final int? gridSize;
 
@@ -48,6 +51,7 @@ class StaticCanvasPainter extends CustomPainter {
     this.previewElement,
     this.editingElementId,
     this.resolvedImages,
+    this.pendingElements,
     this.gridSize,
     this.isDarkBackground = false,
   });
@@ -122,6 +126,16 @@ class StaticCanvasPainter extends CustomPainter {
     if (previewElement != null) {
       ElementRenderer.render(canvas, previewElement!, adapter,
           resolvedImages: resolvedImages);
+    }
+
+    // Render pending flowchart elements at 50% opacity
+    if (pendingElements != null && pendingElements!.isNotEmpty) {
+      canvas.saveLayer(null, Paint()..color = const Color(0x80FFFFFF));
+      for (final element in pendingElements!) {
+        ElementRenderer.render(canvas, element, adapter,
+            resolvedImages: resolvedImages);
+      }
+      canvas.restore();
     }
 
     canvas.restore();
@@ -281,6 +295,7 @@ class StaticCanvasPainter extends CustomPainter {
         !identical(adapter, oldDelegate.adapter) ||
         viewport != oldDelegate.viewport ||
         !identical(previewElement, oldDelegate.previewElement) ||
+        !identical(pendingElements, oldDelegate.pendingElements) ||
         gridSize != oldDelegate.gridSize ||
         isDarkBackground != oldDelegate.isDarkBackground;
   }

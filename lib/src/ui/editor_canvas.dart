@@ -65,6 +65,9 @@ class _EditorCanvasState extends State<EditorCanvas> {
                     previewElement: controller.buildPreviewElement(toolOverlay),
                     editingElementId: controller.editingTextElementId,
                     resolvedImages: controller.resolveImages(),
+                    pendingElements: controller.flowchartCreator.isCreating
+                        ? controller.flowchartCreator.pendingElements
+                        : null,
                     gridSize: controller.gridSize,
                     isDarkBackground: _isDark(controller.canvasBackgroundColor),
                   ),

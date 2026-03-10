@@ -56,7 +56,7 @@ Map<ShortcutActivator, VoidCallback> buildShortcutBindings({
 }
 
 /// Handles key events dispatched to the editor.
-void handleKeyEvent({
+bool handleKeyEvent({
   required KeyEvent event,
   required MarkdrawController controller,
   required Size Function() getCanvasSize,
@@ -71,9 +71,23 @@ void handleKeyEvent({
   void Function(Element element)? onShowLinkDialog,
 }) {
   // Don't intercept keys while editing text
-  if (controller.editingTextElementId != null) return;
+  if (controller.editingTextElementId != null) return false;
 
-  if (event is! KeyDownEvent) return;
+  // Handle key-up events for flowchart commit/navigate end
+  if (event is KeyUpEvent) {
+    if (_isCtrlOrMeta(event.logicalKey)) {
+      if (controller.flowchartCreator.isCreating) {
+        controller.flowchartCommit();
+        return true;
+      }
+    }
+    if (_isAlt(event.logicalKey)) {
+      controller.flowchartNavigateEnd();
+    }
+    return false;
+  }
+
+  if (event is! KeyDownEvent) return false;
   final key = event.logicalKey;
   final shift = HardwareKeyboard.instance.isShiftPressed;
   final ctrl = HardwareKeyboard.instance.isControlPressed ||
@@ -85,17 +99,41 @@ void handleKeyEvent({
   // Zen mode: Alt+Z
   if (alt && !ctrl && !shift && key == LogicalKeyboardKey.keyZ) {
     controller.toggleZenMode();
-    return;
+    return true;
   }
 
   // View mode: Alt+R
   if (alt && !ctrl && !shift && key == LogicalKeyboardKey.keyR) {
     controller.toggleViewMode();
-    return;
+    return true;
   }
 
   // Block tool shortcuts when in view mode (except hand tool)
-  if (controller.viewMode) return;
+  if (controller.viewMode) return false;
+
+  // Escape cancels flowchart creation
+  if (key == LogicalKeyboardKey.escape &&
+      controller.flowchartCreator.isCreating) {
+    controller.flowchartCancel();
+    return true;
+  }
+
+  // Flowchart creation: Ctrl+Arrow (single flowchart node selected)
+  if (ctrl && !shift && !alt && _isArrowKey(key)) {
+    if (controller.selectedElements.length == 1 &&
+        FlowchartUtils.isFlowchartNode(controller.selectedElements.first)) {
+      controller.flowchartCreate(_arrowToDirection(key));
+      return true;
+    }
+  }
+
+  // Flowchart navigation: Alt+Arrow
+  if (alt && !ctrl && !shift && _isArrowKey(key)) {
+    if (controller.selectedElements.length == 1) {
+      controller.flowchartNavigate(_arrowToDirection(key));
+      return true;
+    }
+  }
 
   // Page scrolling: PgDn/PgUp pans viewport by canvas height (Shift for horizontal)
   if (key == LogicalKeyboardKey.pageDown ||
@@ -113,13 +151,13 @@ void handleKeyEvent({
         down ? size.height / controller.editorState.viewport.zoom : -size.height / controller.editorState.viewport.zoom,
       );
     }
-    return;
+    return true;
   }
 
   // Reset canvas: Ctrl+Delete
   if (ctrl && !shift && key == LogicalKeyboardKey.delete) {
     controller.resetCanvas();
-    return;
+    return true;
   }
 
   // Font size cycling: Ctrl+Shift+< / Ctrl+Shift+>
@@ -131,23 +169,23 @@ void handleKeyEvent({
     final increase = key == LogicalKeyboardKey.period ||
         key == LogicalKeyboardKey.greater;
     controller.cycleFontSize(increase: increase);
-    return;
+    return true;
   }
 
   // Copy/paste styles: Ctrl+Alt+C / Ctrl+Alt+V (before regular Ctrl+C/V)
   if (ctrl && alt && !shift && key == LogicalKeyboardKey.keyC) {
     controller.copyStyle();
-    return;
+    return true;
   }
   if (ctrl && alt && !shift && key == LogicalKeyboardKey.keyV) {
     controller.pasteStyle();
-    return;
+    return true;
   }
 
   // Paste as plaintext: Ctrl+Shift+V
   if (ctrl && shift && key == LogicalKeyboardKey.keyV) {
     controller.pasteAsPlaintext(getCanvasSize());
-    return;
+    return true;
   }
 
   // Undo/redo
@@ -157,11 +195,11 @@ void handleKeyEvent({
     } else {
       controller.undo();
     }
-    return;
+    return true;
   }
   if (ctrl && key == LogicalKeyboardKey.keyY) {
     controller.redo();
-    return;
+    return true;
   }
 
   // File shortcuts
@@ -171,25 +209,25 @@ void handleKeyEvent({
     } else {
       onSave();
     }
-    return;
+    return true;
   }
   if (ctrl && key == LogicalKeyboardKey.keyO) {
     onOpen();
-    return;
+    return true;
   }
 
   // Zoom shortcuts
   if (ctrl && key == LogicalKeyboardKey.equal) {
     controller.zoomIn(getCanvasSize());
-    return;
+    return true;
   }
   if (ctrl && key == LogicalKeyboardKey.minus) {
     controller.zoomOut(getCanvasSize());
-    return;
+    return true;
   }
   if (ctrl && key == LogicalKeyboardKey.digit0) {
     controller.resetZoom();
-    return;
+    return true;
   }
 
   // Link shortcut
@@ -198,7 +236,7 @@ void handleKeyEvent({
     if (elements.length == 1 && onShowLinkDialog != null) {
       onShowLinkDialog(elements.first);
     }
-    return;
+    return true;
   }
 
   // Grid toggle: Ctrl/Cmd+' (matches Excalidraw which uses event.code)
@@ -207,7 +245,7 @@ void handleKeyEvent({
           key == LogicalKeyboardKey.quote ||
           event.physicalKey == PhysicalKeyboardKey.quote)) {
     controller.toggleGrid();
-    return;
+    return true;
   }
 
   // Alt+Shift+D: toggle theme
@@ -218,31 +256,31 @@ void handleKeyEvent({
       ThemeMode.dark => ThemeMode.light,
       ThemeMode.system => ThemeMode.dark,
     });
-    return;
+    return true;
   }
 
   // Shift+1: zoom to fit, Shift+2: zoom to selection
   if (!ctrl && shift) {
     if (key == LogicalKeyboardKey.digit1) {
       controller.zoomToFit(getCanvasSize());
-      return;
+      return true;
     }
     if (key == LogicalKeyboardKey.digit2) {
       controller.zoomToSelection(getCanvasSize());
-      return;
+      return true;
     }
   }
 
   // ? key opens help dialog
   if (!ctrl && key.keyLabel == '?') {
     showHelpDialog(context);
-    return;
+    return true;
   }
 
   // Tool lock toggle (Q)
   if (!ctrl && !shift && key == LogicalKeyboardKey.keyQ) {
     controller.toggleToolLocked();
-    return;
+    return true;
   }
 
   // Color picker shortcuts: S (stroke), G (background) — select tool only
@@ -250,11 +288,11 @@ void handleKeyEvent({
       controller.editorState.activeToolType == ToolType.select) {
     if (key == LogicalKeyboardKey.keyS) {
       controller.requestColorPicker(ColorPickerTarget.stroke);
-      return;
+      return true;
     }
     if (key == LogicalKeyboardKey.keyG) {
       controller.requestColorPicker(ColorPickerTarget.background);
-      return;
+      return true;
     }
   }
 
@@ -263,7 +301,7 @@ void handleKeyEvent({
       controller.editorState.activeToolType == ToolType.select &&
       key == LogicalKeyboardKey.keyF) {
     controller.requestColorPicker(ColorPickerTarget.font);
-    return;
+    return true;
   }
 
   // Tool shortcuts (no modifier keys)
@@ -272,12 +310,12 @@ void handleKeyEvent({
     if (label.length == 1) {
       if (label == '9') {
         onImportImage();
-        return;
+        return true;
       }
       final toolType = toolTypeForKey(label.toLowerCase());
       if (toolType != null) {
         controller.switchTool(toolType);
-        return;
+        return true;
       }
     }
   }
@@ -285,7 +323,7 @@ void handleKeyEvent({
   // Escape exits linear editing mode
   if (key == LogicalKeyboardKey.escape && controller.isEditingLinear) {
     controller.isEditingLinear = false;
-    return;
+    return true;
   }
 
   // Pass to tool
@@ -322,5 +360,31 @@ void handleKeyEvent({
       controller.historyManager.push(controller.editorState.scene);
     }
     controller.applyResult(result);
+    return result != null;
   }
+
+  return false;
 }
+
+bool _isArrowKey(LogicalKeyboardKey key) =>
+    key == LogicalKeyboardKey.arrowUp ||
+    key == LogicalKeyboardKey.arrowDown ||
+    key == LogicalKeyboardKey.arrowLeft ||
+    key == LogicalKeyboardKey.arrowRight;
+
+LinkDirection _arrowToDirection(LogicalKeyboardKey key) {
+  if (key == LogicalKeyboardKey.arrowUp) return LinkDirection.up;
+  if (key == LogicalKeyboardKey.arrowDown) return LinkDirection.down;
+  if (key == LogicalKeyboardKey.arrowLeft) return LinkDirection.left;
+  return LinkDirection.right;
+}
+
+bool _isCtrlOrMeta(LogicalKeyboardKey key) =>
+    key == LogicalKeyboardKey.controlLeft ||
+    key == LogicalKeyboardKey.controlRight ||
+    key == LogicalKeyboardKey.metaLeft ||
+    key == LogicalKeyboardKey.metaRight;
+
+bool _isAlt(LogicalKeyboardKey key) =>
+    key == LogicalKeyboardKey.altLeft ||
+    key == LogicalKeyboardKey.altRight;
