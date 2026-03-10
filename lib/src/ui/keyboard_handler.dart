@@ -172,6 +172,12 @@ bool handleKeyEvent({
     return true;
   }
 
+  // Copy as PNG: Shift+Alt+C
+  if (shift && alt && !ctrl && key == LogicalKeyboardKey.keyC) {
+    controller.copyAsPng();
+    return true;
+  }
+
   // Copy/paste styles: Ctrl+Alt+C / Ctrl+Alt+V (before regular Ctrl+C/V)
   if (ctrl && alt && !shift && key == LogicalKeyboardKey.keyC) {
     controller.copyStyle();

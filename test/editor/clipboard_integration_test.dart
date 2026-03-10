@@ -1,9 +1,12 @@
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:markdraw/markdraw.dart';
 
 /// A mock clipboard service for testing.
 class MockClipboardService implements ClipboardService {
   String? _content;
+  Uint8List? lastImageBytes;
 
   @override
   Future<void> copyText(String text) async {
@@ -13,6 +16,11 @@ class MockClipboardService implements ClipboardService {
   @override
   Future<String?> readText() async {
     return _content;
+  }
+
+  @override
+  Future<void> copyImage(Uint8List pngBytes) async {
+    lastImageBytes = pngBytes;
   }
 }
 

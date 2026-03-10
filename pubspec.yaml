@@ -21,6 +21,7 @@ dependencies:
   material_symbols_icons: ^4.2815.0
   re_editor: ^0.8.0
   re_highlight: ^0.0.3
+  super_clipboard: ^0.9.0
 
 dev_dependencies:
   flutter_test:

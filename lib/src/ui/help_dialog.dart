@@ -98,6 +98,7 @@ void showHelpDialog(BuildContext context) {
                       _shortcutRow(context, 'Flip horizontal', 'Shift + H'),
                       _shortcutRow(context, 'Flip vertical', 'Shift + V'),
                       _shortcutRow(context, 'Cycle shape', 'Tab'),
+                      _shortcutRow(context, 'Copy as PNG', 'Shift + Alt + C'),
                       _shortcutRow(context, 'Copy style', '$mod + Alt + C'),
                       _shortcutRow(context, 'Paste style', '$mod + Alt + V'),
                       _shortcutRow(context, 'Paste as text', '$mod + Shift + V'),

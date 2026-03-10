@@ -1546,6 +1546,13 @@ class MarkdrawController extends ChangeNotifier {
     );
   }
 
+  /// Copies the scene (or selection) as a PNG image to the system clipboard.
+  Future<void> copyAsPng() async {
+    final bytes = await exportPng();
+    if (bytes == null) return;
+    await _clipboardService.copyImage(bytes);
+  }
+
   /// Exports the scene (or selection) as an SVG string.
   String exportSvg({bool selectedOnly = true}) {
     final selectedIds = selectedOnly && _editorState.selectedIds.isNotEmpty
