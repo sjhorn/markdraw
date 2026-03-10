@@ -274,27 +274,21 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
           Positioned(
             top: 12,
             right: 12,
-            child: GestureDetector(
+            child: _modePill(
+              context,
+              label: 'Exit view mode',
               onTap: _controller.toggleViewMode,
-              child: MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Text(
-                    'Exit view mode',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color:
-                          Theme.of(context).colorScheme.onPrimaryContainer,
-                    ),
-                  ),
-                ),
-              ),
+            ),
+          ),
+        // Zen mode indicator — click to exit
+        if (_controller.zenMode && !_controller.viewMode)
+          Positioned(
+            top: 12,
+            right: 12,
+            child: _modePill(
+              context,
+              label: 'Exit zen mode',
+              onTap: _controller.toggleZenMode,
             ),
           ),
       ],
@@ -303,5 +297,33 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
       body = MarkdrawSplitPane(controller: _controller, child: body);
     }
     return body;
+  }
+
+  Widget _modePill(
+    BuildContext context, {
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: onTap,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primaryContainer,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: theme.colorScheme.onPrimaryContainer,
+              fontSize: 13,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
