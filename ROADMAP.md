@@ -618,28 +618,59 @@ markdraw/
 
 ---
 
-## Phase 8 — Collaboration & Advanced (Weeks 31+)
+## Phase 8 — Shortcuts, New Tools & UI Modes
+
+> Goal: Fill keyboard shortcut gaps with Excalidraw, add new tools and UI modes.
+
+### 8.1 Shortcuts Wired to Existing Infrastructure ✅
+- [x] PgUp/PgDn viewport scrolling (Shift for horizontal)
+- [x] Ctrl+Shift+Arrow alignment shortcuts (left/right/top/bottom)
+- [x] Ctrl+Shift+</> font size cycling through presets [16, 20, 28, 36]
+- [x] Ctrl+Delete reset canvas (undoable)
+- [x] Help dialog + hamburger menu updates
+
+### 8.2 New Logic + Keyboard Shortcuts ✅
+- [x] FlipUtils: Shift+H/V flip horizontal/vertical (mirrors coords, negates angles, swaps arrowheads)
+- [x] ShapeConverter: Tab/Shift+Tab cycles rectangle → diamond → ellipse
+- [x] Copy/paste styles: Ctrl+Alt+C/V
+- [x] Paste as plaintext: Ctrl+Shift+V creates TextElement from clipboard
+
+### 8.3 UI State Toggles + Color Picker Shortcuts ✅
+- [x] Zen mode (Alt+Z): hides all chrome, canvas stays interactive
+- [x] View mode (Alt+R): forces hand tool, blocks tool switching
+- [x] Color picker shortcuts: S (stroke), G (background), Shift+F (font) — select tool only
+- [x] ColorPickerTarget enum for programmatic picker opening
+
+### 8.4 New Tools ✅
+- [x] Laser pointer (K): temporary fading red trail, 1s decay, no elements created
+- [x] Eye dropper (I): click to sample pixel color (async sampling in controller)
+- [x] LaserRenderer, LaserPoint, LaserTool, EyedropperTool
+- [x] Tool shortcuts, icons, factory, barrel exports
+
+---
+
+## Phase 9 — Collaboration & Advanced (Future)
 
 > Goal: Stretch features for post-launch iteration.
 
-### 8.1 Real-time Collaboration
+### 9.1 Real-time Collaboration
 - [ ] CRDT-based element sync (investigate `y-crdt` Dart port or custom)
 - [ ] Presence awareness (show collaborator cursors)
 - [ ] Conflict resolution for concurrent edits
 - [ ] WebSocket server for session management
 
-### 8.2 AI Integration
+### 9.2 AI Integration
 - [ ] Generate diagrams from text description (LLM → `.markdraw`)
 - [ ] Convert freehand sketches to clean shapes (shape recognition)
 - [ ] Auto-layout suggestions
 
-### 8.3 Plugin System
+### 9.3 Plugin System
 - [ ] Custom element types via plugin API
 - [ ] Custom tools
 - [ ] Custom export formats
 - [ ] Custom markdown extensions within `sketch` blocks
 
-### 8.4 Version History
+### 9.4 Version History
 - [ ] Git-native diffing (`.markdraw` is plain text)
 - [ ] In-app version timeline
 - [ ] Visual diff view
