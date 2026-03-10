@@ -116,7 +116,7 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
           // Don't intercept keys when a descendant (e.g. markdown text pane)
           // has focus — only handle when the editor itself has primary focus.
           if (!node.hasPrimaryFocus) return KeyEventResult.ignored;
-          handleKeyEvent(
+          final handled = handleKeyEvent(
             event: event,
             controller: _controller,
             getCanvasSize: _getCanvasSize,
@@ -130,7 +130,9 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
                 widget.currentThemeMode ?? ThemeMode.system,
             context: context,
           );
-          return KeyEventResult.ignored;
+          return handled
+              ? KeyEventResult.handled
+              : KeyEventResult.ignored;
         },
         child: Scaffold(
           body: LayoutBuilder(
@@ -153,6 +155,7 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
   Widget _buildBody() {
     final isCompact = _controller.isCompact;
     final showChrome = !_controller.zenMode;
+    final showEditChrome = showChrome && !_controller.viewMode;
     Widget body = Stack(
       children: [
         // Full-bleed canvas + desktop library panel
@@ -171,7 +174,7 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
           ],
         ),
         // Toolbar
-        if (showChrome && widget.config.showToolbar) ...[
+        if (showEditChrome && widget.config.showToolbar) ...[
           if (isCompact)
             Positioned(
               bottom: 12,
@@ -230,7 +233,7 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
           ],
         ],
         // Floating property panel — desktop left side
-        if (showChrome &&
+        if (showEditChrome &&
             !isCompact &&
             widget.config.showPropertyPanel &&
             (_controller.selectedElements.isNotEmpty ||
@@ -242,7 +245,7 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
             child: PropertyPanel(controller: _controller),
           ),
         // Compact menu button
-        if (showChrome && isCompact && widget.config.showMenu)
+        if (showEditChrome && isCompact && widget.config.showMenu)
           Positioned(
             top: 12,
             left: 12,
