@@ -1264,6 +1264,27 @@ class MarkdrawController extends ChangeNotifier {
     final elements = selectedElements;
     if (elements.isEmpty) return;
     final e = elements.first;
+
+    // Resolve text properties from element itself or its bound text
+    double? fontSize;
+    String? fontFamily;
+    core.TextAlign? textAlign;
+    VerticalAlign? verticalAlign;
+    if (e is TextElement) {
+      fontSize = e.fontSize;
+      fontFamily = e.fontFamily;
+      textAlign = e.textAlign;
+      verticalAlign = e.verticalAlign;
+    } else {
+      final bt = _editorState.scene.findBoundText(e.id);
+      if (bt != null) {
+        fontSize = bt.fontSize;
+        fontFamily = bt.fontFamily;
+        textAlign = bt.textAlign;
+        verticalAlign = bt.verticalAlign;
+      }
+    }
+
     _copiedStyle = ElementStyle(
       strokeColor: e.strokeColor,
       backgroundColor: e.backgroundColor,
@@ -1272,8 +1293,17 @@ class MarkdrawController extends ChangeNotifier {
       fillStyle: e.fillStyle,
       roughness: e.roughness,
       opacity: e.opacity,
-      fontSize: e is TextElement ? e.fontSize : null,
-      fontFamily: e is TextElement ? e.fontFamily : null,
+      roundness: e.roundness,
+      hasRoundness: e.roundness != null,
+      fontSize: fontSize,
+      fontFamily: fontFamily,
+      textAlign: textAlign,
+      verticalAlign: verticalAlign,
+      arrowType: e is ArrowElement ? e.arrowType : null,
+      startArrowhead: e is LineElement ? e.startArrowhead : null,
+      startArrowheadNone: e is LineElement && e.startArrowhead == null,
+      endArrowhead: e is LineElement ? e.endArrowhead : null,
+      endArrowheadNone: e is LineElement && e.endArrowhead == null,
     );
   }
 
