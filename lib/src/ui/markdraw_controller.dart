@@ -69,6 +69,12 @@ class MarkdrawController extends ChangeNotifier {
   int? _gridSize;
   bool _objectsSnapMode = false;
 
+  // Find state
+  bool _isFindOpen = false;
+  String _findQuery = '';
+  List<ElementId> _findResults = [];
+  int _findCurrentIndex = -1;
+
   // Copied style for paste-style
   ElementStyle? _copiedStyle;
 
@@ -124,6 +130,10 @@ class MarkdrawController extends ChangeNotifier {
   ElementStyle? get copiedStyle => _copiedStyle;
   bool get zenMode => _zenMode;
   bool get viewMode => _viewMode;
+  bool get isFindOpen => _isFindOpen;
+  String get findQuery => _findQuery;
+  List<ElementId> get findResults => _findResults;
+  int get findCurrentIndex => _findCurrentIndex;
   ColorPickerTarget? get pendingColorPicker => _pendingColorPicker;
 
   ElementId? get editingTextElementId => _editingTextElementId;
@@ -601,9 +611,14 @@ class MarkdrawController extends ChangeNotifier {
     _isEditingExisting = false;
     _originalText = null;
     textEditingController.clear();
-    keyboardFocusNode.requestFocus();
     onSceneChanged?.call(_editorState.scene);
     notifyListeners();
+    // Request focus after the frame rebuilds — the TextEditingOverlay removal
+    // detaches _textFocusNode, which triggers Scaffold's FocusScope.unfocus().
+    // A synchronous requestFocus() here would be overridden by that unfocus.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      keyboardFocusNode.requestFocus();
+    });
   }
 
   void cancelTextEditing() {
@@ -643,6 +658,9 @@ class MarkdrawController extends ChangeNotifier {
       _originalText = null;
       textEditingController.clear();
       notifyListeners();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        keyboardFocusNode.requestFocus();
+      });
     }
   }
 
@@ -1417,6 +1435,112 @@ class MarkdrawController extends ChangeNotifier {
     } else {
       switchTool(_toolBeforeViewMode ?? ToolType.select);
       _toolBeforeViewMode = null;
+    }
+    notifyListeners();
+  }
+
+  // --- Find on canvas ---
+
+  /// Opens the find bar.
+  void openFind() {
+    _isFindOpen = true;
+    notifyListeners();
+  }
+
+  /// Closes the find bar and clears search state.
+  void closeFind() {
+    _isFindOpen = false;
+    _findQuery = '';
+    _findResults = [];
+    _findCurrentIndex = -1;
+    notifyListeners();
+  }
+
+  /// Searches the scene for elements matching [query].
+  void updateFindQuery(String query) {
+    _findQuery = query;
+    if (query.isEmpty) {
+      _findResults = [];
+      _findCurrentIndex = -1;
+      notifyListeners();
+      return;
+    }
+
+    final lowerQuery = query.toLowerCase();
+    final results = <ElementId>[];
+    final seen = <String>{};
+
+    for (final element in _editorState.scene.activeElements) {
+      if (element is TextElement) {
+        if (element.text.toLowerCase().contains(lowerQuery)) {
+          if (element.containerId != null) {
+            // Bound text — navigate to parent container
+            if (seen.add(element.containerId!)) {
+              results.add(ElementId(element.containerId!));
+            }
+          } else {
+            if (seen.add(element.id.value)) {
+              results.add(element.id);
+            }
+          }
+        }
+      } else if (element is FrameElement) {
+        if (element.label.toLowerCase().contains(lowerQuery)) {
+          if (seen.add(element.id.value)) {
+            results.add(element.id);
+          }
+        }
+      }
+    }
+
+    _findResults = results;
+    _findCurrentIndex = results.isEmpty ? -1 : 0;
+
+    // Auto-select first match
+    if (_findCurrentIndex >= 0) {
+      applyResult(SetSelectionResult({_findResults[_findCurrentIndex]}));
+    }
+    notifyListeners();
+  }
+
+  /// Advances to the next find result, wrapping around.
+  void findNext(Size canvasSize) {
+    if (_findResults.isEmpty) return;
+    _findCurrentIndex = (_findCurrentIndex + 1) % _findResults.length;
+    _selectAndRevealFindResult(canvasSize);
+  }
+
+  /// Goes to the previous find result, wrapping around.
+  void findPrevious(Size canvasSize) {
+    if (_findResults.isEmpty) return;
+    _findCurrentIndex =
+        (_findCurrentIndex - 1 + _findResults.length) % _findResults.length;
+    _selectAndRevealFindResult(canvasSize);
+  }
+
+  void _selectAndRevealFindResult(Size canvasSize) {
+    final id = _findResults[_findCurrentIndex];
+    applyResult(SetSelectionResult({id}));
+
+    // Smart zoom: only pan/zoom if element is off-screen
+    final bounds = ExportBounds.compute(
+      _editorState.scene,
+      selectedIds: {id},
+      padding: 40,
+    );
+    if (bounds == null) return;
+
+    final visible = _editorState.viewport.visibleRect(canvasSize);
+    final elemRect = Rect.fromLTWH(
+      bounds.left,
+      bounds.top,
+      bounds.size.width,
+      bounds.size.height,
+    );
+    if (!visible.overlaps(elemRect)) {
+      applyResult(UpdateViewportResult(
+        _editorState.viewport.fitToBounds(bounds, canvasSize, padding: 80),
+      ));
     }
     notifyListeners();
   }

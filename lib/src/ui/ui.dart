@@ -10,6 +10,7 @@ export 'compact_property_panel.dart';
 export 'compact_toolbar.dart';
 export 'desktop_toolbar.dart';
 export 'editor_canvas.dart';
+export 'find_overlay.dart';
 export 'font_picker.dart';
 export 'hamburger_menu.dart';
 export 'help_button.dart';

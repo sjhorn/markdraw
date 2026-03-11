@@ -107,6 +107,7 @@ void showHelpDialog(BuildContext context) {
                       _shortcutRow(context, 'Finalize line', 'Enter'),
                       _shortcutRow(context, 'Create flowchart', '$mod + Arrow'),
                       _shortcutRow(context, 'Navigate flowchart', 'Alt + Arrow'),
+                      _shortcutRow(context, 'Find on canvas', '$mod + F'),
                       _shortcutRow(context, 'Deselect', 'Escape'),
                     ]),
                     const SizedBox(height: 16),

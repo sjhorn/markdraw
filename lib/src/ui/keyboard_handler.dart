@@ -18,6 +18,7 @@ Map<ShortcutActivator, VoidCallback> buildShortcutBindings({
   required VoidCallback onZoomIn,
   required VoidCallback onZoomOut,
   required VoidCallback onResetZoom,
+  required VoidCallback onFind,
 }) {
   return {
     const SingleActivator(LogicalKeyboardKey.keyS, meta: true): onSave,
@@ -50,6 +51,9 @@ Map<ShortcutActivator, VoidCallback> buildShortcutBindings({
     const SingleActivator(LogicalKeyboardKey.minus, control: true): onZoomOut,
     const SingleActivator(LogicalKeyboardKey.digit0, control: true):
         onResetZoom,
+    // Find: Cmd/Ctrl+F
+    const SingleActivator(LogicalKeyboardKey.keyF, meta: true): onFind,
+    const SingleActivator(LogicalKeyboardKey.keyF, control: true): onFind,
     // Grid toggle is handled in handleKeyEvent — not here, because Cmd+'
     // is NOT intercepted by macOS (unlike Cmd+S/Z) and would double-fire.
   };
@@ -111,6 +115,18 @@ bool handleKeyEvent({
   // Snap to objects: Alt+S
   if (alt && !ctrl && !shift && key == LogicalKeyboardKey.keyS) {
     controller.toggleObjectsSnapMode();
+    return true;
+  }
+
+  // Find on canvas: Ctrl+F
+  if (ctrl && !shift && key == LogicalKeyboardKey.keyF) {
+    controller.openFind();
+    return true;
+  }
+
+  // Escape closes find bar
+  if (key == LogicalKeyboardKey.escape && controller.isFindOpen) {
+    controller.closeFind();
     return true;
   }
 

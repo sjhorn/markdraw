@@ -108,6 +108,7 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
         onZoomIn: () => _controller.zoomIn(_getCanvasSize()),
         onZoomOut: () => _controller.zoomOut(_getCanvasSize()),
         onResetZoom: _controller.resetZoom,
+        onFind: _controller.openFind,
       ),
       child: Focus(
         focusNode: _controller.keyboardFocusNode,
@@ -283,6 +284,19 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
                   : null,
               onThemeModeChanged: widget.onThemeModeChanged,
               currentThemeMode: widget.currentThemeMode,
+            ),
+          ),
+        // Find overlay
+        if (_controller.isFindOpen)
+          Positioned(
+            bottom: 12,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: FindOverlay(
+                controller: _controller,
+                getCanvasSize: _getCanvasSize,
+              ),
             ),
           ),
         // View mode indicator — click to exit
