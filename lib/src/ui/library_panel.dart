@@ -2,6 +2,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../core/library/library_item.dart';
 import 'markdraw_controller.dart';
 
 /// Desktop library panel (right side).
@@ -106,7 +107,7 @@ class LibraryPanel extends StatelessWidget {
                     itemCount: items.length,
                     itemBuilder: (context, index) {
                       final item = items[index];
-                      return ListTile(
+                      final tile = ListTile(
                         dense: true,
                         title: Text(
                           item.name,
@@ -131,6 +132,33 @@ class LibraryPanel extends StatelessWidget {
                           constraints: const BoxConstraints(),
                           padding: const EdgeInsets.all(4),
                         ),
+                      );
+                      return Draggable<LibraryItem>(
+                        data: item,
+                        feedback: Material(
+                          elevation: 4,
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: cs.primaryContainer,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              item.name,
+                              style: TextStyle(
+                                color: cs.onPrimaryContainer,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ),
+                        childWhenDragging: Opacity(
+                          opacity: 0.4,
+                          child: tile,
+                        ),
+                        child: tile,
                       );
                     },
                   ),

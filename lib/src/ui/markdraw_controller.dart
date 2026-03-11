@@ -706,6 +706,15 @@ class MarkdrawController extends ChangeNotifier {
     applyResult(LibraryUtils.instantiate(item: item, position: position));
   }
 
+  /// Places a library item at a specific screen position (for drag-and-drop).
+  void placeLibraryItemAt(LibraryItem item, Offset screenPosition) {
+    final scenePos = _editorState.viewport.screenToScene(screenPosition);
+    final position = Point(scenePos.dx, scenePos.dy);
+
+    _historyManager.push(_editorState.scene);
+    applyResult(LibraryUtils.instantiate(item: item, position: position));
+  }
+
   void removeLibraryItem(String id) {
     _libraryItems = _libraryItems.where((i) => i.id != id).toList();
     notifyListeners();

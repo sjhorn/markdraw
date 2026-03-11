@@ -161,7 +161,23 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
         // Full-bleed canvas + desktop library panel
         Row(
           children: [
-            Expanded(child: EditorCanvas(controller: _controller)),
+            Expanded(
+              child: DragTarget<LibraryItem>(
+                onAcceptWithDetails: (details) {
+                  // Convert global drop position to local canvas position
+                  final renderBox =
+                      context.findRenderObject() as RenderBox?;
+                  if (renderBox == null) return;
+                  final localPos =
+                      renderBox.globalToLocal(details.offset);
+                  _controller.placeLibraryItemAt(
+                      details.data, localPos);
+                },
+                builder: (context, candidateData, rejectedData) {
+                  return EditorCanvas(controller: _controller);
+                },
+              ),
+            ),
             if (showChrome &&
                 !isCompact &&
                 _controller.showLibraryPanel &&
