@@ -11,6 +11,7 @@ import '../../core/scene/scene_exports.dart';
 import '../../rendering/interactive/interactive.dart';
 import '../bindings/bindings.dart';
 import '../grid_snap.dart';
+import '../object_snap.dart';
 import '../tool_result.dart';
 import '../tool_type.dart';
 import 'tool.dart';
@@ -62,6 +63,10 @@ class SelectTool implements Tool {
 
   // Snap-to-close indicator during point drag
   Point? _closeIndicatorCenter;
+
+  // Object snap state
+  ObjectSnapCache? _objectSnapCache;
+  List<SnapLine> _activeSnapLines = const [];
 
   // Snap-to-close constants for non-arrow line endpoints
   static const _closeThreshold = 10.0; // matching LineTool
@@ -168,7 +173,7 @@ class SelectTool implements Tool {
         }
         _activeHandle = handleType;
         _hitElement = selectedElements.length == 1 ? selectedElements.first : null;
-        _captureStartState(selectedElements);
+        _captureStartState(selectedElements, context: context);
         return null;
       }
     }
@@ -319,6 +324,33 @@ class SelectTool implements Tool {
       final snappedY = snapValue(startElem.y + dy, context.gridSize);
       dx = snappedX - startElem.x;
       dy = snappedY - startElem.y;
+    }
+
+    // Snap to other objects
+    if (context.objectsSnapMode && _objectSnapCache != null) {
+      // Compute union bounds of all moving elements with current offset
+      final startElems = _startElements ?? [hit];
+      Bounds union = Bounds.fromLTWH(
+        startElems.first.x + dx,
+        startElems.first.y + dy,
+        startElems.first.width,
+        startElems.first.height,
+      );
+      for (var i = 1; i < startElems.length; i++) {
+        union = union.union(Bounds.fromLTWH(
+          startElems[i].x + dx,
+          startElems[i].y + dy,
+          startElems[i].width,
+          startElems[i].height,
+        ));
+      }
+      final threshold = 8.0 / context.viewport.zoom;
+      final snapResult = snapToObjects(union, _objectSnapCache!, threshold);
+      dx += snapResult.dx;
+      dy += snapResult.dy;
+      _activeSnapLines = snapResult.snapLines;
+    } else {
+      _activeSnapLines = const [];
     }
 
     final selectedElements = _getSelectedElements(context);
@@ -629,6 +661,128 @@ class SelectTool implements Tool {
         case HandleType.rotation:
           break;
       }
+    }
+
+    // Snap resize edges to other objects
+    if (context.objectsSnapMode && _objectSnapCache != null && angle == 0.0) {
+      final threshold = 8.0 / context.viewport.zoom;
+      final snapLines = <SnapLine>[];
+
+      // Snap active X edges
+      final activeXEdges = <double>[];
+      switch (_activeHandle!) {
+        case HandleType.topLeft:
+        case HandleType.middleLeft:
+        case HandleType.bottomLeft:
+          activeXEdges.add(newLeft);
+        case HandleType.topRight:
+        case HandleType.middleRight:
+        case HandleType.bottomRight:
+          activeXEdges.add(newRight);
+        default:
+          break;
+      }
+
+      for (final edge in activeXEdges) {
+        double bestDist = double.infinity;
+        double? bestSnap;
+        for (final rx in _objectSnapCache!.xPositions) {
+          final dist = (edge - rx).abs();
+          if (dist < bestDist && dist <= threshold) {
+            bestDist = dist;
+            bestSnap = rx;
+          }
+        }
+        if (bestSnap != null) {
+          final delta = bestSnap - edge;
+          switch (_activeHandle!) {
+            case HandleType.topLeft:
+            case HandleType.middleLeft:
+            case HandleType.bottomLeft:
+              newLeft += delta;
+            case HandleType.topRight:
+            case HandleType.middleRight:
+            case HandleType.bottomRight:
+              newRight += delta;
+            default:
+              break;
+          }
+          // Build vertical snap line
+          var minY = math.min(newTop, newBottom);
+          var maxY = math.max(newTop, newBottom);
+          for (final sb in _objectSnapCache!.sourceBounds) {
+            if (_xMatches(sb, bestSnap)) {
+              minY = math.min(minY, sb.top);
+              maxY = math.max(maxY, sb.bottom);
+            }
+          }
+          snapLines.add(SnapLine(
+            orientation: SnapLineOrientation.vertical,
+            position: bestSnap,
+            start: minY,
+            end: maxY,
+          ));
+        }
+      }
+
+      // Snap active Y edges
+      final activeYEdges = <double>[];
+      switch (_activeHandle!) {
+        case HandleType.topLeft:
+        case HandleType.topCenter:
+        case HandleType.topRight:
+          activeYEdges.add(newTop);
+        case HandleType.bottomLeft:
+        case HandleType.bottomCenter:
+        case HandleType.bottomRight:
+          activeYEdges.add(newBottom);
+        default:
+          break;
+      }
+
+      for (final edge in activeYEdges) {
+        double bestDist = double.infinity;
+        double? bestSnap;
+        for (final ry in _objectSnapCache!.yPositions) {
+          final dist = (edge - ry).abs();
+          if (dist < bestDist && dist <= threshold) {
+            bestDist = dist;
+            bestSnap = ry;
+          }
+        }
+        if (bestSnap != null) {
+          final delta = bestSnap - edge;
+          switch (_activeHandle!) {
+            case HandleType.topLeft:
+            case HandleType.topCenter:
+            case HandleType.topRight:
+              newTop += delta;
+            case HandleType.bottomLeft:
+            case HandleType.bottomCenter:
+            case HandleType.bottomRight:
+              newBottom += delta;
+            default:
+              break;
+          }
+          // Build horizontal snap line
+          var minX = math.min(newLeft, newRight);
+          var maxX = math.max(newLeft, newRight);
+          for (final sb in _objectSnapCache!.sourceBounds) {
+            if (_yMatches(sb, bestSnap)) {
+              minX = math.min(minX, sb.left);
+              maxX = math.max(maxX, sb.right);
+            }
+          }
+          snapLines.add(SnapLine(
+            orientation: SnapLineOrientation.horizontal,
+            position: bestSnap,
+            start: minX,
+            end: maxX,
+          ));
+        }
+      }
+
+      _activeSnapLines = snapLines;
     }
 
     // Enforce minimum size
@@ -1671,6 +1825,18 @@ class SelectTool implements Tool {
         );
       }
     }
+
+    // Snap lines during move or resize
+    if (_isDragging &&
+        (_dragMode == _DragMode.move || _dragMode == _DragMode.resize) &&
+        _activeSnapLines.isNotEmpty) {
+      if (_dragMode == _DragMode.move) {
+        return ToolOverlay(snapLines: _activeSnapLines);
+      }
+      // Resize: return snap lines only
+      return ToolOverlay(snapLines: _activeSnapLines);
+    }
+
     if (_dragMode != _DragMode.marquee || !_isDragging) return null;
     final down = _downPoint;
     final current = _current;
@@ -1700,6 +1866,8 @@ class SelectTool implements Tool {
     _startUnionBounds = null;
     _bindTarget = null;
     _closeIndicatorCenter = null;
+    _objectSnapCache = null;
+    _activeSnapLines = const [];
   }
 
   // --- Helpers ---
@@ -1710,7 +1878,8 @@ class SelectTool implements Tool {
         .toList();
   }
 
-  void _captureStartState(List<Element> elements) {
+  void _captureStartState(List<Element> elements,
+      {ToolContext? context}) {
     _startElements = List.of(elements);
     if (elements.length == 1) {
       final e = elements.first;
@@ -1735,6 +1904,12 @@ class SelectTool implements Tool {
       _startUnionBounds = union;
       _startAngle = 0.0;
     }
+
+    // Build object snap cache for resize if enabled
+    if (context != null && context.objectsSnapMode) {
+      final excludeIds = elements.map((e) => e.id).toSet();
+      _objectSnapCache = buildObjectSnapCache(context.scene, excludeIds);
+    }
   }
 
   void _captureStartStateForMove(ToolContext context) {
@@ -1754,6 +1929,18 @@ class SelectTool implements Tool {
       }
     } else {
       _startElements = [hit];
+    }
+
+    // Build object snap cache if enabled
+    if (context.objectsSnapMode) {
+      final excludeIds = <ElementId>{};
+      if (_startElements != null) {
+        for (final e in _startElements!) {
+          excludeIds.add(e.id);
+        }
+      }
+      excludeIds.add(hit.id);
+      _objectSnapCache = buildObjectSnapCache(context.scene, excludeIds);
     }
   }
 
@@ -1868,5 +2055,21 @@ class SelectTool implements Tool {
       }
     }
     return results;
+  }
+
+  /// Returns true if [bounds] has left, center.x, or right matching [x].
+  static bool _xMatches(Bounds bounds, double x) {
+    const epsilon = 0.5;
+    return (bounds.left - x).abs() < epsilon ||
+        (bounds.center.x - x).abs() < epsilon ||
+        (bounds.right - x).abs() < epsilon;
+  }
+
+  /// Returns true if [bounds] has top, center.y, or bottom matching [y].
+  static bool _yMatches(Bounds bounds, double y) {
+    const epsilon = 0.5;
+    return (bounds.top - y).abs() < epsilon ||
+        (bounds.center.y - y).abs() < epsilon ||
+        (bounds.bottom - y).abs() < epsilon;
   }
 }

@@ -67,6 +67,7 @@ class MarkdrawController extends ChangeNotifier {
   ElementStyle _defaultStyle = const ElementStyle();
   String _canvasBackgroundColor = '#ffffff';
   int? _gridSize;
+  bool _objectsSnapMode = false;
 
   // Copied style for paste-style
   ElementStyle? _copiedStyle;
@@ -119,6 +120,7 @@ class MarkdrawController extends ChangeNotifier {
   ElementStyle get defaultStyle => _defaultStyle;
   String get canvasBackgroundColor => _canvasBackgroundColor;
   int? get gridSize => _gridSize;
+  bool get objectsSnapMode => _objectsSnapMode;
   ElementStyle? get copiedStyle => _copiedStyle;
   bool get zenMode => _zenMode;
   bool get viewMode => _viewMode;
@@ -152,6 +154,7 @@ class MarkdrawController extends ChangeNotifier {
     interactionMode: interactionMode,
     isEditingLinear: _isEditingLinear,
     gridSize: _gridSize,
+    objectsSnapMode: _objectsSnapMode,
   );
 
   List<Element> get selectedElements {
@@ -1252,6 +1255,11 @@ class MarkdrawController extends ChangeNotifier {
 
   void toggleGrid() {
     _gridSize = _gridSize == null ? 20 : null;
+    notifyListeners();
+  }
+
+  void toggleObjectsSnapMode() {
+    _objectsSnapMode = !_objectsSnapMode;
     notifyListeners();
   }
 

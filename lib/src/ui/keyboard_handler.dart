@@ -108,6 +108,12 @@ bool handleKeyEvent({
     return true;
   }
 
+  // Snap to objects: Alt+S
+  if (alt && !ctrl && !shift && key == LogicalKeyboardKey.keyS) {
+    controller.toggleObjectsSnapMode();
+    return true;
+  }
+
   // Block tool shortcuts when in view mode (except hand tool)
   if (controller.viewMode) return false;
 

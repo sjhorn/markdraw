@@ -78,6 +78,7 @@ class _EditorCanvasState extends State<EditorCanvas> {
                         ? null
                         : controller.buildSelectionOverlay(),
                     marqueeRect: marqueeRect,
+                    snapLines: toolOverlay?.snapLines ?? const [],
                     bindTargetBounds: toolOverlay?.bindTargetBounds,
                     bindTargetAngle: toolOverlay?.bindTargetAngle ?? 0.0,
                     closeIndicatorCenter: toolOverlay?.closeIndicatorCenter,

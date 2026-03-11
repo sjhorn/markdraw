@@ -76,6 +76,8 @@ class HamburgerMenu extends StatelessWidget {
               onImportImage?.call();
             case 'toggle_grid':
               controller.toggleGrid();
+            case 'snap_to_objects':
+              controller.toggleObjectsSnapMode();
             case 'frame_tool':
               controller.switchTool(ToolType.frame);
             case 'reset_canvas':
@@ -143,6 +145,30 @@ class HamburgerMenu extends StatelessWidget {
                   style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
                 ),
                 if (controller.gridSize != null)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: Icon(Icons.check, size: 16, color: cs.primary),
+                  ),
+              ],
+            ),
+          ),
+          PopupMenuItem<String>(
+            value: 'snap_to_objects',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.straighten,
+                  size: 18,
+                  color: controller.objectsSnapMode
+                      ? cs.primary
+                      : cs.onSurfaceVariant,
+                ),
+                const SizedBox(width: 12),
+                const Expanded(child: Text('Snap to Objects')),
+                Text('Alt+S',
+                    style:
+                        TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+                if (controller.objectsSnapMode)
                   Padding(
                     padding: const EdgeInsets.only(left: 8),
                     child: Icon(Icons.check, size: 16, color: cs.primary),

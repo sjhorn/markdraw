@@ -2,6 +2,7 @@ import '../core/elements/elements.dart';
 import '../core/math/math.dart';
 import '../core/scene/scene_exports.dart';
 import '../rendering/interactive/interaction_mode.dart';
+import '../rendering/interactive/snap_line.dart';
 import '../rendering/viewport_state.dart';
 import 'tool_type.dart';
 
@@ -81,6 +82,7 @@ class ToolContext {
   final InteractionMode interactionMode;
   final bool isEditingLinear;
   final int? gridSize;
+  final bool objectsSnapMode;
 
   ToolContext({
     required this.scene,
@@ -90,6 +92,7 @@ class ToolContext {
     this.interactionMode = InteractionMode.pointer,
     this.isEditingLinear = false,
     this.gridSize,
+    this.objectsSnapMode = false,
   }) : selectedIds = Set.unmodifiable(selectedIds);
 }
 
@@ -117,6 +120,9 @@ class ToolOverlay {
   /// dragging a line endpoint near its opposite endpoint.
   final Point? closeIndicatorCenter;
 
+  /// Snap-to-object guide lines to render during move/resize.
+  final List<SnapLine> snapLines;
+
   const ToolOverlay({
     this.creationBounds,
     this.creationPoints,
@@ -126,6 +132,7 @@ class ToolOverlay {
     this.creationClosed = false,
     this.eraserElementIds,
     this.closeIndicatorCenter,
+    this.snapLines = const [],
   });
 }
 
