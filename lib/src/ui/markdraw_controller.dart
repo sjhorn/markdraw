@@ -949,6 +949,11 @@ class MarkdrawController extends ChangeNotifier {
       }
     }
 
+    // Re-measure text bounds after font-related style changes
+    if (style.fontSize != null || style.fontFamily != null) {
+      _remeasureSelectedTextElements();
+    }
+
     restoreTextFocus(wasEditing, savedSelection);
   }
 
@@ -970,6 +975,23 @@ class MarkdrawController extends ChangeNotifier {
         }
       }
     });
+  }
+
+  /// Re-measures selected text elements and updates their bounds.
+  void _remeasureSelectedTextElements() {
+    for (final e in selectedElements) {
+      if (e is! TextElement) continue;
+      if (e.containerId != null) continue;
+
+      // Re-fetch from scene since applyResult may have updated it
+      final current = _editorState.scene.getElementById(e.id);
+      if (current is! TextElement) continue;
+
+      final validated = TextBoundsValidator.validateElement(current);
+      if (!identical(validated, current)) {
+        applyResult(UpdateElementResult(validated));
+      }
+    }
   }
 
   // --- Key dispatch ---
@@ -1157,7 +1179,8 @@ class MarkdrawController extends ChangeNotifier {
 
   void loadScene(Scene scene, {String? background}) {
     _historyManager.clear();
-    _editorState = _editorState.copyWith(scene: scene, selectedIds: {});
+    final validated = TextBoundsValidator.validateScene(scene);
+    _editorState = _editorState.copyWith(scene: validated, selectedIds: {});
     if (background != null) {
       _canvasBackgroundColor = background;
     }
@@ -1170,7 +1193,8 @@ class MarkdrawController extends ChangeNotifier {
   /// so the change can be undone. Used by the split-pane text editor.
   void applyScene(Scene scene, {String? background}) {
     _historyManager.push(_editorState.scene);
-    _editorState = _editorState.copyWith(scene: scene, selectedIds: {});
+    final validated = TextBoundsValidator.validateScene(scene);
+    _editorState = _editorState.copyWith(scene: validated, selectedIds: {});
     if (background != null) {
       _canvasBackgroundColor = background;
     }
@@ -1183,7 +1207,8 @@ class MarkdrawController extends ChangeNotifier {
   /// into a single undo entry. Call [applyScene] first to create the undo
   /// point, then [replaceScene] for subsequent updates in the same session.
   void replaceScene(Scene scene, {String? background}) {
-    _editorState = _editorState.copyWith(scene: scene, selectedIds: {});
+    final validated = TextBoundsValidator.validateScene(scene);
+    _editorState = _editorState.copyWith(scene: validated, selectedIds: {});
     if (background != null) {
       _canvasBackgroundColor = background;
     }

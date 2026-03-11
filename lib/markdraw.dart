@@ -20,6 +20,7 @@ export 'src/rendering/image_cache.dart';
 export 'src/rendering/interactive/interactive.dart';
 export 'src/rendering/rough/rough.dart';
 export 'src/rendering/static_canvas_painter.dart';
+export 'src/rendering/text_bounds_validator.dart';
 export 'src/rendering/text_renderer.dart';
 export 'src/rendering/viewport_culling.dart';
 export 'src/rendering/viewport_state.dart';
