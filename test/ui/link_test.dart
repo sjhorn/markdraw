@@ -109,6 +109,48 @@ void main() {
       ctrl.dispose();
     });
 
+    test('followLink prepends https:// when no scheme', () {
+      String? openedUrl;
+      final ctrl = MarkdrawController(
+        config: MarkdrawEditorConfig(
+          onLinkOpen: (url) => openedUrl = url,
+        ),
+      );
+
+      ctrl.followLink('example.com/page', const Size(800, 600));
+
+      expect(openedUrl, 'https://example.com/page');
+      ctrl.dispose();
+    });
+
+    test('followLink prepends file:/// for absolute paths', () {
+      String? openedUrl;
+      final ctrl = MarkdrawController(
+        config: MarkdrawEditorConfig(
+          onLinkOpen: (url) => openedUrl = url,
+        ),
+      );
+
+      ctrl.followLink('/Users/me/doc.pdf', const Size(800, 600));
+
+      expect(openedUrl, 'file:////Users/me/doc.pdf');
+      ctrl.dispose();
+    });
+
+    test('followLink preserves existing schemes', () {
+      String? openedUrl;
+      final ctrl = MarkdrawController(
+        config: MarkdrawEditorConfig(
+          onLinkOpen: (url) => openedUrl = url,
+        ),
+      );
+
+      ctrl.followLink('http://insecure.example.com', const Size(800, 600));
+
+      expect(openedUrl, 'http://insecure.example.com');
+      ctrl.dispose();
+    });
+
     test('followLink with nonexistent element id does nothing', () {
       controller.loadScene(sceneWith([
         RectangleElement(

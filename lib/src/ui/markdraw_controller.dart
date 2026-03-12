@@ -1615,6 +1615,8 @@ class MarkdrawController extends ChangeNotifier {
   }
 
   /// Follows a link: element links (#id) navigate on canvas, URLs call onLinkOpen.
+  /// Automatically prepends protocol if missing (file:/// for absolute paths,
+  /// https:// for everything else).
   void followLink(String link, Size canvasSize) {
     if (link.startsWith('#')) {
       final targetIdStr = link.substring(1);
@@ -1624,8 +1626,15 @@ class MarkdrawController extends ChangeNotifier {
       if (target == null) return;
       _selectAndRevealElement(ElementId(targetIdStr), canvasSize);
     } else {
-      _config.onLinkOpen?.call(link);
+      _config.onLinkOpen?.call(_normalizeUrl(link));
     }
+  }
+
+  /// Prepends a protocol scheme if the link doesn't already have one.
+  static String _normalizeUrl(String url) {
+    if (url.contains('://')) return url; // already has scheme
+    if (url.startsWith('/')) return 'file:///$url';
+    return 'https://$url';
   }
 
   /// Selects an element and pans/zooms to reveal it (shared by find and followLink).
