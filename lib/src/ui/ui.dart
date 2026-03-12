@@ -17,6 +17,7 @@ export 'help_button.dart';
 export 'help_dialog.dart';
 export 'keyboard_handler.dart';
 export 'library_panel.dart';
+export 'link_overlay.dart';
 export 'markdraw_app.dart';
 export 'markdraw_controller.dart';
 export 'markdraw_editor.dart';

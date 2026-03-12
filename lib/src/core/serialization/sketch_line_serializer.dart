@@ -386,6 +386,9 @@ class SketchLineSerializer {
     if (element.groupIds.isNotEmpty) {
       parts.add('group=${element.groupIds.join(',')}');
     }
+    if (element.link != null && element.link!.isNotEmpty) {
+      parts.add('link="${element.link}"');
+    }
     // seed is intentionally omitted — it's auto-generated from a random value
     // and only affects rough-drawing wobble, not document semantics.
   }

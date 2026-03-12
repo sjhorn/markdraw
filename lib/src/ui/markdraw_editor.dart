@@ -130,6 +130,7 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
             getCurrentThemeMode: () =>
                 widget.currentThemeMode ?? ThemeMode.system,
             context: context,
+            onShowLinkDialog: (_) => _controller.openLinkEditor(),
           );
           return handled
               ? KeyEventResult.handled
@@ -140,6 +141,9 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
             builder: (context, constraints) {
               final isCompact =
                   constraints.maxWidth < widget.config.compactBreakpoint;
+              _controller.lastCanvasSize = Size(
+                constraints.maxWidth, constraints.maxHeight,
+              );
               if (isCompact != _controller.isCompact) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (mounted) _controller.isCompact = isCompact;
@@ -299,6 +303,10 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
               ),
             ),
           ),
+        // Link overlay
+        if (_controller.isLinkEditorOpen &&
+            _controller.selectedElements.length == 1)
+          _buildLinkOverlay(),
         // View mode indicator — click to exit
         if (_controller.viewMode)
           Positioned(
@@ -327,6 +335,32 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
       body = MarkdrawSplitPane(controller: _controller, child: body);
     }
     return body;
+  }
+
+  Widget _buildLinkOverlay() {
+    final elements = _controller.selectedElements;
+    if (elements.isEmpty) return const SizedBox.shrink();
+    final element = elements.first;
+    final viewport = _controller.editorState.viewport;
+
+    // Position the overlay above the selected element, centered horizontally
+    final topLeft = viewport.sceneToScreen(
+      Offset(element.x, element.y),
+    );
+    final bottomRight = viewport.sceneToScreen(
+      Offset(element.x + element.width, element.y + element.height),
+    );
+    final centerX = (topLeft.dx + bottomRight.dx) / 2;
+    final top = topLeft.dy - 54; // above the element
+
+    return Positioned(
+      left: (centerX - 170).clamp(8.0, double.infinity),
+      top: top.clamp(8.0, double.infinity),
+      child: LinkOverlay(
+        controller: _controller,
+        getCanvasSize: _getCanvasSize,
+      ),
+    );
   }
 
   Widget _modePill(

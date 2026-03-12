@@ -203,7 +203,7 @@ class DocumentParser {
       // The quoted string may appear immediately after keyword or after
       // properties like id=... (e.g. rect id=rect1 "Label" at 0,0 100x50).
       final labelMatch = RegExp(
-        r'^(\w+)\s+(.*?)"([^"]+)"\s*(.*)',
+        r'^(\w+)\s+(.*?)(?<!=)"([^"]+)"\s*(.*)',
       ).firstMatch(line);
 
       if (labelMatch != null &&

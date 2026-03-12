@@ -205,6 +205,7 @@ class SketchLineParser {
           locked: common.locked,
           frameId: common.frameId,
           groupIds: common.groupIds,
+          link: common.link,
         ),
       'ellipse' => EllipseElement(
           id: elementId,
@@ -224,6 +225,7 @@ class SketchLineParser {
           locked: common.locked,
           frameId: common.frameId,
           groupIds: common.groupIds,
+          link: common.link,
         ),
       'diamond' => DiamondElement(
           id: elementId,
@@ -243,6 +245,7 @@ class SketchLineParser {
           locked: common.locked,
           frameId: common.frameId,
           groupIds: common.groupIds,
+          link: common.link,
         ),
       _ => null,
     };
@@ -282,6 +285,7 @@ class SketchLineParser {
       locked: common.locked,
       frameId: common.frameId,
       groupIds: common.groupIds,
+      link: common.link,
     );
 
     return ParseResult(value: element);
@@ -335,6 +339,7 @@ class SketchLineParser {
       locked: common.locked,
       frameId: common.frameId,
       groupIds: common.groupIds,
+      link: common.link,
     );
 
     return ParseResult(value: element);
@@ -385,6 +390,7 @@ class SketchLineParser {
       locked: common.locked,
       frameId: common.frameId,
       groupIds: common.groupIds,
+      link: common.link,
     );
 
     return ParseResult(value: element);
@@ -428,6 +434,7 @@ class SketchLineParser {
       locked: common.locked,
       frameId: common.frameId,
       groupIds: common.groupIds,
+      link: common.link,
     );
 
     return ParseResult(value: element);
@@ -538,6 +545,7 @@ class SketchLineParser {
       locked: common.locked,
       frameId: common.frameId,
       groupIds: common.groupIds,
+      link: common.link,
     );
 
     if (hasBindings) {
@@ -590,6 +598,7 @@ class SketchLineParser {
       locked: common.locked,
       frameId: common.frameId,
       groupIds: common.groupIds,
+      link: common.link,
     );
 
     return ParseResult(value: element);
@@ -707,6 +716,7 @@ class _CommonProperties {
 
   final String? frameId;
   final List<String> groupIds;
+  final String? link;
 
   _CommonProperties({
     required this.strokeColor,
@@ -721,6 +731,7 @@ class _CommonProperties {
     required this.locked,
     required this.frameId,
     required this.groupIds,
+    required this.link,
   });
 }
 
@@ -821,6 +832,7 @@ class _PropertyBag {
     final groupIds = groupStr != null && groupStr.isNotEmpty
         ? groupStr.split(',')
         : <String>[];
+    final linkStr = namedString('link');
 
     return _CommonProperties(
       strokeColor: colorStr != null ? normalizeColor(colorStr) : '#000000',
@@ -837,6 +849,7 @@ class _PropertyBag {
       locked: isLocked,
       frameId: frameIdStr,
       groupIds: groupIds,
+      link: linkStr,
     );
   }
 

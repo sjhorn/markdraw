@@ -18,6 +18,23 @@ class EditorCanvas extends StatefulWidget {
 class _EditorCanvasState extends State<EditorCanvas> {
   MarkdrawController get controller => widget.controller;
 
+  List<LinkIconInfo>? _buildLinkIcons() {
+    final selectedIds = controller.editorState.selectedIds;
+    final icons = <LinkIconInfo>[];
+    for (final element in controller.editorState.scene.activeElements) {
+      if (element.link == null || element.link!.isEmpty) continue;
+      // Skip selected elements — they show the overlay instead
+      if (selectedIds.contains(element.id)) continue;
+      icons.add(LinkIconInfo(
+        x: element.x,
+        y: element.y,
+        width: element.width,
+        height: element.height,
+      ));
+    }
+    return icons.isEmpty ? null : icons;
+  }
+
   @override
   Widget build(BuildContext context) {
     final toolOverlay = controller.activeTool.overlay;
@@ -90,8 +107,9 @@ class _EditorCanvasState extends State<EditorCanvas> {
                     creationPoints: toolOverlay?.creationPoints,
                     creationBounds: toolOverlay?.creationBounds,
                     laserTrail: controller.activeTool is LaserTool
-                        ? (controller.activeTool as LaserTool).activeTrail
+                        ? (controller.activeTool as LaserTool) .activeTrail
                         : null,
+                    linkIcons: _buildLinkIcons(),
                   ),
                   child: const SizedBox.expand(),
                 ),

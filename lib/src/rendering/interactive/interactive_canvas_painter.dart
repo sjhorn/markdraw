@@ -12,6 +12,21 @@ import 'selection_overlay.dart';
 import 'selection_renderer.dart';
 import 'snap_line.dart';
 
+/// Info about an element's link icon position for rendering.
+class LinkIconInfo {
+  final double x;
+  final double y;
+  final double width;
+  final double height;
+
+  const LinkIconInfo({
+    required this.x,
+    required this.y,
+    required this.width,
+    required this.height,
+  });
+}
+
 /// A [CustomPainter] that renders the interactive overlay layer.
 ///
 /// This painter sits on top of [StaticCanvasPainter] and draws selection UI
@@ -36,6 +51,7 @@ class InteractiveCanvasPainter extends CustomPainter {
   final double bindTargetAngle;
   final Point? closeIndicatorCenter;
   final List<LaserPoint>? laserTrail;
+  final List<LinkIconInfo>? linkIcons;
 
   const InteractiveCanvasPainter({
     required this.viewport,
@@ -53,6 +69,7 @@ class InteractiveCanvasPainter extends CustomPainter {
     this.bindTargetAngle = 0.0,
     this.closeIndicatorCenter,
     this.laserTrail,
+    this.linkIcons,
   });
 
   @override
@@ -177,12 +194,67 @@ class InteractiveCanvasPainter extends CustomPainter {
       SelectionRenderer.drawCloseIndicator(canvas, closeIndicatorCenter!);
     }
 
+    // Link icons on elements with links
+    if (linkIcons != null) {
+      for (final info in linkIcons!) {
+        _drawLinkIcon(canvas, info);
+      }
+    }
+
     canvas.restore();
 
     // Laser trail — drawn in screen space (after restore)
     if (laserTrail != null && laserTrail!.length >= 2) {
       LaserRenderer.draw(canvas, laserTrail!, viewport);
     }
+  }
+
+  void _drawLinkIcon(Canvas canvas, LinkIconInfo info) {
+    const iconSize = 14.0;
+    final cx = info.x + info.width - iconSize / 2;
+    final cy = info.y - iconSize / 2;
+
+    // Draw background circle
+    final bgPaint = Paint()
+      ..color = const Color(0xFFE8E8E8)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(cx, cy), iconSize / 2 + 2, bgPaint);
+
+    // Draw border
+    final borderPaint = Paint()
+      ..color = const Color(0xFF999999)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+    canvas.drawCircle(Offset(cx, cy), iconSize / 2 + 2, borderPaint);
+
+    // Draw a simple chain-link icon using two overlapping arcs
+    final linkPaint = Paint()
+      ..color = const Color(0xFF555555)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round;
+
+    // Left half-circle
+    canvas.drawArc(
+      Rect.fromCenter(center: Offset(cx - 1.5, cy), width: 6, height: 8),
+      1.57, // pi/2
+      3.14, // pi
+      false,
+      linkPaint,
+    );
+    // Right half-circle
+    canvas.drawArc(
+      Rect.fromCenter(center: Offset(cx + 1.5, cy), width: 6, height: 8),
+      -1.57, // -pi/2
+      3.14, // pi
+      false,
+      linkPaint,
+    );
+    // Connecting lines
+    canvas.drawLine(
+        Offset(cx - 1.5, cy - 4), Offset(cx + 1.5, cy - 4), linkPaint);
+    canvas.drawLine(
+        Offset(cx - 1.5, cy + 4), Offset(cx + 1.5, cy + 4), linkPaint);
   }
 
   @override
@@ -201,6 +273,7 @@ class InteractiveCanvasPainter extends CustomPainter {
         !listEquals(pointHandles, oldDelegate.pointHandles) ||
         !listEquals(midpointHandles, oldDelegate.midpointHandles) ||
         !listEquals(segmentMidpoints, oldDelegate.segmentMidpoints) ||
-        laserTrail != oldDelegate.laserTrail;
+        laserTrail != oldDelegate.laserTrail ||
+        !listEquals(linkIcons, oldDelegate.linkIcons);
   }
 }

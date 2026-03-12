@@ -34,7 +34,14 @@ class _CanvasPage extends StatefulWidget {
 }
 
 class _CanvasPageState extends State<_CanvasPage> {
-  final _controller = MarkdrawController();
+  final _controller = MarkdrawController(
+    config: MarkdrawEditorConfig(
+      onLinkOpen: (url) {
+        debugPrint('Open link: $url');
+        // Wire to url_launcher in production: launchUrl(Uri.parse(url))
+      },
+    ),
+  );
   late final _files = MarkdrawFileHandler(controller: _controller);
 
   @override

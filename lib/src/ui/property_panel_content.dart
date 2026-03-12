@@ -700,8 +700,8 @@ class PropertyPanelContent extends StatelessWidget {
         if (isSingle)
           IconToggleChip(
             isSelected: elements.first.link != null,
-            onTap: () => _showLinkDialog(context, elements.first),
-            tooltip: 'Link',
+            onTap: () => controller.openLinkEditor(),
+            tooltip: 'Link (Ctrl+K)',
             child: const Icon(Icons.link, size: 18),
           ),
         if (isSingle &&
@@ -748,73 +748,6 @@ class PropertyPanelContent extends StatelessWidget {
       },
       tooltip: isLocked ? 'Unlock' : 'Lock',
       child: Icon(isLocked ? Icons.lock : Icons.lock_open, size: 18),
-    );
-  }
-
-  void _showLinkDialog(BuildContext context, Element element) {
-    final linkController =
-        TextEditingController(text: element.link ?? '');
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Edit link'),
-        content: TextField(
-          controller: linkController,
-          autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'https://...',
-            labelText: 'URL',
-          ),
-          onSubmitted: (_) {
-            final url = linkController.text.trim();
-            controller.pushHistory();
-            if (url.isEmpty) {
-              controller.applyResult(
-                UpdateElementResult(element.copyWith(clearLink: true)),
-              );
-            } else {
-              controller.applyResult(
-                UpdateElementResult(element.copyWith(link: url)),
-              );
-            }
-            Navigator.of(ctx).pop();
-          },
-        ),
-        actions: [
-          if (element.link != null)
-            TextButton(
-              onPressed: () {
-                controller.pushHistory();
-                controller.applyResult(
-                  UpdateElementResult(element.copyWith(clearLink: true)),
-                );
-                Navigator.of(ctx).pop();
-              },
-              child: const Text('Remove'),
-            ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              final url = linkController.text.trim();
-              controller.pushHistory();
-              if (url.isEmpty) {
-                controller.applyResult(
-                  UpdateElementResult(element.copyWith(clearLink: true)),
-                );
-              } else {
-                controller.applyResult(
-                  UpdateElementResult(element.copyWith(link: url)),
-                );
-              }
-              Navigator.of(ctx).pop();
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
     );
   }
 

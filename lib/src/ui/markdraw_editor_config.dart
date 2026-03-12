@@ -24,6 +24,7 @@ class MarkdrawEditorConfig {
     this.canvasBackgroundPresets = color_utils.canvasBackgroundPresets,
     this.strokeColorPresets = color_utils.strokeQuickPicks,
     this.backgroundColorPresets = color_utils.backgroundQuickPicks,
+    this.onLinkOpen,
   });
 
   /// Which tools to show in the toolbar. Defaults to all tools if null.
@@ -76,4 +77,8 @@ class MarkdrawEditorConfig {
 
   /// Background color presets for the property panel.
   final List<String> backgroundColorPresets;
+
+  /// Called when the user follows an external link (not an element link).
+  /// Wire this to url_launcher in the example app.
+  final void Function(String url)? onLinkOpen;
 }

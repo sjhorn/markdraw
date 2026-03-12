@@ -69,6 +69,11 @@ class MarkdrawController extends ChangeNotifier {
   int? _gridSize;
   bool _objectsSnapMode = false;
 
+  // Link editor state
+  bool _isLinkEditorOpen = false;
+  bool _isLinkEditorEditing = false;
+  bool _linkToElementMode = false;
+
   // Find state
   bool _isFindOpen = false;
   String _findQuery = '';
@@ -95,6 +100,9 @@ class MarkdrawController extends ChangeNotifier {
   bool _isEditingExisting = false;
   String? _originalText;
   bool _suppressFocusCommit = false;
+
+  // Canvas size cache (for followLink from pointer events)
+  Size? _lastCanvasSize;
 
   // Mouse position for eraser cursor
   Offset? _mousePosition;
@@ -130,6 +138,9 @@ class MarkdrawController extends ChangeNotifier {
   ElementStyle? get copiedStyle => _copiedStyle;
   bool get zenMode => _zenMode;
   bool get viewMode => _viewMode;
+  bool get isLinkEditorOpen => _isLinkEditorOpen;
+  bool get isLinkEditorEditing => _isLinkEditorEditing;
+  bool get linkToElementMode => _linkToElementMode;
   bool get isFindOpen => _isFindOpen;
   String get findQuery => _findQuery;
   List<ElementId> get findResults => _findResults;
@@ -210,6 +221,10 @@ class MarkdrawController extends ChangeNotifier {
   set canvasBackgroundColor(String value) {
     _canvasBackgroundColor = value;
     notifyListeners();
+  }
+
+  set lastCanvasSize(Size? value) {
+    _lastCanvasSize = value;
   }
 
   set mousePosition(Offset? value) {
@@ -770,8 +785,42 @@ class MarkdrawController extends ChangeNotifier {
     if (_editingTextElementId != null) {
       commitTextEditing();
     }
-    _sceneBeforeDrag = _editorState.scene;
+
     final point = toScene(localPosition);
+
+    // Link-to-element mode: clicking an element sets the link target
+    if (_linkToElementMode) {
+      final hit = _editorState.scene.getElementAtPoint(point);
+      if (hit != null && _editorState.selectedIds.length == 1) {
+        final sourceId = _editorState.selectedIds.first;
+        if (hit.id != sourceId) {
+          setElementLink(sourceId, '#${hit.id.value}');
+          _linkToElementMode = false;
+          _isLinkEditorOpen = false;
+          _isLinkEditorEditing = false;
+          notifyListeners();
+          return;
+        }
+      }
+      _linkToElementMode = false;
+      notifyListeners();
+      return;
+    }
+
+    // Check if click hit a link icon
+    final linkedElement = hitTestLinkIcon(point);
+    if (linkedElement != null) {
+      // Need canvas size for followLink — use a reasonable fallback
+      followLink(linkedElement.link!, _lastCanvasSize ?? const Size(800, 600));
+      return;
+    }
+
+    // Close link editor when clicking elsewhere
+    if (_isLinkEditorOpen) {
+      closeLinkEditor();
+    }
+
+    _sceneBeforeDrag = _editorState.scene;
     final shift = HardwareKeyboard.instance.isShiftPressed;
     if (_activeTool is SelectTool) {
       applyResult(
@@ -1520,9 +1569,69 @@ class MarkdrawController extends ChangeNotifier {
 
   void _selectAndRevealFindResult(Size canvasSize) {
     final id = _findResults[_findCurrentIndex];
+    _selectAndRevealElement(id, canvasSize);
+  }
+
+  // --- Link editor ---
+
+  /// Opens the link editor overlay in editing mode (for Ctrl+K or button).
+  void openLinkEditor() {
+    _isLinkEditorOpen = true;
+    _isLinkEditorEditing = true;
+    notifyListeners();
+  }
+
+  /// Closes the link editor overlay.
+  void closeLinkEditor() {
+    _isLinkEditorOpen = false;
+    _isLinkEditorEditing = false;
+    _linkToElementMode = false;
+    notifyListeners();
+  }
+
+  /// Shows the link overlay in info mode (element has a link, just display it).
+  void showLinkInfo() {
+    _isLinkEditorOpen = true;
+    _isLinkEditorEditing = false;
+    notifyListeners();
+  }
+
+  /// Sets or clears the link on an element.
+  void setElementLink(ElementId id, String? link) {
+    _historyManager.push(_editorState.scene);
+    final element = _editorState.scene.getElementById(id);
+    if (element == null) return;
+    if (link == null || link.isEmpty) {
+      applyResult(UpdateElementResult(element.copyWith(clearLink: true)));
+    } else {
+      applyResult(UpdateElementResult(element.copyWith(link: link)));
+    }
+  }
+
+  /// Enters "link to element" mode — next click on an element sets the link.
+  void enterLinkToElementMode() {
+    _linkToElementMode = true;
+    notifyListeners();
+  }
+
+  /// Follows a link: element links (#id) navigate on canvas, URLs call onLinkOpen.
+  void followLink(String link, Size canvasSize) {
+    if (link.startsWith('#')) {
+      final targetIdStr = link.substring(1);
+      final target = _editorState.scene.getElementById(
+        ElementId(targetIdStr),
+      );
+      if (target == null) return;
+      _selectAndRevealElement(ElementId(targetIdStr), canvasSize);
+    } else {
+      _config.onLinkOpen?.call(link);
+    }
+  }
+
+  /// Selects an element and pans/zooms to reveal it (shared by find and followLink).
+  void _selectAndRevealElement(ElementId id, Size canvasSize) {
     applyResult(SetSelectionResult({id}));
 
-    // Smart zoom: only pan/zoom if element is off-screen
     final bounds = ExportBounds.compute(
       _editorState.scene,
       selectedIds: {id},
@@ -1543,6 +1652,25 @@ class MarkdrawController extends ChangeNotifier {
       ));
     }
     notifyListeners();
+  }
+
+  /// Hit-tests whether a point is on a link icon (top-right corner of linked elements).
+  Element? hitTestLinkIcon(Point scenePoint) {
+    const iconSize = 16.0;
+    for (final element in _editorState.scene.activeElements.reversed) {
+      if (element.link == null || element.link!.isEmpty) continue;
+      // Skip selected elements — they show the overlay instead
+      if (_editorState.selectedIds.contains(element.id)) continue;
+      final iconLeft = element.x + element.width - iconSize;
+      final iconTop = element.y - iconSize;
+      if (scenePoint.x >= iconLeft &&
+          scenePoint.x <= iconLeft + iconSize &&
+          scenePoint.y >= iconTop &&
+          scenePoint.y <= iconTop + iconSize) {
+        return element;
+      }
+    }
+    return null;
   }
 
   // --- Flowchart ---
