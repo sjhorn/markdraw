@@ -35,9 +35,21 @@ class PropertyPanelContent extends StatelessWidget {
     if (isEditingText) {
       return _buildTextEditingPanel(context);
     }
+    final singleFrame = elements.length == 1 && elements.first is FrameElement
+        ? elements.first as FrameElement
+        : null;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (singleFrame != null) ...[
+          _buildSectionLabel(context, 'Frame name'),
+          _FrameNameEditor(
+            frame: singleFrame,
+            controller: controller,
+          ),
+          const SizedBox(height: 12),
+        ],
         IgnorePointer(
           ignoring: isLocked,
           child: Opacity(
@@ -1148,4 +1160,83 @@ class _AutoOpenFontPickerState extends State<_AutoOpenFontPicker> {
 
   @override
   Widget build(BuildContext context) => widget.child;
+}
+
+/// Inline text field for editing a frame's label.
+class _FrameNameEditor extends StatefulWidget {
+  final FrameElement frame;
+  final MarkdrawController controller;
+
+  const _FrameNameEditor({
+    required this.frame,
+    required this.controller,
+  });
+
+  @override
+  State<_FrameNameEditor> createState() => _FrameNameEditorState();
+}
+
+class _FrameNameEditorState extends State<_FrameNameEditor> {
+  late final TextEditingController _textController;
+
+  @override
+  void initState() {
+    super.initState();
+    _textController = TextEditingController(text: widget.frame.label);
+  }
+
+  @override
+  void didUpdateWidget(covariant _FrameNameEditor oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.frame.id != widget.frame.id ||
+        oldWidget.frame.label != widget.frame.label) {
+      _textController.text = widget.frame.label;
+    }
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
+
+  void _submit(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty || trimmed == widget.frame.label) return;
+    widget.controller.pushHistory();
+    widget.controller.applyResult(
+      UpdateElementResult(widget.frame.copyWithLabel(trimmed)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return SizedBox(
+      height: 32,
+      child: TextField(
+        controller: _textController,
+        style: TextStyle(fontSize: 13, color: cs.onSurface),
+        decoration: InputDecoration(
+          isDense: true,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.3)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.3)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: cs.primary),
+          ),
+        ),
+        onSubmitted: _submit,
+        onTapOutside: (_) => _submit(_textController.text),
+      ),
+    );
+  }
 }
