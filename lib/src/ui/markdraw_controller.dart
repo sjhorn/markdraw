@@ -1654,19 +1654,20 @@ class MarkdrawController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Hit-tests whether a point is on a link icon (top-right corner of linked elements).
+  /// Hit-tests whether a point is on a link icon (above top-right corner).
   Element? hitTestLinkIcon(Point scenePoint) {
-    const iconSize = 16.0;
+    const iconRadius = 10.0; // iconSize/2 + padding
     for (final element in _editorState.scene.activeElements.reversed) {
       if (element.link == null || element.link!.isEmpty) continue;
       // Skip selected elements — they show the overlay instead
       if (_editorState.selectedIds.contains(element.id)) continue;
-      final iconLeft = element.x + element.width - iconSize;
-      final iconTop = element.y - iconSize;
-      if (scenePoint.x >= iconLeft &&
-          scenePoint.x <= iconLeft + iconSize &&
-          scenePoint.y >= iconTop &&
-          scenePoint.y <= iconTop + iconSize) {
+      // Icon center matches _drawLinkIcon positioning
+      final cx = element.x + element.width - 8; // iconSize/2
+      final cy = element.y - 18; // iconSize + 2
+      if (scenePoint.x >= cx - iconRadius &&
+          scenePoint.x <= cx + iconRadius &&
+          scenePoint.y >= cy - iconRadius &&
+          scenePoint.y <= cy + iconRadius) {
         return element;
       }
     }

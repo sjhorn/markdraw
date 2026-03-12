@@ -210,9 +210,9 @@ class InteractiveCanvasPainter extends CustomPainter {
   }
 
   void _drawLinkIcon(Canvas canvas, LinkIconInfo info) {
-    const iconSize = 14.0;
+    const iconSize = 16.0;
     final cx = info.x + info.width - iconSize / 2;
-    final cy = info.y - iconSize / 2;
+    final cy = info.y - iconSize - 2; // offset above shape
 
     // Draw background circle
     final bgPaint = Paint()
@@ -227,34 +227,19 @@ class InteractiveCanvasPainter extends CustomPainter {
       ..strokeWidth = 1.0;
     canvas.drawCircle(Offset(cx, cy), iconSize / 2 + 2, borderPaint);
 
-    // Draw a simple chain-link icon using two overlapping arcs
-    final linkPaint = Paint()
-      ..color = const Color(0xFF555555)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5
-      ..strokeCap = StrokeCap.round;
-
-    // Left half-circle
-    canvas.drawArc(
-      Rect.fromCenter(center: Offset(cx - 1.5, cy), width: 6, height: 8),
-      1.57, // pi/2
-      3.14, // pi
-      false,
-      linkPaint,
-    );
-    // Right half-circle
-    canvas.drawArc(
-      Rect.fromCenter(center: Offset(cx + 1.5, cy), width: 6, height: 8),
-      -1.57, // -pi/2
-      3.14, // pi
-      false,
-      linkPaint,
-    );
-    // Connecting lines
-    canvas.drawLine(
-        Offset(cx - 1.5, cy - 4), Offset(cx + 1.5, cy - 4), linkPaint);
-    canvas.drawLine(
-        Offset(cx - 1.5, cy + 4), Offset(cx + 1.5, cy + 4), linkPaint);
+    // Draw "launch" icon using TextPainter with Material Icons codepoint
+    final tp = TextPainter(
+      text: TextSpan(
+        text: String.fromCharCode(0xe895), // Icons.launch
+        style: const TextStyle(
+          fontSize: 12,
+          fontFamily: 'MaterialIcons',
+          color: Color(0xFF555555),
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    tp.paint(canvas, Offset(cx - tp.width / 2, cy - tp.height / 2));
   }
 
   @override

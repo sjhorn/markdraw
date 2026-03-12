@@ -164,8 +164,8 @@ void main() {
       );
       controller.loadScene(sceneWith([rect]));
 
-      // Icon is at top-right corner: x+width-16 to x+width, y-16 to y
-      final hit = controller.hitTestLinkIcon(const Point(296, 90));
+      // Icon center at (x+width-8, y-18), radius 10
+      final hit = controller.hitTestLinkIcon(const Point(292, 82));
       expect(hit, isNotNull);
       expect(hit!.id, const ElementId('r1'));
     });
@@ -180,7 +180,7 @@ void main() {
       );
       controller.loadScene(sceneWith([rect]));
 
-      final hit = controller.hitTestLinkIcon(const Point(296, 90));
+      final hit = controller.hitTestLinkIcon(const Point(292, 82));
       expect(hit, isNull);
     });
 
@@ -196,7 +196,7 @@ void main() {
       controller.loadScene(sceneWith([rect]));
       controller.applyResult(SetSelectionResult({rect.id}));
 
-      final hit = controller.hitTestLinkIcon(const Point(296, 90));
+      final hit = controller.hitTestLinkIcon(const Point(292, 82));
       expect(hit, isNull);
     });
 
