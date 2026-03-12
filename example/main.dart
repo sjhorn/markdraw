@@ -8,6 +8,7 @@
 library;
 
 import 'package:flutter/material.dart' hide Element, SelectionOverlay;
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:markdraw/markdraw.dart' hide TextAlign;
 
@@ -36,10 +37,7 @@ class _CanvasPage extends StatefulWidget {
 class _CanvasPageState extends State<_CanvasPage> {
   final _controller = MarkdrawController(
     config: MarkdrawEditorConfig(
-      onLinkOpen: (url) {
-        debugPrint('Open link: $url');
-        // Wire to url_launcher in production: launchUrl(Uri.parse(url))
-      },
+      onLinkOpen: (url) => launchUrl(Uri.parse(url)),
     ),
   );
   late final _files = MarkdrawFileHandler(controller: _controller);

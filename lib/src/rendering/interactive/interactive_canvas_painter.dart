@@ -227,19 +227,35 @@ class InteractiveCanvasPainter extends CustomPainter {
       ..strokeWidth = 1.0;
     canvas.drawCircle(Offset(cx, cy), iconSize / 2 + 2, borderPaint);
 
-    // Draw "launch" icon using TextPainter with Material Icons codepoint
-    final tp = TextPainter(
-      text: TextSpan(
-        text: String.fromCharCode(0xe895), // Icons.launch
-        style: const TextStyle(
-          fontSize: 12,
-          fontFamily: 'MaterialIcons',
-          color: Color(0xFF555555),
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    tp.paint(canvas, Offset(cx - tp.width / 2, cy - tp.height / 2));
+    // Draw "launch" icon manually with paths
+    final iconPaint = Paint()
+      ..color = const Color(0xFF555555)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    const s = 4.5; // half-size of the icon drawing area
+
+    // Open box (missing top-right corner)
+    final boxPath = Path()
+      ..moveTo(cx + s, cy + s * 0.2) // right side, slightly below top
+      ..lineTo(cx + s, cy + s) // bottom-right
+      ..lineTo(cx - s, cy + s) // bottom-left
+      ..lineTo(cx - s, cy - s) // top-left
+      ..lineTo(cx - s * 0.2, cy - s); // top side, slightly past left
+    canvas.drawPath(boxPath, iconPaint);
+
+    // Arrow from center to top-right
+    canvas.drawLine(Offset(cx - s * 0.1, cy + s * 0.1),
+        Offset(cx + s, cy - s), iconPaint);
+
+    // Arrowhead
+    final arrowPath = Path()
+      ..moveTo(cx + s * 0.2, cy - s)
+      ..lineTo(cx + s, cy - s)
+      ..lineTo(cx + s, cy - s * 0.2);
+    canvas.drawPath(arrowPath, iconPaint);
   }
 
   @override
