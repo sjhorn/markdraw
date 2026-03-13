@@ -129,6 +129,8 @@ class _EditorCanvasState extends State<EditorCanvas> {
               ),
             if (controller.editingTextElementId != null)
               TextEditingOverlay(controller: controller),
+            if (controller.editingFrameLabelId != null)
+              _FrameLabelEditingOverlay(controller: controller),
             // Compact property panel trigger
             if (controller.isCompact &&
                 controller.selectedElements.isNotEmpty)
@@ -148,6 +150,121 @@ class _EditorCanvasState extends State<EditorCanvas> {
 bool _isDark(String hexColor) {
   final c = parseColor(hexColor);
   return c.computeLuminance() < 0.5;
+}
+
+/// Inline text field overlay for editing a frame's label on the canvas.
+class _FrameLabelEditingOverlay extends StatefulWidget {
+  final MarkdrawController controller;
+  const _FrameLabelEditingOverlay({required this.controller});
+
+  @override
+  State<_FrameLabelEditingOverlay> createState() =>
+      _FrameLabelEditingOverlayState();
+}
+
+class _FrameLabelEditingOverlayState
+    extends State<_FrameLabelEditingOverlay> {
+  late TextEditingController _textController;
+  final _focusNode = FocusNode();
+  bool _committed = false;
+
+  FrameElement? get _frame {
+    final id = widget.controller.editingFrameLabelId;
+    if (id == null) return null;
+    final e = widget.controller.editorState.scene.getElementById(id);
+    return e is FrameElement ? e : null;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final frame = _frame;
+    _textController = TextEditingController(text: frame?.label ?? '');
+    _textController.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: _textController.text.length,
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    if (!_committed) {
+      // Commit on dispose if not already done (e.g. tap outside)
+      widget.controller.commitFrameLabel(_textController.text);
+    }
+    _textController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _submit(String value) {
+    if (_committed) return;
+    _committed = true;
+    widget.controller.commitFrameLabel(value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final frame = _frame;
+    if (frame == null) return const SizedBox.shrink();
+
+    final viewport = widget.controller.editorState.viewport;
+    final zoom = viewport.zoom;
+
+    // Position the text field at the frame label location (above top-left)
+    final screenPos = viewport.sceneToScreen(
+      Offset(frame.x, frame.y - 4),
+    );
+
+    // Match the rendered label style
+    const fontSize = 14.0;
+    final scaledFontSize = fontSize * zoom;
+    final fieldWidth = (frame.width * zoom).clamp(80.0, 400.0);
+
+    return Positioned(
+      left: screenPos.dx,
+      top: screenPos.dy - scaledFontSize - 4,
+      child: SizedBox(
+        width: fieldWidth,
+        height: scaledFontSize + 8,
+        child: TextField(
+          controller: _textController,
+          focusNode: _focusNode,
+          style: TextStyle(
+            fontSize: scaledFontSize,
+            fontFamily: 'Helvetica',
+            color: parseColor(frame.strokeColor),
+          ),
+          decoration: InputDecoration(
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 2,
+              vertical: 2,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(2),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(2),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+                width: 2,
+              ),
+            ),
+            filled: true,
+            fillColor: Theme.of(context).colorScheme.surface,
+          ),
+          onSubmitted: _submit,
+        ),
+      ),
+    );
+  }
 }
 
 /// Floating button that opens the compact property panel bottom sheet.

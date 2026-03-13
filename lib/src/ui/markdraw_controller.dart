@@ -101,6 +101,9 @@ class MarkdrawController extends ChangeNotifier {
   String? _originalText;
   bool _suppressFocusCommit = false;
 
+  // Frame label editing state
+  ElementId? _editingFrameLabelId;
+
   // Canvas size cache (for followLink from pointer events)
   Size? _lastCanvasSize;
 
@@ -148,6 +151,7 @@ class MarkdrawController extends ChangeNotifier {
   ColorPickerTarget? get pendingColorPicker => _pendingColorPicker;
 
   ElementId? get editingTextElementId => _editingTextElementId;
+  ElementId? get editingFrameLabelId => _editingFrameLabelId;
   FocusNode get textFocusNode => _textFocusNode;
   bool get isEditingExisting => _isEditingExisting;
   String? get originalText => _originalText;
@@ -679,6 +683,63 @@ class MarkdrawController extends ChangeNotifier {
     }
   }
 
+  // -- Frame label editing --------------------------------------------------
+
+  void startFrameLabelEditing(FrameElement frame) {
+    _editingFrameLabelId = frame.id;
+    notifyListeners();
+  }
+
+  void commitFrameLabel(String newLabel) {
+    final id = _editingFrameLabelId;
+    if (id == null) return;
+    final element = _editorState.scene.getElementById(id);
+    if (element is! FrameElement) {
+      _editingFrameLabelId = null;
+      notifyListeners();
+      return;
+    }
+    final trimmed = newLabel.trim();
+    if (trimmed.isNotEmpty && trimmed != element.label) {
+      pushHistory();
+      applyResult(UpdateElementResult(element.copyWithLabel(trimmed)));
+    }
+    _editingFrameLabelId = null;
+    notifyListeners();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      keyboardFocusNode.requestFocus();
+    });
+  }
+
+  void cancelFrameLabelEditing() {
+    _editingFrameLabelId = null;
+    notifyListeners();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      keyboardFocusNode.requestFocus();
+    });
+  }
+
+  /// Hit-tests whether a scene point is within a frame's label area.
+  FrameElement? hitTestFrameLabel(Point scenePoint) {
+    const labelHeight = 18.0; // 14px font + padding
+    const labelPadding = 4.0;
+    for (final element in _editorState.scene.activeElements.reversed) {
+      if (element is! FrameElement) continue;
+      final labelTop = element.y - labelPadding - labelHeight;
+      final labelBottom = element.y - labelPadding;
+      // Estimate label width: ~8px per character at 14px font
+      final labelWidth =
+          (element.label.length * 8.0).clamp(40.0, element.width);
+      if (scenePoint.x >= element.x &&
+          scenePoint.x <= element.x + labelWidth &&
+          scenePoint.y >= labelTop &&
+          scenePoint.y <= labelBottom) {
+        return element;
+      }
+    }
+    return null;
+  }
+
   void onTextChanged() {
     final id = _editingTextElementId;
     if (id == null) return;
@@ -785,6 +846,8 @@ class MarkdrawController extends ChangeNotifier {
     if (_editingTextElementId != null) {
       commitTextEditing();
     }
+    // Frame label editing is committed by the overlay itself on submit/blur.
+    // We don't force-commit here since the TextField handles its own focus.
 
     final point = toScene(localPosition);
 
@@ -875,20 +938,28 @@ class MarkdrawController extends ChangeNotifier {
       applyResult(_activeTool.onPointerUp(point, toolContext));
     }
 
-    // Double-click dispatch for text editing and line editing
+    // Double-click dispatch for text editing, line editing, and frame labels
     if (isDoubleClick &&
         _activeTool is SelectTool &&
         _editingTextElementId == null) {
-      final hit = _editorState.scene.getElementAtPoint(point);
-      if (hit is TextElement) {
-        startTextEditingExisting(hit);
-      } else if (hit != null && BoundTextUtils.isTextContainer(hit)) {
-        startBoundTextEditing(hit);
-      } else if (hit is ArrowElement) {
-        startArrowLabelEditing(hit);
-      } else if (hit is LineElement) {
-        _isEditingLinear = true;
-        notifyListeners();
+      // Check frame label area first (above the frame, not inside it)
+      final frameHit = hitTestFrameLabel(point);
+      if (frameHit != null) {
+        startFrameLabelEditing(frameHit);
+      } else {
+        final hit = _editorState.scene.getElementAtPoint(point);
+        if (hit is TextElement) {
+          startTextEditingExisting(hit);
+        } else if (hit != null && BoundTextUtils.isTextContainer(hit)) {
+          startBoundTextEditing(hit);
+        } else if (hit is ArrowElement) {
+          startArrowLabelEditing(hit);
+        } else if (hit is LineElement) {
+          _isEditingLinear = true;
+          notifyListeners();
+        } else if (hit is FrameElement) {
+          startFrameLabelEditing(hit);
+        }
       }
     }
 
