@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import '../../core/elements/elements.dart';
+import '../../core/groups/frame_utils.dart';
 import '../../core/math/math.dart';
 import '../grid_snap.dart';
 import '../tool_result.dart';
@@ -67,9 +68,22 @@ class FrameTool implements Tool {
       label: 'Frame ${_frameCount + 1}',
     );
 
+    // Auto-assign existing elements that are fully inside the new frame
+    final assignResults = <ToolResult>[];
+    for (final existing in context.scene.activeElements) {
+      if (existing is FrameElement) continue;
+      if (existing.frameId != null) continue; // already in a frame
+      if (FrameUtils.isInsideFrame(existing, element)) {
+        assignResults.add(
+          UpdateElementResult(existing.copyWith(frameId: element.id.value)),
+        );
+      }
+    }
+
     reset();
     return CompoundResult([
       AddElementResult(element),
+      ...assignResults,
       SetSelectionResult({element.id}),
       SwitchToolResult(ToolType.select),
     ]);
