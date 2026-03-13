@@ -78,19 +78,26 @@ class StaticCanvasPainter extends CustomPainter {
         continue;
       }
 
-      // Clip children of frames to frame bounds
-      final hasClip = element.frameId != null;
-      if (hasClip) {
-        final frame = _findFrameElement(element.frameId!);
-        if (frame != null) {
+      // Clip children of frames to frame bounds and inherit frame opacity
+      final parentFrame = element.frameId != null
+          ? _findFrameElement(element.frameId!)
+          : null;
+      if (parentFrame != null) {
+        final frameOpacity = parentFrame.opacity;
+        if (frameOpacity < 1.0) {
+          canvas.saveLayer(
+            null,
+            Paint()..color = Color.fromRGBO(0, 0, 0, frameOpacity),
+          );
+        } else {
           canvas.save();
-          canvas.clipRect(Rect.fromLTWH(
-            frame.x,
-            frame.y,
-            frame.width,
-            frame.height,
-          ));
         }
+        canvas.clipRect(Rect.fromLTWH(
+          parentFrame.x,
+          parentFrame.y,
+          parentFrame.width,
+          parentFrame.height,
+        ));
       }
 
       // For arrows with bound text, wrap in a saveLayer so we can
@@ -114,11 +121,8 @@ class StaticCanvasPainter extends CustomPainter {
         canvas.restore();
       }
 
-      if (hasClip) {
-        final frame = _findFrameElement(element.frameId!);
-        if (frame != null) {
-          canvas.restore();
-        }
+      if (parentFrame != null) {
+        canvas.restore();
       }
     }
 
