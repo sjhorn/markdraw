@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:markdraw/markdraw.dart';
-import 'package:markdraw/src/editor/tools/frame_tool.dart';
 
 void main() {
   group('frame opacity propagation', () {
@@ -220,6 +219,285 @@ void main() {
         controller.editorState.scene.getElementById(rect.id)!.opacity,
         0.4,
       );
+    });
+  });
+
+  group('all properties round-trip through .markdraw', () {
+    test('stroke color', () {
+      final serializer = SketchLineSerializer();
+      final parser = SketchLineParser();
+
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 50,
+        strokeColor: '#ff0000',
+      );
+      final line = serializer.serialize(rect, alias: 'r1');
+      expect(line, contains('color='));
+      final parsed = parser.parseLine(line, 1);
+      expect(parsed.value!.strokeColor, '#ff0000');
+    });
+
+    test('background color', () {
+      final serializer = SketchLineSerializer();
+      final parser = SketchLineParser();
+
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 50,
+        backgroundColor: '#00ff00',
+      );
+      final line = serializer.serialize(rect, alias: 'r1');
+      expect(line, contains('fill='));
+      final parsed = parser.parseLine(line, 1);
+      expect(parsed.value!.backgroundColor, '#00ff00');
+    });
+
+    test('stroke width', () {
+      final serializer = SketchLineSerializer();
+      final parser = SketchLineParser();
+
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 50,
+        strokeWidth: 4.0,
+      );
+      final line = serializer.serialize(rect, alias: 'r1');
+      expect(line, contains('stroke-width=4'));
+      final parsed = parser.parseLine(line, 1);
+      expect(parsed.value!.strokeWidth, 4.0);
+    });
+
+    test('stroke style dashed', () {
+      final serializer = SketchLineSerializer();
+      final parser = SketchLineParser();
+
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 50,
+        strokeStyle: StrokeStyle.dashed,
+      );
+      final line = serializer.serialize(rect, alias: 'r1');
+      expect(line, contains('stroke=dashed'));
+      final parsed = parser.parseLine(line, 1);
+      expect(parsed.value!.strokeStyle, StrokeStyle.dashed);
+    });
+
+    test('fill style hachure', () {
+      final serializer = SketchLineSerializer();
+      final parser = SketchLineParser();
+
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 50,
+        fillStyle: FillStyle.hachure,
+      );
+      final line = serializer.serialize(rect, alias: 'r1');
+      expect(line, contains('fill-style=hachure'));
+      final parsed = parser.parseLine(line, 1);
+      expect(parsed.value!.fillStyle, FillStyle.hachure);
+    });
+
+    test('roughness', () {
+      final serializer = SketchLineSerializer();
+      final parser = SketchLineParser();
+
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 50,
+        roughness: 2.0,
+      );
+      final line = serializer.serialize(rect, alias: 'r1');
+      expect(line, contains('roughness=2'));
+      final parsed = parser.parseLine(line, 1);
+      expect(parsed.value!.roughness, 2.0);
+    });
+
+    test('opacity', () {
+      final serializer = SketchLineSerializer();
+      final parser = SketchLineParser();
+
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 50,
+        opacity: 0.6,
+      );
+      final line = serializer.serialize(rect, alias: 'r1');
+      expect(line, contains('opacity=0.6'));
+      final parsed = parser.parseLine(line, 1);
+      expect(parsed.value!.opacity, 0.6);
+    });
+
+    test('angle', () {
+      final serializer = SketchLineSerializer();
+      final parser = SketchLineParser();
+
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 50,
+        angle: 0.7854, // ~45 degrees
+      );
+      final line = serializer.serialize(rect, alias: 'r1');
+      expect(line, contains('angle=45'));
+      final parsed = parser.parseLine(line, 1);
+      // Angle round-trips through degrees, so check within tolerance
+      expect(parsed.value!.angle, closeTo(0.7854, 0.02));
+    });
+
+    test('locked', () {
+      final serializer = SketchLineSerializer();
+      final parser = SketchLineParser();
+
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 50,
+        locked: true,
+      );
+      final line = serializer.serialize(rect, alias: 'r1');
+      expect(line, contains('locked'));
+      final parsed = parser.parseLine(line, 1);
+      expect(parsed.value!.locked, isTrue);
+    });
+
+    test('roundness', () {
+      final serializer = SketchLineSerializer();
+      final parser = SketchLineParser();
+
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 50,
+        roundness: const Roundness.adaptive(value: 8.0),
+      );
+      final line = serializer.serialize(rect, alias: 'r1');
+      expect(line, contains('rounded=8'));
+      final parsed = parser.parseLine(line, 1);
+      expect(parsed.value!.roundness, isNotNull);
+      expect(parsed.value!.roundness!.value, 8.0);
+    });
+
+    test('link', () {
+      final serializer = SketchLineSerializer();
+      final parser = SketchLineParser();
+
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 50,
+        link: 'https://example.com',
+      );
+      final line = serializer.serialize(rect, alias: 'r1');
+      expect(line, contains('link="https://example.com"'));
+      final parsed = parser.parseLine(line, 1);
+      expect(parsed.value!.link, 'https://example.com');
+    });
+
+    test('groupIds', () {
+      final serializer = SketchLineSerializer();
+      final parser = SketchLineParser();
+
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 50,
+        groupIds: ['g1', 'g2'],
+      );
+      final line = serializer.serialize(rect, alias: 'r1');
+      expect(line, contains('group=g1,g2'));
+      final parsed = parser.parseLine(line, 1);
+      expect(parsed.value!.groupIds, ['g1', 'g2']);
+    });
+
+    test('frameId', () {
+      final serializer = SketchLineSerializer();
+      final parser = SketchLineParser();
+
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 50,
+        frameId: 'f1',
+      );
+      final line = serializer.serialize(rect, alias: 'r1');
+      expect(line, contains('frame=f1'));
+      final parsed = parser.parseLine(line, 1);
+      expect(parsed.value!.frameId, 'f1');
+    });
+
+    test('frame label', () {
+      final serializer = SketchLineSerializer();
+      final parser = SketchLineParser();
+
+      final frame = FrameElement(
+        id: const ElementId('f1'),
+        x: 0, y: 0, width: 200, height: 200,
+        label: 'My Section',
+      );
+      final line = serializer.serialize(frame, alias: 'f1');
+      expect(line, contains('"My Section"'));
+      final parsed = parser.parseLine(line, 1);
+      expect(parsed.value, isA<FrameElement>());
+      expect((parsed.value as FrameElement).label, 'My Section');
+    });
+
+    test('default values are omitted from output', () {
+      final serializer = SketchLineSerializer();
+
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 0, y: 0, width: 100, height: 50,
+        // All defaults
+      );
+      final line = serializer.serialize(rect, alias: 'r1');
+      expect(line, isNot(contains('color=')));
+      expect(line, isNot(contains('fill=')));
+      expect(line, isNot(contains('stroke=')));
+      expect(line, isNot(contains('stroke-width=')));
+      expect(line, isNot(contains('fill-style=')));
+      expect(line, isNot(contains('roughness=')));
+      expect(line, isNot(contains('opacity=')));
+      expect(line, isNot(contains('angle=')));
+      expect(line, isNot(contains('locked')));
+      expect(line, isNot(contains('rounded=')));
+      expect(line, isNot(contains('link=')));
+      expect(line, isNot(contains('group=')));
+      expect(line, isNot(contains('frame=')));
+    });
+
+    test('all properties combined on single element', () {
+      final serializer = SketchLineSerializer();
+      final parser = SketchLineParser();
+
+      final rect = RectangleElement(
+        id: const ElementId('r1'),
+        x: 10, y: 20, width: 100, height: 50,
+        strokeColor: '#ff0000',
+        backgroundColor: '#00ff00',
+        strokeWidth: 4.0,
+        strokeStyle: StrokeStyle.dashed,
+        fillStyle: FillStyle.crossHatch,
+        roughness: 0.0,
+        opacity: 0.7,
+        angle: 1.5708, // 90 degrees
+        locked: true,
+        roundness: const Roundness.adaptive(value: 12.0),
+        link: 'https://dart.dev',
+        groupIds: ['g1'],
+        frameId: 'f1',
+      );
+      final line = serializer.serialize(rect, alias: 'r1');
+      final parsed = parser.parseLine(line, 1);
+      final r = parsed.value!;
+
+      expect(r.strokeColor, '#ff0000');
+      expect(r.backgroundColor, '#00ff00');
+      expect(r.strokeWidth, 4.0);
+      expect(r.strokeStyle, StrokeStyle.dashed);
+      expect(r.fillStyle, FillStyle.crossHatch);
+      expect(r.roughness, 0.0);
+      expect(r.opacity, 0.7);
+      expect(r.angle, closeTo(1.5708, 0.02));
+      expect(r.locked, isTrue);
+      expect(r.roundness!.value, 12.0);
+      expect(r.link, 'https://dart.dev');
+      expect(r.groupIds, ['g1']);
+      expect(r.frameId, 'f1');
     });
   });
 }
