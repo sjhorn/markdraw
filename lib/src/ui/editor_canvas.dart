@@ -184,6 +184,7 @@ class _FrameLabelEditingOverlayState
       baseOffset: 0,
       extentOffset: _textController.text.length,
     );
+    _focusNode.addListener(_onFocusChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
     });
@@ -191,13 +192,19 @@ class _FrameLabelEditingOverlayState
 
   @override
   void dispose() {
+    _focusNode.removeListener(_onFocusChanged);
     if (!_committed) {
-      // Commit on dispose if not already done (e.g. tap outside)
       widget.controller.commitFrameLabel(_textController.text);
     }
     _textController.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  void _onFocusChanged() {
+    if (!_focusNode.hasFocus) {
+      _submit(_textController.text);
+    }
   }
 
   void _submit(String value) {
@@ -211,6 +218,8 @@ class _FrameLabelEditingOverlayState
     final frame = _frame;
     if (frame == null) return const SizedBox.shrink();
 
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final viewport = widget.controller.editorState.viewport;
     final zoom = viewport.zoom;
 
@@ -236,7 +245,7 @@ class _FrameLabelEditingOverlayState
           style: TextStyle(
             fontSize: scaledFontSize,
             fontFamily: 'Helvetica',
-            color: parseColor(frame.strokeColor),
+            color: isDark ? cs.onSurface : cs.onSurface,
           ),
           decoration: InputDecoration(
             isDense: true,
@@ -246,19 +255,14 @@ class _FrameLabelEditingOverlayState
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(2),
-              borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.primary,
-              ),
+              borderSide: BorderSide(color: cs.primary),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(2),
-              borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.primary,
-                width: 2,
-              ),
+              borderSide: BorderSide(color: cs.primary, width: 2),
             ),
             filled: true,
-            fillColor: Theme.of(context).colorScheme.surface,
+            fillColor: cs.surface,
           ),
           onSubmitted: _submit,
         ),
