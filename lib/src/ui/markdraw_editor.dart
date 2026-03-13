@@ -220,6 +220,33 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
                 ),
               ),
             ),
+            // Scene name label — right of hamburger menu, behind toolbar
+            Positioned(
+              top: 23,
+              left: 60,
+              child: GestureDetector(
+                onTap: () => showRenameDocumentDialog(context, _controller),
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: Builder(builder: (context) {
+                    final canvasBg = parseColor(
+                        _controller.canvasBackgroundColor);
+                    final textColor = canvasBg.computeLuminance() > 0.5
+                        ? Colors.black
+                        : Colors.white;
+                    return Text(
+                      _controller.documentName ?? 'Untitled',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: _controller.documentName != null
+                            ? textColor.withValues(alpha: 0.7)
+                            : textColor.withValues(alpha: 0.3),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+            ),
             if (widget.config.showMenu)
               Positioned(
                 top: 12,

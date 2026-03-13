@@ -81,6 +81,9 @@ class DocumentSerializer {
 
     final serializer = SketchLineSerializer();
     buffer.writeln('```markdraw');
+    if (doc.settings.name != null) {
+      buffer.writeln('@name "${doc.settings.name}"');
+    }
 
     for (final element in section.elements) {
       // Skip bound text — it's inlined on the parent shape

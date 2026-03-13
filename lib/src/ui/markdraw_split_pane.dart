@@ -83,22 +83,31 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
     _previousOnSceneChanged = widget.controller.onSceneChanged;
     widget.controller.onSceneChanged = _onSceneChanged;
 
+    // Listen for controller changes (e.g. rename).
+    widget.controller.addListener(_onControllerChanged);
+
     // Seed the text pane with the current scene.
+    _lastSyncedName = widget.controller.documentName;
     _syncCanvasToText();
   }
 
   // Store the previous callback so we can chain it.
   void Function(Scene)? _previousOnSceneChanged;
 
+  // Track last-synced name so we can detect renames.
+  String? _lastSyncedName;
+
   @override
   void didUpdateWidget(MarkdrawSplitPane oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.controller != oldWidget.controller) {
+      oldWidget.controller.removeListener(_onControllerChanged);
       // Restore old controller's callback.
       oldWidget.controller.onSceneChanged = _previousOnSceneChanged;
       // Re-wire to new controller.
       _previousOnSceneChanged = widget.controller.onSceneChanged;
       widget.controller.onSceneChanged = _onSceneChanged;
+      widget.controller.addListener(_onControllerChanged);
       _syncCanvasToText();
     }
   }
@@ -110,6 +119,7 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
     _textFocusNode.dispose();
     _canvasFlash.dispose();
     _textFlash.dispose();
+    widget.controller.removeListener(_onControllerChanged);
     // Restore the previous callback.
     widget.controller.onSceneChanged = _previousOnSceneChanged;
     super.dispose();
@@ -118,6 +128,16 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
   // ---------------------------------------------------------------------------
   // Sync: canvas → text (immediate, sketch lines only)
   // ---------------------------------------------------------------------------
+
+  void _onControllerChanged() {
+    if (_isSyncing) return;
+    final currentName = widget.controller.documentName;
+    if (currentName != _lastSyncedName) {
+      _lastSyncedName = currentName;
+      _syncCanvasToText();
+      _textFlash.forward(from: 0);
+    }
+  }
 
   void _onSceneChanged(Scene scene) {
     _previousOnSceneChanged?.call(scene);
@@ -133,6 +153,7 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
     final sketchLines = _extractSketchLines(fullText);
     _codeController.text = sketchLines;
     _lastSyncedText = sketchLines;
+    _lastSyncedName = widget.controller.documentName;
     _isSyncing = false;
   }
 
@@ -202,6 +223,8 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
           widget.controller.applyScene(scene, background: bg);
           _hasPushedForSession = true;
         }
+        // Sync @name directive back to the controller
+        widget.controller.renameDocument(doc.settings.name ?? '');
         setState(() {
           _parseWarnings = parseResult.warnings;
           _hasParseError = false;

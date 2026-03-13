@@ -5,6 +5,37 @@ import 'package:flutter/material.dart';
 
 import '../../markdraw.dart' hide TextAlign;
 
+/// Shows a dialog to rename the document.
+void showRenameDocumentDialog(BuildContext context, MarkdrawController controller) {
+  final textController = TextEditingController(text: controller.documentName ?? '');
+  showDialog<String>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Rename'),
+      content: TextField(
+        controller: textController,
+        autofocus: true,
+        decoration: const InputDecoration(hintText: 'Document name'),
+        onSubmitted: (value) => Navigator.of(context).pop(value),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(textController.text),
+          child: const Text('OK'),
+        ),
+      ],
+    ),
+  ).then((value) {
+    if (value != null) {
+      controller.renameDocument(value);
+    }
+  });
+}
+
 /// Desktop hamburger menu (top-left).
 class HamburgerMenu extends StatelessWidget {
   final MarkdrawController controller;
@@ -66,6 +97,8 @@ class HamburgerMenu extends StatelessWidget {
               onSave?.call();
             case 'save_as':
               onSaveAs?.call();
+            case 'rename':
+              _showRenameDialog(context);
             case 'export_png':
               onExportPng?.call();
             case 'export_svg':
@@ -96,6 +129,8 @@ class HamburgerMenu extends StatelessWidget {
           if (onSaveAs != null)
             _menuItem(
                 context, 'save_as', Icons.save_as, 'Save As', '$mod+Shift+S'),
+          _menuItem(context, 'rename', Icons.drive_file_rename_outline,
+              'Rename...', null),
           if (onOpen != null || onSave != null || onSaveAs != null)
             const PopupMenuDivider(),
           if (onExportPng != null)
@@ -248,6 +283,10 @@ class HamburgerMenu extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _showRenameDialog(BuildContext context) {
+    showRenameDocumentDialog(context, controller);
   }
 
   PopupMenuItem<String> _menuItem(

@@ -81,6 +81,7 @@ class ExcalidrawJsonCodec {
       'elements': elements,
       'appState': <String, dynamic>{
         'viewBackgroundColor': doc.settings.background,
+        if (doc.settings.name != null) 'name': doc.settings.name,
       },
       'files': filesJson,
     };
@@ -285,17 +286,20 @@ class ExcalidrawJsonCodec {
 
     final files = parseFilesJson(decoded['files'], warnings);
 
-    // Extract viewBackgroundColor from appState
+    // Extract viewBackgroundColor and name from appState
     final appState = decoded['appState'];
     final viewBg = (appState is Map<String, dynamic>)
         ? (appState['viewBackgroundColor'] as String? ?? '#ffffff')
         : '#ffffff';
+    final name = (appState is Map<String, dynamic>)
+        ? appState['name'] as String?
+        : null;
 
     return ParseResult(
       value: MarkdrawDocument(
         sections: [SketchSection(elements)],
         files: files,
-        settings: CanvasSettings(background: viewBg),
+        settings: CanvasSettings(background: viewBg, name: name),
       ),
       warnings: warnings,
     );

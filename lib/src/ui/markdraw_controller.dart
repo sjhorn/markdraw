@@ -68,6 +68,7 @@ class MarkdrawController extends ChangeNotifier {
   String _canvasBackgroundColor = '#ffffff';
   int? _gridSize;
   bool _objectsSnapMode = false;
+  String? _documentName;
 
   // Link editor state
   bool _isLinkEditorOpen = false;
@@ -138,6 +139,7 @@ class MarkdrawController extends ChangeNotifier {
   String get canvasBackgroundColor => _canvasBackgroundColor;
   int? get gridSize => _gridSize;
   bool get objectsSnapMode => _objectsSnapMode;
+  String? get documentName => _documentName;
   ElementStyle? get copiedStyle => _copiedStyle;
   bool get zenMode => _zenMode;
   bool get viewMode => _viewMode;
@@ -1543,6 +1545,12 @@ class MarkdrawController extends ChangeNotifier {
     ]));
   }
 
+  /// Renames the document. Empty string is treated as null (no name).
+  void renameDocument(String name) {
+    _documentName = name.isEmpty ? null : name;
+    notifyListeners();
+  }
+
   /// Clears the canvas, pushing the current scene to undo history.
   void resetCanvas() {
     _historyManager.push(_editorState.scene);
@@ -1550,6 +1558,7 @@ class MarkdrawController extends ChangeNotifier {
       scene: Scene(),
       selectedIds: {},
     );
+    _documentName = null;
     onSceneChanged?.call(_editorState.scene);
     notifyListeners();
   }
@@ -1900,6 +1909,7 @@ class MarkdrawController extends ChangeNotifier {
       settings: CanvasSettings(
         background: _canvasBackgroundColor,
         grid: _gridSize,
+        name: _documentName,
       ),
     );
     return switch (format) {
@@ -1919,6 +1929,7 @@ class MarkdrawController extends ChangeNotifier {
     };
     _canvasBackgroundColor = parseResult.value.settings.background;
     _gridSize = parseResult.value.settings.grid;
+    _documentName = parseResult.value.settings.name;
     loadScene(SceneDocumentConverter.documentToScene(parseResult.value));
   }
 

@@ -64,6 +64,7 @@ class DocumentParser {
     var i = 0;
     var proseBuffer = StringBuffer();
     final files = <String, ImageFile>{};
+    String? sketchName;
 
     while (i < lines.length) {
       if (lines[i].trim() == '```markdraw' ||
@@ -80,6 +81,9 @@ class DocumentParser {
           i++;
         }
         if (i < lines.length) i++; // skip closing ```
+
+        // Extract @name directive
+        sketchName ??= _extractDirective(sketchLines, 'name');
 
         final sketchResult = _parseSketchBlock(
           sketchLines,
@@ -166,15 +170,34 @@ class DocumentParser {
       }
     }
 
+    final finalSettings = sketchName != null
+        ? settings.copyWith(name: sketchName)
+        : settings;
+
     return ParseResult(
       value: MarkdrawDocument(
-        settings: settings,
+        settings: finalSettings,
         sections: sections,
         aliases: Map.from(parser.aliases),
         files: files,
       ),
       warnings: allWarnings,
     );
+  }
+
+  /// Extracts a `@directive "value"` from sketch block lines.
+  static String? _extractDirective(List<String> lines, String directive) {
+    for (final line in lines) {
+      final trimmed = line.trim();
+      if (trimmed.startsWith('@$directive ')) {
+        final rest = trimmed.substring(directive.length + 2).trim();
+        if (rest.startsWith('"') && rest.endsWith('"') && rest.length >= 2) {
+          return rest.substring(1, rest.length - 1);
+        }
+        return rest;
+      }
+    }
+    return null;
   }
 
   static void _flushProse(
@@ -196,7 +219,7 @@ class DocumentParser {
 
     for (var i = 0; i < lines.length; i++) {
       final line = lines[i].trim();
-      if (line.isEmpty || line.startsWith('#')) continue;
+      if (line.isEmpty || line.startsWith('#') || line.startsWith('@')) continue;
 
       // Check for inline label on shapes: keyword [props] "Label" ...
       // Only applies to shape types (not text, which naturally has quotes)
