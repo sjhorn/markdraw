@@ -78,20 +78,12 @@ class StaticCanvasPainter extends CustomPainter {
         continue;
       }
 
-      // Clip children of frames to frame bounds and inherit frame opacity
+      // Clip children of frames to frame bounds
       final parentFrame = element.frameId != null
           ? _findFrameElement(element.frameId!)
           : null;
       if (parentFrame != null) {
-        final frameOpacity = parentFrame.opacity;
-        if (frameOpacity < 1.0) {
-          canvas.saveLayer(
-            null,
-            Paint()..color = Color.fromRGBO(0, 0, 0, frameOpacity),
-          );
-        } else {
-          canvas.save();
-        }
+        canvas.save();
         canvas.clipRect(Rect.fromLTWH(
           parentFrame.x,
           parentFrame.y,

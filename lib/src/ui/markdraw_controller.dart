@@ -1074,6 +1074,21 @@ class MarkdrawController extends ChangeNotifier {
     final result = PropertyPanelState.applyStyle(elements, shapeStyle);
     applyResult(result);
 
+    // When opacity changes on a frame, propagate to all children
+    if (style.opacity != null) {
+      for (final e in elements) {
+        if (e is FrameElement) {
+          final children =
+              FrameUtils.findFrameChildren(_editorState.scene, e.id);
+          for (final child in children) {
+            applyResult(
+              UpdateElementResult(child.copyWith(opacity: style.opacity)),
+            );
+          }
+        }
+      }
+    }
+
     // Also apply text properties to bound text of selected containers
     if (style.fontSize != null ||
         style.fontFamily != null ||
