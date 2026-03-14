@@ -20,8 +20,7 @@ void main() {
       final result = tool.onPointerUp(const Point(93, 67), ctx);
 
       expect(result, isA<CompoundResult>());
-      final add = (result as CompoundResult)
-          .results
+      final add = (result as CompoundResult).results
           .whereType<AddElementResult>()
           .first;
       final elem = add.element;
@@ -40,8 +39,7 @@ void main() {
       final result = tool.onPointerUp(const Point(93, 67), ctx);
 
       expect(result, isA<CompoundResult>());
-      final add = (result as CompoundResult)
-          .results
+      final add = (result as CompoundResult).results
           .whereType<AddElementResult>()
           .first;
       final elem = add.element;
@@ -59,8 +57,7 @@ void main() {
       final result = tool.onPointerUp(const Point(93, 67), ctx);
 
       expect(result, isA<CompoundResult>());
-      final add = (result as CompoundResult)
-          .results
+      final add = (result as CompoundResult).results
           .whereType<AddElementResult>()
           .first;
       final elem = add.element;
@@ -80,8 +77,7 @@ void main() {
       final result = tool.onPointerUp(const Point(93, 67), ctx);
 
       expect(result, isA<CompoundResult>());
-      final add = (result as CompoundResult)
-          .results
+      final add = (result as CompoundResult).results
           .whereType<AddElementResult>()
           .first;
       final elem = add.element;
@@ -101,8 +97,7 @@ void main() {
       final result = tool.onPointerUp(const Point(213, 167), ctx);
 
       expect(result, isA<CompoundResult>());
-      final add = (result as CompoundResult)
-          .results
+      final add = (result as CompoundResult).results
           .whereType<AddElementResult>()
           .first;
       final elem = add.element;
@@ -123,8 +118,7 @@ void main() {
       final result = tool.onPointerUp(const Point(93, 67), ctx);
 
       expect(result, isA<CompoundResult>());
-      final add = (result as CompoundResult)
-          .results
+      final add = (result as CompoundResult).results
           .whereType<AddElementResult>()
           .first;
       final elem = add.element as LineElement;
@@ -145,8 +139,7 @@ void main() {
       final result = tool.onPointerUp(const Point(93, 67), ctx);
 
       expect(result, isA<CompoundResult>());
-      final add = (result as CompoundResult)
-          .results
+      final add = (result as CompoundResult).results
           .whereType<AddElementResult>()
           .first;
       final elem = add.element as ArrowElement;
@@ -172,12 +165,10 @@ void main() {
       // Start from empty space (snapped to grid)
       tool.onPointerDown(const Point(13, 50), ctx);
       // End on the rectangle (binding should take priority)
-      final result =
-          tool.onPointerUp(const Point(82, 50), ctx);
+      final result = tool.onPointerUp(const Point(82, 50), ctx);
 
       expect(result, isA<CompoundResult>());
-      final add = (result as CompoundResult)
-          .results
+      final add = (result as CompoundResult).results
           .whereType<AddElementResult>()
           .first;
       final arrow = add.element as ArrowElement;
@@ -198,8 +189,7 @@ void main() {
       final result = tool.onPointerUp(const Point(14, 18), ctx);
 
       expect(result, isA<CompoundResult>());
-      final add = (result as CompoundResult)
-          .results
+      final add = (result as CompoundResult).results
           .whereType<AddElementResult>()
           .first;
       final elem = add.element;

@@ -48,6 +48,5 @@ class LibraryItem {
   int get hashCode => id.hashCode;
 
   @override
-  String toString() =>
-      'LibraryItem($id, "$name", ${elements.length} elements)';
+  String toString() => 'LibraryItem($id, "$name", ${elements.length} elements)';
 }

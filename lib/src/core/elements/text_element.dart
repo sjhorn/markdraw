@@ -5,18 +5,10 @@ import 'roundness.dart';
 import 'stroke_style.dart';
 
 /// Text alignment within a text element.
-enum TextAlign {
-  left,
-  center,
-  right,
-}
+enum TextAlign { left, center, right }
 
 /// Vertical alignment of bound text within a container shape.
-enum VerticalAlign {
-  top,
-  middle,
-  bottom,
-}
+enum VerticalAlign { top, middle, bottom }
 
 /// A text drawing element.
 class TextElement extends Element {
@@ -88,8 +80,7 @@ class TextElement extends Element {
       fontFamily: fontFamily ?? this.fontFamily,
       textAlign: textAlign ?? this.textAlign,
       verticalAlign: verticalAlign ?? this.verticalAlign,
-      containerId:
-          clearContainerId ? null : (containerId ?? this.containerId),
+      containerId: clearContainerId ? null : (containerId ?? this.containerId),
       lineHeight: lineHeight ?? this.lineHeight,
       autoResize: autoResize ?? this.autoResize,
       angle: angle,

@@ -10,13 +10,15 @@ void main() {
 
     test('single element returns its bounds', () {
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 20,
-        width: 100,
-        height: 50,
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 20,
+          width: 100,
+          height: 50,
+        ),
+      );
 
       final bounds = scene.sceneBounds();
       expect(bounds, isNotNull);
@@ -25,20 +27,24 @@ void main() {
 
     test('multiple elements returns union bounds', () {
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 50,
-      ));
-      scene = scene.addElement(EllipseElement(
-        id: const ElementId('e1'),
-        x: 200,
-        y: 100,
-        width: 80,
-        height: 60,
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 50,
+        ),
+      );
+      scene = scene.addElement(
+        EllipseElement(
+          id: const ElementId('e1'),
+          x: 200,
+          y: 100,
+          width: 80,
+          height: 60,
+        ),
+      );
 
       final bounds = scene.sceneBounds();
       expect(bounds, isNotNull);
@@ -51,21 +57,25 @@ void main() {
 
     test('deleted elements excluded', () {
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 50,
-      ));
-      scene = scene.addElement(EllipseElement(
-        id: const ElementId('e1'),
-        x: 500,
-        y: 500,
-        width: 200,
-        height: 200,
-        isDeleted: true,
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 50,
+        ),
+      );
+      scene = scene.addElement(
+        EllipseElement(
+          id: const ElementId('e1'),
+          x: 500,
+          y: 500,
+          width: 200,
+          height: 200,
+          isDeleted: true,
+        ),
+      );
 
       final bounds = scene.sceneBounds();
       expect(bounds, isNotNull);
@@ -75,29 +85,35 @@ void main() {
 
     test('mixed element types all included', () {
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 10,
-        width: 50,
-        height: 50,
-      ));
-      scene = scene.addElement(LineElement(
-        id: const ElementId('l1'),
-        x: 200,
-        y: 200,
-        width: 100,
-        height: 0,
-        points: [const Point(200, 200), const Point(300, 200)],
-      ));
-      scene = scene.addElement(FreedrawElement(
-        id: const ElementId('f1'),
-        x: -50,
-        y: -20,
-        width: 30,
-        height: 15,
-        points: [const Point(0, 0), const Point(30, 15)],
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 10,
+          width: 50,
+          height: 50,
+        ),
+      );
+      scene = scene.addElement(
+        LineElement(
+          id: const ElementId('l1'),
+          x: 200,
+          y: 200,
+          width: 100,
+          height: 0,
+          points: [const Point(200, 200), const Point(300, 200)],
+        ),
+      );
+      scene = scene.addElement(
+        FreedrawElement(
+          id: const ElementId('f1'),
+          x: -50,
+          y: -20,
+          width: 30,
+          height: 15,
+          points: [const Point(0, 0), const Point(30, 15)],
+        ),
+      );
 
       final bounds = scene.sceneBounds();
       expect(bounds, isNotNull);
@@ -110,22 +126,26 @@ void main() {
 
     test('all deleted returns null', () {
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 50,
-        isDeleted: true,
-      ));
-      scene = scene.addElement(EllipseElement(
-        id: const ElementId('e1'),
-        x: 200,
-        y: 100,
-        width: 80,
-        height: 60,
-        isDeleted: true,
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 50,
+          isDeleted: true,
+        ),
+      );
+      scene = scene.addElement(
+        EllipseElement(
+          id: const ElementId('e1'),
+          x: 200,
+          y: 100,
+          width: 80,
+          height: 60,
+          isDeleted: true,
+        ),
+      );
 
       expect(scene.sceneBounds(), isNull);
     });

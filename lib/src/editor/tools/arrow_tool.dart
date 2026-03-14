@@ -59,8 +59,11 @@ class ArrowTool implements Tool {
   }
 
   @override
-  ToolResult? onPointerMove(Point point, ToolContext context,
-      {Offset? screenDelta}) {
+  ToolResult? onPointerMove(
+    Point point,
+    ToolContext context, {
+    Offset? screenDelta,
+  }) {
     if (_points.isNotEmpty) {
       _previewPoint = point;
       _bindTarget = BindingUtils.findBindTarget(context.scene, point);
@@ -70,8 +73,11 @@ class ArrowTool implements Tool {
 
   /// Extended onPointerUp with double-click detection.
   @override
-  ToolResult? onPointerUp(Point point, ToolContext context,
-      {bool isDoubleClick = false}) {
+  ToolResult? onPointerUp(
+    Point point,
+    ToolContext context, {
+    bool isDoubleClick = false,
+  }) {
     if (_isDragCreating) {
       _isDragCreating = false;
       final origin = _dragOrigin!;
@@ -141,8 +147,12 @@ class ArrowTool implements Tool {
   }
 
   @override
-  ToolResult? onKeyEvent(String key,
-      {bool shift = false, bool ctrl = false, ToolContext? context}) {
+  ToolResult? onKeyEvent(
+    String key, {
+    bool shift = false,
+    bool ctrl = false,
+    ToolContext? context,
+  }) {
     if ((key == 'Escape' || key == 'Enter') && _points.length >= 2) {
       return _finalize();
     }
@@ -188,8 +198,9 @@ class ArrowTool implements Tool {
     final maxX = routedPoints.map((p) => p.x).reduce(math.max);
     final maxY = routedPoints.map((p) => p.y).reduce(math.max);
 
-    final relativePoints =
-        routedPoints.map((p) => Point(p.x - minX, p.y - minY)).toList();
+    final relativePoints = routedPoints
+        .map((p) => Point(p.x - minX, p.y - minY))
+        .toList();
 
     return ArrowElement(
       id: ElementId.generate(),
@@ -223,7 +234,9 @@ class ArrowTool implements Tool {
       Heading? endHeading;
       if (_bindTarget != null && _previewPoint != null) {
         final fixedPoint = BindingUtils.computeFixedPoint(
-            _bindTarget!, _previewPoint!);
+          _bindTarget!,
+          _previewPoint!,
+        );
         endHeading = ElbowRouting.headingFromFixedPoint(fixedPoint);
       }
       overlayPoints = ElbowRouting.route(

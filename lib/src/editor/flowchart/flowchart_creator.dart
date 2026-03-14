@@ -27,7 +27,9 @@ class FlowchartCreator {
     required LinkDirection direction,
     required Scene scene,
   }) {
-    if (_isCreating && _direction == direction && _startNodeId == startNode.id) {
+    if (_isCreating &&
+        _direction == direction &&
+        _startNodeId == startNode.id) {
       // Same direction — fan out more nodes
       _numberOfNodes += 1;
     } else {
@@ -39,8 +41,11 @@ class FlowchartCreator {
     _isCreating = true;
 
     if (_numberOfNodes == 1) {
-      _pendingElements =
-          FlowchartUtils.createNodeAndArrow(startNode, direction, scene);
+      _pendingElements = FlowchartUtils.createNodeAndArrow(
+        startNode,
+        direction,
+        scene,
+      );
     } else {
       _pendingElements = FlowchartUtils.createFannedNodes(
         startNode,

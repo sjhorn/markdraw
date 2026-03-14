@@ -38,8 +38,11 @@ void downloadFile(String filename, String content) {
 }
 
 /// Triggers a browser file download with raw binary bytes.
-void downloadBytes(String filename, List<int> bytes,
-    {String mimeType = 'application/octet-stream'}) {
+void downloadBytes(
+  String filename,
+  List<int> bytes, {
+  String mimeType = 'application/octet-stream',
+}) {
   final blob = web.Blob(
     [Uint8List.fromList(bytes).toJS].toJS,
     web.BlobPropertyBag(type: mimeType),

@@ -2,7 +2,8 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/painting.dart';
 
-import '../core/elements/elements.dart' as core
+import '../core/elements/elements.dart'
+    as core
     show TextAlign, TextElement, VerticalAlign;
 import 'font_resolver.dart';
 
@@ -16,8 +17,10 @@ class TextRenderer {
   ///
   /// If [maxWidth] is provided, the text wraps within that width.
   /// Returns `(0, 0)` for empty text.
-  static (double, double) measure(core.TextElement element,
-      {double? maxWidth}) {
+  static (double, double) measure(
+    core.TextElement element, {
+    double? maxWidth,
+  }) {
     if (element.text.isEmpty) return (0.0, 0.0);
 
     final painter = buildTextPainter(element);
@@ -54,8 +57,9 @@ class TextRenderer {
   /// Callers must call [TextPainter.layout] before painting, and
   /// [TextPainter.dispose] when done.
   static TextPainter buildTextPainter(core.TextElement element) {
-    final color = _parseColor(element.strokeColor)
-        .withValues(alpha: element.opacity);
+    final color = _parseColor(
+      element.strokeColor,
+    ).withValues(alpha: element.opacity);
 
     final style = FontResolver.resolve(
       element.fontFamily,

@@ -3,32 +3,38 @@ import 'package:markdraw/markdraw.dart' hide TextAlign;
 
 Scene _sceneWithElements() {
   return Scene()
-      .addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 50,
-      ))
-      .addElement(RectangleElement(
-        id: const ElementId('r2'),
-        x: 200,
-        y: 100,
-        width: 80,
-        height: 60,
-      ));
+      .addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 50,
+        ),
+      )
+      .addElement(
+        RectangleElement(
+          id: const ElementId('r2'),
+          x: 200,
+          y: 100,
+          width: 80,
+          height: 60,
+        ),
+      );
 }
 
 Scene _sceneWithText() {
-  return Scene().addElement(TextElement(
-    id: const ElementId('t1'),
-    x: 0,
-    y: 0,
-    width: 100,
-    height: 20,
-    text: 'hello',
-    fontSize: 20,
-  ));
+  return Scene().addElement(
+    TextElement(
+      id: const ElementId('t1'),
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 20,
+      text: 'hello',
+      fontSize: 20,
+    ),
+  );
 }
 
 void main() {
@@ -78,9 +84,9 @@ void main() {
       addTearDown(controller.dispose);
 
       // Set zoom first
-      controller.applyResult(UpdateViewportResult(
-        const ViewportState(zoom: 2.0),
-      ));
+      controller.applyResult(
+        UpdateViewportResult(const ViewportState(zoom: 2.0)),
+      );
       controller.panViewport(100, 50);
 
       expect(controller.editorState.viewport.zoom, 2.0);
@@ -138,8 +144,9 @@ void main() {
 
       controller.cycleFontSize(increase: true);
 
-      final text = controller.editorState.scene
-          .getElementById(const ElementId('t1')) as TextElement;
+      final text =
+          controller.editorState.scene.getElementById(const ElementId('t1'))
+              as TextElement;
       expect(text.fontSize, 28);
     });
 
@@ -192,9 +199,7 @@ void main() {
       addTearDown(controller.dispose);
 
       controller.loadScene(_sceneWithElements());
-      controller.applyResult(
-        SetSelectionResult({const ElementId('r1')}),
-      );
+      controller.applyResult(SetSelectionResult({const ElementId('r1')}));
       expect(controller.editorState.selectedIds, isNotEmpty);
 
       controller.resetCanvas();
@@ -223,16 +228,18 @@ void main() {
       addTearDown(controller.dispose);
 
       controller.loadScene(_sceneWithElements());
-      controller.applyResult(SetSelectionResult(
-        {const ElementId('r1'), const ElementId('r2')},
-      ));
+      controller.applyResult(
+        SetSelectionResult({const ElementId('r1'), const ElementId('r2')}),
+      );
 
       controller.dispatchKey('ArrowLeft', shift: true, ctrl: true);
 
-      final r1 = controller.editorState.scene
-          .getElementById(const ElementId('r1'))!;
-      final r2 = controller.editorState.scene
-          .getElementById(const ElementId('r2'))!;
+      final r1 = controller.editorState.scene.getElementById(
+        const ElementId('r1'),
+      )!;
+      final r2 = controller.editorState.scene.getElementById(
+        const ElementId('r2'),
+      )!;
       expect(r1.x, 0);
       expect(r2.x, 0);
     });
@@ -242,16 +249,18 @@ void main() {
       addTearDown(controller.dispose);
 
       controller.loadScene(_sceneWithElements());
-      controller.applyResult(SetSelectionResult(
-        {const ElementId('r1'), const ElementId('r2')},
-      ));
+      controller.applyResult(
+        SetSelectionResult({const ElementId('r1'), const ElementId('r2')}),
+      );
 
       controller.dispatchKey('ArrowRight', shift: true, ctrl: true);
 
-      final r1 = controller.editorState.scene
-          .getElementById(const ElementId('r1'))!;
-      final r2 = controller.editorState.scene
-          .getElementById(const ElementId('r2'))!;
+      final r1 = controller.editorState.scene.getElementById(
+        const ElementId('r1'),
+      )!;
+      final r2 = controller.editorState.scene.getElementById(
+        const ElementId('r2'),
+      )!;
       // Both right edges should be at 280 (200+80)
       expect(r1.x + r1.width, 280);
       expect(r2.x + r2.width, 280);
@@ -262,16 +271,18 @@ void main() {
       addTearDown(controller.dispose);
 
       controller.loadScene(_sceneWithElements());
-      controller.applyResult(SetSelectionResult(
-        {const ElementId('r1'), const ElementId('r2')},
-      ));
+      controller.applyResult(
+        SetSelectionResult({const ElementId('r1'), const ElementId('r2')}),
+      );
 
       controller.dispatchKey('ArrowUp', shift: true, ctrl: true);
 
-      final r1 = controller.editorState.scene
-          .getElementById(const ElementId('r1'))!;
-      final r2 = controller.editorState.scene
-          .getElementById(const ElementId('r2'))!;
+      final r1 = controller.editorState.scene.getElementById(
+        const ElementId('r1'),
+      )!;
+      final r2 = controller.editorState.scene.getElementById(
+        const ElementId('r2'),
+      )!;
       expect(r1.y, 0);
       expect(r2.y, 0);
     });
@@ -281,16 +292,18 @@ void main() {
       addTearDown(controller.dispose);
 
       controller.loadScene(_sceneWithElements());
-      controller.applyResult(SetSelectionResult(
-        {const ElementId('r1'), const ElementId('r2')},
-      ));
+      controller.applyResult(
+        SetSelectionResult({const ElementId('r1'), const ElementId('r2')}),
+      );
 
       controller.dispatchKey('ArrowDown', shift: true, ctrl: true);
 
-      final r1 = controller.editorState.scene
-          .getElementById(const ElementId('r1'))!;
-      final r2 = controller.editorState.scene
-          .getElementById(const ElementId('r2'))!;
+      final r1 = controller.editorState.scene.getElementById(
+        const ElementId('r1'),
+      )!;
+      final r2 = controller.editorState.scene.getElementById(
+        const ElementId('r2'),
+      )!;
       // Both bottom edges should be at 160 (100+60)
       expect(r1.y + r1.height, 160);
       expect(r2.y + r2.height, 160);
@@ -301,16 +314,16 @@ void main() {
       addTearDown(controller.dispose);
 
       controller.loadScene(_sceneWithElements());
-      controller.applyResult(SetSelectionResult(
-        {const ElementId('r1')},
-      ));
+      controller.applyResult(SetSelectionResult({const ElementId('r1')}));
 
-      final before = controller.editorState.scene
-          .getElementById(const ElementId('r1'))!;
+      final before = controller.editorState.scene.getElementById(
+        const ElementId('r1'),
+      )!;
       controller.dispatchKey('ArrowLeft', shift: true, ctrl: true);
 
-      final after = controller.editorState.scene
-          .getElementById(const ElementId('r1'))!;
+      final after = controller.editorState.scene.getElementById(
+        const ElementId('r1'),
+      )!;
       expect(after.x, before.x);
     });
 
@@ -319,32 +332,37 @@ void main() {
       addTearDown(controller.dispose);
 
       final scene = Scene()
-          .addElement(RectangleElement(
-            id: const ElementId('r1'),
-            x: 0,
-            y: 0,
-            width: 100,
-            height: 50,
-            locked: true,
-          ))
-          .addElement(RectangleElement(
-            id: const ElementId('r2'),
-            x: 200,
-            y: 100,
-            width: 80,
-            height: 60,
-            locked: true,
-          ));
+          .addElement(
+            RectangleElement(
+              id: const ElementId('r1'),
+              x: 0,
+              y: 0,
+              width: 100,
+              height: 50,
+              locked: true,
+            ),
+          )
+          .addElement(
+            RectangleElement(
+              id: const ElementId('r2'),
+              x: 200,
+              y: 100,
+              width: 80,
+              height: 60,
+              locked: true,
+            ),
+          );
       controller.loadScene(scene);
-      controller.applyResult(SetSelectionResult(
-        {const ElementId('r1'), const ElementId('r2')},
-      ));
+      controller.applyResult(
+        SetSelectionResult({const ElementId('r1'), const ElementId('r2')}),
+      );
 
       controller.dispatchKey('ArrowLeft', shift: true, ctrl: true);
 
       // Should not have changed
-      final r2 = controller.editorState.scene
-          .getElementById(const ElementId('r2'))!;
+      final r2 = controller.editorState.scene.getElementById(
+        const ElementId('r2'),
+      )!;
       expect(r2.x, 200);
     });
   });

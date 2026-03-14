@@ -20,6 +20,8 @@ void downloadFile(String filename, String content) =>
     throw UnsupportedError('downloadFile is web-only');
 
 /// Not used on native — file_picker handles save dialogs.
-void downloadBytes(String filename, List<int> bytes,
-        {String mimeType = 'application/octet-stream'}) =>
-    throw UnsupportedError('downloadBytes is web-only');
+void downloadBytes(
+  String filename,
+  List<int> bytes, {
+  String mimeType = 'application/octet-stream',
+}) => throw UnsupportedError('downloadBytes is web-only');

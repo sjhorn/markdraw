@@ -23,8 +23,7 @@ class Point {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Point && x == other.x && y == other.y;
+      identical(this, other) || other is Point && x == other.x && y == other.y;
 
   @override
   int get hashCode => Object.hash(x, y);

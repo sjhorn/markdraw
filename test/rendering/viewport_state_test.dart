@@ -225,8 +225,10 @@ void main() {
 
   group('ViewportState.fitToBounds', () {
     test('null bounds returns default state', () {
-      final fitted = const ViewportState(zoom: 2.0, offset: Offset(100, 50))
-          .fitToBounds(null, const Size(800, 600));
+      final fitted = const ViewportState(
+        zoom: 2.0,
+        offset: Offset(100, 50),
+      ).fitToBounds(null, const Size(800, 600));
       expect(fitted.offset, Offset.zero);
       expect(fitted.zoom, 1.0);
     });

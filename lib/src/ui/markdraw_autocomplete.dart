@@ -6,8 +6,15 @@ import 'package:re_editor/re_editor.dart';
 
 /// Element keywords that trigger auto-ID insertion on autocomplete.
 const Set<String> elementKeywords = {
-  'rect', 'ellipse', 'diamond', 'line', 'arrow',
-  'text', 'freedraw', 'frame', 'image',
+  'rect',
+  'ellipse',
+  'diamond',
+  'line',
+  'arrow',
+  'text',
+  'freedraw',
+  'frame',
+  'image',
 };
 
 /// Returns the next available element ID for [keyword] given [currentText].
@@ -135,10 +142,7 @@ const List<CodeKeywordPrompt> markdrawPrompts = [
 /// inserts `rect id=rect1` (with the index auto-incremented). This works
 /// for both Enter key and mouse click selection.
 class ElementIdPromptsBuilder implements CodeAutocompletePromptsBuilder {
-  ElementIdPromptsBuilder({
-    required this.delegate,
-    required this.controller,
-  });
+  ElementIdPromptsBuilder({required this.delegate, required this.controller});
 
   final CodeAutocompletePromptsBuilder delegate;
   final CodeLineEditingController controller;
@@ -183,10 +187,7 @@ PreferredSizeWidget buildAutocompleteView(
   ValueNotifier<CodeAutocompleteEditingValue> notifier,
   ValueChanged<CodeAutocompleteResult> onSelected,
 ) {
-  return _AutocompleteDropdown(
-    notifier: notifier,
-    onSelected: onSelected,
-  );
+  return _AutocompleteDropdown(notifier: notifier, onSelected: onSelected);
 }
 
 class _AutocompleteDropdown extends StatelessWidget
@@ -203,8 +204,7 @@ class _AutocompleteDropdown extends StatelessWidget
   static const _maxVisible = 6;
 
   @override
-  Size get preferredSize =>
-      const Size(200, _itemHeight * _maxVisible + 8);
+  Size get preferredSize => const Size(200, _itemHeight * _maxVisible + 8);
 
   @override
   Widget build(BuildContext context) {
@@ -243,9 +243,8 @@ class _AutocompleteDropdown extends StatelessWidget
               final prompt = prompts[index];
               final isSelected = index == value.index;
               return InkWell(
-                onTap: () => onSelected(
-                  value.copyWith(index: index).autocomplete,
-                ),
+                onTap: () =>
+                    onSelected(value.copyWith(index: index).autocomplete),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   color: isSelected
@@ -258,8 +257,9 @@ class _AutocompleteDropdown extends StatelessWidget
                       fontFamily: 'monospace',
                       fontSize: 13,
                       color: theme.colorScheme.onSurface,
-                      fontWeight:
-                          isSelected ? FontWeight.w600 : FontWeight.normal,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),

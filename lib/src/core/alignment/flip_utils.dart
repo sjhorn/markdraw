@@ -18,9 +18,7 @@ class FlipUtils {
     final union = _unionOf(infos);
     final centerX = union.left + union.size.width / 2;
 
-    return [
-      for (final info in infos) _flipH(info.element, centerX),
-    ];
+    return [for (final info in infos) _flipH(info.element, centerX)];
   }
 
   /// Flip all elements vertically around their union bounding box center.
@@ -30,9 +28,7 @@ class FlipUtils {
     final union = _unionOf(infos);
     final centerY = union.top + union.size.height / 2;
 
-    return [
-      for (final info in infos) _flipV(info.element, centerY),
-    ];
+    return [for (final info in infos) _flipV(info.element, centerY)];
   }
 
   static Element _flipH(Element e, double centerX) {
@@ -198,7 +194,13 @@ class _FlipInfo {
   }
 
   static (double, double) _rotate(
-      double px, double py, double cx, double cy, double cosA, double sinA) {
+    double px,
+    double py,
+    double cx,
+    double cy,
+    double cosA,
+    double sinA,
+  ) {
     final dx = px - cx;
     final dy = py - cy;
     return (cx + dx * cosA - dy * sinA, cy + dx * sinA + dy * cosA);

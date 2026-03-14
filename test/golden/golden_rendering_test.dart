@@ -61,20 +61,20 @@ final _isCI = Platform.environment.containsKey('CI');
 void main() {
   group('Golden rendering tests', () {
     testWidgets('renders rectangle', (tester) async {
-      final scene = Scene().addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 10,
-        width: 100,
-        height: 60,
-        roughness: 0,
-        fillStyle: FillStyle.solid,
-        backgroundColor: '#e3f2fd',
-        seed: 42,
-      ));
-      await tester.pumpWidget(
-        Center(child: _buildStaticCanvas(scene)),
+      final scene = Scene().addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 10,
+          width: 100,
+          height: 60,
+          roughness: 0,
+          fillStyle: FillStyle.solid,
+          backgroundColor: '#e3f2fd',
+          seed: 42,
+        ),
       );
+      await tester.pumpWidget(Center(child: _buildStaticCanvas(scene)));
       await expectLater(
         find.byType(RepaintBoundary),
         matchesGoldenFile('goldens/rectangle_solid.png'),
@@ -82,20 +82,20 @@ void main() {
     });
 
     testWidgets('renders ellipse', (tester) async {
-      final scene = Scene().addElement(EllipseElement(
-        id: const ElementId('e1'),
-        x: 20,
-        y: 15,
-        width: 120,
-        height: 80,
-        roughness: 0,
-        fillStyle: FillStyle.solid,
-        backgroundColor: '#e8f5e9',
-        seed: 42,
-      ));
-      await tester.pumpWidget(
-        Center(child: _buildStaticCanvas(scene)),
+      final scene = Scene().addElement(
+        EllipseElement(
+          id: const ElementId('e1'),
+          x: 20,
+          y: 15,
+          width: 120,
+          height: 80,
+          roughness: 0,
+          fillStyle: FillStyle.solid,
+          backgroundColor: '#e8f5e9',
+          seed: 42,
+        ),
       );
+      await tester.pumpWidget(Center(child: _buildStaticCanvas(scene)));
       await expectLater(
         find.byType(RepaintBoundary),
         matchesGoldenFile('goldens/ellipse_solid.png'),
@@ -103,20 +103,20 @@ void main() {
     });
 
     testWidgets('renders diamond', (tester) async {
-      final scene = Scene().addElement(DiamondElement(
-        id: const ElementId('d1'),
-        x: 20,
-        y: 10,
-        width: 100,
-        height: 80,
-        roughness: 0,
-        fillStyle: FillStyle.solid,
-        backgroundColor: '#fff3e0',
-        seed: 42,
-      ));
-      await tester.pumpWidget(
-        Center(child: _buildStaticCanvas(scene)),
+      final scene = Scene().addElement(
+        DiamondElement(
+          id: const ElementId('d1'),
+          x: 20,
+          y: 10,
+          width: 100,
+          height: 80,
+          roughness: 0,
+          fillStyle: FillStyle.solid,
+          backgroundColor: '#fff3e0',
+          seed: 42,
+        ),
       );
+      await tester.pumpWidget(Center(child: _buildStaticCanvas(scene)));
       await expectLater(
         find.byType(RepaintBoundary),
         matchesGoldenFile('goldens/diamond_solid.png'),
@@ -125,42 +125,46 @@ void main() {
 
     testWidgets('renders mixed scene', (tester) async {
       final scene = Scene()
-          .addElement(RectangleElement(
-            id: const ElementId('r1'),
-            x: 5,
-            y: 5,
-            width: 60,
-            height: 40,
-            roughness: 0,
-            fillStyle: FillStyle.solid,
-            backgroundColor: '#e3f2fd',
-            seed: 42,
-          ))
-          .addElement(EllipseElement(
-            id: const ElementId('e1'),
-            x: 80,
-            y: 10,
-            width: 50,
-            height: 50,
-            roughness: 0,
-            fillStyle: FillStyle.solid,
-            backgroundColor: '#e8f5e9',
-            seed: 43,
-          ))
-          .addElement(DiamondElement(
-            id: const ElementId('d1'),
-            x: 140,
-            y: 5,
-            width: 50,
-            height: 50,
-            roughness: 0,
-            fillStyle: FillStyle.solid,
-            backgroundColor: '#fff3e0',
-            seed: 44,
-          ));
-      await tester.pumpWidget(
-        Center(child: _buildStaticCanvas(scene)),
-      );
+          .addElement(
+            RectangleElement(
+              id: const ElementId('r1'),
+              x: 5,
+              y: 5,
+              width: 60,
+              height: 40,
+              roughness: 0,
+              fillStyle: FillStyle.solid,
+              backgroundColor: '#e3f2fd',
+              seed: 42,
+            ),
+          )
+          .addElement(
+            EllipseElement(
+              id: const ElementId('e1'),
+              x: 80,
+              y: 10,
+              width: 50,
+              height: 50,
+              roughness: 0,
+              fillStyle: FillStyle.solid,
+              backgroundColor: '#e8f5e9',
+              seed: 43,
+            ),
+          )
+          .addElement(
+            DiamondElement(
+              id: const ElementId('d1'),
+              x: 140,
+              y: 5,
+              width: 50,
+              height: 50,
+              roughness: 0,
+              fillStyle: FillStyle.solid,
+              backgroundColor: '#fff3e0',
+              seed: 44,
+            ),
+          );
+      await tester.pumpWidget(Center(child: _buildStaticCanvas(scene)));
       await expectLater(
         find.byType(RepaintBoundary),
         matchesGoldenFile('goldens/mixed_scene.png'),
@@ -169,30 +173,32 @@ void main() {
 
     testWidgets('renders line and arrow', (tester) async {
       final scene = Scene()
-          .addElement(LineElement(
-            id: const ElementId('l1'),
-            x: 10,
-            y: 30,
-            width: 80,
-            height: 0,
-            points: const [Point(0, 0), Point(80, 0)],
-            roughness: 0,
-            seed: 42,
-          ))
-          .addElement(ArrowElement(
-            id: const ElementId('a1'),
-            x: 10,
-            y: 80,
-            width: 80,
-            height: 40,
-            points: const [Point(0, 0), Point(80, 40)],
-            endArrowhead: Arrowhead.arrow,
-            roughness: 0,
-            seed: 43,
-          ));
-      await tester.pumpWidget(
-        Center(child: _buildStaticCanvas(scene)),
-      );
+          .addElement(
+            LineElement(
+              id: const ElementId('l1'),
+              x: 10,
+              y: 30,
+              width: 80,
+              height: 0,
+              points: const [Point(0, 0), Point(80, 0)],
+              roughness: 0,
+              seed: 42,
+            ),
+          )
+          .addElement(
+            ArrowElement(
+              id: const ElementId('a1'),
+              x: 10,
+              y: 80,
+              width: 80,
+              height: 40,
+              points: const [Point(0, 0), Point(80, 40)],
+              endArrowhead: Arrowhead.arrow,
+              roughness: 0,
+              seed: 43,
+            ),
+          );
+      await tester.pumpWidget(Center(child: _buildStaticCanvas(scene)));
       await expectLater(
         find.byType(RepaintBoundary),
         matchesGoldenFile('goldens/line_and_arrow.png'),
@@ -202,19 +208,19 @@ void main() {
     // Text golden tests are skipped on CI — font rendering differs across
     // platforms (macOS vs Linux), producing pixel mismatches.
     testWidgets('renders text element', skip: _isCI, (tester) async {
-      final scene = Scene().addElement(core.TextElement(
-        id: const ElementId('t1'),
-        x: 10,
-        y: 10,
-        width: 150,
-        height: 30,
-        text: 'Hello Golden',
-        fontSize: 20,
-        seed: 42,
-      ));
-      await tester.pumpWidget(
-        Center(child: _buildStaticCanvas(scene)),
+      final scene = Scene().addElement(
+        core.TextElement(
+          id: const ElementId('t1'),
+          x: 10,
+          y: 10,
+          width: 150,
+          height: 30,
+          text: 'Hello Golden',
+          fontSize: 20,
+          seed: 42,
+        ),
       );
+      await tester.pumpWidget(Center(child: _buildStaticCanvas(scene)));
       await expectLater(
         find.byType(RepaintBoundary),
         matchesGoldenFile('goldens/text_element.png'),
@@ -223,32 +229,34 @@ void main() {
 
     testWidgets('renders bound text in rectangle', skip: _isCI, (tester) async {
       final scene = Scene()
-          .addElement(RectangleElement(
-            id: const ElementId('r1'),
-            x: 10,
-            y: 10,
-            width: 150,
-            height: 80,
-            roughness: 0,
-            fillStyle: FillStyle.solid,
-            backgroundColor: '#e3f2fd',
-            seed: 42,
-          ))
-          .addElement(core.TextElement(
-            id: const ElementId('t1'),
-            x: 10,
-            y: 10,
-            width: 135,
-            height: 25,
-            text: 'Label',
-            fontSize: 20,
-            containerId: 'r1',
-            seed: 43,
-          ));
+          .addElement(
+            RectangleElement(
+              id: const ElementId('r1'),
+              x: 10,
+              y: 10,
+              width: 150,
+              height: 80,
+              roughness: 0,
+              fillStyle: FillStyle.solid,
+              backgroundColor: '#e3f2fd',
+              seed: 42,
+            ),
+          )
+          .addElement(
+            core.TextElement(
+              id: const ElementId('t1'),
+              x: 10,
+              y: 10,
+              width: 135,
+              height: 25,
+              text: 'Label',
+              fontSize: 20,
+              containerId: 'r1',
+              seed: 43,
+            ),
+          );
       await tester.pumpWidget(
-        Center(
-          child: _buildStaticCanvas(scene, size: const Size(200, 120)),
-        ),
+        Center(child: _buildStaticCanvas(scene, size: const Size(200, 120))),
       );
       await expectLater(
         find.byType(RepaintBoundary),
@@ -257,21 +265,21 @@ void main() {
     });
 
     testWidgets('renders rotated element', (tester) async {
-      final scene = Scene().addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 30,
-        y: 20,
-        width: 100,
-        height: 60,
-        angle: math.pi / 6, // 30 degrees
-        roughness: 0,
-        fillStyle: FillStyle.solid,
-        backgroundColor: '#e3f2fd',
-        seed: 42,
-      ));
-      await tester.pumpWidget(
-        Center(child: _buildStaticCanvas(scene)),
+      final scene = Scene().addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 30,
+          y: 20,
+          width: 100,
+          height: 60,
+          angle: math.pi / 6, // 30 degrees
+          roughness: 0,
+          fillStyle: FillStyle.solid,
+          backgroundColor: '#e3f2fd',
+          seed: 42,
+        ),
       );
+      await tester.pumpWidget(Center(child: _buildStaticCanvas(scene)));
       await expectLater(
         find.byType(RepaintBoundary),
         matchesGoldenFile('goldens/rotated_rectangle.png'),
@@ -279,17 +287,19 @@ void main() {
     });
 
     testWidgets('renders viewport zoom 2x', (tester) async {
-      final scene = Scene().addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 10,
-        width: 60,
-        height: 40,
-        roughness: 0,
-        fillStyle: FillStyle.solid,
-        backgroundColor: '#e3f2fd',
-        seed: 42,
-      ));
+      final scene = Scene().addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 10,
+          width: 60,
+          height: 40,
+          roughness: 0,
+          fillStyle: FillStyle.solid,
+          backgroundColor: '#e3f2fd',
+          seed: 42,
+        ),
+      );
       const viewport = ViewportState(zoom: 2.0);
       await tester.pumpWidget(
         Center(child: _buildStaticCanvas(scene, viewport: viewport)),
@@ -316,12 +326,7 @@ void main() {
       final selection = SelectionOverlay.fromElements([rect]);
 
       await tester.pumpWidget(
-        Center(
-          child: _buildInteractiveCanvas(
-            scene,
-            selection: selection,
-          ),
-        ),
+        Center(child: _buildInteractiveCanvas(scene, selection: selection)),
       );
       await expectLater(
         find.byType(RepaintBoundary),

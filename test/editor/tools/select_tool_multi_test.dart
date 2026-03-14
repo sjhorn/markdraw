@@ -138,8 +138,9 @@ void main() {
       final compound = result! as CompoundResult;
       // First result: SetSelection, Second: UpdateElement
       expect(compound.results[0], isA<SetSelectionResult>());
-      expect((compound.results[0] as SetSelectionResult).selectedIds,
-          {rect3Local.id});
+      expect((compound.results[0] as SetSelectionResult).selectedIds, {
+        rect3Local.id,
+      });
       expect(compound.results[1], isA<UpdateElementResult>());
     });
 

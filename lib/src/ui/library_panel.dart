@@ -27,8 +27,7 @@ class LibraryPanel extends StatelessWidget {
     return Container(
       width: 200,
       decoration: BoxDecoration(
-        border: Border(
-            left: BorderSide(color: Theme.of(context).dividerColor)),
+        border: Border(left: BorderSide(color: Theme.of(context).dividerColor)),
         color: cs.surfaceContainerLowest,
       ),
       child: Column(
@@ -37,8 +36,8 @@ class LibraryPanel extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               border: Border(
-                  bottom:
-                      BorderSide(color: Theme.of(context).dividerColor)),
+                bottom: BorderSide(color: Theme.of(context).dividerColor),
+              ),
             ),
             child: Row(
               children: [
@@ -58,16 +57,14 @@ class LibraryPanel extends StatelessWidget {
                 if (onExportLibrary != null)
                   IconButton(
                     icon: const Icon(Icons.file_download, size: 18),
-                    onPressed:
-                        items.isEmpty ? null : onExportLibrary,
+                    onPressed: items.isEmpty ? null : onExportLibrary,
                     tooltip: 'Export Library',
                     constraints: const BoxConstraints(),
                     padding: const EdgeInsets.all(4),
                   ),
                 IconButton(
                   icon: const Icon(Icons.close, size: 18),
-                  onPressed: () =>
-                      controller.showLibraryPanel = false,
+                  onPressed: () => controller.showLibraryPanel = false,
                   tooltip: 'Close',
                   constraints: const BoxConstraints(),
                   padding: const EdgeInsets.all(4),
@@ -99,7 +96,9 @@ class LibraryPanel extends StatelessWidget {
                         'No library items.\nSelect elements and click "Add to Library".',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                            color: cs.onSurfaceVariant, fontSize: 12),
+                          color: cs.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                   )
@@ -118,10 +117,8 @@ class LibraryPanel extends StatelessWidget {
                           style: const TextStyle(fontSize: 11),
                         ),
                         onTap: () {
-                          final box =
-                              context.findRenderObject() as RenderBox?;
-                          final size =
-                              box?.size ?? const Size(800, 600);
+                          final box = context.findRenderObject() as RenderBox?;
+                          final size = box?.size ?? const Size(800, 600);
                           controller.placeLibraryItem(item, size);
                         },
                         trailing: IconButton(
@@ -140,7 +137,9 @@ class LibraryPanel extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                             decoration: BoxDecoration(
                               color: cs.primaryContainer,
                               borderRadius: BorderRadius.circular(8),
@@ -154,10 +153,7 @@ class LibraryPanel extends StatelessWidget {
                             ),
                           ),
                         ),
-                        childWhenDragging: Opacity(
-                          opacity: 0.4,
-                          child: tile,
-                        ),
+                        childWhenDragging: Opacity(opacity: 0.4, child: tile),
                         child: tile,
                       );
                     },

@@ -31,9 +31,9 @@ class RoughPathCache {
         .where((k) => k.startsWith('$elementId:') && k != key)
         .toList()
         .forEach((old) {
-      _cache.remove(old);
-      _lruOrder.remove(old);
-    });
+          _cache.remove(old);
+          _lruOrder.remove(old);
+        });
     _cache[key] = drawable;
     _lruOrder.add(key);
     _evictIfNeeded();

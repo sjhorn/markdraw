@@ -7,23 +7,25 @@ void main() {
   group('LibraryCodec', () {
     group('serialize', () {
       test('serializes a single item', () {
-        final doc = LibraryDocument(items: [
-          LibraryItem(
-            id: 'item-1',
-            name: 'Blue Box',
-            status: 'published',
-            created: 1708715821000,
-            elements: [
-              RectangleElement(
-                id: const ElementId('r1'),
-                x: 0,
-                y: 0,
-                width: 100,
-                height: 50,
-              ),
-            ],
-          ),
-        ]);
+        final doc = LibraryDocument(
+          items: [
+            LibraryItem(
+              id: 'item-1',
+              name: 'Blue Box',
+              status: 'published',
+              created: 1708715821000,
+              elements: [
+                RectangleElement(
+                  id: const ElementId('r1'),
+                  x: 0,
+                  y: 0,
+                  width: 100,
+                  height: 50,
+                ),
+              ],
+            ),
+          ],
+        );
 
         final output = LibraryCodec.serialize(doc);
         expect(output, contains('library-item: item-1'));
@@ -35,34 +37,36 @@ void main() {
       });
 
       test('serializes multiple items', () {
-        final doc = LibraryDocument(items: [
-          LibraryItem(
-            id: 'item-1',
-            name: 'Box',
-            elements: [
-              RectangleElement(
-                id: const ElementId('r1'),
-                x: 0,
-                y: 0,
-                width: 100,
-                height: 50,
-              ),
-            ],
-          ),
-          LibraryItem(
-            id: 'item-2',
-            name: 'Circle',
-            elements: [
-              EllipseElement(
-                id: const ElementId('e1'),
-                x: 0,
-                y: 0,
-                width: 80,
-                height: 80,
-              ),
-            ],
-          ),
-        ]);
+        final doc = LibraryDocument(
+          items: [
+            LibraryItem(
+              id: 'item-1',
+              name: 'Box',
+              elements: [
+                RectangleElement(
+                  id: const ElementId('r1'),
+                  x: 0,
+                  y: 0,
+                  width: 100,
+                  height: 50,
+                ),
+              ],
+            ),
+            LibraryItem(
+              id: 'item-2',
+              name: 'Circle',
+              elements: [
+                EllipseElement(
+                  id: const ElementId('e1'),
+                  x: 0,
+                  y: 0,
+                  width: 80,
+                  height: 80,
+                ),
+              ],
+            ),
+          ],
+        );
 
         final output = LibraryCodec.serialize(doc);
         expect(output, contains('library-item: item-1'));
@@ -72,28 +76,30 @@ void main() {
       });
 
       test('serializes item with image files', () {
-        final doc = LibraryDocument(items: [
-          LibraryItem(
-            id: 'img-item',
-            name: 'Image',
-            elements: [
-              ImageElement(
-                id: const ElementId('img1'),
-                x: 0,
-                y: 0,
-                width: 200,
-                height: 150,
-                fileId: 'file-abc',
-              ),
-            ],
-            files: {
-              'file-abc': ImageFile(
-                mimeType: 'image/png',
-                bytes: Uint8List.fromList([1, 2, 3]),
-              ),
-            },
-          ),
-        ]);
+        final doc = LibraryDocument(
+          items: [
+            LibraryItem(
+              id: 'img-item',
+              name: 'Image',
+              elements: [
+                ImageElement(
+                  id: const ElementId('img1'),
+                  x: 0,
+                  y: 0,
+                  width: 200,
+                  height: 150,
+                  fileId: 'file-abc',
+                ),
+              ],
+              files: {
+                'file-abc': ImageFile(
+                  mimeType: 'image/png',
+                  bytes: Uint8List.fromList([1, 2, 3]),
+                ),
+              },
+            ),
+          ],
+        );
 
         final output = LibraryCodec.serialize(doc);
         expect(output, contains('```files'));
@@ -186,24 +192,26 @@ file-abc image/png AQID
 
     group('round-trip', () {
       test('serialize then parse preserves items', () {
-        final original = LibraryDocument(items: [
-          LibraryItem(
-            id: 'item-1',
-            name: 'Test Box',
-            status: 'published',
-            created: 12345,
-            elements: [
-              RectangleElement(
-                id: const ElementId('r1'),
-                x: 10,
-                y: 20,
-                width: 100,
-                height: 50,
-                strokeColor: '#ff0000',
-              ),
-            ],
-          ),
-        ]);
+        final original = LibraryDocument(
+          items: [
+            LibraryItem(
+              id: 'item-1',
+              name: 'Test Box',
+              status: 'published',
+              created: 12345,
+              elements: [
+                RectangleElement(
+                  id: const ElementId('r1'),
+                  x: 10,
+                  y: 20,
+                  width: 100,
+                  height: 50,
+                  strokeColor: '#ff0000',
+                ),
+              ],
+            ),
+          ],
+        );
 
         final serialized = LibraryCodec.serialize(original);
         final result = LibraryCodec.parse(serialized);
@@ -219,43 +227,48 @@ file-abc image/png AQID
         expect(item.elements.first, isA<RectangleElement>());
       });
 
-      test('round-trip preserves multiple items with different element types', () {
-        final original = LibraryDocument(items: [
-          LibraryItem(
-            id: 'item-1',
-            name: 'Box',
-            elements: [
-              RectangleElement(
-                id: const ElementId('r1'),
-                x: 0,
-                y: 0,
-                width: 100,
-                height: 50,
+      test(
+        'round-trip preserves multiple items with different element types',
+        () {
+          final original = LibraryDocument(
+            items: [
+              LibraryItem(
+                id: 'item-1',
+                name: 'Box',
+                elements: [
+                  RectangleElement(
+                    id: const ElementId('r1'),
+                    x: 0,
+                    y: 0,
+                    width: 100,
+                    height: 50,
+                  ),
+                ],
+              ),
+              LibraryItem(
+                id: 'item-2',
+                name: 'Circle',
+                elements: [
+                  EllipseElement(
+                    id: const ElementId('e1'),
+                    x: 0,
+                    y: 0,
+                    width: 80,
+                    height: 80,
+                  ),
+                ],
               ),
             ],
-          ),
-          LibraryItem(
-            id: 'item-2',
-            name: 'Circle',
-            elements: [
-              EllipseElement(
-                id: const ElementId('e1'),
-                x: 0,
-                y: 0,
-                width: 80,
-                height: 80,
-              ),
-            ],
-          ),
-        ]);
+          );
 
-        final serialized = LibraryCodec.serialize(original);
-        final result = LibraryCodec.parse(serialized);
+          final serialized = LibraryCodec.serialize(original);
+          final result = LibraryCodec.parse(serialized);
 
-        expect(result.value.items, hasLength(2));
-        expect(result.value.items[0].elements.first, isA<RectangleElement>());
-        expect(result.value.items[1].elements.first, isA<EllipseElement>());
-      });
+          expect(result.value.items, hasLength(2));
+          expect(result.value.items[0].elements.first, isA<RectangleElement>());
+          expect(result.value.items[1].elements.first, isA<EllipseElement>());
+        },
+      );
     });
   });
 
@@ -288,21 +301,23 @@ file-abc image/png AQID
     });
 
     test('loadLibrary loads markdrawlib file', () async {
-      final doc = LibraryDocument(items: [
-        LibraryItem(
-          id: 'item-1',
-          name: 'Test',
-          elements: [
-            RectangleElement(
-              id: const ElementId('r1'),
-              x: 0,
-              y: 0,
-              width: 100,
-              height: 50,
-            ),
-          ],
-        ),
-      ]);
+      final doc = LibraryDocument(
+        items: [
+          LibraryItem(
+            id: 'item-1',
+            name: 'Test',
+            elements: [
+              RectangleElement(
+                id: const ElementId('r1'),
+                x: 0,
+                y: 0,
+                width: 100,
+                height: 50,
+              ),
+            ],
+          ),
+        ],
+      );
       fileSystem['lib.markdrawlib'] = LibraryCodec.serialize(doc);
 
       final result = await service.loadLibrary('lib.markdrawlib');
@@ -311,21 +326,23 @@ file-abc image/png AQID
     });
 
     test('loadLibrary loads excalidrawlib file', () async {
-      final doc = LibraryDocument(items: [
-        LibraryItem(
-          id: 'item-1',
-          name: 'Test',
-          elements: [
-            RectangleElement(
-              id: const ElementId('r1'),
-              x: 0,
-              y: 0,
-              width: 100,
-              height: 50,
-            ),
-          ],
-        ),
-      ]);
+      final doc = LibraryDocument(
+        items: [
+          LibraryItem(
+            id: 'item-1',
+            name: 'Test',
+            elements: [
+              RectangleElement(
+                id: const ElementId('r1'),
+                x: 0,
+                y: 0,
+                width: 100,
+                height: 50,
+              ),
+            ],
+          ),
+        ],
+      );
       fileSystem['lib.excalidrawlib'] = ExcalidrawLibCodec.serialize(doc);
 
       final result = await service.loadLibrary('lib.excalidrawlib');
@@ -334,21 +351,23 @@ file-abc image/png AQID
     });
 
     test('saveLibrary saves markdrawlib file', () async {
-      final doc = LibraryDocument(items: [
-        LibraryItem(
-          id: 'item-1',
-          name: 'Saved',
-          elements: [
-            RectangleElement(
-              id: const ElementId('r1'),
-              x: 0,
-              y: 0,
-              width: 100,
-              height: 50,
-            ),
-          ],
-        ),
-      ]);
+      final doc = LibraryDocument(
+        items: [
+          LibraryItem(
+            id: 'item-1',
+            name: 'Saved',
+            elements: [
+              RectangleElement(
+                id: const ElementId('r1'),
+                x: 0,
+                y: 0,
+                width: 100,
+                height: 50,
+              ),
+            ],
+          ),
+        ],
+      );
 
       await service.saveLibrary(doc, 'output.markdrawlib');
       expect(fileSystem['output.markdrawlib'], isNotNull);
@@ -356,21 +375,23 @@ file-abc image/png AQID
     });
 
     test('saveLibrary saves excalidrawlib file', () async {
-      final doc = LibraryDocument(items: [
-        LibraryItem(
-          id: 'item-1',
-          name: 'Saved',
-          elements: [
-            RectangleElement(
-              id: const ElementId('r1'),
-              x: 0,
-              y: 0,
-              width: 100,
-              height: 50,
-            ),
-          ],
-        ),
-      ]);
+      final doc = LibraryDocument(
+        items: [
+          LibraryItem(
+            id: 'item-1',
+            name: 'Saved',
+            elements: [
+              RectangleElement(
+                id: const ElementId('r1'),
+                x: 0,
+                y: 0,
+                width: 100,
+                height: 50,
+              ),
+            ],
+          ),
+        ],
+      );
 
       await service.saveLibrary(doc, 'output.excalidrawlib');
       expect(fileSystem['output.excalidrawlib'], isNotNull);
@@ -378,23 +399,25 @@ file-abc image/png AQID
     });
 
     test('loadLibrary + saveLibrary round-trip via markdrawlib', () async {
-      final original = LibraryDocument(items: [
-        LibraryItem(
-          id: 'item-1',
-          name: 'Round Trip',
-          status: 'published',
-          created: 99999,
-          elements: [
-            RectangleElement(
-              id: const ElementId('r1'),
-              x: 0,
-              y: 0,
-              width: 100,
-              height: 50,
-            ),
-          ],
-        ),
-      ]);
+      final original = LibraryDocument(
+        items: [
+          LibraryItem(
+            id: 'item-1',
+            name: 'Round Trip',
+            status: 'published',
+            created: 99999,
+            elements: [
+              RectangleElement(
+                id: const ElementId('r1'),
+                x: 0,
+                y: 0,
+                width: 100,
+                height: 50,
+              ),
+            ],
+          ),
+        ],
+      );
 
       await service.saveLibrary(original, 'rt.markdrawlib');
       final result = await service.loadLibrary('rt.markdrawlib');
@@ -403,23 +426,25 @@ file-abc image/png AQID
     });
 
     test('loadLibrary + saveLibrary round-trip via excalidrawlib', () async {
-      final original = LibraryDocument(items: [
-        LibraryItem(
-          id: 'item-1',
-          name: 'Round Trip',
-          status: 'published',
-          created: 99999,
-          elements: [
-            RectangleElement(
-              id: const ElementId('r1'),
-              x: 0,
-              y: 0,
-              width: 100,
-              height: 50,
-            ),
-          ],
-        ),
-      ]);
+      final original = LibraryDocument(
+        items: [
+          LibraryItem(
+            id: 'item-1',
+            name: 'Round Trip',
+            status: 'published',
+            created: 99999,
+            elements: [
+              RectangleElement(
+                id: const ElementId('r1'),
+                x: 0,
+                y: 0,
+                width: 100,
+                height: 50,
+              ),
+            ],
+          ),
+        ],
+      );
 
       await service.saveLibrary(original, 'rt.excalidrawlib');
       final result = await service.loadLibrary('rt.excalidrawlib');

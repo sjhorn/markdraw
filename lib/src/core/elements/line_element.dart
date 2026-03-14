@@ -81,8 +81,9 @@ class LineElement extends Element {
       startArrowhead: clearStartArrowhead
           ? null
           : (startArrowhead ?? this.startArrowhead),
-      endArrowhead:
-          clearEndArrowhead ? null : (endArrowhead ?? this.endArrowhead),
+      endArrowhead: clearEndArrowhead
+          ? null
+          : (endArrowhead ?? this.endArrowhead),
       closed: closed ?? this.closed,
       angle: angle,
       strokeColor: strokeColor,

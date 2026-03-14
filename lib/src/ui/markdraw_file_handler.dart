@@ -10,7 +10,6 @@ import 'package:flutter/widgets.dart';
 
 import 'package:markdraw/markdraw.dart' hide TextAlign;
 
-
 /// Encapsulates all file-picker + platform-I/O + controller interactions.
 ///
 /// Create one per editor and pass its methods as callbacks to
@@ -26,10 +25,7 @@ class MarkdrawFileHandler {
   /// Saves to [currentFilePath], or falls through to [saveAs].
   Future<void> save() async {
     if (!kIsWeb && currentFilePath != null) {
-      await writeStringToFile(
-        currentFilePath!,
-        controller.serializeScene(),
-      );
+      await writeStringToFile(currentFilePath!, controller.serializeScene());
     } else {
       await saveAs();
     }
@@ -70,8 +66,8 @@ class MarkdrawFileHandler {
     final content = file.bytes != null
         ? utf8.decode(file.bytes!)
         : !kIsWeb
-            ? await readStringFromFile(file.path!)
-            : null;
+        ? await readStringFromFile(file.path!)
+        : null;
     if (content == null) return;
 
     controller.loadFromContent(content, file.name);
@@ -146,8 +142,8 @@ class MarkdrawFileHandler {
     final content = kIsWeb && picked.bytes != null
         ? utf8.decode(picked.bytes!)
         : picked.path != null
-            ? await readStringFromFile(picked.path!)
-            : null;
+        ? await readStringFromFile(picked.path!)
+        : null;
     if (content == null) return;
 
     controller.importLibraryFromContent(content, picked.name);

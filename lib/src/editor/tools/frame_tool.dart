@@ -35,8 +35,11 @@ class FrameTool implements Tool {
   }
 
   @override
-  ToolResult? onPointerMove(Point point, ToolContext context,
-      {Offset? screenDelta}) {
+  ToolResult? onPointerMove(
+    Point point,
+    ToolContext context, {
+    Offset? screenDelta,
+  }) {
     if (_start == null) return null;
     _current = snapToGrid(point, context.gridSize);
     return null;
@@ -90,8 +93,12 @@ class FrameTool implements Tool {
   }
 
   @override
-  ToolResult? onKeyEvent(String key,
-      {bool shift = false, bool ctrl = false, ToolContext? context}) {
+  ToolResult? onKeyEvent(
+    String key, {
+    bool shift = false,
+    bool ctrl = false,
+    ToolContext? context,
+  }) {
     if (key == 'Escape') reset();
     return null;
   }

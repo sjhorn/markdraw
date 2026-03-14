@@ -84,10 +84,7 @@ void main() {
 
   group('Diamond parsing', () {
     test('basic diamond', () {
-      final result = parser.parseLine(
-        'diamond at 50,50 size 100x100',
-        1,
-      );
+      final result = parser.parseLine('diamond at 50,50 size 100x100', 1);
       expect(result.value, isA<DiamondElement>());
       expect(result.value!.x, 50);
       expect(result.value!.y, 50);
@@ -96,10 +93,7 @@ void main() {
 
   group('Text parsing', () {
     test('basic text', () {
-      final result = parser.parseLine(
-        'text "High Priority" at 100,50',
-        1,
-      );
+      final result = parser.parseLine('text "High Priority" at 100,50', 1);
       expect(result.value, isA<TextElement>());
       final text = result.value! as TextElement;
       expect(text.text, 'High Priority');
@@ -108,37 +102,25 @@ void main() {
     });
 
     test('text with font size', () {
-      final result = parser.parseLine(
-        'text "Big" at 0,0 size=36',
-        1,
-      );
+      final result = parser.parseLine('text "Big" at 0,0 size=36', 1);
       final text = result.value! as TextElement;
       expect(text.fontSize, 36);
     });
 
     test('text with font family', () {
-      final result = parser.parseLine(
-        'text "Custom" at 0,0 font=Cascadia',
-        1,
-      );
+      final result = parser.parseLine('text "Custom" at 0,0 font=Cascadia', 1);
       final text = result.value! as TextElement;
       expect(text.fontFamily, 'Cascadia');
     });
 
     test('text with alignment', () {
-      final result = parser.parseLine(
-        'text "Centered" at 0,0 align=center',
-        1,
-      );
+      final result = parser.parseLine('text "Centered" at 0,0 align=center', 1);
       final text = result.value! as TextElement;
       expect(text.textAlign, TextAlign.center);
     });
 
     test('text with color', () {
-      final result = parser.parseLine(
-        'text "Red" at 100,50 color=#d32f2f',
-        1,
-      );
+      final result = parser.parseLine('text "Red" at 100,50 color=#d32f2f', 1);
       expect(result.value!.strokeColor, '#d32f2f');
     });
 
@@ -152,19 +134,13 @@ void main() {
     });
 
     test('text with valign=top', () {
-      final result = parser.parseLine(
-        'text "Top" at 0,0 valign=top',
-        1,
-      );
+      final result = parser.parseLine('text "Top" at 0,0 valign=top', 1);
       final text = result.value! as TextElement;
       expect(text.verticalAlign, VerticalAlign.top);
     });
 
     test('text with valign=bottom', () {
-      final result = parser.parseLine(
-        'text "Bottom" at 0,0 valign=bottom',
-        1,
-      );
+      final result = parser.parseLine('text "Bottom" at 0,0 valign=bottom', 1);
       final text = result.value! as TextElement;
       expect(text.verticalAlign, VerticalAlign.bottom);
     });
@@ -179,55 +155,37 @@ void main() {
     });
 
     test('font=hand-drawn resolves to Excalifont', () {
-      final result = parser.parseLine(
-        'text "Hello" at 0,0 font=hand-drawn',
-        1,
-      );
+      final result = parser.parseLine('text "Hello" at 0,0 font=hand-drawn', 1);
       final text = result.value! as TextElement;
       expect(text.fontFamily, 'Excalifont');
     });
 
     test('font=normal resolves to Nunito', () {
-      final result = parser.parseLine(
-        'text "Hello" at 0,0 font=normal',
-        1,
-      );
+      final result = parser.parseLine('text "Hello" at 0,0 font=normal', 1);
       final text = result.value! as TextElement;
       expect(text.fontFamily, 'Nunito');
     });
 
     test('font=code resolves to Source Code Pro', () {
-      final result = parser.parseLine(
-        'text "Hello" at 0,0 font=code',
-        1,
-      );
+      final result = parser.parseLine('text "Hello" at 0,0 font=code', 1);
       final text = result.value! as TextElement;
       expect(text.fontFamily, 'Source Code Pro');
     });
 
     test('font=Nunito passes through unchanged', () {
-      final result = parser.parseLine(
-        'text "Hello" at 0,0 font=Nunito',
-        1,
-      );
+      final result = parser.parseLine('text "Hello" at 0,0 font=Nunito', 1);
       final text = result.value! as TextElement;
       expect(text.fontFamily, 'Nunito');
     });
 
     test('font-size=small resolves to 16', () {
-      final result = parser.parseLine(
-        'text "Hello" at 0,0 font-size=small',
-        1,
-      );
+      final result = parser.parseLine('text "Hello" at 0,0 font-size=small', 1);
       final text = result.value! as TextElement;
       expect(text.fontSize, 16.0);
     });
 
     test('font-size=xl resolves to 36', () {
-      final result = parser.parseLine(
-        'text "Hello" at 0,0 font-size=xl',
-        1,
-      );
+      final result = parser.parseLine('text "Hello" at 0,0 font-size=xl', 1);
       final text = result.value! as TextElement;
       expect(text.fontSize, 36.0);
     });
@@ -242,10 +200,7 @@ void main() {
     });
 
     test('font-size=large resolves to 28', () {
-      final result = parser.parseLine(
-        'text "Hello" at 0,0 font-size=large',
-        1,
-      );
+      final result = parser.parseLine('text "Hello" at 0,0 font-size=large', 1);
       final text = result.value! as TextElement;
       expect(text.fontSize, 28.0);
     });
@@ -262,10 +217,7 @@ void main() {
     });
 
     test('numeric size= still works as before', () {
-      final result = parser.parseLine(
-        'text "Hello" at 0,0 size=24',
-        1,
-      );
+      final result = parser.parseLine('text "Hello" at 0,0 size=24', 1);
       final text = result.value! as TextElement;
       expect(text.fontSize, 24.0);
     });
@@ -315,20 +267,14 @@ void main() {
 
   group('Arrow parsing', () {
     test('arrow with from/to bindings', () {
-      final result = parser.parseLine(
-        'arrow from auth to gateway',
-        1,
-      );
+      final result = parser.parseLine('arrow from auth to gateway', 1);
       expect(result.value, isA<ArrowElement>());
       // Bindings are stored as deferred references
       expect(result.warnings, isEmpty);
     });
 
     test('arrow with points (no bindings)', () {
-      final result = parser.parseLine(
-        'arrow points=[[0,0],[200,0]]',
-        1,
-      );
+      final result = parser.parseLine('arrow points=[[0,0],[200,0]]', 1);
       final arrow = result.value! as ArrowElement;
       expect(arrow.points, hasLength(2));
       expect(arrow.points[0], const Point(0, 0));
@@ -346,10 +292,7 @@ void main() {
     });
 
     test('arrow default endArrowhead is arrow', () {
-      final result = parser.parseLine(
-        'arrow points=[[0,0],[200,0]]',
-        1,
-      );
+      final result = parser.parseLine('arrow points=[[0,0],[200,0]]', 1);
       final arrow = result.value! as ArrowElement;
       expect(arrow.endArrowhead, Arrowhead.arrow);
     });
@@ -363,10 +306,7 @@ void main() {
     });
 
     test('arrow from/to stored as binding aliases', () {
-      parser.parseLine(
-        'arrow from auth to gateway',
-        1,
-      );
+      parser.parseLine('arrow from auth to gateway', 1);
       expect(parser.pendingBindings, isNotEmpty);
     });
 
@@ -406,10 +346,7 @@ void main() {
     });
 
     test('arrow with coordinate endpoint (partial binding)', () {
-      final result = parser.parseLine(
-        'arrow from auth to 500,300',
-        1,
-      );
+      final result = parser.parseLine('arrow from auth to 500,300', 1);
       expect(result.value, isA<ArrowElement>());
       // 'from auth' creates a pending binding, 'to 500,300' is a coordinate
       expect(parser.pendingBindings, hasLength(1));
@@ -418,10 +355,7 @@ void main() {
     });
 
     test('arrow with coordinate start (partial binding)', () {
-      final result = parser.parseLine(
-        'arrow from 100,50 to dest',
-        1,
-      );
+      final result = parser.parseLine('arrow from 100,50 to dest', 1);
       expect(result.value, isA<ArrowElement>());
       expect(parser.pendingBindings, hasLength(1));
       expect(parser.pendingBindings.first.fromAlias, isNull);
@@ -511,10 +445,7 @@ void main() {
 
   group('Named colors and short hex', () {
     test('CSS named color parses to hex', () {
-      final result = parser.parseLine(
-        'rect at 0,0 100x100 color=red',
-        1,
-      );
+      final result = parser.parseLine('rect at 0,0 100x100 color=red', 1);
       expect(result.value!.strokeColor, '#ff0000');
     });
 
@@ -527,44 +458,29 @@ void main() {
     });
 
     test('named color is case-insensitive', () {
-      final result = parser.parseLine(
-        'rect at 0,0 100x100 color=Red',
-        1,
-      );
+      final result = parser.parseLine('rect at 0,0 100x100 color=Red', 1);
       expect(result.value!.strokeColor, '#ff0000');
     });
 
     test('short hex expands to full hex', () {
-      final result = parser.parseLine(
-        'rect at 0,0 100x100 fill=#ccc',
-        1,
-      );
+      final result = parser.parseLine('rect at 0,0 100x100 fill=#ccc', 1);
       expect(result.value!.backgroundColor, '#cccccc');
     });
 
     test('full hex passes through', () {
-      final result = parser.parseLine(
-        'rect at 0,0 100x100 fill=#e3f2fd',
-        1,
-      );
+      final result = parser.parseLine('rect at 0,0 100x100 fill=#e3f2fd', 1);
       expect(result.value!.backgroundColor, '#e3f2fd');
     });
 
     test('legacy full hex still works (backward compat)', () {
-      final result = parser.parseLine(
-        'rect at 0,0 100x100 color=#ff0000',
-        1,
-      );
+      final result = parser.parseLine('rect at 0,0 100x100 color=#ff0000', 1);
       expect(result.value!.strokeColor, '#ff0000');
     });
   });
 
   group('Number parsing', () {
     test('decimal positions parsed correctly', () {
-      final result = parser.parseLine(
-        'rect at 100.5,200.25 size 160x80',
-        1,
-      );
+      final result = parser.parseLine('rect at 100.5,200.25 size 160x80', 1);
       expect(result.value!.x, 100.5);
       expect(result.value!.y, 200.25);
     });
@@ -573,10 +489,7 @@ void main() {
   // Verifies the autocomplete-generated format: keyword id=keywordN ...
   group('id= immediately after keyword', () {
     test('rect id=rect1 parses correctly', () {
-      final result = parser.parseLine(
-        'rect id=rect1 at 10,20 size 100x50',
-        1,
-      );
+      final result = parser.parseLine('rect id=rect1 at 10,20 size 100x50', 1);
       final elem = result.value!;
       expect(elem, isA<RectangleElement>());
       expect(elem.x, 10);
@@ -612,10 +525,7 @@ void main() {
     });
 
     test('text id=text1 with quoted string after id parses correctly', () {
-      final result = parser.parseLine(
-        'text id=text1 "Hello world" at 5,15',
-        1,
-      );
+      final result = parser.parseLine('text id=text1 "Hello world" at 5,15', 1);
       final elem = result.value! as TextElement;
       expect(elem.text, 'Hello world');
       expect(elem.x, 5);
@@ -648,10 +558,7 @@ void main() {
       parser.parseLine('rect id=src at 0,0 size 50x50', 1);
       parser.parseLine('rect id=dst at 200,200 size 50x50', 2);
 
-      final result = parser.parseLine(
-        'arrow id=arrow1 from src to dst',
-        3,
-      );
+      final result = parser.parseLine('arrow id=arrow1 from src to dst', 3);
       expect(result.value, isNotNull);
       expect(result.value, isA<ArrowElement>());
     });
@@ -666,10 +573,7 @@ void main() {
     });
 
     test('frame id=frame1 parses correctly', () {
-      final result = parser.parseLine(
-        'frame id=frame1 at 0,0 size 400x300',
-        1,
-      );
+      final result = parser.parseLine('frame id=frame1 at 0,0 size 400x300', 1);
       final elem = result.value! as FrameElement;
       expect(elem.x, 0);
       expect(elem.y, 0);
@@ -704,7 +608,10 @@ void main() {
 
     test('id alias is registered and usable for bindings', () {
       parser.parseLine('rect id=rect1 at 0,0 size 50x50', 1);
-      final result = parser.parseLine('arrow id=arrow1 from rect1 to 200,200', 2);
+      final result = parser.parseLine(
+        'arrow id=arrow1 from rect1 to 200,200',
+        2,
+      );
       expect(result.value, isNotNull);
     });
   });

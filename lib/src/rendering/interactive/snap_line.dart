@@ -32,6 +32,5 @@ class SnapLine {
   int get hashCode => Object.hash(orientation, position, start, end);
 
   @override
-  String toString() =>
-      'SnapLine($orientation, pos=$position, $start..$end)';
+  String toString() => 'SnapLine($orientation, pos=$position, $start..$end)';
 }

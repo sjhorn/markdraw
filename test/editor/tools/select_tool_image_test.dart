@@ -14,20 +14,19 @@ Scene _sceneWithImage({
   var scene = Scene();
   scene = scene.addFile(
     fileId,
-    ImageFile(
-      mimeType: 'image/png',
-      bytes: Uint8List.fromList([1, 2, 3]),
+    ImageFile(mimeType: 'image/png', bytes: Uint8List.fromList([1, 2, 3])),
+  );
+  scene = scene.addElement(
+    ImageElement(
+      id: ElementId(imgId),
+      x: x,
+      y: y,
+      width: width,
+      height: height,
+      fileId: fileId,
+      seed: 42,
     ),
   );
-  scene = scene.addElement(ImageElement(
-    id: ElementId(imgId),
-    x: x,
-    y: y,
-    width: width,
-    height: height,
-    fileId: fileId,
-    seed: 42,
-  ));
   return scene;
 }
 
@@ -114,15 +113,17 @@ void main() {
     test('delete image keeps file if another element references it', () {
       var scene = _sceneWithImage(imgId: 'img1', fileId: 'abc12345');
       // Add another image element referencing same file
-      scene = scene.addElement(ImageElement(
-        id: const ElementId('img2'),
-        x: 400,
-        y: 100,
-        width: 200,
-        height: 100,
-        fileId: 'abc12345',
-        seed: 43,
-      ));
+      scene = scene.addElement(
+        ImageElement(
+          id: const ElementId('img2'),
+          x: 400,
+          y: 100,
+          width: 200,
+          height: 100,
+          fileId: 'abc12345',
+          seed: 43,
+        ),
+      );
 
       final tool = SelectTool();
       final context = ToolContext(

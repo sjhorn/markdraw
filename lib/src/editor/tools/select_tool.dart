@@ -27,15 +27,7 @@ double _handleHitRadius(InteractionMode mode) =>
 const double _minSize = 10.0;
 
 /// Drag mode for the select tool.
-enum _DragMode {
-  none,
-  move,
-  resize,
-  rotate,
-  dragPoint,
-  dragSegment,
-  marquee,
-}
+enum _DragMode { none, move, resize, rotate, dragPoint, dragSegment, marquee }
 
 /// Tool for selecting, moving, resizing, rotating, and point-editing elements.
 class SelectTool implements Tool {
@@ -79,13 +71,15 @@ class SelectTool implements Tool {
   /// UI should hide the selection bounding box during these drags.
   bool get isDraggingPoint =>
       _isDragging &&
-      (_dragMode == _DragMode.dragPoint ||
-          _dragMode == _DragMode.dragSegment);
+      (_dragMode == _DragMode.dragPoint || _dragMode == _DragMode.dragSegment);
 
   /// Extended onPointerDown that accepts shift modifier.
   @override
-  ToolResult? onPointerDown(Point point, ToolContext context,
-      {bool shift = false}) {
+  ToolResult? onPointerDown(
+    Point point,
+    ToolContext context, {
+    bool shift = false,
+  }) {
     _downPoint = point;
     _current = point;
     _isDragging = false;
@@ -95,15 +89,16 @@ class SelectTool implements Tool {
     final selectedElements = _getSelectedElements(context);
 
     // Skip handle hit-tests if all selected elements are locked
-    final allLocked = selectedElements.isNotEmpty &&
-        selectedElements.every((e) => e.locked);
+    final allLocked =
+        selectedElements.isNotEmpty && selectedElements.every((e) => e.locked);
 
     // 1. Point/segment handle hit-test (line/arrow only, single selection)
     //    For simple 2-point lines/arrows, handles are always visible so
     //    hit-test without requiring linear editing mode.
     if (selectedElements.length == 1 && !allLocked) {
       final elem = selectedElements.first;
-      final isLinearEditable = elem is LineElement &&
+      final isLinearEditable =
+          elem is LineElement &&
           (elem.points.length <= 2 || context.isEditingLinear);
 
       // Point handle check first — always takes priority over segment drag
@@ -123,17 +118,18 @@ class SelectTool implements Tool {
       }
 
       // For elbowed arrows, check segment hit after point handles
-      if (context.isEditingLinear &&
-          elem is ArrowElement &&
-          elem.elbowed) {
-        final segIndex =
-            _hitTestSegment(point, elem, context.interactionMode);
+      if (context.isEditingLinear && elem is ArrowElement && elem.elbowed) {
+        final segIndex = _hitTestSegment(point, elem, context.interactionMode);
         if (segIndex != null) {
           _dragMode = _DragMode.dragSegment;
           _activeSegmentIndex = segIndex;
           _hitElement = elem;
           _startBounds = Bounds.fromLTWH(
-              elem.x, elem.y, elem.width, elem.height);
+            elem.x,
+            elem.y,
+            elem.width,
+            elem.height,
+          );
           _startPoints = List.of(elem.points);
           return null;
         }
@@ -155,7 +151,11 @@ class SelectTool implements Tool {
         _activePointIndex = midIdx + 1;
         _hitElement = updated;
         _startBounds = Bounds.fromLTWH(
-            updated.x, updated.y, updated.width, updated.height);
+          updated.x,
+          updated.y,
+          updated.width,
+          updated.height,
+        );
         _startPoints = List.of((updated as LineElement).points);
         return UpdateElementResult(updated);
       }
@@ -163,8 +163,11 @@ class SelectTool implements Tool {
 
     // 2. Resize/rotation handle hit-test
     if (selectedElements.isNotEmpty && !allLocked) {
-      final handleType =
-          _hitTestHandle(point, selectedElements, context.interactionMode);
+      final handleType = _hitTestHandle(
+        point,
+        selectedElements,
+        context.interactionMode,
+      );
       if (handleType != null) {
         if (handleType == HandleType.rotation) {
           _dragMode = _DragMode.rotate;
@@ -172,7 +175,9 @@ class SelectTool implements Tool {
           _dragMode = _DragMode.resize;
         }
         _activeHandle = handleType;
-        _hitElement = selectedElements.length == 1 ? selectedElements.first : null;
+        _hitElement = selectedElements.length == 1
+            ? selectedElements.first
+            : null;
         _captureStartState(selectedElements, context: context);
         return null;
       }
@@ -184,8 +189,11 @@ class SelectTool implements Tool {
   }
 
   @override
-  ToolResult? onPointerMove(Point point, ToolContext context,
-      {Offset? screenDelta}) {
+  ToolResult? onPointerMove(
+    Point point,
+    ToolContext context, {
+    Offset? screenDelta,
+  }) {
     final down = _downPoint;
     if (down == null) return null;
 
@@ -318,8 +326,12 @@ class SelectTool implements Tool {
 
     // Snap element position to grid (Ctrl disables)
     if (context.gridSize != null && !_shiftDown) {
-      final startElem = _startElements?.firstWhere((e) => e.id == hit.id,
-          orElse: () => hit) ?? hit;
+      final startElem =
+          _startElements?.firstWhere(
+            (e) => e.id == hit.id,
+            orElse: () => hit,
+          ) ??
+          hit;
       final snappedX = snapValue(startElem.x + dx, context.gridSize);
       final snappedY = snapValue(startElem.y + dy, context.gridSize);
       dx = snappedX - startElem.x;
@@ -337,12 +349,14 @@ class SelectTool implements Tool {
         startElems.first.height,
       );
       for (var i = 1; i < startElems.length; i++) {
-        union = union.union(Bounds.fromLTWH(
-          startElems[i].x + dx,
-          startElems[i].y + dy,
-          startElems[i].width,
-          startElems[i].height,
-        ));
+        union = union.union(
+          Bounds.fromLTWH(
+            startElems[i].x + dx,
+            startElems[i].y + dy,
+            startElems[i].width,
+            startElems[i].height,
+          ),
+        );
       }
       final threshold = 8.0 / context.viewport.zoom;
       final snapResult = snapToObjects(union, _objectSnapCache!, threshold);
@@ -365,33 +379,57 @@ class SelectTool implements Tool {
         updates.add(UpdateElementResult(moved));
         movedElements.add(moved);
       }
-      updates.addAll(_buildFrameChildMoveUpdates(
-          context.scene, movedElements, context.selectedIds));
-      updates.addAll(_buildBoundArrowUpdates(
-          context.scene, movedElements, context.selectedIds));
-      updates.addAll(BoundTextUtils.updateBoundTextPositions(
-          context.scene, movedElements));
-      updates.addAll(_buildFrameAssignmentUpdates(
-          context.scene, movedElements, context.selectedIds));
+      updates.addAll(
+        _buildFrameChildMoveUpdates(
+          context.scene,
+          movedElements,
+          context.selectedIds,
+        ),
+      );
+      updates.addAll(
+        _buildBoundArrowUpdates(
+          context.scene,
+          movedElements,
+          context.selectedIds,
+        ),
+      );
+      updates.addAll(
+        BoundTextUtils.updateBoundTextPositions(context.scene, movedElements),
+      );
+      updates.addAll(
+        _buildFrameAssignmentUpdates(
+          context.scene,
+          movedElements,
+          context.selectedIds,
+        ),
+      );
       return CompoundResult(updates);
     }
 
     // Single element move
-    final startElem = _startElements?.firstWhere((e) => e.id == hit.id,
-        orElse: () => hit) ?? hit;
+    final startElem =
+        _startElements?.firstWhere((e) => e.id == hit.id, orElse: () => hit) ??
+        hit;
     final moved = startElem.copyWith(x: startElem.x + dx, y: startElem.y + dy);
 
     if (isSelected) {
-      final arrowUpdates = _buildBoundArrowUpdates(
-          context.scene, [moved], context.selectedIds);
+      final arrowUpdates = _buildBoundArrowUpdates(context.scene, [
+        moved,
+      ], context.selectedIds);
       final textUpdates = BoundTextUtils.updateBoundTextPositions(
-          context.scene, [moved]);
-      final frameChildUpdates = _buildFrameChildMoveUpdates(
-          context.scene, [moved], context.selectedIds);
-      final frameAssignUpdates = _buildFrameAssignmentUpdates(
-          context.scene, [moved], context.selectedIds);
-      if (arrowUpdates.isEmpty && textUpdates.isEmpty &&
-          frameChildUpdates.isEmpty && frameAssignUpdates.isEmpty) {
+        context.scene,
+        [moved],
+      );
+      final frameChildUpdates = _buildFrameChildMoveUpdates(context.scene, [
+        moved,
+      ], context.selectedIds);
+      final frameAssignUpdates = _buildFrameAssignmentUpdates(context.scene, [
+        moved,
+      ], context.selectedIds);
+      if (arrowUpdates.isEmpty &&
+          textUpdates.isEmpty &&
+          frameChildUpdates.isEmpty &&
+          frameAssignUpdates.isEmpty) {
         return UpdateElementResult(moved);
       }
       return CompoundResult([
@@ -406,8 +444,10 @@ class SelectTool implements Tool {
     // Dragging an unselected element: expand to outermost group if grouped
     final outermostGid = GroupUtils.outermostGroupId(hit);
     if (outermostGid != null) {
-      final groupMembers =
-          GroupUtils.findGroupMembers(context.scene, outermostGid);
+      final groupMembers = GroupUtils.findGroupMembers(
+        context.scene,
+        outermostGid,
+      );
       final groupIds = groupMembers.map((e) => e.id).toSet();
       final startElems = _startElements ?? groupMembers;
       final updates = <ToolResult>[SetSelectionResult(groupIds)];
@@ -418,21 +458,33 @@ class SelectTool implements Tool {
         movedElements.add(m);
       }
       updates.addAll(
-          _buildBoundArrowUpdates(context.scene, movedElements, groupIds));
+        _buildBoundArrowUpdates(context.scene, movedElements, groupIds),
+      );
       updates.addAll(
-          BoundTextUtils.updateBoundTextPositions(context.scene, movedElements));
+        BoundTextUtils.updateBoundTextPositions(context.scene, movedElements),
+      );
       return CompoundResult(updates);
     }
 
     // Dragging an unselected ungrouped element: select then move
     final arrowUpdates = _buildBoundArrowUpdates(
-        context.scene, [moved], {hit.id});
-    final textUpdates = BoundTextUtils.updateBoundTextPositions(
-        context.scene, [moved]);
+      context.scene,
+      [moved],
+      {hit.id},
+    );
+    final textUpdates = BoundTextUtils.updateBoundTextPositions(context.scene, [
+      moved,
+    ]);
     final frameChildUpdates = _buildFrameChildMoveUpdates(
-        context.scene, [moved], {hit.id});
+      context.scene,
+      [moved],
+      {hit.id},
+    );
     final frameAssignUpdates = _buildFrameAssignmentUpdates(
-        context.scene, [moved], {hit.id});
+      context.scene,
+      [moved],
+      {hit.id},
+    );
     return CompoundResult([
       SetSelectionResult({hit.id}),
       UpdateElementResult(moved),
@@ -456,8 +508,7 @@ class SelectTool implements Tool {
       if (e is TextElement && e.containerId != null) continue;
       final eBounds = Bounds.fromLTWH(e.x, e.y, e.width, e.height);
       if (marquee.containsPoint(eBounds.origin) &&
-          marquee.containsPoint(
-              Point(eBounds.right, eBounds.bottom))) {
+          marquee.containsPoint(Point(eBounds.right, eBounds.bottom))) {
         selected.add(e.id);
       }
     }
@@ -483,7 +534,10 @@ class SelectTool implements Tool {
 
   /// Hit-test for point handles on a line/arrow element.
   int? _hitTestPointHandle(
-      Point scenePoint, Element element, InteractionMode mode) {
+    Point scenePoint,
+    Element element,
+    InteractionMode mode,
+  ) {
     if (element is! LineElement) return null;
     // Transform scene point into the element's local (unrotated) space
     final center = Point(
@@ -510,7 +564,10 @@ class SelectTool implements Tool {
   /// segment) if the scene point is within hit radius of the midpoint.
   /// Skipped for elbow arrows (they don't support midpoint insertion).
   int? _hitTestMidpointHandle(
-      Point scenePoint, Element element, InteractionMode mode) {
+    Point scenePoint,
+    Element element,
+    InteractionMode mode,
+  ) {
     if (element is! LineElement) return null;
     if (element is ArrowElement && element.elbowed) return null;
     if (element.points.length < 2) return null;
@@ -541,7 +598,10 @@ class SelectTool implements Tool {
 
   /// Hit-test for resize/rotation handles on selected elements.
   HandleType? _hitTestHandle(
-      Point scenePoint, List<Element> elements, InteractionMode mode) {
+    Point scenePoint,
+    List<Element> elements,
+    InteractionMode mode,
+  ) {
     final overlay = SelectionOverlay.fromElements(elements, mode: mode);
     if (overlay == null || !overlay.showBoundingBox) return null;
 
@@ -716,12 +776,14 @@ class SelectTool implements Tool {
               maxY = math.max(maxY, sb.bottom);
             }
           }
-          snapLines.add(SnapLine(
-            orientation: SnapLineOrientation.vertical,
-            position: bestSnap,
-            start: minY,
-            end: maxY,
-          ));
+          snapLines.add(
+            SnapLine(
+              orientation: SnapLineOrientation.vertical,
+              position: bestSnap,
+              start: minY,
+              end: maxY,
+            ),
+          );
         }
       }
 
@@ -773,12 +835,14 @@ class SelectTool implements Tool {
               maxX = math.max(maxX, sb.right);
             }
           }
-          snapLines.add(SnapLine(
-            orientation: SnapLineOrientation.horizontal,
-            position: bestSnap,
-            start: minX,
-            end: maxX,
-          ));
+          snapLines.add(
+            SnapLine(
+              orientation: SnapLineOrientation.horizontal,
+              position: bestSnap,
+              start: minX,
+              end: maxX,
+            ),
+          );
         }
       }
 
@@ -807,7 +871,8 @@ class SelectTool implements Tool {
 
     // Aspect ratio lock: images default to locked (Shift unlocks),
     // other shapes default to unlocked (Shift locks).
-    final isImage = _hitElement is ImageElement ||
+    final isImage =
+        _hitElement is ImageElement ||
         (_startElements != null &&
             _startElements!.length == 1 &&
             _startElements!.first is ImageElement);
@@ -894,8 +959,12 @@ class SelectTool implements Tool {
     final elem = _hitElement ?? _startElements?.first;
     if (elem == null) return null;
 
-    final startElem = _startElements?.firstWhere((e) => e.id == elem.id,
-        orElse: () => elem) ?? elem;
+    final startElem =
+        _startElements?.firstWhere(
+          (e) => e.id == elem.id,
+          orElse: () => elem,
+        ) ??
+        elem;
 
     Element resized;
     // For point-based elements, scale points proportionally to new bounds
@@ -909,17 +978,17 @@ class SelectTool implements Tool {
         final scaledPoints = startElem.points
             .map((p) => Point(p.x * scaleX, p.y * scaleY))
             .toList();
-        resized = startElem.copyWithLine(points: scaledPoints).copyWith(
-            x: newLeft, y: newTop, width: newW, height: newH,
-          );
+        resized = startElem
+            .copyWithLine(points: scaledPoints)
+            .copyWith(x: newLeft, y: newTop, width: newW, height: newH);
       } else {
         final fd = startElem as FreedrawElement;
         final scaledPoints = fd.points
             .map((p) => Point(p.x * scaleX, p.y * scaleY))
             .toList();
-        resized = fd.copyWithFreedraw(points: scaledPoints).copyWith(
-            x: newLeft, y: newTop, width: newW, height: newH,
-          );
+        resized = fd
+            .copyWithFreedraw(points: scaledPoints)
+            .copyWith(x: newLeft, y: newTop, width: newW, height: newH);
       }
     } else {
       resized = startElem.copyWith(
@@ -930,10 +999,12 @@ class SelectTool implements Tool {
       );
     }
 
-    final arrowUpdates = _buildBoundArrowUpdates(
-        context.scene, [resized], context.selectedIds);
-    final textUpdates = BoundTextUtils.updateBoundTextPositions(
-        context.scene, [resized]);
+    final arrowUpdates = _buildBoundArrowUpdates(context.scene, [
+      resized,
+    ], context.selectedIds);
+    final textUpdates = BoundTextUtils.updateBoundTextPositions(context.scene, [
+      resized,
+    ]);
     if (arrowUpdates.isEmpty && textUpdates.isEmpty) {
       return UpdateElementResult(resized);
     }
@@ -983,33 +1054,34 @@ class SelectTool implements Tool {
         final scaledPoints = elem.points
             .map((p) => Point(p.x * elemScaleX, p.y * elemScaleY))
             .toList();
-        resized = elem.copyWithLine(points: scaledPoints).copyWith(
-            x: newX, y: newY, width: newW, height: newH,
-          );
+        resized = elem
+            .copyWithLine(points: scaledPoints)
+            .copyWith(x: newX, y: newY, width: newW, height: newH);
       } else if (elem is FreedrawElement) {
         final elemScaleX = elem.width > 0 ? newW / elem.width : 1.0;
         final elemScaleY = elem.height > 0 ? newH / elem.height : 1.0;
         final scaledPoints = elem.points
             .map((p) => Point(p.x * elemScaleX, p.y * elemScaleY))
             .toList();
-        resized = elem.copyWithFreedraw(points: scaledPoints).copyWith(
-            x: newX, y: newY, width: newW, height: newH,
-          );
+        resized = elem
+            .copyWithFreedraw(points: scaledPoints)
+            .copyWith(x: newX, y: newY, width: newW, height: newH);
       } else {
-        resized = elem.copyWith(
-          x: newX,
-          y: newY,
-          width: newW,
-          height: newH,
-        );
+        resized = elem.copyWith(x: newX, y: newY, width: newW, height: newH);
       }
       updates.add(UpdateElementResult(resized));
       movedElements.add(resized);
     }
-    updates.addAll(_buildBoundArrowUpdates(
-        context.scene, movedElements, context.selectedIds));
-    updates.addAll(BoundTextUtils.updateBoundTextPositions(
-        context.scene, movedElements));
+    updates.addAll(
+      _buildBoundArrowUpdates(
+        context.scene,
+        movedElements,
+        context.selectedIds,
+      ),
+    );
+    updates.addAll(
+      BoundTextUtils.updateBoundTextPositions(context.scene, movedElements),
+    );
     return CompoundResult(updates);
   }
 
@@ -1021,9 +1093,7 @@ class SelectTool implements Tool {
 
     final center = _startBounds!.center;
     final startAngle = math.atan2(down.y - center.y, down.x - center.x);
-    final currentAngle = math.atan2(
-      current.y - center.y, current.x - center.x,
-    );
+    final currentAngle = math.atan2(current.y - center.y, current.x - center.x);
     var delta = currentAngle - startAngle;
 
     // Shift snaps to 15° increments
@@ -1041,14 +1111,20 @@ class SelectTool implements Tool {
     final elem = _hitElement ?? _startElements?.first;
     if (elem == null) return null;
 
-    final startElem = _startElements?.firstWhere((e) => e.id == elem.id,
-        orElse: () => elem) ?? elem;
+    final startElem =
+        _startElements?.firstWhere(
+          (e) => e.id == elem.id,
+          orElse: () => elem,
+        ) ??
+        elem;
 
     final rotated = startElem.copyWith(angle: _startAngle + delta);
-    final arrowUpdates = _buildBoundArrowUpdates(
-        context.scene, [rotated], context.selectedIds);
-    final textUpdates = BoundTextUtils.updateBoundTextPositions(
-        context.scene, [rotated]);
+    final arrowUpdates = _buildBoundArrowUpdates(context.scene, [
+      rotated,
+    ], context.selectedIds);
+    final textUpdates = BoundTextUtils.updateBoundTextPositions(context.scene, [
+      rotated,
+    ]);
     if (arrowUpdates.isEmpty && textUpdates.isEmpty) {
       return UpdateElementResult(rotated);
     }
@@ -1081,10 +1157,16 @@ class SelectTool implements Tool {
       updates.add(UpdateElementResult(moved));
       movedElements.add(moved);
     }
-    updates.addAll(_buildBoundArrowUpdates(
-        context.scene, movedElements, context.selectedIds));
-    updates.addAll(BoundTextUtils.updateBoundTextPositions(
-        context.scene, movedElements));
+    updates.addAll(
+      _buildBoundArrowUpdates(
+        context.scene,
+        movedElements,
+        context.selectedIds,
+      ),
+    );
+    updates.addAll(
+      BoundTextUtils.updateBoundTextPositions(context.scene, movedElements),
+    );
     return CompoundResult(updates);
   }
 
@@ -1092,7 +1174,9 @@ class SelectTool implements Tool {
 
   ToolResult? _applyPointDrag(Point current, ToolContext context) {
     final down = _downPoint;
-    if (down == null || _hitElement is! LineElement || _activePointIndex == null) {
+    if (down == null ||
+        _hitElement is! LineElement ||
+        _activePointIndex == null) {
       return null;
     }
 
@@ -1134,16 +1218,14 @@ class SelectTool implements Tool {
         _bindTarget = target;
 
         if (target != null) {
-          final fixedPoint =
-              BindingUtils.computeFixedPoint(target, absPoint);
+          final fixedPoint = BindingUtils.computeFixedPoint(target, absPoint);
           final binding = PointBinding(
             elementId: target.id.value,
             fixedPoint: fixedPoint,
           );
 
           // Snap the point to the edge
-          final snapped =
-              BindingUtils.resolveBindingPoint(target, binding);
+          final snapped = BindingUtils.resolveBindingPoint(target, binding);
           final snappedRel = Point(
             snapped.x - updated.x,
             snapped.y - updated.y,
@@ -1236,15 +1318,15 @@ class SelectTool implements Tool {
   /// Hit-test for segment proximity on an elbowed arrow.
   /// Returns the segment index (0-based) or null.
   int? _hitTestSegment(
-      Point scenePoint, ArrowElement arrow, InteractionMode mode) {
+    Point scenePoint,
+    ArrowElement arrow,
+    InteractionMode mode,
+  ) {
     final points = arrow.points;
     if (points.length < 2) return null;
 
     // Transform scene point into the element's local (unrotated) space
-    final center = Point(
-      arrow.x + arrow.width / 2,
-      arrow.y + arrow.height / 2,
-    );
+    final center = Point(arrow.x + arrow.width / 2, arrow.y + arrow.height / 2);
     final localPoint = _unrotatePoint(scenePoint, center, arrow.angle);
 
     final radius = _handleHitRadius(mode);
@@ -1349,8 +1431,9 @@ class SelectTool implements Tool {
       maxX = math.max(maxX, pt.x);
       maxY = math.max(maxY, pt.y);
     }
-    final normalized =
-        points.map((p) => Point(p.x - minX, p.y - minY)).toList();
+    final normalized = points
+        .map((p) => Point(p.x - minX, p.y - minY))
+        .toList();
 
     final newWidth = maxX - minX;
     final newHeight = maxY - minY;
@@ -1369,19 +1452,25 @@ class SelectTool implements Tool {
       dy = minX * s + minY * c + (dw * s - dh * (1 - c)) / 2;
     }
 
-    return elem.copyWithLine(points: normalized).copyWith(
-      x: elem.x + dx,
-      y: elem.y + dy,
-      width: newWidth,
-      height: newHeight,
-    );
+    return elem
+        .copyWithLine(points: normalized)
+        .copyWith(
+          x: elem.x + dx,
+          y: elem.y + dy,
+          width: newWidth,
+          height: newHeight,
+        );
   }
 
   // --- Keyboard ---
 
   @override
-  ToolResult? onKeyEvent(String key,
-      {bool shift = false, bool ctrl = false, ToolContext? context}) {
+  ToolResult? onKeyEvent(
+    String key, {
+    bool shift = false,
+    bool ctrl = false,
+    ToolContext? context,
+  }) {
     if (key == 'Escape') {
       reset();
       return SetSelectionResult({});
@@ -1394,15 +1483,13 @@ class SelectTool implements Tool {
     // Delete/Backspace
     if (key == 'Delete' || key == 'Backspace') {
       if (selectedElements.isEmpty) return null;
-      final deletable =
-          selectedElements.where((e) => !e.locked).toList();
+      final deletable = selectedElements.where((e) => !e.locked).toList();
       if (deletable.isEmpty) return null;
       final results = <ToolResult>[
         for (final e in deletable) RemoveElementResult(e.id),
         SetSelectionResult({}),
       ];
-      final deletedIds =
-          deletable.map((e) => e.id).toSet();
+      final deletedIds = deletable.map((e) => e.id).toSet();
 
       // Cascade: delete bound text children, and clean parent boundElements
       for (final elem in deletable) {
@@ -1422,8 +1509,9 @@ class SelectTool implements Tool {
               final newBound = parent.boundElements
                   .where((b) => b.id != elem.id.value)
                   .toList();
-              results.add(UpdateElementResult(
-                  parent.copyWith(boundElements: newBound)));
+              results.add(
+                UpdateElementResult(parent.copyWith(boundElements: newBound)),
+              );
             }
           }
         }
@@ -1432,8 +1520,10 @@ class SelectTool implements Tool {
       // Release children of deleted frames
       for (final elem in deletable) {
         if (elem is FrameElement) {
-          final released =
-              FrameUtils.releaseFrameChildren(context.scene, elem.id);
+          final released = FrameUtils.releaseFrameChildren(
+            context.scene,
+            elem.id,
+          );
           for (final child in released) {
             if (!deletedIds.contains(child.id)) {
               results.add(UpdateElementResult(child));
@@ -1448,7 +1538,8 @@ class SelectTool implements Tool {
           final fileId = elem.fileId;
           // Check if any other active element still references this fileId
           final stillReferenced = context.scene.activeElements.any(
-            (e) => e is ImageElement &&
+            (e) =>
+                e is ImageElement &&
                 e.fileId == fileId &&
                 !deletedIds.contains(e.id),
           );
@@ -1468,13 +1559,11 @@ class SelectTool implements Tool {
           seen.add(arrow.id);
           var updated = arrow;
           if (arrow.startBinding != null &&
-              deletedIds.contains(
-                  ElementId(arrow.startBinding!.elementId))) {
+              deletedIds.contains(ElementId(arrow.startBinding!.elementId))) {
             updated = updated.copyWithArrow(clearStartBinding: true);
           }
           if (arrow.endBinding != null &&
-              deletedIds.contains(
-                  ElementId(arrow.endBinding!.elementId))) {
+              deletedIds.contains(ElementId(arrow.endBinding!.elementId))) {
             updated = updated.copyWithArrow(clearEndBinding: true);
           }
           if (!identical(updated, arrow)) {
@@ -1506,8 +1595,9 @@ class SelectTool implements Tool {
     if (ctrl && shift && (key == 'g' || key == 'G')) {
       if (selectedElements.isEmpty) return null;
       // Only ungroup elements that actually have groupIds
-      final groupedElements =
-          selectedElements.where((e) => e.groupIds.isNotEmpty).toList();
+      final groupedElements = selectedElements
+          .where((e) => e.groupIds.isNotEmpty)
+          .toList();
       if (groupedElements.isEmpty) return null;
       final ungrouped = GroupUtils.ungroupElements(groupedElements);
       final results = <ToolResult>[
@@ -1551,8 +1641,7 @@ class SelectTool implements Tool {
     // Ctrl+X: Cut (copy all, remove only unlocked)
     if (ctrl && (key == 'x' || key == 'X')) {
       if (selectedElements.isEmpty) return null;
-      final cuttable =
-          selectedElements.where((e) => !e.locked).toList();
+      final cuttable = selectedElements.where((e) => !e.locked).toList();
       if (cuttable.isEmpty) return null;
       final results = <ToolResult>[
         SetClipboardResult(List.of(cuttable)),
@@ -1571,9 +1660,7 @@ class SelectTool implements Tool {
           ? LayerUtils.bringToFront(context.scene, ids)
           : LayerUtils.bringForward(context.scene, ids);
       if (updated.isEmpty) return null;
-      return CompoundResult([
-        for (final e in updated) UpdateElementResult(e),
-      ]);
+      return CompoundResult([for (final e in updated) UpdateElementResult(e)]);
     }
 
     // Ctrl+[: Send backward / Ctrl+Shift+[: Send to back
@@ -1585,9 +1672,7 @@ class SelectTool implements Tool {
           ? LayerUtils.sendToBack(context.scene, ids)
           : LayerUtils.sendBackward(context.scene, ids);
       if (updated.isEmpty) return null;
-      return CompoundResult([
-        for (final e in updated) UpdateElementResult(e),
-      ]);
+      return CompoundResult([for (final e in updated) UpdateElementResult(e)]);
     }
 
     // Shift+H: Flip horizontal
@@ -1596,9 +1681,7 @@ class SelectTool implements Tool {
       if (selectedElements.every((e) => e.locked)) return null;
       final flipped = FlipUtils.flipHorizontal(selectedElements);
       if (flipped.isEmpty) return null;
-      return CompoundResult([
-        for (final e in flipped) UpdateElementResult(e),
-      ]);
+      return CompoundResult([for (final e in flipped) UpdateElementResult(e)]);
     }
 
     // Shift+V: Flip vertical
@@ -1607,9 +1690,7 @@ class SelectTool implements Tool {
       if (selectedElements.every((e) => e.locked)) return null;
       final flipped = FlipUtils.flipVertical(selectedElements);
       if (flipped.isEmpty) return null;
-      return CompoundResult([
-        for (final e in flipped) UpdateElementResult(e),
-      ]);
+      return CompoundResult([for (final e in flipped) UpdateElementResult(e)]);
     }
 
     // Tab / Shift+Tab: Cycle shape type
@@ -1628,9 +1709,12 @@ class SelectTool implements Tool {
     }
 
     // Ctrl+Shift+Arrow: Alignment shortcuts
-    if (ctrl && shift &&
-        (key == 'ArrowLeft' || key == 'ArrowRight' ||
-            key == 'ArrowUp' || key == 'ArrowDown')) {
+    if (ctrl &&
+        shift &&
+        (key == 'ArrowLeft' ||
+            key == 'ArrowRight' ||
+            key == 'ArrowUp' ||
+            key == 'ArrowDown')) {
       if (selectedElements.length < 2) return null;
       if (selectedElements.every((e) => e.locked)) return null;
       final aligned = switch (key) {
@@ -1641,27 +1725,37 @@ class SelectTool implements Tool {
         _ => <Element>[],
       };
       if (aligned.isEmpty) return null;
-      return CompoundResult([
-        for (final e in aligned) UpdateElementResult(e),
-      ]);
+      return CompoundResult([for (final e in aligned) UpdateElementResult(e)]);
     }
 
     // Arrow keys: Nudge
     final nudge = shift ? 10.0 : 1.0;
-    if (key == 'ArrowLeft' || key == 'ArrowRight' ||
-        key == 'ArrowUp' || key == 'ArrowDown') {
+    if (key == 'ArrowLeft' ||
+        key == 'ArrowRight' ||
+        key == 'ArrowUp' ||
+        key == 'ArrowDown') {
       if (selectedElements.isEmpty) return null;
       if (selectedElements.any((e) => e.locked)) return null;
-      final dx = key == 'ArrowLeft' ? -nudge : key == 'ArrowRight' ? nudge : 0.0;
-      final dy = key == 'ArrowUp' ? -nudge : key == 'ArrowDown' ? nudge : 0.0;
+      final dx = key == 'ArrowLeft'
+          ? -nudge
+          : key == 'ArrowRight'
+          ? nudge
+          : 0.0;
+      final dy = key == 'ArrowUp'
+          ? -nudge
+          : key == 'ArrowDown'
+          ? nudge
+          : 0.0;
       return _nudgeElements(selectedElements, dx, dy, context);
     }
 
     return null;
   }
 
-  ToolResult _duplicateElements(List<Element> elements,
-      {ToolContext? context}) {
+  ToolResult _duplicateElements(
+    List<Element> elements, {
+    ToolContext? context,
+  }) {
     final results = <ToolResult>[];
     final newIds = <ElementId>{};
     // Map old ID → new ID for reconnecting bound text and frameId
@@ -1680,20 +1774,25 @@ class SelectTool implements Tool {
     for (final e in elements) {
       final newId = idMap[e.id.value]!;
       newIds.add(newId);
-      final remappedGroupIds =
-          e.groupIds.map((gid) => groupIdMap[gid]!).toList();
+      final remappedGroupIds = e.groupIds
+          .map((gid) => groupIdMap[gid]!)
+          .toList();
       // Remap frameId if the frame is also being duplicated
       String? remappedFrameId = e.frameId;
       if (e.frameId != null && idMap.containsKey(e.frameId)) {
         remappedFrameId = idMap[e.frameId]!.value;
       }
-      results.add(AddElementResult(e.copyWith(
-        id: newId,
-        x: e.x + 10,
-        y: e.y + 10,
-        groupIds: remappedGroupIds,
-        frameId: remappedFrameId,
-      )));
+      results.add(
+        AddElementResult(
+          e.copyWith(
+            id: newId,
+            x: e.x + 10,
+            y: e.y + 10,
+            groupIds: remappedGroupIds,
+            frameId: remappedFrameId,
+          ),
+        ),
+      );
     }
     // Duplicate bound text for each element that has it
     if (context != null) {
@@ -1702,18 +1801,23 @@ class SelectTool implements Tool {
         if (boundText != null) {
           final newTextId = ElementId.generate();
           final newParentId = idMap[e.id.value]!;
-          results.add(AddElementResult(
-            boundText.copyWithText(containerId: newParentId.value).copyWith(
-              id: newTextId,
-              x: boundText.x + 10,
-              y: boundText.y + 10,
+          results.add(
+            AddElementResult(
+              boundText
+                  .copyWithText(containerId: newParentId.value)
+                  .copyWith(
+                    id: newTextId,
+                    x: boundText.x + 10,
+                    y: boundText.y + 10,
+                  ),
             ),
-          ));
+          );
           // Update the duplicated parent's boundElements
-          final parentResult = results.firstWhere(
-            (r) => r is AddElementResult &&
-                r.element.id == newParentId,
-          ) as AddElementResult;
+          final parentResult =
+              results.firstWhere(
+                    (r) => r is AddElementResult && r.element.id == newParentId,
+                  )
+                  as AddElementResult;
           final updatedBound = [
             ...parentResult.element.boundElements,
             BoundElement(id: newTextId.value, type: 'text'),
@@ -1728,8 +1832,7 @@ class SelectTool implements Tool {
     return CompoundResult(results);
   }
 
-  ToolResult _pasteElements(List<Element> clipboard,
-      {ToolContext? context}) {
+  ToolResult _pasteElements(List<Element> clipboard, {ToolContext? context}) {
     final results = <ToolResult>[];
     final newIds = <ElementId>{};
     final idMap = <String, ElementId>{};
@@ -1747,20 +1850,25 @@ class SelectTool implements Tool {
     for (final e in clipboard) {
       final newId = idMap[e.id.value]!;
       newIds.add(newId);
-      final remappedGroupIds =
-          e.groupIds.map((gid) => groupIdMap[gid]!).toList();
+      final remappedGroupIds = e.groupIds
+          .map((gid) => groupIdMap[gid]!)
+          .toList();
       // Remap frameId if the frame is also being pasted
       String? remappedFrameId = e.frameId;
       if (e.frameId != null && idMap.containsKey(e.frameId)) {
         remappedFrameId = idMap[e.frameId]!.value;
       }
-      results.add(AddElementResult(e.copyWith(
-        id: newId,
-        x: e.x + 10,
-        y: e.y + 10,
-        groupIds: remappedGroupIds,
-        frameId: remappedFrameId,
-      )));
+      results.add(
+        AddElementResult(
+          e.copyWith(
+            id: newId,
+            x: e.x + 10,
+            y: e.y + 10,
+            groupIds: remappedGroupIds,
+            frameId: remappedFrameId,
+          ),
+        ),
+      );
     }
     // Also paste bound text for clipboard elements
     if (context != null) {
@@ -1769,13 +1877,17 @@ class SelectTool implements Tool {
         if (boundText != null) {
           final newTextId = ElementId.generate();
           final newParentId = idMap[e.id.value]!;
-          results.add(AddElementResult(
-            boundText.copyWithText(containerId: newParentId.value).copyWith(
-              id: newTextId,
-              x: boundText.x + 10,
-              y: boundText.y + 10,
+          results.add(
+            AddElementResult(
+              boundText
+                  .copyWithText(containerId: newParentId.value)
+                  .copyWith(
+                    id: newTextId,
+                    x: boundText.x + 10,
+                    y: boundText.y + 10,
+                  ),
             ),
-          ));
+          );
         }
       }
     }
@@ -1784,7 +1896,11 @@ class SelectTool implements Tool {
   }
 
   ToolResult _nudgeElements(
-      List<Element> elements, double dx, double dy, ToolContext context) {
+    List<Element> elements,
+    double dx,
+    double dy,
+    ToolContext context,
+  ) {
     final movedElements = <Element>[];
     final results = <ToolResult>[];
     for (final e in elements) {
@@ -1792,12 +1908,23 @@ class SelectTool implements Tool {
       results.add(UpdateElementResult(moved));
       movedElements.add(moved);
     }
-    results.addAll(_buildFrameChildMoveUpdates(
-        context.scene, movedElements, context.selectedIds));
-    results.addAll(_buildBoundArrowUpdates(
-        context.scene, movedElements, context.selectedIds));
-    results.addAll(BoundTextUtils.updateBoundTextPositions(
-        context.scene, movedElements));
+    results.addAll(
+      _buildFrameChildMoveUpdates(
+        context.scene,
+        movedElements,
+        context.selectedIds,
+      ),
+    );
+    results.addAll(
+      _buildBoundArrowUpdates(
+        context.scene,
+        movedElements,
+        context.selectedIds,
+      ),
+    );
+    results.addAll(
+      BoundTextUtils.updateBoundTextPositions(context.scene, movedElements),
+    );
     if (results.length == 1) return results.first;
     return CompoundResult(results);
   }
@@ -1878,8 +2005,7 @@ class SelectTool implements Tool {
         .toList();
   }
 
-  void _captureStartState(List<Element> elements,
-      {ToolContext? context}) {
+  void _captureStartState(List<Element> elements, {ToolContext? context}) {
     _startElements = List.of(elements);
     if (elements.length == 1) {
       final e = elements.first;
@@ -1891,14 +2017,14 @@ class SelectTool implements Tool {
     } else {
       // Multi-element: union bounds
       Bounds union = Bounds.fromLTWH(
-        elements.first.x, elements.first.y,
-        elements.first.width, elements.first.height,
+        elements.first.x,
+        elements.first.y,
+        elements.first.width,
+        elements.first.height,
       );
       for (var i = 1; i < elements.length; i++) {
         final e = elements[i];
-        union = union.union(
-          Bounds.fromLTWH(e.x, e.y, e.width, e.height),
-        );
+        union = union.union(Bounds.fromLTWH(e.x, e.y, e.width, e.height));
       }
       _startBounds = union;
       _startUnionBounds = union;
@@ -1922,8 +2048,10 @@ class SelectTool implements Tool {
       // Dragging an unselected element: capture group members if grouped
       final outermostGid = GroupUtils.outermostGroupId(hit);
       if (outermostGid != null) {
-        _startElements =
-            GroupUtils.findGroupMembers(context.scene, outermostGid);
+        _startElements = GroupUtils.findGroupMembers(
+          context.scene,
+          outermostGid,
+        );
       } else {
         _startElements = [hit];
       }
@@ -1967,8 +2095,10 @@ class SelectTool implements Tool {
         if (selectedIds.contains(arrow.id)) continue;
         if (seen.contains(arrow.id)) continue;
         seen.add(arrow.id);
-        final updated =
-            BindingUtils.updateBoundArrowEndpoints(arrow, tempScene);
+        final updated = BindingUtils.updateBoundArrowEndpoints(
+          arrow,
+          tempScene,
+        );
         if (!identical(updated, arrow)) {
           results.add(UpdateElementResult(updated));
         }
@@ -2004,21 +2134,26 @@ class SelectTool implements Tool {
 
       // Look up the element in the temp scene to get its current position
       final current = tempScene.getElementById(elem.id) ?? elem;
-      final containingFrame = FrameUtils.findContainingFrame(tempScene, current);
+      final containingFrame = FrameUtils.findContainingFrame(
+        tempScene,
+        current,
+      );
 
       if (containingFrame != null) {
         // Element is inside a frame
         if (current.frameId != containingFrame.id.value) {
-          results.add(UpdateElementResult(
-            current.copyWith(frameId: containingFrame.id.value),
-          ));
+          results.add(
+            UpdateElementResult(
+              current.copyWith(frameId: containingFrame.id.value),
+            ),
+          );
         }
       } else {
         // Element is not inside any frame — clear frameId if set
         if (current.frameId != null) {
-          results.add(UpdateElementResult(
-            current.copyWith(clearFrameId: true),
-          ));
+          results.add(
+            UpdateElementResult(current.copyWith(clearFrameId: true)),
+          );
         }
       }
     }
@@ -2049,9 +2184,9 @@ class SelectTool implements Tool {
         if (selectedIds.contains(child.id)) continue;
         if (seen.contains(child.id)) continue;
         seen.add(child.id);
-        results.add(UpdateElementResult(
-          child.copyWith(x: child.x + dx, y: child.y + dy),
-        ));
+        results.add(
+          UpdateElementResult(child.copyWith(x: child.x + dx, y: child.y + dy)),
+        );
       }
     }
     return results;

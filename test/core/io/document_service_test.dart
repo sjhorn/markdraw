@@ -439,29 +439,29 @@ void main() {
 /// Excalidraw JSON with all 7 element types.
 String _allElementsExcalidraw() {
   Map<String, dynamic> base(String id, String type) => {
-        'id': id,
-        'type': type,
-        'x': 10,
-        'y': 20,
-        'width': 100,
-        'height': 50,
-        'angle': 0,
-        'strokeColor': '#000000',
-        'backgroundColor': 'transparent',
-        'fillStyle': 'solid',
-        'strokeWidth': 2,
-        'strokeStyle': 'solid',
-        'roughness': 1,
-        'opacity': 100,
-        'seed': 42,
-        'version': 1,
-        'versionNonce': 0,
-        'isDeleted': false,
-        'groupIds': <String>[],
-        'boundElements': null,
-        'updated': 0,
-        'locked': false,
-      };
+    'id': id,
+    'type': type,
+    'x': 10,
+    'y': 20,
+    'width': 100,
+    'height': 50,
+    'angle': 0,
+    'strokeColor': '#000000',
+    'backgroundColor': 'transparent',
+    'fillStyle': 'solid',
+    'strokeWidth': 2,
+    'strokeStyle': 'solid',
+    'roughness': 1,
+    'opacity': 100,
+    'seed': 42,
+    'version': 1,
+    'versionNonce': 0,
+    'isDeleted': false,
+    'groupIds': <String>[],
+    'boundElements': null,
+    'updated': 0,
+    'locked': false,
+  };
 
   return jsonEncode({
     'type': 'excalidraw',
@@ -536,19 +536,26 @@ void _expectElementsMatch(List<Element> original, List<Element> reloaded) {
   const positionedTypes = {'rectangle', 'ellipse', 'diamond', 'text'};
   const sizedTypes = {'rectangle', 'ellipse', 'diamond'};
   for (var i = 0; i < original.length; i++) {
-    expect(reloaded[i].runtimeType, original[i].runtimeType,
-        reason: 'Element $i type mismatch');
+    expect(
+      reloaded[i].runtimeType,
+      original[i].runtimeType,
+      reason: 'Element $i type mismatch',
+    );
     if (positionedTypes.contains(original[i].type)) {
-      expect(reloaded[i].x, original[i].x,
-          reason: 'Element $i x mismatch');
-      expect(reloaded[i].y, original[i].y,
-          reason: 'Element $i y mismatch');
+      expect(reloaded[i].x, original[i].x, reason: 'Element $i x mismatch');
+      expect(reloaded[i].y, original[i].y, reason: 'Element $i y mismatch');
     }
     if (sizedTypes.contains(original[i].type)) {
-      expect(reloaded[i].width, original[i].width,
-          reason: 'Element $i width mismatch');
-      expect(reloaded[i].height, original[i].height,
-          reason: 'Element $i height mismatch');
+      expect(
+        reloaded[i].width,
+        original[i].width,
+        reason: 'Element $i width mismatch',
+      );
+      expect(
+        reloaded[i].height,
+        original[i].height,
+        reason: 'Element $i height mismatch',
+      );
     }
   }
 }

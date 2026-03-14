@@ -8,16 +8,15 @@ Element _rect({
   double w = 100,
   double h = 100,
   List<String> groupIds = const [],
-}) =>
-    Element(
-      id: ElementId(id),
-      type: 'rectangle',
-      x: x,
-      y: y,
-      width: w,
-      height: h,
-      groupIds: groupIds,
-    );
+}) => Element(
+  id: ElementId(id),
+  type: 'rectangle',
+  x: x,
+  y: y,
+  width: w,
+  height: h,
+  groupIds: groupIds,
+);
 
 void main() {
   group('outermostGroupId', () {
@@ -96,11 +95,9 @@ void main() {
           .addElement(_rect(id: 'r1', groupIds: ['g1']))
           .addElement(_rect(id: 'r2', groupIds: ['g1']))
           .addElement(_rect(id: 'r3'));
-      final expanded = GroupUtils.expandToGroup(
-        scene,
-        {const ElementId('r1')},
-        'g1',
-      );
+      final expanded = GroupUtils.expandToGroup(scene, {
+        const ElementId('r1'),
+      }, 'g1');
       expect(expanded, hasLength(2));
       expect(expanded, contains(const ElementId('r2')));
     });
@@ -109,11 +106,10 @@ void main() {
       final scene = Scene()
           .addElement(_rect(id: 'r1', groupIds: ['g1']))
           .addElement(_rect(id: 'r2'));
-      final expanded = GroupUtils.expandToGroup(
-        scene,
-        {const ElementId('r1'), const ElementId('r2')},
-        'g1',
-      );
+      final expanded = GroupUtils.expandToGroup(scene, {
+        const ElementId('r1'),
+        const ElementId('r2'),
+      }, 'g1');
       expect(expanded, hasLength(2));
       expect(expanded, contains(const ElementId('r2')));
     });
@@ -196,10 +192,7 @@ void main() {
     test('returns null for ungrouped element', () {
       final e = _rect(id: 'r1');
       final scene = Scene().addElement(e);
-      expect(
-        GroupUtils.resolveGroupForClick(e, {}, scene),
-        isNull,
-      );
+      expect(GroupUtils.resolveGroupForClick(e, {}, scene), isNull);
     });
 
     test('returns outermost group when nothing selected', () {
@@ -207,10 +200,7 @@ void main() {
       final scene = Scene()
           .addElement(e)
           .addElement(_rect(id: 'r2', groupIds: ['inner', 'outer']));
-      expect(
-        GroupUtils.resolveGroupForClick(e, {}, scene),
-        'outer',
-      );
+      expect(GroupUtils.resolveGroupForClick(e, {}, scene), 'outer');
     });
 
     test('drills to inner group when outer selected but inner not fully', () {
@@ -218,20 +208,11 @@ void main() {
       final r1 = _rect(id: 'r1', groupIds: ['inner', 'outer']);
       final r2 = _rect(id: 'r2', groupIds: ['outer']);
       final r3 = _rect(id: 'r3', groupIds: ['inner']);
-      final scene = Scene()
-          .addElement(r1)
-          .addElement(r2)
-          .addElement(r3);
+      final scene = Scene().addElement(r1).addElement(r2).addElement(r3);
 
       // Outer fully selected (r1, r2), but inner not (r3 missing)
-      final selection = {
-        const ElementId('r1'),
-        const ElementId('r2'),
-      };
-      expect(
-        GroupUtils.resolveGroupForClick(r1, selection, scene),
-        'inner',
-      );
+      final selection = {const ElementId('r1'), const ElementId('r2')};
+      expect(GroupUtils.resolveGroupForClick(r1, selection, scene), 'inner');
     });
 
     test('returns null when all group levels selected (individual)', () {
@@ -240,14 +221,8 @@ void main() {
       final scene = Scene().addElement(r1).addElement(r2);
 
       // All members of the only group are selected
-      final selection = {
-        const ElementId('r1'),
-        const ElementId('r2'),
-      };
-      expect(
-        GroupUtils.resolveGroupForClick(r1, selection, scene),
-        isNull,
-      );
+      final selection = {const ElementId('r1'), const ElementId('r2')};
+      expect(GroupUtils.resolveGroupForClick(r1, selection, scene), isNull);
     });
   });
 }

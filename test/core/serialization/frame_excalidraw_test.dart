@@ -15,9 +15,11 @@ void main() {
         label: 'Section A',
         seed: 42,
       );
-      final doc = MarkdrawDocument(sections: [
-        SketchSection([frame]),
-      ]);
+      final doc = MarkdrawDocument(
+        sections: [
+          SketchSection([frame]),
+        ],
+      );
       final json = ExcalidrawJsonCodec.serialize(doc);
       final decoded = jsonDecode(json) as Map<String, dynamic>;
       final elements = decoded['elements'] as List;
@@ -77,9 +79,11 @@ void main() {
         label: 'My Frame',
         seed: 99,
       );
-      final doc = MarkdrawDocument(sections: [
-        SketchSection([frame]),
-      ]);
+      final doc = MarkdrawDocument(
+        sections: [
+          SketchSection([frame]),
+        ],
+      );
       final json = ExcalidrawJsonCodec.serialize(doc);
       final result = ExcalidrawJsonCodec.parse(json);
       final parsed = result.value.allElements[0] as FrameElement;
@@ -100,9 +104,11 @@ void main() {
         frameId: 'f1',
         seed: 7,
       );
-      final doc = MarkdrawDocument(sections: [
-        SketchSection([rect]),
-      ]);
+      final doc = MarkdrawDocument(
+        sections: [
+          SketchSection([rect]),
+        ],
+      );
       final json = ExcalidrawJsonCodec.serialize(doc);
       final result = ExcalidrawJsonCodec.parse(json);
       final parsed = result.value.allElements[0];
@@ -128,9 +134,11 @@ void main() {
         frameId: 'f1',
         seed: 2,
       );
-      final doc = MarkdrawDocument(sections: [
-        SketchSection([frame, child]),
-      ]);
+      final doc = MarkdrawDocument(
+        sections: [
+          SketchSection([frame, child]),
+        ],
+      );
       final json = ExcalidrawJsonCodec.serialize(doc);
       final result = ExcalidrawJsonCodec.parse(json);
       final elements = result.value.allElements;

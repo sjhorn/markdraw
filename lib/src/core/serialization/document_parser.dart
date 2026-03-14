@@ -67,8 +67,7 @@ class DocumentParser {
     String? sketchName;
 
     while (i < lines.length) {
-      if (lines[i].trim() == '```markdraw' ||
-            lines[i].trim() == '```sketch') {
+      if (lines[i].trim() == '```markdraw' || lines[i].trim() == '```sketch') {
         // Flush prose
         _flushProse(proseBuffer, sections);
         proseBuffer = StringBuffer();
@@ -116,10 +115,12 @@ class DocumentParser {
                     bytes: Uint8List.fromList(bytes),
                   );
                 } catch (_) {
-                  allWarnings.add(ParseWarning(
-                    line: i + 1,
-                    message: 'Invalid base64 data for file $fileId',
-                  ));
+                  allWarnings.add(
+                    ParseWarning(
+                      line: i + 1,
+                      message: 'Invalid base64 data for file $fileId',
+                    ),
+                  );
                 }
               }
             }
@@ -200,10 +201,7 @@ class DocumentParser {
     return null;
   }
 
-  static void _flushProse(
-    StringBuffer buffer,
-    List<DocumentSection> sections,
-  ) {
+  static void _flushProse(StringBuffer buffer, List<DocumentSection> sections) {
     final content = buffer.toString();
     if (content.isNotEmpty) {
       sections.add(ProseSection(content));
@@ -219,7 +217,9 @@ class DocumentParser {
 
     for (var i = 0; i < lines.length; i++) {
       final line = lines[i].trim();
-      if (line.isEmpty || line.startsWith('#') || line.startsWith('@')) continue;
+      if (line.isEmpty || line.startsWith('#') || line.startsWith('@')) {
+        continue;
+      }
 
       // Check for inline label on shapes: keyword [props] "Label" ...
       // Only applies to shape types (not text, which naturally has quotes)
@@ -232,7 +232,9 @@ class DocumentParser {
       if (labelMatch != null &&
           _labelableKeywords.contains(labelMatch.group(1)!.toLowerCase())) {
         final keyword = labelMatch.group(1)!;
-        final before = labelMatch.group(2)!; // props before the label (may be empty)
+        final before = labelMatch.group(
+          2,
+        )!; // props before the label (may be empty)
         final label = labelMatch.group(3)!;
         final after = labelMatch.group(4)!; // props after the label
 
@@ -246,12 +248,13 @@ class DocumentParser {
 
           // Extract text-* properties from the original line
           final textFontSize =
-              _namedFontSizes[_parseNamedString(line, 'text-size')]
-              ?? _namedFontSizes[_parseNamedString(line, 'font-size')]
-              ?? _parseNamedDouble(line, 'text-size')
-              ?? 20.0;
+              _namedFontSizes[_parseNamedString(line, 'text-size')] ??
+              _namedFontSizes[_parseNamedString(line, 'font-size')] ??
+              _parseNamedDouble(line, 'text-size') ??
+              20.0;
           final textFontFamily = _resolveFontAlias(
-              _parseNamedString(line, 'text-font') ?? 'Excalifont');
+            _parseNamedString(line, 'text-font') ?? 'Excalifont',
+          );
           final textAlignStr = _parseNamedString(line, 'text-align');
           final textAlign = switch (textAlignStr) {
             'left' => TextAlign.left,

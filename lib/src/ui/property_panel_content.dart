@@ -86,7 +86,10 @@ class PropertyPanelContent extends StatelessWidget {
         if (showFullTextProps) ...[
           _buildSectionLabel(context, 'Text align'),
           _buildTextAlignCombinedRow(
-              context, style.textAlign, style.verticalAlign),
+            context,
+            style.textAlign,
+            style.verticalAlign,
+          ),
           const SizedBox(height: 8),
         ],
         _buildSectionLabel(context, 'Opacity'),
@@ -114,8 +117,8 @@ class PropertyPanelContent extends StatelessWidget {
           _buildColorPickerRow(
             context,
             selected: style.backgroundColor,
-            onSelect: (c) => controller
-                .applyStyleChange(ElementStyle(backgroundColor: c)),
+            onSelect: (c) =>
+                controller.applyStyleChange(ElementStyle(backgroundColor: c)),
             quickPicks: backgroundQuickPicks,
             target: ColorPickerTarget.background,
           ),
@@ -156,7 +159,10 @@ class PropertyPanelContent extends StatelessWidget {
           const SizedBox(height: 8),
           _buildSectionLabel(context, 'Text align'),
           _buildTextAlignCombinedRow(
-              context, style.textAlign, style.verticalAlign),
+            context,
+            style.textAlign,
+            style.verticalAlign,
+          ),
         ],
         if (style.hasArrows) ...[
           const SizedBox(height: 8),
@@ -167,11 +173,13 @@ class PropertyPanelContent extends StatelessWidget {
             isNone: style.startArrowheadNone,
             onSelect: (a) {
               if (a == null) {
-                controller.applyStyleChange(const ElementStyle(
-                    hasLines: true, startArrowheadNone: true));
+                controller.applyStyleChange(
+                  const ElementStyle(hasLines: true, startArrowheadNone: true),
+                );
               } else {
                 controller.applyStyleChange(
-                    ElementStyle(hasLines: true, startArrowhead: a));
+                  ElementStyle(hasLines: true, startArrowhead: a),
+                );
               }
             },
           ),
@@ -183,11 +191,13 @@ class PropertyPanelContent extends StatelessWidget {
             isNone: style.endArrowheadNone,
             onSelect: (a) {
               if (a == null) {
-                controller.applyStyleChange(const ElementStyle(
-                    hasLines: true, endArrowheadNone: true));
+                controller.applyStyleChange(
+                  const ElementStyle(hasLines: true, endArrowheadNone: true),
+                );
               } else {
                 controller.applyStyleChange(
-                    ElementStyle(hasLines: true, endArrowhead: a));
+                  ElementStyle(hasLines: true, endArrowhead: a),
+                );
               }
             },
           ),
@@ -247,8 +257,9 @@ class PropertyPanelContent extends StatelessWidget {
           color: selected ?? '#000000',
           isActive: !isQuickPick,
           onColorSelected: onSelect,
-          onRenderScene:
-              canvasSize != null ? controller.renderSceneImage : null,
+          onRenderScene: canvasSize != null
+              ? controller.renderSceneImage
+              : null,
           onSampleColor: controller.sampleColorFromImage,
           canvasSize: canvasSize,
           autoOpen: shouldAutoOpen,
@@ -269,13 +280,16 @@ class PropertyPanelContent extends StatelessWidget {
         for (var i = 0; i < widths.length; i++)
           IconToggleChip(
             isSelected: current == widths[i],
-            onTap: () => controller
-                .applyStyleChange(ElementStyle(strokeWidth: widths[i])),
+            onTap: () => controller.applyStyleChange(
+              ElementStyle(strokeWidth: widths[i]),
+            ),
             tooltip: tooltips[i],
             child: CustomPaint(
               size: const Size(20, 20),
-              painter: StrokeWidthIcon(displayWidths[i],
-                  color: Theme.of(context).colorScheme.onSurface),
+              painter: StrokeWidthIcon(
+                displayWidths[i],
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
           ),
       ],
@@ -292,13 +306,16 @@ class PropertyPanelContent extends StatelessWidget {
         for (var i = 0; i < styles.length; i++)
           IconToggleChip(
             isSelected: current == styles[i],
-            onTap: () => controller
-                .applyStyleChange(ElementStyle(strokeStyle: styles[i])),
+            onTap: () => controller.applyStyleChange(
+              ElementStyle(strokeStyle: styles[i]),
+            ),
             tooltip: names[i],
             child: CustomPaint(
               size: const Size(20, 20),
-              painter: StrokeStyleIcon(names[i],
-                  color: Theme.of(context).colorScheme.onSurface),
+              painter: StrokeStyleIcon(
+                names[i],
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
           ),
       ],
@@ -315,13 +332,15 @@ class PropertyPanelContent extends StatelessWidget {
         for (var i = 0; i < styles.length; i++)
           IconToggleChip(
             isSelected: current == styles[i],
-            onTap: () => controller
-                .applyStyleChange(ElementStyle(fillStyle: styles[i])),
+            onTap: () =>
+                controller.applyStyleChange(ElementStyle(fillStyle: styles[i])),
             tooltip: names[i],
             child: CustomPaint(
               size: const Size(20, 20),
-              painter: FillStyleIcon(names[i],
-                  color: Theme.of(context).colorScheme.onSurface),
+              painter: FillStyleIcon(
+                names[i],
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
           ),
       ],
@@ -338,13 +357,15 @@ class PropertyPanelContent extends StatelessWidget {
         for (var i = 0; i < values.length; i++)
           IconToggleChip(
             isSelected: current == values[i],
-            onTap: () => controller
-                .applyStyleChange(ElementStyle(roughness: values[i])),
+            onTap: () =>
+                controller.applyStyleChange(ElementStyle(roughness: values[i])),
             tooltip: tooltips[i],
             child: CustomPaint(
               size: const Size(20, 20),
-              painter: RoughnessIcon(values[i],
-                  color: Theme.of(context).colorScheme.onSurface),
+              painter: RoughnessIcon(
+                values[i],
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
           ),
       ],
@@ -367,8 +388,7 @@ class PropertyPanelContent extends StatelessWidget {
             min: 0,
             max: 1,
             divisions: 20,
-            label:
-                current != null ? '${(current * 100).round()}%' : 'mixed',
+            label: current != null ? '${(current * 100).round()}%' : 'mixed',
             onChanged: (v) =>
                 controller.applyStyleChange(ElementStyle(opacity: v)),
           ),
@@ -389,13 +409,16 @@ class PropertyPanelContent extends StatelessWidget {
             isSelected: !isRound,
             onTap: () {
               controller.applyStyleChange(
-                  const ElementStyle(hasRoundness: true));
+                const ElementStyle(hasRoundness: true),
+              );
             },
             tooltip: 'Sharp',
             child: CustomPaint(
               size: const Size(20, 20),
-              painter: RoundnessIcon(false,
-                  color: Theme.of(context).colorScheme.onSurface),
+              painter: RoundnessIcon(
+                false,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
           ),
           IconToggleChip(
@@ -409,15 +432,12 @@ class PropertyPanelContent extends StatelessWidget {
                   final r = e is DiamondElement
                       ? const Roundness.proportional(value: 0)
                       : e is LineElement
-                          ? const Roundness.proportional(value: 0)
-                          : const Roundness.adaptive(value: 0);
-                  results
-                      .add(UpdateElementResult(e.copyWith(roundness: r)));
+                      ? const Roundness.proportional(value: 0)
+                      : const Roundness.adaptive(value: 0);
+                  results.add(UpdateElementResult(e.copyWith(roundness: r)));
                 }
                 controller.applyResult(
-                  results.length == 1
-                      ? results.first
-                      : CompoundResult(results),
+                  results.length == 1 ? results.first : CompoundResult(results),
                 );
               } else {
                 controller.applyStyleChange(
@@ -431,8 +451,10 @@ class PropertyPanelContent extends StatelessWidget {
             tooltip: 'Round',
             child: CustomPaint(
               size: const Size(20, 20),
-              painter: RoundnessIcon(true,
-                  color: Theme.of(context).colorScheme.onSurface),
+              painter: RoundnessIcon(
+                true,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
           ),
         ],
@@ -467,7 +489,8 @@ class PropertyPanelContent extends StatelessWidget {
             onTap: () {
               controller.pushHistory();
               controller.applyStyleChange(
-                  ElementStyle(hasArrows: true, arrowType: type));
+                ElementStyle(hasArrows: true, arrowType: type),
+              );
             },
             tooltip: switch (type) {
               ArrowType.sharp => 'Sharp',
@@ -477,14 +500,12 @@ class PropertyPanelContent extends StatelessWidget {
             },
             child: CustomPaint(
               size: const Size(20, 20),
-              painter: ArrowTypeIcon(
-                  switch (type) {
-                    ArrowType.sharp => 'sharp',
-                    ArrowType.round => 'round',
-                    ArrowType.sharpElbow => 'elbow',
-                    ArrowType.roundElbow => 'round-elbow',
-                  },
-                  color: Theme.of(context).colorScheme.onSurface),
+              painter: ArrowTypeIcon(switch (type) {
+                ArrowType.sharp => 'sharp',
+                ArrowType.round => 'round',
+                ArrowType.sharpElbow => 'elbow',
+                ArrowType.roundElbow => 'round-elbow',
+              }, color: Theme.of(context).colorScheme.onSurface),
             ),
           ),
       ],
@@ -514,22 +535,25 @@ class PropertyPanelContent extends StatelessWidget {
               tooltip: 'None',
               child: CustomPaint(
                 size: const Size(20, 20),
-                painter: ArrowheadIcon(null,
-                    isStart: isStart,
-                    color: Theme.of(context).colorScheme.onSurface),
+                painter: ArrowheadIcon(
+                  null,
+                  isStart: isStart,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
             ),
             for (final ah in arrowheads)
               IconToggleChip(
                 isSelected: current == ah,
                 onTap: () => onSelect(ah),
-                tooltip:
-                    ah.name[0].toUpperCase() + ah.name.substring(1),
+                tooltip: ah.name[0].toUpperCase() + ah.name.substring(1),
                 child: CustomPaint(
                   size: const Size(20, 20),
-                  painter: ArrowheadIcon(ah,
-                      isStart: isStart,
-                      color: Theme.of(context).colorScheme.onSurface),
+                  painter: ArrowheadIcon(
+                    ah,
+                    isStart: isStart,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
               ),
           ],
@@ -548,11 +572,14 @@ class PropertyPanelContent extends StatelessWidget {
           onTap: () {
             controller.pushHistory();
             final ids = controller.editorState.selectedIds;
-            final updated =
-                LayerUtils.sendToBack(controller.editorState.scene, ids);
+            final updated = LayerUtils.sendToBack(
+              controller.editorState.scene,
+              ids,
+            );
             if (updated.isEmpty) return;
-            controller.applyResult(CompoundResult(
-                [for (final e in updated) UpdateElementResult(e)]));
+            controller.applyResult(
+              CompoundResult([for (final e in updated) UpdateElementResult(e)]),
+            );
           },
           tooltip: 'Send to back (Ctrl+Shift+[)',
           child: const Icon(Icons.vertical_align_bottom, size: 18),
@@ -563,10 +590,13 @@ class PropertyPanelContent extends StatelessWidget {
             controller.pushHistory();
             final ids = controller.editorState.selectedIds;
             final updated = LayerUtils.sendBackward(
-                controller.editorState.scene, ids);
+              controller.editorState.scene,
+              ids,
+            );
             if (updated.isEmpty) return;
-            controller.applyResult(CompoundResult(
-                [for (final e in updated) UpdateElementResult(e)]));
+            controller.applyResult(
+              CompoundResult([for (final e in updated) UpdateElementResult(e)]),
+            );
           },
           tooltip: 'Send backward (Ctrl+[)',
           child: const Icon(Icons.arrow_downward, size: 18),
@@ -577,10 +607,13 @@ class PropertyPanelContent extends StatelessWidget {
             controller.pushHistory();
             final ids = controller.editorState.selectedIds;
             final updated = LayerUtils.bringForward(
-                controller.editorState.scene, ids);
+              controller.editorState.scene,
+              ids,
+            );
             if (updated.isEmpty) return;
-            controller.applyResult(CompoundResult(
-                [for (final e in updated) UpdateElementResult(e)]));
+            controller.applyResult(
+              CompoundResult([for (final e in updated) UpdateElementResult(e)]),
+            );
           },
           tooltip: 'Bring forward (Ctrl+])',
           child: const Icon(Icons.arrow_upward, size: 18),
@@ -591,10 +624,13 @@ class PropertyPanelContent extends StatelessWidget {
             controller.pushHistory();
             final ids = controller.editorState.selectedIds;
             final updated = LayerUtils.bringToFront(
-                controller.editorState.scene, ids);
+              controller.editorState.scene,
+              ids,
+            );
             if (updated.isEmpty) return;
-            controller.applyResult(CompoundResult(
-                [for (final e in updated) UpdateElementResult(e)]));
+            controller.applyResult(
+              CompoundResult([for (final e in updated) UpdateElementResult(e)]),
+            );
           },
           tooltip: 'Bring to front (Ctrl+Shift+])',
           child: const Icon(Icons.vertical_align_top, size: 18),
@@ -612,18 +648,42 @@ class PropertyPanelContent extends StatelessWidget {
         Wrap(
           spacing: 4,
           children: [
-            _alignButton(context, Icons.align_horizontal_left,
-                'Align left', AlignmentUtils.alignLeft),
-            _alignButton(context, Icons.align_horizontal_center,
-                'Align center H', AlignmentUtils.alignCenterH),
-            _alignButton(context, Icons.align_horizontal_right,
-                'Align right', AlignmentUtils.alignRight),
-            _alignButton(context, Icons.align_vertical_top, 'Align top',
-                AlignmentUtils.alignTop),
-            _alignButton(context, Icons.align_vertical_center,
-                'Align center V', AlignmentUtils.alignCenterV),
-            _alignButton(context, Icons.align_vertical_bottom,
-                'Align bottom', AlignmentUtils.alignBottom),
+            _alignButton(
+              context,
+              Icons.align_horizontal_left,
+              'Align left',
+              AlignmentUtils.alignLeft,
+            ),
+            _alignButton(
+              context,
+              Icons.align_horizontal_center,
+              'Align center H',
+              AlignmentUtils.alignCenterH,
+            ),
+            _alignButton(
+              context,
+              Icons.align_horizontal_right,
+              'Align right',
+              AlignmentUtils.alignRight,
+            ),
+            _alignButton(
+              context,
+              Icons.align_vertical_top,
+              'Align top',
+              AlignmentUtils.alignTop,
+            ),
+            _alignButton(
+              context,
+              Icons.align_vertical_center,
+              'Align center V',
+              AlignmentUtils.alignCenterV,
+            ),
+            _alignButton(
+              context,
+              Icons.align_vertical_bottom,
+              'Align bottom',
+              AlignmentUtils.alignBottom,
+            ),
           ],
         ),
         if (selectedCount >= 3) ...[
@@ -632,10 +692,18 @@ class PropertyPanelContent extends StatelessWidget {
           Wrap(
             spacing: 4,
             children: [
-              _alignButton(context, Icons.horizontal_distribute,
-                  'Distribute H', AlignmentUtils.distributeH),
-              _alignButton(context, Icons.vertical_distribute,
-                  'Distribute V', AlignmentUtils.distributeV),
+              _alignButton(
+                context,
+                Icons.horizontal_distribute,
+                'Distribute H',
+                AlignmentUtils.distributeH,
+              ),
+              _alignButton(
+                context,
+                Icons.vertical_distribute,
+                'Distribute V',
+                AlignmentUtils.distributeV,
+              ),
             ],
           ),
         ],
@@ -661,8 +729,9 @@ class PropertyPanelContent extends StatelessWidget {
           controller.pushHistory();
           final updated = operation(elems);
           if (updated.isEmpty) return;
-          controller.applyResult(CompoundResult(
-              [for (final e in updated) UpdateElementResult(e)]));
+          controller.applyResult(
+            CompoundResult([for (final e in updated) UpdateElementResult(e)]),
+          );
         },
       ),
     );
@@ -692,8 +761,7 @@ class PropertyPanelContent extends StatelessWidget {
         if (hasGroup)
           IconToggleChip(
             isSelected: false,
-            onTap: () =>
-                controller.dispatchKey('g', ctrl: true, shift: true),
+            onTap: () => controller.dispatchKey('g', ctrl: true, shift: true),
             tooltip: 'Ungroup',
             child: const Icon(Icons.group_work_outlined, size: 18),
           ),
@@ -739,8 +807,7 @@ class PropertyPanelContent extends StatelessWidget {
         if (elems.isEmpty) return;
         final on = !isLocked;
         final results = <ToolResult>[
-          for (final e in elems)
-            UpdateElementResult(e.copyWith(locked: on)),
+          for (final e in elems) UpdateElementResult(e.copyWith(locked: on)),
         ];
         controller.applyResult(
           results.length == 1 ? results.first : CompoundResult(results),
@@ -754,8 +821,7 @@ class PropertyPanelContent extends StatelessWidget {
   Widget _buildFontSizeRow(BuildContext context, double? current) {
     const sizes = [16.0, 20.0, 28.0, 36.0];
     const labels = ['S', 'M', 'L', 'XL'];
-    final displaySize =
-        current != null ? current.round().toString() : '—';
+    final displaySize = current != null ? current.round().toString() : '—';
     final isPreset = current != null && sizes.contains(current);
     return Row(
       children: [
@@ -787,8 +853,7 @@ class PropertyPanelContent extends StatelessWidget {
   void _showFontSizeDialog(BuildContext context, double? current) {
     final wasEditing = controller.editingTextElementId != null;
     final savedSelection = wasEditing
-        ? controller.editableTextKey.currentState?.textEditingValue
-            .selection
+        ? controller.editableTextKey.currentState?.textEditingValue.selection
         : null;
     if (wasEditing) controller.suppressFocusCommit = true;
 
@@ -812,8 +877,7 @@ class PropertyPanelContent extends StatelessWidget {
             final parsed = double.tryParse(value);
             if (parsed != null) {
               controller.applyStyleChange(
-                ElementStyle(
-                    hasText: true, fontSize: parsed.clamp(4.0, 200.0)),
+                ElementStyle(hasText: true, fontSize: parsed.clamp(4.0, 200.0)),
               );
             }
             Navigator.of(ctx).pop();
@@ -830,7 +894,9 @@ class PropertyPanelContent extends StatelessWidget {
               if (parsed != null) {
                 controller.applyStyleChange(
                   ElementStyle(
-                      hasText: true, fontSize: parsed.clamp(4.0, 200.0)),
+                    hasText: true,
+                    fontSize: parsed.clamp(4.0, 200.0),
+                  ),
                 );
               }
               Navigator.of(ctx).pop();
@@ -900,7 +966,10 @@ class PropertyPanelContent extends StatelessWidget {
   }
 
   Widget _buildFontCategoryButtons(
-      BuildContext context, String? current, FontCategory category) {
+    BuildContext context,
+    String? current,
+    FontCategory category,
+  ) {
     return Wrap(
       spacing: 4,
       children: [
@@ -929,8 +998,7 @@ class PropertyPanelContent extends StatelessWidget {
           onTap: () => controller.applyStyleChange(
             ElementStyle(
               hasText: true,
-              fontFamily:
-                  FontResolver.defaultForCategory[FontCategory.normal],
+              fontFamily: FontResolver.defaultForCategory[FontCategory.normal],
             ),
           ),
           tooltip: 'Normal',
@@ -942,8 +1010,7 @@ class PropertyPanelContent extends StatelessWidget {
           onTap: () => controller.applyStyleChange(
             ElementStyle(
               hasText: true,
-              fontFamily:
-                  FontResolver.defaultForCategory[FontCategory.code],
+              fontFamily: FontResolver.defaultForCategory[FontCategory.code],
             ),
           ),
           tooltip: 'Code',
@@ -963,8 +1030,7 @@ class PropertyPanelContent extends StatelessWidget {
 
     final wasEditing = controller.editingTextElementId != null;
     final savedSelection = wasEditing
-        ? controller.editableTextKey.currentState?.textEditingValue
-            .selection
+        ? controller.editableTextKey.currentState?.textEditingValue.selection
         : null;
     if (wasEditing) controller.suppressFocusCommit = true;
 
@@ -980,7 +1046,8 @@ class PropertyPanelContent extends StatelessWidget {
           entry.remove();
           controller.fontPickerOpen = false;
           controller.applyStyleChange(
-              ElementStyle(hasText: true, fontFamily: font));
+            ElementStyle(hasText: true, fontFamily: font),
+          );
           controller.restoreTextFocus(wasEditing, savedSelection);
         },
         onDismiss: () {
@@ -996,8 +1063,7 @@ class PropertyPanelContent extends StatelessWidget {
   void _showCompactFontPicker(BuildContext context, String? current) {
     final wasEditing = controller.editingTextElementId != null;
     final savedSelection = wasEditing
-        ? controller.editableTextKey.currentState?.textEditingValue
-            .selection
+        ? controller.editableTextKey.currentState?.textEditingValue.selection
         : null;
     if (wasEditing) controller.suppressFocusCommit = true;
 
@@ -1150,4 +1216,3 @@ class _AutoOpenFontPickerState extends State<_AutoOpenFontPicker> {
   @override
   Widget build(BuildContext context) => widget.child;
 }
-

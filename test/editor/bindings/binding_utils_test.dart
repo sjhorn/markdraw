@@ -7,51 +7,50 @@ Element _rect({
   double y = 0,
   double w = 100,
   double h = 100,
-}) =>
-    Element(
-      id: ElementId(id),
-      type: 'rectangle',
-      x: x,
-      y: y,
-      width: w,
-      height: h,
-    );
+}) => Element(
+  id: ElementId(id),
+  type: 'rectangle',
+  x: x,
+  y: y,
+  width: w,
+  height: h,
+);
 
 Element _ellipse({required String id, double x = 0, double y = 0}) => Element(
-      id: ElementId(id),
-      type: 'ellipse',
-      x: x,
-      y: y,
-      width: 100,
-      height: 100,
-    );
+  id: ElementId(id),
+  type: 'ellipse',
+  x: x,
+  y: y,
+  width: 100,
+  height: 100,
+);
 
 Element _diamond({required String id, double x = 0, double y = 0}) => Element(
-      id: ElementId(id),
-      type: 'diamond',
-      x: x,
-      y: y,
-      width: 100,
-      height: 100,
-    );
+  id: ElementId(id),
+  type: 'diamond',
+  x: x,
+  y: y,
+  width: 100,
+  height: 100,
+);
 
 Element _text({required String id}) => Element(
-      id: ElementId(id),
-      type: 'text',
-      x: 0,
-      y: 0,
-      width: 100,
-      height: 20,
-    );
+  id: ElementId(id),
+  type: 'text',
+  x: 0,
+  y: 0,
+  width: 100,
+  height: 20,
+);
 
 LineElement _line({required String id}) => LineElement(
-      id: ElementId(id),
-      x: 0,
-      y: 0,
-      width: 100,
-      height: 100,
-      points: const [Point(0, 0), Point(100, 100)],
-    );
+  id: ElementId(id),
+  x: 0,
+  y: 0,
+  width: 100,
+  height: 100,
+  points: const [Point(0, 0), Point(100, 100)],
+);
 
 ArrowElement _arrow({
   required String id,
@@ -62,26 +61,25 @@ ArrowElement _arrow({
   List<Point>? points,
   PointBinding? startBinding,
   PointBinding? endBinding,
-}) =>
-    ArrowElement(
-      id: ElementId(id),
-      x: x,
-      y: y,
-      width: w,
-      height: h,
-      points: points ?? const [Point(0, 0), Point(100, 100)],
-      startBinding: startBinding,
-      endBinding: endBinding,
-    );
+}) => ArrowElement(
+  id: ElementId(id),
+  x: x,
+  y: y,
+  width: w,
+  height: h,
+  points: points ?? const [Point(0, 0), Point(100, 100)],
+  startBinding: startBinding,
+  endBinding: endBinding,
+);
 
 FreedrawElement _freedraw({required String id}) => FreedrawElement(
-      id: ElementId(id),
-      x: 0,
-      y: 0,
-      width: 100,
-      height: 100,
-      points: const [Point(0, 0), Point(50, 50), Point(100, 100)],
-    );
+  id: ElementId(id),
+  x: 0,
+  y: 0,
+  width: 100,
+  height: 100,
+  points: const [Point(0, 0), Point(50, 50), Point(100, 100)],
+);
 
 void main() {
   group('isBindable', () {
@@ -373,8 +371,10 @@ void main() {
       final updated = BindingUtils.updateBoundArrowEndpoints(arrow, scene);
       // Start point should now be at rect's left edge center (100, 150)
       // converted to absolute: x + points[0].x
-      final startAbs = Point(updated.x + updated.points.first.x,
-          updated.y + updated.points.first.y);
+      final startAbs = Point(
+        updated.x + updated.points.first.x,
+        updated.y + updated.points.first.y,
+      );
       expect(startAbs.x, closeTo(100, 0.01));
       expect(startAbs.y, closeTo(150, 0.01));
     });
@@ -395,8 +395,10 @@ void main() {
       );
       final scene = Scene().addElement(rect).addElement(arrow);
       final updated = BindingUtils.updateBoundArrowEndpoints(arrow, scene);
-      final endAbs = Point(updated.x + updated.points.last.x,
-          updated.y + updated.points.last.y);
+      final endAbs = Point(
+        updated.x + updated.points.last.x,
+        updated.y + updated.points.last.y,
+      );
       expect(endAbs.x, closeTo(250, 0.01));
       expect(endAbs.y, closeTo(200, 0.01));
     });
@@ -420,14 +422,20 @@ void main() {
           fixedPoint: Point(0.0, 0.5), // left edge center
         ),
       );
-      final scene =
-          Scene().addElement(rect1).addElement(rect2).addElement(arrow);
+      final scene = Scene()
+          .addElement(rect1)
+          .addElement(rect2)
+          .addElement(arrow);
       final updated = BindingUtils.updateBoundArrowEndpoints(arrow, scene);
 
-      final startAbs = Point(updated.x + updated.points.first.x,
-          updated.y + updated.points.first.y);
-      final endAbs = Point(updated.x + updated.points.last.x,
-          updated.y + updated.points.last.y);
+      final startAbs = Point(
+        updated.x + updated.points.first.x,
+        updated.y + updated.points.first.y,
+      );
+      final endAbs = Point(
+        updated.x + updated.points.last.x,
+        updated.y + updated.points.last.y,
+      );
 
       expect(startAbs.x, closeTo(100, 0.01)); // right edge of r1
       expect(startAbs.y, closeTo(50, 0.01)); // vertical center of r1
@@ -520,8 +528,10 @@ void main() {
           fixedPoint: Point(1.0, 0.5),
         ),
       );
-      final scene =
-          Scene().addElement(rect).addElement(arrow1).addElement(arrow2);
+      final scene = Scene()
+          .addElement(rect)
+          .addElement(arrow1)
+          .addElement(arrow2);
       final bound = BindingUtils.findBoundArrows(scene, const ElementId('r1'));
       expect(bound, hasLength(2));
     });
@@ -536,14 +546,14 @@ void main() {
     // rotated right edge (which in unrotated space is the bottom edge).
 
     Element rotatedRect() => Element(
-          id: const ElementId('rot'),
-          type: 'rectangle',
-          x: 0,
-          y: 0,
-          width: 100,
-          height: 100,
-          angle: 1.5707963267948966, // pi/2 = 90 degrees
-        );
+      id: const ElementId('rot'),
+      type: 'rectangle',
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+      angle: 1.5707963267948966, // pi/2 = 90 degrees
+    );
 
     test('findBindTarget detects rotated element from rotated edge', () {
       final rect = rotatedRect();
@@ -584,16 +594,19 @@ void main() {
       expect(resolved.y, closeTo(50, 0.5));
     });
 
-    test('computeFixedPoint round-trips with resolveBindingPoint on rotated element', () {
-      final rect = rotatedRect();
-      const scenePoint = Point(105, 50);
-      final fp = BindingUtils.computeFixedPoint(rect, scenePoint);
-      final binding = PointBinding(elementId: 'rot', fixedPoint: fp);
-      final resolved = BindingUtils.resolveBindingPoint(rect, binding);
-      // Should resolve to a point on the rotated element's edge, near (100, 50)
-      expect(resolved.x, closeTo(100, 1));
-      expect(resolved.y, closeTo(50, 1));
-    });
+    test(
+      'computeFixedPoint round-trips with resolveBindingPoint on rotated element',
+      () {
+        final rect = rotatedRect();
+        const scenePoint = Point(105, 50);
+        final fp = BindingUtils.computeFixedPoint(rect, scenePoint);
+        final binding = PointBinding(elementId: 'rot', fixedPoint: fp);
+        final resolved = BindingUtils.resolveBindingPoint(rect, binding);
+        // Should resolve to a point on the rotated element's edge, near (100, 50)
+        expect(resolved.x, closeTo(100, 1));
+        expect(resolved.y, closeTo(50, 1));
+      },
+    );
 
     test('non-rotated element behavior unchanged', () {
       final rect = _rect(id: 'r1', x: 50, y: 80, w: 120, h: 60);

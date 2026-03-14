@@ -89,8 +89,9 @@ class ArrowElement extends LineElement {
       points: points,
       startArrowhead: startArrowhead,
       endArrowhead: endArrowhead,
-      startBinding:
-          clearStartBinding ? null : (startBinding ?? this.startBinding),
+      startBinding: clearStartBinding
+          ? null
+          : (startBinding ?? this.startBinding),
       endBinding: clearEndBinding ? null : (endBinding ?? this.endBinding),
       arrowType: arrowType ?? this.arrowType,
       closed: closed,
@@ -136,8 +137,9 @@ class ArrowElement extends LineElement {
       startArrowhead: clearStartArrowhead
           ? null
           : (startArrowhead ?? this.startArrowhead),
-      endArrowhead:
-          clearEndArrowhead ? null : (endArrowhead ?? this.endArrowhead),
+      endArrowhead: clearEndArrowhead
+          ? null
+          : (endArrowhead ?? this.endArrowhead),
       startBinding: startBinding,
       endBinding: endBinding,
       arrowType: arrowType,

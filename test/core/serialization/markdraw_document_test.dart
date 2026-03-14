@@ -84,18 +84,13 @@ void main() {
     });
 
     test('allElements returns empty for prose-only document', () {
-      final doc = MarkdrawDocument(
-        sections: [const ProseSection('just text')],
-      );
+      final doc = MarkdrawDocument(sections: [const ProseSection('just text')]);
       expect(doc.allElements, isEmpty);
     });
 
     test('aliases map is unmodifiable', () {
       final doc = MarkdrawDocument(aliases: {'a': 'b'});
-      expect(
-        () => doc.aliases['c'] = 'd',
-        throwsA(isA<UnsupportedError>()),
-      );
+      expect(() => doc.aliases['c'] = 'd', throwsA(isA<UnsupportedError>()));
     });
 
     test('sections list is unmodifiable', () {
@@ -115,7 +110,9 @@ void main() {
 
       final modified = doc.copyWith(
         settings: const CanvasSettings(grid: 40),
-        sections: [SketchSection([rect])],
+        sections: [
+          SketchSection([rect]),
+        ],
       );
 
       expect(modified.settings.grid, 40);
@@ -134,9 +131,7 @@ void main() {
     });
 
     test('resolveAlias looks up element ID from alias', () {
-      final doc = MarkdrawDocument(
-        aliases: {'auth': 'rect-uuid'},
-      );
+      final doc = MarkdrawDocument(aliases: {'auth': 'rect-uuid'});
       expect(doc.resolveAlias('auth'), 'rect-uuid');
       expect(doc.resolveAlias('unknown'), isNull);
     });

@@ -34,7 +34,8 @@ class MarkdrawApp extends StatefulWidget {
     BuildContext context,
     ThemeMode themeMode,
     void Function(ThemeMode) onThemeModeChanged,
-  ) home;
+  )
+  home;
 
   final String title;
   final ThemeMode initialThemeMode;

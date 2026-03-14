@@ -8,22 +8,12 @@ class ImageCrop {
   final double width;
   final double height;
 
-  const ImageCrop({
-    this.x = 0,
-    this.y = 0,
-    this.width = 1,
-    this.height = 1,
-  });
+  const ImageCrop({this.x = 0, this.y = 0, this.width = 1, this.height = 1});
 
   /// Whether this crop represents the full image (no cropping).
   bool get isFullImage => x == 0 && y == 0 && width == 1 && height == 1;
 
-  ImageCrop copyWith({
-    double? x,
-    double? y,
-    double? width,
-    double? height,
-  }) {
+  ImageCrop copyWith({double? x, double? y, double? width, double? height}) {
     return ImageCrop(
       x: x ?? this.x,
       y: y ?? this.y,

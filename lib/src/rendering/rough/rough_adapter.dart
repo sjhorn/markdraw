@@ -13,8 +13,12 @@ abstract class RoughAdapter {
   ///
   /// When [roundness] is non-null, corners are rounded using the Excalidraw
   /// adaptive/proportional radius algorithm.
-  void drawRectangle(Canvas canvas, Bounds bounds, DrawStyle style,
-      {Roundness? roundness});
+  void drawRectangle(
+    Canvas canvas,
+    Bounds bounds,
+    DrawStyle style, {
+    Roundness? roundness,
+  });
 
   /// Draws an ellipse with rough/hand-drawn styling.
   void drawEllipse(Canvas canvas, Bounds bounds, DrawStyle style);
@@ -23,8 +27,12 @@ abstract class RoughAdapter {
   ///
   /// When [roundness] is non-null, corners are rounded using the Excalidraw
   /// proportional radius algorithm.
-  void drawDiamond(Canvas canvas, Bounds bounds, DrawStyle style,
-      {Roundness? roundness});
+  void drawDiamond(
+    Canvas canvas,
+    Bounds bounds,
+    DrawStyle style, {
+    Roundness? roundness,
+  });
 
   /// Draws a line (open polyline) through the given points.
   void drawLine(Canvas canvas, List<Point> points, DrawStyle style);

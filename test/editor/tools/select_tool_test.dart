@@ -64,10 +64,7 @@ void main() {
     });
 
     test('click on empty clears selection', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       tool.onPointerDown(const Point(500, 500), ctx);
       final result = tool.onPointerUp(const Point(500, 500), ctx);
       expect(result, isA<SetSelectionResult>());
@@ -83,8 +80,7 @@ void main() {
       tool.onPointerDown(const Point(220, 220), ctx, shift: true);
       final result = tool.onPointerUp(const Point(220, 220), ctx);
       expect(result, isA<SetSelectionResult>());
-      expect(
-          (result! as SetSelectionResult).selectedIds, {rect1.id, rect2.id});
+      expect((result! as SetSelectionResult).selectedIds, {rect1.id, rect2.id});
     });
 
     test('shift+click toggles element out of selection', () {
@@ -100,10 +96,7 @@ void main() {
     });
 
     test('drag selected element moves it', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       tool.onPointerDown(const Point(50, 30), ctx);
       tool.onPointerMove(const Point(70, 50), ctx);
       final result = tool.onPointerUp(const Point(70, 50), ctx);
@@ -114,10 +107,7 @@ void main() {
     });
 
     test('drag line element moves all points', () {
-      final ctx = contextWith(
-        elements: [line1],
-        selectedIds: {line1.id},
-      );
+      final ctx = contextWith(elements: [line1], selectedIds: {line1.id});
       // Click near (but not at) the midpoint to avoid triggering midpoint insertion
       tool.onPointerDown(const Point(330, 330), ctx);
       tool.onPointerMove(const Point(350, 350), ctx);
@@ -170,10 +160,7 @@ void main() {
     });
 
     test('click same point without drag on selected does not move', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       tool.onPointerDown(const Point(50, 30), ctx);
       final result = tool.onPointerUp(const Point(50, 30), ctx);
       // Should re-select, not produce an update
@@ -193,10 +180,7 @@ void main() {
     });
 
     test('small drag on element treated as click', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       tool.onPointerDown(const Point(50, 30), ctx);
       final result = tool.onPointerUp(const Point(52, 31), ctx);
       expect(result, isA<SetSelectionResult>());
@@ -247,11 +231,7 @@ void main() {
         y: 0,
         width: 100,
         height: 100,
-        points: const [
-          Point(0, 0),
-          Point(100, 0),
-          Point(50, 100),
-        ],
+        points: const [Point(0, 0), Point(100, 0), Point(50, 100)],
       );
       final ctx = contextWith(
         elements: [openLine],
@@ -281,11 +261,7 @@ void main() {
         y: 0,
         width: 100,
         height: 100,
-        points: const [
-          Point(0, 0),
-          Point(100, 0),
-          Point(50, 100),
-        ],
+        points: const [Point(0, 0), Point(100, 0), Point(50, 100)],
       );
       final ctx = contextWith(
         elements: [openLine],
@@ -314,11 +290,7 @@ void main() {
         y: 0,
         width: 100,
         height: 100,
-        points: const [
-          Point(0, 0),
-          Point(100, 0),
-          Point(50, 100),
-        ],
+        points: const [Point(0, 0), Point(100, 0), Point(50, 100)],
       );
       final ctx = contextWith(
         elements: [openLine],
@@ -344,11 +316,7 @@ void main() {
         y: 0,
         width: 100,
         height: 100,
-        points: const [
-          Point(0, 0),
-          Point(100, 0),
-          Point(50, 100),
-        ],
+        points: const [Point(0, 0), Point(100, 0), Point(50, 100)],
         endArrowhead: Arrowhead.arrow,
       );
       final ctx = contextWith(
@@ -377,10 +345,7 @@ void main() {
         y: 0,
         width: 100,
         height: 0,
-        points: const [
-          Point(0, 0),
-          Point(100, 0),
-        ],
+        points: const [Point(0, 0), Point(100, 0)],
       );
       final ctx = contextWith(
         elements: [shortLine],
@@ -406,11 +371,7 @@ void main() {
         y: 0,
         width: 100,
         height: 100,
-        points: const [
-          Point(0, 0),
-          Point(100, 0),
-          Point(50, 100),
-        ],
+        points: const [Point(0, 0), Point(100, 0), Point(50, 100)],
       );
       final ctx = contextWith(
         elements: [openLine],
@@ -438,11 +399,7 @@ void main() {
         y: 0,
         width: 100,
         height: 100,
-        points: const [
-          Point(0, 0),
-          Point(100, 0),
-          Point(50, 100),
-        ],
+        points: const [Point(0, 0), Point(100, 0), Point(50, 100)],
       );
       final ctx = contextWith(
         elements: [openLine],
@@ -474,11 +431,7 @@ void main() {
       y: 0,
       width: 100,
       height: 100,
-      points: const [
-        Point(0, 0),
-        Point(50, 50),
-        Point(100, 100),
-      ],
+      points: const [Point(0, 0), Point(50, 50), Point(100, 100)],
     );
 
     ToolContext contextWith({
@@ -498,31 +451,33 @@ void main() {
       );
     }
 
-    test('isEditingLinear false: point handle click does not start point drag',
-        () {
-      final ctx = contextWith(
-        elements: [line],
-        selectedIds: {line.id},
-        isEditingLinear: false,
-      );
+    test(
+      'isEditingLinear false: point handle click does not start point drag',
+      () {
+        final ctx = contextWith(
+          elements: [line],
+          selectedIds: {line.id},
+          isEditingLinear: false,
+        );
 
-      // Click directly on the first point (0, 0)
-      tool.onPointerDown(const Point(0, 0), ctx);
-      // Drag away — should NOT produce a point drag (UpdateElementResult),
-      // instead falls through to element body hit-test → move
-      tool.onPointerMove(const Point(20, 20), ctx);
-      final result = tool.onPointerUp(const Point(20, 20), ctx);
+        // Click directly on the first point (0, 0)
+        tool.onPointerDown(const Point(0, 0), ctx);
+        // Drag away — should NOT produce a point drag (UpdateElementResult),
+        // instead falls through to element body hit-test → move
+        tool.onPointerMove(const Point(20, 20), ctx);
+        final result = tool.onPointerUp(const Point(20, 20), ctx);
 
-      // With isEditingLinear=false, clicking on a point handle falls through
-      // to body hit-test. The element is selected, so it moves.
-      expect(result, isA<UpdateElementResult>());
-      final updated = (result! as UpdateElementResult).element;
-      // Move: x += 20, y += 20 (moved the whole element, not just the point)
-      expect(updated.x, 20.0);
-      expect(updated.y, 20.0);
-      // Points should remain unchanged (not a point drag)
-      expect((updated as LineElement).points, line.points);
-    });
+        // With isEditingLinear=false, clicking on a point handle falls through
+        // to body hit-test. The element is selected, so it moves.
+        expect(result, isA<UpdateElementResult>());
+        final updated = (result! as UpdateElementResult).element;
+        // Move: x += 20, y += 20 (moved the whole element, not just the point)
+        expect(updated.x, 20.0);
+        expect(updated.y, 20.0);
+        // Points should remain unchanged (not a point drag)
+        expect((updated as LineElement).points, line.points);
+      },
+    );
 
     test('isEditingLinear true: point handle click starts point drag', () {
       final ctx = contextWith(

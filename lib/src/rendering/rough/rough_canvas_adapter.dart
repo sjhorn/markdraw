@@ -45,8 +45,12 @@ class RoughCanvasAdapter implements RoughAdapter {
   }
 
   @override
-  void drawRectangle(Canvas canvas, Bounds bounds, DrawStyle style,
-      {Roundness? roundness}) {
+  void drawRectangle(
+    Canvas canvas,
+    Bounds bounds,
+    DrawStyle style, {
+    Roundness? roundness,
+  }) {
     if (roundness != null) {
       _drawRoundedRectangle(canvas, bounds, style, roundness);
       return;
@@ -75,7 +79,11 @@ class RoughCanvasAdapter implements RoughAdapter {
   }
 
   void _drawRoundedRectangle(
-      Canvas canvas, Bounds bounds, DrawStyle style, Roundness roundness) {
+    Canvas canvas,
+    Bounds bounds,
+    DrawStyle style,
+    Roundness roundness,
+  ) {
     final w = bounds.size.width;
     final h = bounds.size.height;
     final r = Roundness.cornerRadius(math.min(w, h), roundness);
@@ -107,10 +115,15 @@ class RoughCanvasAdapter implements RoughAdapter {
     final inset = style.strokeWidth / 2;
     final ri = math.max(r - inset, 0.0);
     final clip = Path()
-      ..addRRect(RRect.fromLTRBR(
-        x + inset, y + inset, x + w - inset, y + h - inset,
-        Radius.circular(ri),
-      ));
+      ..addRRect(
+        RRect.fromLTRBR(
+          x + inset,
+          y + inset,
+          x + w - inset,
+          y + h - inset,
+          Radius.circular(ri),
+        ),
+      );
     _drawClippedFillThenStroke(canvas, drawable, style, clipPath: clip);
   }
 
@@ -132,8 +145,12 @@ class RoughCanvasAdapter implements RoughAdapter {
   }
 
   @override
-  void drawDiamond(Canvas canvas, Bounds bounds, DrawStyle style,
-      {Roundness? roundness}) {
+  void drawDiamond(
+    Canvas canvas,
+    Bounds bounds,
+    DrawStyle style, {
+    Roundness? roundness,
+  }) {
     if (roundness != null) {
       _drawRoundedDiamond(canvas, bounds, style, roundness);
       return;
@@ -164,7 +181,11 @@ class RoughCanvasAdapter implements RoughAdapter {
   }
 
   void _drawRoundedDiamond(
-      Canvas canvas, Bounds bounds, DrawStyle style, Roundness roundness) {
+    Canvas canvas,
+    Bounds bounds,
+    DrawStyle style,
+    Roundness roundness,
+  ) {
     final topX = bounds.center.x;
     final topY = bounds.top;
     final rightX = bounds.right;
@@ -184,18 +205,48 @@ class RoughCanvasAdapter implements RoughAdapter {
       PointD(topX + vr, topY + hr), // start after top corner
       PointD(rightX - vr, rightY - hr), // end before right corner
       ..._cubicBezier(
-          rightX - vr, rightY - hr, rightX, rightY, rightX, rightY,
-          rightX - vr, rightY + hr),
+        rightX - vr,
+        rightY - hr,
+        rightX,
+        rightY,
+        rightX,
+        rightY,
+        rightX - vr,
+        rightY + hr,
+      ),
       PointD(bottomX + vr, bottomY - hr), // end before bottom corner
       ..._cubicBezier(
-          bottomX + vr, bottomY - hr, bottomX, bottomY, bottomX, bottomY,
-          bottomX - vr, bottomY - hr),
+        bottomX + vr,
+        bottomY - hr,
+        bottomX,
+        bottomY,
+        bottomX,
+        bottomY,
+        bottomX - vr,
+        bottomY - hr,
+      ),
       PointD(leftX + vr, leftY + hr), // end before left corner
-      ..._cubicBezier(leftX + vr, leftY + hr, leftX, leftY, leftX, leftY,
-          leftX + vr, leftY - hr),
+      ..._cubicBezier(
+        leftX + vr,
+        leftY + hr,
+        leftX,
+        leftY,
+        leftX,
+        leftY,
+        leftX + vr,
+        leftY - hr,
+      ),
       PointD(topX - vr, topY + hr), // end before top corner
-      ..._cubicBezier(topX - vr, topY + hr, topX, topY, topX, topY,
-          topX + vr, topY + hr),
+      ..._cubicBezier(
+        topX - vr,
+        topY + hr,
+        topX,
+        topY,
+        topX,
+        topY,
+        topX + vr,
+        topY + hr,
+      ),
     ];
 
     var drawable = _getCached();
@@ -214,7 +265,12 @@ class RoughCanvasAdapter implements RoughAdapter {
       ..lineTo(rightX - vri, rightY - hri)
       ..quadraticBezierTo(rightX - inset, rightY, rightX - vri, rightY + hri)
       ..lineTo(bottomX + vri, bottomY - hri)
-      ..quadraticBezierTo(bottomX, bottomY - inset, bottomX - vri, bottomY - hri)
+      ..quadraticBezierTo(
+        bottomX,
+        bottomY - inset,
+        bottomX - vri,
+        bottomY - hri,
+      )
       ..lineTo(leftX + vri, leftY + hri)
       ..quadraticBezierTo(leftX + inset, leftY, leftX + vri, leftY - hri)
       ..lineTo(topX - vri, topY + hri)
@@ -225,36 +281,54 @@ class RoughCanvasAdapter implements RoughAdapter {
 
   /// Approximates a quadratic Bezier curve as [_cornerSegments] line points.
   static List<PointD> _quadBezier(
-      double x0, double y0, double cx, double cy, double x1, double y1) {
+    double x0,
+    double y0,
+    double cx,
+    double cy,
+    double x1,
+    double y1,
+  ) {
     final pts = <PointD>[];
     for (var i = 1; i <= _cornerSegments; i++) {
       final t = i / _cornerSegments;
       final mt = 1 - t;
-      pts.add(PointD(
-        mt * mt * x0 + 2 * mt * t * cx + t * t * x1,
-        mt * mt * y0 + 2 * mt * t * cy + t * t * y1,
-      ));
+      pts.add(
+        PointD(
+          mt * mt * x0 + 2 * mt * t * cx + t * t * x1,
+          mt * mt * y0 + 2 * mt * t * cy + t * t * y1,
+        ),
+      );
     }
     return pts;
   }
 
   /// Approximates a cubic Bezier curve as [_cornerSegments] line points.
-  static List<PointD> _cubicBezier(double x0, double y0, double cx1,
-      double cy1, double cx2, double cy2, double x1, double y1) {
+  static List<PointD> _cubicBezier(
+    double x0,
+    double y0,
+    double cx1,
+    double cy1,
+    double cx2,
+    double cy2,
+    double x1,
+    double y1,
+  ) {
     final pts = <PointD>[];
     for (var i = 1; i <= _cornerSegments; i++) {
       final t = i / _cornerSegments;
       final mt = 1 - t;
-      pts.add(PointD(
-        mt * mt * mt * x0 +
-            3 * mt * mt * t * cx1 +
-            3 * mt * t * t * cx2 +
-            t * t * t * x1,
-        mt * mt * mt * y0 +
-            3 * mt * mt * t * cy1 +
-            3 * mt * t * t * cy2 +
-            t * t * t * y1,
-      ));
+      pts.add(
+        PointD(
+          mt * mt * mt * x0 +
+              3 * mt * mt * t * cx1 +
+              3 * mt * t * t * cx2 +
+              t * t * t * x1,
+          mt * mt * mt * y0 +
+              3 * mt * mt * t * cy1 +
+              3 * mt * t * t * cy2 +
+              t * t * t * y1,
+        ),
+      );
     }
     return pts;
   }
@@ -286,8 +360,10 @@ class RoughCanvasAdapter implements RoughAdapter {
     // the path (draws a return line from last point to first point).
     for (var i = 0; i < points.length - 1; i++) {
       final drawable = generator.line(
-        points[i].x, points[i].y,
-        points[i + 1].x, points[i + 1].y,
+        points[i].x,
+        points[i].y,
+        points[i + 1].x,
+        points[i + 1].y,
       );
       _drawRough(canvas, drawable, style);
     }
@@ -337,16 +413,20 @@ class RoughCanvasAdapter implements RoughAdapter {
         final t = j / _cornerSegments;
         final tt = t * t;
         final ttt = tt * t;
-        result.add(PointD(
-          0.5 * ((-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * ttt +
-              (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * tt +
-              (-p0.x + p2.x) * t +
-              2 * p1.x),
-          0.5 * ((-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * ttt +
-              (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * tt +
-              (-p0.y + p2.y) * t +
-              2 * p1.y),
-        ));
+        result.add(
+          PointD(
+            0.5 *
+                ((-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * ttt +
+                    (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * tt +
+                    (-p0.x + p2.x) * t +
+                    2 * p1.x),
+            0.5 *
+                ((-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * ttt +
+                    (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * tt +
+                    (-p0.y + p2.y) * t +
+                    2 * p1.y),
+          ),
+        );
       }
     }
     return result;
@@ -449,7 +529,9 @@ class RoughCanvasAdapter implements RoughAdapter {
         points.first,
         angle,
         style.strokeWidth,
-        Paint()..color = paint.color..strokeWidth = paint.strokeWidth,
+        Paint()
+          ..color = paint.color
+          ..strokeWidth = paint.strokeWidth,
       );
     }
 
@@ -462,7 +544,9 @@ class RoughCanvasAdapter implements RoughAdapter {
         points.last,
         angle,
         style.strokeWidth,
-        Paint()..color = paint.color..strokeWidth = paint.strokeWidth,
+        Paint()
+          ..color = paint.color
+          ..strokeWidth = paint.strokeWidth,
       );
     }
   }
@@ -700,10 +784,7 @@ class RoughCanvasAdapter implements RoughAdapter {
           opSet.type == OpSetType.fillSketch) {
         final path = _opsToPath(opSet);
         if (opSet.type == OpSetType.fillPath) {
-          canvas.drawPath(
-            path,
-            fillPaint..style = PaintingStyle.fill,
-          );
+          canvas.drawPath(path, fillPaint..style = PaintingStyle.fill);
         } else {
           canvas.drawPath(path, fillPaint);
         }
@@ -712,8 +793,7 @@ class RoughCanvasAdapter implements RoughAdapter {
   }
 
   /// Draws the stroke portion of a rough drawable with dash/dot pattern.
-  void _drawDashedStroke(
-      Canvas canvas, Drawable drawable, DrawStyle style) {
+  void _drawDashedStroke(Canvas canvas, Drawable drawable, DrawStyle style) {
     final strokePaint = style.toStrokePaint();
     for (final opSet in drawable.sets) {
       if (opSet.type == OpSetType.path) {

@@ -1,4 +1,3 @@
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:markdraw/markdraw.dart';
 
@@ -63,8 +62,9 @@ void main() {
         height: 50,
       );
       state = state.applyResult(AddElementResult(element));
-      final newState =
-          state.applyResult(RemoveElementResult(const ElementId('r1')));
+      final newState = state.applyResult(
+        RemoveElementResult(const ElementId('r1')),
+      );
       expect(newState.scene.getElementById(const ElementId('r1')), isNull);
     });
 
@@ -81,8 +81,7 @@ void main() {
     });
 
     test('applyResult with SwitchToolResult changes active tool', () {
-      final newState =
-          state.applyResult(SwitchToolResult(ToolType.rectangle));
+      final newState = state.applyResult(SwitchToolResult(ToolType.rectangle));
       expect(newState.activeToolType, ToolType.rectangle);
     });
 
@@ -124,8 +123,7 @@ void main() {
         selectedIds: {const ElementId('r1')},
         activeToolType: ToolType.rectangle,
       );
-      final newState =
-          state.applyResult(SwitchToolResult(ToolType.select));
+      final newState = state.applyResult(SwitchToolResult(ToolType.select));
       expect(newState.scene.elements.length, 1);
       expect(newState.viewport.zoom, 1.5);
       expect(newState.selectedIds, {const ElementId('r1')});
@@ -148,10 +146,7 @@ void main() {
         height: 20,
       );
       final compound = CompoundResult([
-        CompoundResult([
-          AddElementResult(e1),
-          AddElementResult(e2),
-        ]),
+        CompoundResult([AddElementResult(e1), AddElementResult(e2)]),
         SetSelectionResult({e1.id, e2.id}),
       ]);
       final newState = state.applyResult(compound);
@@ -177,8 +172,7 @@ void main() {
         width: 100,
         height: 50,
       );
-      final newState =
-          state.applyResult(SetClipboardResult([element]));
+      final newState = state.applyResult(SetClipboardResult([element]));
       expect(newState.clipboard, hasLength(1));
       expect(newState.clipboard.first.id, const ElementId('r1'));
     });
@@ -197,8 +191,7 @@ void main() {
         selectedIds: {const ElementId('r1')},
         activeToolType: ToolType.rectangle,
       );
-      final newState =
-          state.applyResult(SetClipboardResult([element]));
+      final newState = state.applyResult(SetClipboardResult([element]));
       expect(newState.scene.elements.length, 1);
       expect(newState.viewport.zoom, 1.5);
       expect(newState.selectedIds, {const ElementId('r1')});
@@ -261,21 +254,18 @@ void main() {
         expect(state.toolLocked, isFalse);
       });
 
-      test('suppresses SwitchToolResult to select when toolLocked is true',
-          () {
+      test('suppresses SwitchToolResult to select when toolLocked is true', () {
         state = state.copyWith(
           activeToolType: ToolType.rectangle,
           toolLocked: true,
         );
-        final newState =
-            state.applyResult(SwitchToolResult(ToolType.select));
+        final newState = state.applyResult(SwitchToolResult(ToolType.select));
         expect(newState.activeToolType, ToolType.rectangle);
       });
 
       test('allows SwitchToolResult to select when toolLocked is false', () {
         state = state.copyWith(activeToolType: ToolType.rectangle);
-        final newState =
-            state.applyResult(SwitchToolResult(ToolType.select));
+        final newState = state.applyResult(SwitchToolResult(ToolType.select));
         expect(newState.activeToolType, ToolType.select);
       });
 
@@ -284,8 +274,7 @@ void main() {
           activeToolType: ToolType.rectangle,
           toolLocked: true,
         );
-        final newState =
-            state.applyResult(SwitchToolResult(ToolType.hand));
+        final newState = state.applyResult(SwitchToolResult(ToolType.hand));
         expect(newState.activeToolType, ToolType.hand);
       });
     });

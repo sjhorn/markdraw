@@ -46,8 +46,7 @@ class SvgExporter {
     final ordered = scene.orderedElements;
 
     // Emit clipPath definitions for frames
-    final frames = ordered.where(
-        (e) => !e.isDeleted && e is FrameElement);
+    final frames = ordered.where((e) => !e.isDeleted && e is FrameElement);
     if (frames.isNotEmpty) {
       buf.write('<defs>');
       for (final frame in frames) {

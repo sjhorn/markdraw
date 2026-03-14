@@ -23,22 +23,24 @@ DrawStyle _style({
   double opacity = 1.0,
   int seed = 42,
 }) {
-  return DrawStyle.fromElement(core.Element(
-    id: ElementId.generate(),
-    type: 'rectangle',
-    x: 0,
-    y: 0,
-    width: 100,
-    height: 100,
-    strokeColor: strokeColor,
-    backgroundColor: backgroundColor,
-    fillStyle: fillStyle,
-    strokeWidth: strokeWidth,
-    strokeStyle: strokeStyle,
-    roughness: roughness,
-    opacity: opacity,
-    seed: seed,
-  ));
+  return DrawStyle.fromElement(
+    core.Element(
+      id: ElementId.generate(),
+      type: 'rectangle',
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+      strokeColor: strokeColor,
+      backgroundColor: backgroundColor,
+      fillStyle: fillStyle,
+      strokeWidth: strokeWidth,
+      strokeStyle: strokeStyle,
+      roughness: roughness,
+      opacity: opacity,
+      seed: seed,
+    ),
+  );
 }
 
 /// Mock adapter that records calls for StaticCanvasPainter tests.
@@ -46,8 +48,12 @@ class _MockRoughAdapter implements RoughAdapter {
   final List<String> calls = [];
 
   @override
-  void drawRectangle(Canvas canvas, Bounds bounds, DrawStyle style,
-      {Roundness? roundness}) {
+  void drawRectangle(
+    Canvas canvas,
+    Bounds bounds,
+    DrawStyle style, {
+    Roundness? roundness,
+  }) {
     calls.add('rectangle');
   }
 
@@ -57,8 +63,12 @@ class _MockRoughAdapter implements RoughAdapter {
   }
 
   @override
-  void drawDiamond(Canvas canvas, Bounds bounds, DrawStyle style,
-      {Roundness? roundness}) {
+  void drawDiamond(
+    Canvas canvas,
+    Bounds bounds,
+    DrawStyle style, {
+    Roundness? roundness,
+  }) {
     calls.add('diamond');
   }
 
@@ -73,8 +83,13 @@ class _MockRoughAdapter implements RoughAdapter {
   }
 
   @override
-  void drawArrow(Canvas canvas, List<Point> points,
-      Arrowhead? startArrowhead, Arrowhead? endArrowhead, DrawStyle style) {
+  void drawArrow(
+    Canvas canvas,
+    List<Point> points,
+    Arrowhead? startArrowhead,
+    Arrowhead? endArrowhead,
+    DrawStyle style,
+  ) {
     calls.add('arrow');
   }
 
@@ -89,26 +104,46 @@ class _MockRoughAdapter implements RoughAdapter {
   }
 
   @override
-  void drawCurvedArrow(Canvas canvas, List<Point> points,
-      Arrowhead? startArrowhead, Arrowhead? endArrowhead, DrawStyle style) {
+  void drawCurvedArrow(
+    Canvas canvas,
+    List<Point> points,
+    Arrowhead? startArrowhead,
+    Arrowhead? endArrowhead,
+    DrawStyle style,
+  ) {
     calls.add('curvedArrow');
   }
 
   @override
-  void drawElbowArrow(Canvas canvas, List<Point> points,
-      Arrowhead? startArrowhead, Arrowhead? endArrowhead, DrawStyle style) {
+  void drawElbowArrow(
+    Canvas canvas,
+    List<Point> points,
+    Arrowhead? startArrowhead,
+    Arrowhead? endArrowhead,
+    DrawStyle style,
+  ) {
     calls.add('elbowArrow');
   }
 
   @override
-  void drawRoundElbowArrow(Canvas canvas, List<Point> points,
-      Arrowhead? startArrowhead, Arrowhead? endArrowhead, DrawStyle style) {
+  void drawRoundElbowArrow(
+    Canvas canvas,
+    List<Point> points,
+    Arrowhead? startArrowhead,
+    Arrowhead? endArrowhead,
+    DrawStyle style,
+  ) {
     calls.add('roundElbowArrow');
   }
 
   @override
-  void drawFreedraw(Canvas canvas, List<Point> points,
-      List<double> pressures, bool simulatePressure, DrawStyle style) {
+  void drawFreedraw(
+    Canvas canvas,
+    List<Point> points,
+    List<double> pressures,
+    bool simulatePressure,
+    DrawStyle style,
+  ) {
     calls.add('freedraw');
   }
 }
@@ -126,15 +161,11 @@ void main() {
 
     test('drawPolygonLine renders closed polygon', () {
       final (recorder, canvas) = _makeCanvas();
-      adapter.drawPolygonLine(
-        canvas,
-        [
-          const Point(0, 0),
-          const Point(100, 0),
-          const Point(50, 80),
-        ],
-        _style(),
-      );
+      adapter.drawPolygonLine(canvas, [
+        const Point(0, 0),
+        const Point(100, 0),
+        const Point(50, 80),
+      ], _style());
       final picture = recorder.endRecording();
       expect(picture, isNotNull);
     });
@@ -142,8 +173,10 @@ void main() {
     test('drawPolygonLine with fewer than 3 points returns early', () {
       final (recorder, canvas) = _makeCanvas();
       expect(
-        () => adapter.drawPolygonLine(
-            canvas, [const Point(0, 0), const Point(10, 10)], _style()),
+        () => adapter.drawPolygonLine(canvas, [
+          const Point(0, 0),
+          const Point(10, 10),
+        ], _style()),
         returnsNormally,
       );
       recorder.endRecording();
@@ -151,16 +184,12 @@ void main() {
 
     test('drawCurvedPolygon renders smooth closed shape', () {
       final (recorder, canvas) = _makeCanvas();
-      adapter.drawCurvedPolygon(
-        canvas,
-        [
-          const Point(0, 0),
-          const Point(100, 0),
-          const Point(100, 100),
-          const Point(0, 100),
-        ],
-        _style(),
-      );
+      adapter.drawCurvedPolygon(canvas, [
+        const Point(0, 0),
+        const Point(100, 0),
+        const Point(100, 100),
+        const Point(0, 100),
+      ], _style());
       final picture = recorder.endRecording();
       expect(picture, isNotNull);
     });
@@ -168,25 +197,23 @@ void main() {
     test('drawCurvedPolygon strips duplicate closing point', () {
       final (recorder, canvas) = _makeCanvas();
       // Last point same as first — should be stripped
-      adapter.drawCurvedPolygon(
-        canvas,
-        [
-          const Point(0, 0),
-          const Point(100, 0),
-          const Point(100, 100),
-          const Point(0, 100),
-          const Point(0, 0), // duplicate closing point
-        ],
-        _style(),
-      );
+      adapter.drawCurvedPolygon(canvas, [
+        const Point(0, 0),
+        const Point(100, 0),
+        const Point(100, 100),
+        const Point(0, 100),
+        const Point(0, 0), // duplicate closing point
+      ], _style());
       recorder.endRecording();
     });
 
     test('drawCurvedPolygon with fewer than 3 points returns early', () {
       final (recorder, canvas) = _makeCanvas();
       expect(
-        () => adapter.drawCurvedPolygon(
-            canvas, [const Point(0, 0), const Point(10, 10)], _style()),
+        () => adapter.drawCurvedPolygon(canvas, [
+          const Point(0, 0),
+          const Point(10, 10),
+        ], _style()),
         returnsNormally,
       );
       recorder.endRecording();
@@ -194,11 +221,11 @@ void main() {
 
     test('drawCurvedLine with dashed stroke', () {
       final (recorder, canvas) = _makeCanvas();
-      adapter.drawCurvedLine(
-        canvas,
-        [const Point(0, 0), const Point(50, 50), const Point(100, 0)],
-        _style(strokeStyle: StrokeStyle.dashed),
-      );
+      adapter.drawCurvedLine(canvas, [
+        const Point(0, 0),
+        const Point(50, 50),
+        const Point(100, 0),
+      ], _style(strokeStyle: StrokeStyle.dashed));
       recorder.endRecording();
     });
 
@@ -259,11 +286,7 @@ void main() {
       final (recorder, canvas) = _makeCanvas();
       adapter.drawRoundElbowArrow(
         canvas,
-        [
-          const Point(0, 0),
-          const Point(0, 100),
-          const Point(100, 100),
-        ],
+        [const Point(0, 0), const Point(0, 100), const Point(100, 100)],
         Arrowhead.triangle,
         Arrowhead.arrow,
         _style(),
@@ -275,11 +298,7 @@ void main() {
       final (recorder, canvas) = _makeCanvas();
       adapter.drawRoundElbowArrow(
         canvas,
-        [
-          const Point(0, 0),
-          const Point(0, 50),
-          const Point(50, 50),
-        ],
+        [const Point(0, 0), const Point(0, 50), const Point(50, 50)],
         null,
         Arrowhead.arrow,
         _style(strokeStyle: StrokeStyle.dashed),
@@ -292,11 +311,7 @@ void main() {
       // Very short segments where radius < 0.5, triggers lineTo fallback
       adapter.drawRoundElbowArrow(
         canvas,
-        [
-          const Point(0, 0),
-          const Point(0, 0.5),
-          const Point(0.5, 0.5),
-        ],
+        [const Point(0, 0), const Point(0, 0.5), const Point(0.5, 0.5)],
         null,
         null,
         _style(),
@@ -308,7 +323,12 @@ void main() {
       final (recorder, canvas) = _makeCanvas();
       expect(
         () => adapter.drawRoundElbowArrow(
-            canvas, [const Point(0, 0)], null, null, _style()),
+          canvas,
+          [const Point(0, 0)],
+          null,
+          null,
+          _style(),
+        ),
         returnsNormally,
       );
       recorder.endRecording();
@@ -318,11 +338,7 @@ void main() {
       final (recorder, canvas) = _makeCanvas();
       adapter.drawElbowArrow(
         canvas,
-        [
-          const Point(0, 0),
-          const Point(0, 100),
-          const Point(100, 100),
-        ],
+        [const Point(0, 0), const Point(0, 100), const Point(100, 100)],
         Arrowhead.bar,
         Arrowhead.arrow,
         _style(strokeStyle: StrokeStyle.dashed),
@@ -334,11 +350,7 @@ void main() {
       final (recorder, canvas) = _makeCanvas();
       adapter.drawElbowArrow(
         canvas,
-        [
-          const Point(0, 0),
-          const Point(0, 50),
-          const Point(50, 50),
-        ],
+        [const Point(0, 0), const Point(0, 50), const Point(50, 50)],
         null,
         Arrowhead.triangle,
         _style(strokeStyle: StrokeStyle.dotted),
@@ -358,44 +370,32 @@ void main() {
 
     test('drawPolygonLine with dashed stroke', () {
       final (recorder, canvas) = _makeCanvas();
-      adapter.drawPolygonLine(
-        canvas,
-        [
-          const Point(0, 0),
-          const Point(100, 0),
-          const Point(50, 80),
-        ],
-        _style(strokeStyle: StrokeStyle.dashed),
-      );
+      adapter.drawPolygonLine(canvas, [
+        const Point(0, 0),
+        const Point(100, 0),
+        const Point(50, 80),
+      ], _style(strokeStyle: StrokeStyle.dashed));
       recorder.endRecording();
     });
 
     test('drawPolygonLine with hachure fill', () {
       final (recorder, canvas) = _makeCanvas();
-      adapter.drawPolygonLine(
-        canvas,
-        [
-          const Point(0, 0),
-          const Point(100, 0),
-          const Point(50, 80),
-        ],
-        _style(fillStyle: FillStyle.hachure),
-      );
+      adapter.drawPolygonLine(canvas, [
+        const Point(0, 0),
+        const Point(100, 0),
+        const Point(50, 80),
+      ], _style(fillStyle: FillStyle.hachure));
       recorder.endRecording();
     });
 
     test('drawCurvedPolygon with cross-hatch fill', () {
       final (recorder, canvas) = _makeCanvas();
-      adapter.drawCurvedPolygon(
-        canvas,
-        [
-          const Point(0, 0),
-          const Point(100, 0),
-          const Point(100, 100),
-          const Point(0, 100),
-        ],
-        _style(fillStyle: FillStyle.crossHatch),
-      );
+      adapter.drawCurvedPolygon(canvas, [
+        const Point(0, 0),
+        const Point(100, 0),
+        const Point(100, 100),
+        const Point(0, 100),
+      ], _style(fillStyle: FillStyle.crossHatch));
       recorder.endRecording();
     });
 
@@ -577,11 +577,7 @@ void main() {
         y: 0,
         width: 100,
         height: 50,
-        points: [
-          const Point(0, 0),
-          const Point(0, 50),
-          const Point(100, 50),
-        ],
+        points: [const Point(0, 0), const Point(0, 50), const Point(100, 50)],
         arrowType: ArrowType.sharpElbow,
         strokeStyle: StrokeStyle.dashed,
         endArrowhead: Arrowhead.arrow,
@@ -629,11 +625,7 @@ void main() {
         y: 0,
         width: 100,
         height: 100,
-        points: [
-          const Point(0, 0),
-          const Point(100, 0),
-          const Point(50, 100),
-        ],
+        points: [const Point(0, 0), const Point(100, 0), const Point(50, 100)],
         closed: true,
         roundness: const Roundness.proportional(value: 0),
         seed: 42,
@@ -756,13 +748,10 @@ void main() {
         gridSize: 20,
       );
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(400, 300));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(400, 300));
+        recorder.endRecording();
+      }, returnsNormally);
     });
 
     test('renders grid with dark background', () {
@@ -776,37 +765,38 @@ void main() {
         isDarkBackground: true,
       );
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(400, 300));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(400, 300));
+        recorder.endRecording();
+      }, returnsNormally);
     });
 
     test('clips frame children to frame bounds', () {
       final (recorder, canvas) = _makeCanvas();
 
       var scene = Scene();
-      scene = scene.addElement(FrameElement(
-        id: const ElementId('frame1'),
-        x: 0,
-        y: 0,
-        width: 200,
-        height: 200,
-        label: 'Frame 1',
-        index: 'a0',
-      ));
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 10,
-        width: 50,
-        height: 50,
-        frameId: 'frame1',
-        index: 'a1',
-      ));
+      scene = scene.addElement(
+        FrameElement(
+          id: const ElementId('frame1'),
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 200,
+          label: 'Frame 1',
+          index: 'a0',
+        ),
+      );
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 10,
+          width: 50,
+          height: 50,
+          frameId: 'frame1',
+          index: 'a1',
+        ),
+      );
 
       final painter = StaticCanvasPainter(
         scene: scene,
@@ -814,13 +804,10 @@ void main() {
         viewport: const ViewportState(),
       );
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
     });
 
     test('renders pending elements at reduced opacity', () {
@@ -906,14 +893,16 @@ void main() {
       final (recorder, canvas) = _makeCanvas();
 
       var scene = Scene();
-      scene = scene.addElement(core.TextElement(
-        id: const ElementId('t1'),
-        x: 50,
-        y: 50,
-        width: 200,
-        height: 40,
-        text: 'Editing this',
-      ));
+      scene = scene.addElement(
+        core.TextElement(
+          id: const ElementId('t1'),
+          x: 50,
+          y: 50,
+          width: 200,
+          height: 40,
+          text: 'Editing this',
+        ),
+      );
 
       final painter = StaticCanvasPainter(
         scene: scene,
@@ -940,30 +929,30 @@ void main() {
     });
 
     test('freedrawToPathData with single point returns arc (dot)', () {
-      final result =
-          SvgPathConverter.freedrawToPathData([const Point(50, 50)], 4.0);
+      final result = SvgPathConverter.freedrawToPathData([
+        const Point(50, 50),
+      ], 4.0);
       expect(result, contains('A'));
       expect(result, contains('M'));
     });
 
     test('freedrawToPathData with two points returns line', () {
-      final result = SvgPathConverter.freedrawToPathData(
-          [const Point(0, 0), const Point(100, 50)], 2.0);
+      final result = SvgPathConverter.freedrawToPathData([
+        const Point(0, 0),
+        const Point(100, 50),
+      ], 2.0);
       expect(result, contains('M'));
       expect(result, contains('L'));
       expect(result, isNot(contains('C')));
     });
 
     test('freedrawToPathData with 3+ points returns Bezier curves', () {
-      final result = SvgPathConverter.freedrawToPathData(
-        [
-          const Point(0, 0),
-          const Point(30, 20),
-          const Point(60, 10),
-          const Point(100, 50),
-        ],
-        2.0,
-      );
+      final result = SvgPathConverter.freedrawToPathData([
+        const Point(0, 0),
+        const Point(30, 20),
+        const Point(60, 10),
+        const Point(100, 50),
+      ], 2.0);
       expect(result, contains('M'));
       expect(result, contains('C'));
     });
@@ -1082,8 +1071,9 @@ void main() {
       );
     });
 
-    testWidgets('StrokeWidthIcon shouldRepaint detects width change',
-        (tester) async {
+    testWidgets('StrokeWidthIcon shouldRepaint detects width change', (
+      tester,
+    ) async {
       final p1 = StrokeWidthIcon(1.0);
       final p2 = StrokeWidthIcon(2.0);
       expect(p2.shouldRepaint(p1), isTrue);
@@ -1144,8 +1134,9 @@ void main() {
       );
     });
 
-    testWidgets('FillStyleIcon cross-hatch paints without error',
-        (tester) async {
+    testWidgets('FillStyleIcon cross-hatch paints without error', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: CustomPaint(
@@ -1167,8 +1158,9 @@ void main() {
       );
     });
 
-    testWidgets('RoughnessIcon smooth (0) paints without error',
-        (tester) async {
+    testWidgets('RoughnessIcon smooth (0) paints without error', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: CustomPaint(
@@ -1179,8 +1171,9 @@ void main() {
       );
     });
 
-    testWidgets('RoughnessIcon medium (1) paints without error',
-        (tester) async {
+    testWidgets('RoughnessIcon medium (1) paints without error', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: CustomPaint(
@@ -1191,8 +1184,9 @@ void main() {
       );
     });
 
-    testWidgets('RoughnessIcon high (2.5) paints without error',
-        (tester) async {
+    testWidgets('RoughnessIcon high (2.5) paints without error', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: CustomPaint(
@@ -1258,8 +1252,9 @@ void main() {
       );
     });
 
-    testWidgets('ArrowTypeIcon round-elbow paints without error',
-        (tester) async {
+    testWidgets('ArrowTypeIcon round-elbow paints without error', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: CustomPaint(
@@ -1270,8 +1265,9 @@ void main() {
       );
     });
 
-    testWidgets('ArrowheadIcon null (no arrowhead) paints line only',
-        (tester) async {
+    testWidgets('ArrowheadIcon null (no arrowhead) paints line only', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: CustomPaint(
@@ -1326,8 +1322,9 @@ void main() {
       );
     });
 
-    testWidgets('ArrowheadIcon triangleOutline paints without error',
-        (tester) async {
+    testWidgets('ArrowheadIcon triangleOutline paints without error', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: CustomPaint(
@@ -1349,8 +1346,9 @@ void main() {
       );
     });
 
-    testWidgets('ArrowheadIcon circleOutline paints without error',
-        (tester) async {
+    testWidgets('ArrowheadIcon circleOutline paints without error', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: CustomPaint(
@@ -1372,8 +1370,9 @@ void main() {
       );
     });
 
-    testWidgets('ArrowheadIcon diamondOutline paints without error',
-        (tester) async {
+    testWidgets('ArrowheadIcon diamondOutline paints without error', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: CustomPaint(
@@ -1384,8 +1383,9 @@ void main() {
       );
     });
 
-    testWidgets('ArrowheadIcon crowfootOne paints without error',
-        (tester) async {
+    testWidgets('ArrowheadIcon crowfootOne paints without error', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: CustomPaint(
@@ -1396,8 +1396,9 @@ void main() {
       );
     });
 
-    testWidgets('ArrowheadIcon crowfootMany paints without error',
-        (tester) async {
+    testWidgets('ArrowheadIcon crowfootMany paints without error', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: CustomPaint(
@@ -1408,8 +1409,9 @@ void main() {
       );
     });
 
-    testWidgets('ArrowheadIcon crowfootOneOrMany paints without error',
-        (tester) async {
+    testWidgets('ArrowheadIcon crowfootOneOrMany paints without error', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: CustomPaint(
@@ -1420,8 +1422,9 @@ void main() {
       );
     });
 
-    testWidgets('ArrowheadIcon isStart=true reverses direction',
-        (tester) async {
+    testWidgets('ArrowheadIcon isStart=true reverses direction', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: CustomPaint(
@@ -1454,8 +1457,9 @@ void main() {
       );
     });
 
-    testWidgets('DiamondIconPainter filled paints without error',
-        (tester) async {
+    testWidgets('DiamondIconPainter filled paints without error', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: CustomPaint(

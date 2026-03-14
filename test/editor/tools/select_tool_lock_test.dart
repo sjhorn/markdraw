@@ -116,8 +116,7 @@ void main() {
         elements: [lockedRect, unlockedRect2],
         selectedIds: {lockedRect.id, unlockedRect2.id},
       );
-      final result =
-          tool.onKeyEvent('Delete', ctrl: false, context: ctx);
+      final result = tool.onKeyEvent('Delete', ctrl: false, context: ctx);
       expect(result, isA<CompoundResult>());
       final compound = result! as CompoundResult;
       // Should have RemoveElementResult for unlocked only
@@ -127,10 +126,7 @@ void main() {
       expect(removeResults.length, 1);
       expect(removeResults.first.id, unlockedRect2.id);
       // Locked element should NOT be removed
-      expect(
-        removeResults.any((r) => r.id == lockedRect.id),
-        isFalse,
-      );
+      expect(removeResults.any((r) => r.id == lockedRect.id), isFalse);
     });
 
     test('delete with only locked elements returns null', () {
@@ -138,8 +134,7 @@ void main() {
         elements: [lockedRect],
         selectedIds: {lockedRect.id},
       );
-      final result =
-          tool.onKeyEvent('Delete', ctrl: false, context: ctx);
+      final result = tool.onKeyEvent('Delete', ctrl: false, context: ctx);
       expect(result, isNull);
     });
 
@@ -148,8 +143,7 @@ void main() {
         elements: [lockedRect, unlockedRect2],
         selectedIds: {lockedRect.id, unlockedRect2.id},
       );
-      final result =
-          tool.onKeyEvent('x', ctrl: true, context: ctx);
+      final result = tool.onKeyEvent('x', ctrl: true, context: ctx);
       expect(result, isA<CompoundResult>());
       final compound = result! as CompoundResult;
       final removeResults = compound.results
@@ -170,8 +164,7 @@ void main() {
         elements: [lockedRect],
         selectedIds: {lockedRect.id},
       );
-      final result =
-          tool.onKeyEvent('ArrowRight', ctrl: false, context: ctx);
+      final result = tool.onKeyEvent('ArrowRight', ctrl: false, context: ctx);
       expect(result, isNull);
     });
 
@@ -180,8 +173,7 @@ void main() {
         elements: [lockedRect, unlockedRect2],
         selectedIds: {lockedRect.id, unlockedRect2.id},
       );
-      final result =
-          tool.onKeyEvent('ArrowRight', ctrl: false, context: ctx);
+      final result = tool.onKeyEvent('ArrowRight', ctrl: false, context: ctx);
       expect(result, isNull);
     });
 
@@ -207,8 +199,12 @@ void main() {
         elements: [unlockedRect, unlockedRect2],
         selectedIds: {unlockedRect.id, unlockedRect2.id},
       );
-      final result =
-          tool.onKeyEvent('l', ctrl: true, shift: true, context: ctx);
+      final result = tool.onKeyEvent(
+        'l',
+        ctrl: true,
+        shift: true,
+        context: ctx,
+      );
       expect(result, isA<CompoundResult>());
       final compound = result! as CompoundResult;
       final updates = compound.results
@@ -230,8 +226,12 @@ void main() {
         elements: [lockedRect],
         selectedIds: {lockedRect.id},
       );
-      final result =
-          tool.onKeyEvent('l', ctrl: true, shift: true, context: ctx);
+      final result = tool.onKeyEvent(
+        'l',
+        ctrl: true,
+        shift: true,
+        context: ctx,
+      );
       expect(result, isA<CompoundResult>());
       final compound = result! as CompoundResult;
       final updates = compound.results
@@ -248,8 +248,12 @@ void main() {
 
     test('Ctrl+Shift+L with no selection returns null', () {
       final ctx = contextWith(elements: [unlockedRect]);
-      final result =
-          tool.onKeyEvent('l', ctrl: true, shift: true, context: ctx);
+      final result = tool.onKeyEvent(
+        'l',
+        ctrl: true,
+        shift: true,
+        context: ctx,
+      );
       expect(result, isNull);
     });
 
@@ -258,8 +262,12 @@ void main() {
         elements: [lockedRect, unlockedRect2],
         selectedIds: {lockedRect.id, unlockedRect2.id},
       );
-      final result =
-          tool.onKeyEvent('l', ctrl: true, shift: true, context: ctx);
+      final result = tool.onKeyEvent(
+        'l',
+        ctrl: true,
+        shift: true,
+        context: ctx,
+      );
       expect(result, isA<CompoundResult>());
       final compound = result! as CompoundResult;
       // Mixed: not allLocked → lock all, keep selection

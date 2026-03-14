@@ -41,10 +41,8 @@ class CompactMenuButton extends StatelessWidget {
         color: cs.surface,
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.17), blurRadius: 1),
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08), blurRadius: 3),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.17), blurRadius: 1),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 3),
         ],
       ),
       child: IconButton(
@@ -110,8 +108,7 @@ class CompactMenuButton extends StatelessWidget {
               },
             ),
             const Divider(),
-            if (onThemeModeChanged != null)
-              _buildCompactThemeRow(ctx),
+            if (onThemeModeChanged != null) _buildCompactThemeRow(ctx),
             _buildCompactCanvasBackgroundRow(ctx),
           ],
         ),
@@ -126,24 +123,47 @@ class CompactMenuButton extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          Text('Theme',
-              style: TextStyle(fontSize: 16, color: cs.onSurface)),
+          Text('Theme', style: TextStyle(fontSize: 16, color: cs.onSurface)),
           const Spacer(),
-          _themeButton(ctx, Icons.light_mode, 'Light',
-              current == ThemeMode.light, ThemeMode.light, cs),
+          _themeButton(
+            ctx,
+            Icons.light_mode,
+            'Light',
+            current == ThemeMode.light,
+            ThemeMode.light,
+            cs,
+          ),
           const SizedBox(width: 4),
-          _themeButton(ctx, Icons.dark_mode, 'Dark',
-              current == ThemeMode.dark, ThemeMode.dark, cs),
+          _themeButton(
+            ctx,
+            Icons.dark_mode,
+            'Dark',
+            current == ThemeMode.dark,
+            ThemeMode.dark,
+            cs,
+          ),
           const SizedBox(width: 4),
-          _themeButton(ctx, Icons.brightness_auto, 'System',
-              current == ThemeMode.system, ThemeMode.system, cs),
+          _themeButton(
+            ctx,
+            Icons.brightness_auto,
+            'System',
+            current == ThemeMode.system,
+            ThemeMode.system,
+            cs,
+          ),
         ],
       ),
     );
   }
 
-  Widget _themeButton(BuildContext ctx, IconData icon, String tooltip,
-      bool isActive, ThemeMode mode, ColorScheme cs) {
+  Widget _themeButton(
+    BuildContext ctx,
+    IconData icon,
+    String tooltip,
+    bool isActive,
+    ThemeMode mode,
+    ColorScheme cs,
+  ) {
     return Tooltip(
       message: tooltip,
       child: Material(
@@ -175,8 +195,10 @@ class CompactMenuButton extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          Text('Background',
-              style: TextStyle(fontSize: 16, color: cs.onSurface)),
+          Text(
+            'Background',
+            style: TextStyle(fontSize: 16, color: cs.onSurface),
+          ),
           const Spacer(),
           for (final c in canvasBackgroundPresets)
             Padding(
@@ -195,8 +217,7 @@ class CompactMenuButton extends StatelessWidget {
     );
   }
 
-  ListTile _compactMenuItem(
-      IconData icon, String label, VoidCallback onTap) {
+  ListTile _compactMenuItem(IconData icon, String label, VoidCallback onTap) {
     return ListTile(
       leading: Icon(icon, size: 22),
       title: Text(label),

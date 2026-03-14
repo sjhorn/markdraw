@@ -96,10 +96,12 @@ class SelectionOverlay {
 
     // Handles sit on the selection box for shapes, further out for
     // lines/arrows/diamonds.
-    final needsExpanded =
-        elements.any((e) => _expandedHandleTypes.contains(e.type));
+    final needsExpanded = elements.any(
+      (e) => _expandedHandleTypes.contains(e.type),
+    );
     final handlePad =
-        selectionPaddingFor(mode) + (needsExpanded ? _expandedHandleExtra : 0.0);
+        selectionPaddingFor(mode) +
+        (needsExpanded ? _expandedHandleExtra : 0.0);
     final handleBounds = Bounds.fromLTWH(
       union.left - handlePad,
       union.top - handlePad,
@@ -125,11 +127,13 @@ class SelectionOverlay {
     // Populate per-element bounds for multi-select outlines.
     final elemBounds = elements.length > 1
         ? elements
-            .map((e) => ElementSelectionBounds(
+              .map(
+                (e) => ElementSelectionBounds(
                   bounds: Bounds.fromLTWH(e.x, e.y, e.width, e.height),
                   angle: e.angle,
-                ))
-            .toList()
+                ),
+              )
+              .toList()
         : const <ElementSelectionBounds>[];
 
     return SelectionOverlay(
@@ -179,9 +183,14 @@ class SelectionOverlay {
           listEquals(elementBounds, other.elementBounds);
 
   @override
-  int get hashCode =>
-      Object.hash(bounds, angle, isLocked, showBoundingBox,
-          Object.hashAll(handles), Object.hashAll(elementBounds));
+  int get hashCode => Object.hash(
+    bounds,
+    angle,
+    isLocked,
+    showBoundingBox,
+    Object.hashAll(handles),
+    Object.hashAll(elementBounds),
+  );
 
   @override
   String toString() => 'SelectionOverlay($bounds, angle=$angle)';

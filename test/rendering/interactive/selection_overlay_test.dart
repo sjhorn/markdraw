@@ -8,26 +8,26 @@ void main() {
     });
 
     test('contains all expected types', () {
-      expect(HandleType.values, containsAll([
-        HandleType.topLeft,
-        HandleType.topCenter,
-        HandleType.topRight,
-        HandleType.middleLeft,
-        HandleType.middleRight,
-        HandleType.bottomLeft,
-        HandleType.bottomCenter,
-        HandleType.bottomRight,
-        HandleType.rotation,
-      ]));
+      expect(
+        HandleType.values,
+        containsAll([
+          HandleType.topLeft,
+          HandleType.topCenter,
+          HandleType.topRight,
+          HandleType.middleLeft,
+          HandleType.middleRight,
+          HandleType.bottomLeft,
+          HandleType.bottomCenter,
+          HandleType.bottomRight,
+          HandleType.rotation,
+        ]),
+      );
     });
   });
 
   group('Handle', () {
     test('stores type and position', () {
-      const handle = Handle(
-        type: HandleType.topLeft,
-        position: Point(10, 20),
-      );
+      const handle = Handle(type: HandleType.topLeft, position: Point(10, 20));
       expect(handle.type, HandleType.topLeft);
       expect(handle.position, const Point(10, 20));
     });
@@ -193,7 +193,10 @@ void main() {
     test('showBoundingBox is false for 2-point line', () {
       final line = LineElement(
         id: const ElementId('l1'),
-        x: 0, y: 0, width: 100, height: 100,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
         points: [const Point(0, 0), const Point(100, 100)],
       );
       final overlay = SelectionOverlay.fromElements([line]);
@@ -203,7 +206,10 @@ void main() {
     test('showBoundingBox is false for 2-point arrow', () {
       final arrow = ArrowElement(
         id: const ElementId('a1'),
-        x: 0, y: 0, width: 100, height: 0,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 0,
         points: [const Point(0, 0), const Point(100, 0)],
         endArrowhead: Arrowhead.arrow,
       );
@@ -214,12 +220,11 @@ void main() {
     test('showBoundingBox is true for multi-point line', () {
       final line = LineElement(
         id: const ElementId('l1'),
-        x: 0, y: 0, width: 100, height: 100,
-        points: [
-          const Point(0, 0),
-          const Point(50, 100),
-          const Point(100, 0),
-        ],
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        points: [const Point(0, 0), const Point(50, 100), const Point(100, 0)],
       );
       final overlay = SelectionOverlay.fromElements([line]);
       expect(overlay!.showBoundingBox, isTrue);
@@ -228,31 +233,45 @@ void main() {
     test('showBoundingBox is true for rectangle', () {
       final rect = RectangleElement(
         id: const ElementId('r1'),
-        x: 0, y: 0, width: 100, height: 100,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
       );
       final overlay = SelectionOverlay.fromElements([rect]);
       expect(overlay!.showBoundingBox, isTrue);
     });
 
-    test('showBoundingBox is true for multiple elements including 2-point line',
-        () {
-      final line = LineElement(
-        id: const ElementId('l1'),
-        x: 0, y: 0, width: 100, height: 100,
-        points: [const Point(0, 0), const Point(100, 100)],
-      );
-      final rect = RectangleElement(
-        id: const ElementId('r1'),
-        x: 200, y: 200, width: 50, height: 50,
-      );
-      final overlay = SelectionOverlay.fromElements([line, rect]);
-      expect(overlay!.showBoundingBox, isTrue);
-    });
+    test(
+      'showBoundingBox is true for multiple elements including 2-point line',
+      () {
+        final line = LineElement(
+          id: const ElementId('l1'),
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+          points: [const Point(0, 0), const Point(100, 100)],
+        );
+        final rect = RectangleElement(
+          id: const ElementId('r1'),
+          x: 200,
+          y: 200,
+          width: 50,
+          height: 50,
+        );
+        final overlay = SelectionOverlay.fromElements([line, rect]);
+        expect(overlay!.showBoundingBox, isTrue);
+      },
+    );
 
     test('showBoundingBox is false for elbow arrow', () {
       final arrow = ArrowElement(
         id: const ElementId('ea1'),
-        x: 0, y: 0, width: 200, height: 100,
+        x: 0,
+        y: 0,
+        width: 200,
+        height: 100,
         points: [
           const Point(0, 0),
           const Point(100, 0),
@@ -325,10 +344,14 @@ void main() {
 
       final overlay = SelectionOverlay.fromElements([e1, e2]);
       expect(overlay!.elementBounds, hasLength(2));
-      expect(overlay.elementBounds[0].bounds,
-          Bounds.fromLTWH(50, 100, 100, 80));
-      expect(overlay.elementBounds[1].bounds,
-          Bounds.fromLTWH(200, 50, 150, 200));
+      expect(
+        overlay.elementBounds[0].bounds,
+        Bounds.fromLTWH(50, 100, 100, 80),
+      );
+      expect(
+        overlay.elementBounds[1].bounds,
+        Bounds.fromLTWH(200, 50, 150, 200),
+      );
     });
 
     test('multi-select preserves per-element angles', () {
@@ -357,15 +380,24 @@ void main() {
     test('elementBounds included in equality', () {
       final e1 = RectangleElement(
         id: const ElementId('r1'),
-        x: 0, y: 0, width: 100, height: 100,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
       );
       final e2 = RectangleElement(
         id: const ElementId('r2'),
-        x: 200, y: 200, width: 100, height: 100,
+        x: 200,
+        y: 200,
+        width: 100,
+        height: 100,
       );
       final e3 = EllipseElement(
         id: const ElementId('e1'),
-        x: 200, y: 200, width: 100, height: 100,
+        x: 200,
+        y: 200,
+        width: 100,
+        height: 100,
       );
 
       final a = SelectionOverlay.fromElements([e1, e2]);
@@ -414,8 +446,9 @@ void main() {
         height: 100,
       );
 
-      final overlay = SelectionOverlay.fromElements([rect],
-          mode: InteractionMode.touch);
+      final overlay = SelectionOverlay.fromElements([
+        rect,
+      ], mode: InteractionMode.touch);
       final handles = overlay!.handles;
       final byType = {for (final h in handles) h.type: h.position};
 

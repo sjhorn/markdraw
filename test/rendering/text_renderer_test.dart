@@ -46,10 +46,7 @@ void main() {
         final (recorder, canvas) = _makeCanvas();
         final element = _text();
 
-        expect(
-          () => TextRenderer.draw(canvas, element),
-          returnsNormally,
-        );
+        expect(() => TextRenderer.draw(canvas, element), returnsNormally);
         recorder.endRecording();
       });
 
@@ -57,10 +54,7 @@ void main() {
         final (recorder, canvas) = _makeCanvas();
         final element = _text(text: '');
 
-        expect(
-          () => TextRenderer.draw(canvas, element),
-          returnsNormally,
-        );
+        expect(() => TextRenderer.draw(canvas, element), returnsNormally);
         recorder.endRecording();
       });
 

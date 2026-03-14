@@ -115,9 +115,13 @@ class _LinkOverlayState extends State<LinkOverlay> {
           borderRadius: BorderRadius.circular(8),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withValues(alpha: 0.17), blurRadius: 1),
+              color: Colors.black.withValues(alpha: 0.17),
+              blurRadius: 1,
+            ),
             BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08), blurRadius: 3),
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 3,
+            ),
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 14,
@@ -140,10 +144,8 @@ class _LinkOverlayState extends State<LinkOverlay> {
         color: cs.primaryContainer,
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.17), blurRadius: 1),
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08), blurRadius: 3),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.17), blurRadius: 1),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 3),
         ],
       ),
       child: Row(
@@ -153,10 +155,7 @@ class _LinkOverlayState extends State<LinkOverlay> {
           Expanded(
             child: Text(
               message,
-              style: TextStyle(
-                fontSize: 13,
-                color: cs.onPrimaryContainer,
-              ),
+              style: TextStyle(fontSize: 13, color: cs.onPrimaryContainer),
             ),
           ),
           SizedBox(
@@ -183,8 +182,8 @@ class _LinkOverlayState extends State<LinkOverlay> {
     final displayText = isElementLink
         ? 'Element: ${displayLink.substring(1)}'
         : (displayLink.length > 30
-            ? '${displayLink.substring(0, 30)}...'
-            : displayLink);
+              ? '${displayLink.substring(0, 30)}...'
+              : displayLink);
 
     return Row(
       children: [
@@ -194,8 +193,7 @@ class _LinkOverlayState extends State<LinkOverlay> {
           child: GestureDetector(
             onTap: () {
               if (link != null && link.isNotEmpty) {
-                widget.controller.followLink(
-                    link, widget.getCanvasSize());
+                widget.controller.followLink(link, widget.getCanvasSize());
               }
             },
             child: MouseRegion(
@@ -266,10 +264,7 @@ class _LinkOverlayState extends State<LinkOverlay> {
             decoration: InputDecoration(
               labelText: 'Link URL',
               hintText: 'https://... or #elementId',
-              hintStyle: TextStyle(
-                fontSize: 14,
-                color: cs.onSurfaceVariant,
-              ),
+              hintStyle: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 8,
                 vertical: 0,
@@ -293,8 +288,10 @@ class _LinkOverlayState extends State<LinkOverlay> {
                   widget.controller.enterLinkToElementMode();
                 },
                 icon: const Icon(Icons.touch_app, size: 14),
-                label: const Text('Link to element',
-                    style: TextStyle(fontSize: 12)),
+                label: const Text(
+                  'Link to element',
+                  style: TextStyle(fontSize: 12),
+                ),
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   minimumSize: Size.zero,
@@ -325,8 +322,7 @@ class _LinkOverlayState extends State<LinkOverlay> {
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   minimumSize: Size.zero,
                 ),
-                child:
-                    const Text('Save', style: TextStyle(fontSize: 12)),
+                child: const Text('Save', style: TextStyle(fontSize: 12)),
               ),
             ),
           ],

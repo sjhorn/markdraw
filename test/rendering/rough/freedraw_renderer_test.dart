@@ -4,10 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:markdraw/markdraw.dart';
 
-DrawStyle _style({
-  double strokeWidth = 2.0,
-  double opacity = 1.0,
-}) {
+DrawStyle _style({double strokeWidth = 2.0, double opacity = 1.0}) {
   return DrawStyle(
     strokeColor: const Color(0xFF000000),
     backgroundColor: const Color(0x00000000),
@@ -23,10 +20,9 @@ DrawStyle _style({
 void main() {
   group('FreedrawRenderer.buildPath', () {
     test('single point produces a small path (dot)', () {
-      final path = FreedrawRenderer.buildPath(
-        [const Point(50, 50)],
-        _style().strokeWidth,
-      );
+      final path = FreedrawRenderer.buildPath([
+        const Point(50, 50),
+      ], _style().strokeWidth);
       final bounds = path.getBounds();
       // Should be a tiny area around the point
       expect(bounds.width, lessThan(10));
@@ -34,24 +30,21 @@ void main() {
     });
 
     test('two points produces a straight line', () {
-      final path = FreedrawRenderer.buildPath(
-        [const Point(0, 0), const Point(100, 0)],
-        _style().strokeWidth,
-      );
+      final path = FreedrawRenderer.buildPath([
+        const Point(0, 0),
+        const Point(100, 0),
+      ], _style().strokeWidth);
       final bounds = path.getBounds();
       expect(bounds.width, closeTo(100, 1));
       expect(bounds.height, closeTo(0, 1));
     });
 
     test('three+ points produces a smooth Bezier curve', () {
-      final path = FreedrawRenderer.buildPath(
-        [
-          const Point(0, 0),
-          const Point(50, 30),
-          const Point(100, 0),
-        ],
-        _style().strokeWidth,
-      );
+      final path = FreedrawRenderer.buildPath([
+        const Point(0, 0),
+        const Point(50, 30),
+        const Point(100, 0),
+      ], _style().strokeWidth);
       final bounds = path.getBounds();
       // Curve should span the x range
       expect(bounds.width, greaterThan(90));
@@ -60,28 +53,22 @@ void main() {
     });
 
     test('path starts near first point', () {
-      final path = FreedrawRenderer.buildPath(
-        [
-          const Point(10, 20),
-          const Point(50, 60),
-          const Point(90, 30),
-        ],
-        _style().strokeWidth,
-      );
+      final path = FreedrawRenderer.buildPath([
+        const Point(10, 20),
+        const Point(50, 60),
+        const Point(90, 30),
+      ], _style().strokeWidth);
       final bounds = path.getBounds();
       expect(bounds.left, closeTo(10, 5));
       expect(bounds.top, closeTo(20, 5));
     });
 
     test('path ends near last point', () {
-      final path = FreedrawRenderer.buildPath(
-        [
-          const Point(10, 20),
-          const Point(50, 60),
-          const Point(90, 30),
-        ],
-        _style().strokeWidth,
-      );
+      final path = FreedrawRenderer.buildPath([
+        const Point(10, 20),
+        const Point(50, 60),
+        const Point(90, 30),
+      ], _style().strokeWidth);
       final bounds = path.getBounds();
       expect(bounds.right, closeTo(90, 5));
     });
@@ -98,11 +85,11 @@ void main() {
       final canvas = Canvas(recorder);
       final style = _style();
 
-      FreedrawRenderer.draw(
-        canvas,
-        [const Point(0, 0), const Point(50, 50), const Point(100, 0)],
-        style,
-      );
+      FreedrawRenderer.draw(canvas, [
+        const Point(0, 0),
+        const Point(50, 50),
+        const Point(100, 0),
+      ], style);
 
       final picture = recorder.endRecording();
       expect(picture, isNotNull);
@@ -114,11 +101,10 @@ void main() {
       final style = _style(strokeWidth: 5.0);
 
       // Should not throw
-      FreedrawRenderer.draw(
-        canvas,
-        [const Point(0, 0), const Point(100, 100)],
-        style,
-      );
+      FreedrawRenderer.draw(canvas, [
+        const Point(0, 0),
+        const Point(100, 100),
+      ], style);
 
       final picture = recorder.endRecording();
       expect(picture, isNotNull);
@@ -141,8 +127,7 @@ void main() {
       final canvas = Canvas(recorder);
 
       expect(
-        () => FreedrawRenderer.draw(
-            canvas, [const Point(50, 50)], _style()),
+        () => FreedrawRenderer.draw(canvas, [const Point(50, 50)], _style()),
         returnsNormally,
       );
 

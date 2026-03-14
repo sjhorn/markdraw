@@ -175,39 +175,53 @@ void main() {
   // --- Move unselected group ---
 
   group('Move unselected grouped element', () {
-    test('dragging unselected grouped element selects and moves entire group', () {
-      final ctx = contextWith(elements: [rect1, rect2, rect3]);
-      // Start drag on rect1 (grouped, not selected)
-      tool.onPointerDown(const Point(50, 30), ctx);
-      // Move enough to trigger drag
-      tool.onPointerMove(const Point(60, 40), ctx);
-      final result = tool.onPointerUp(const Point(60, 40), ctx);
+    test(
+      'dragging unselected grouped element selects and moves entire group',
+      () {
+        final ctx = contextWith(elements: [rect1, rect2, rect3]);
+        // Start drag on rect1 (grouped, not selected)
+        tool.onPointerDown(const Point(50, 30), ctx);
+        // Move enough to trigger drag
+        tool.onPointerMove(const Point(60, 40), ctx);
+        final result = tool.onPointerUp(const Point(60, 40), ctx);
 
-      expect(result, isA<CompoundResult>());
-      final compound = result! as CompoundResult;
-      // Should contain a SetSelectionResult for the group
-      final selResult = compound.results.whereType<SetSelectionResult>().first;
-      expect(selResult.selectedIds, {rect1.id, rect2.id});
-      // Should contain UpdateElementResults for both group members
-      final updates = compound.results.whereType<UpdateElementResult>().toList();
-      expect(updates.length, greaterThanOrEqualTo(2));
-    });
+        expect(result, isA<CompoundResult>());
+        final compound = result! as CompoundResult;
+        // Should contain a SetSelectionResult for the group
+        final selResult = compound.results
+            .whereType<SetSelectionResult>()
+            .first;
+        expect(selResult.selectedIds, {rect1.id, rect2.id});
+        // Should contain UpdateElementResults for both group members
+        final updates = compound.results
+            .whereType<UpdateElementResult>()
+            .toList();
+        expect(updates.length, greaterThanOrEqualTo(2));
+      },
+    );
 
-    test('dragging unselected ungrouped element selects and moves only that element', () {
-      final ctx = contextWith(elements: [rect1, rect2, rect3]);
-      // Drag rect3 (ungrouped, at 400,400)
-      tool.onPointerDown(const Point(420, 410), ctx);
-      tool.onPointerMove(const Point(430, 420), ctx);
-      final result = tool.onPointerUp(const Point(430, 420), ctx);
+    test(
+      'dragging unselected ungrouped element selects and moves only that element',
+      () {
+        final ctx = contextWith(elements: [rect1, rect2, rect3]);
+        // Drag rect3 (ungrouped, at 400,400)
+        tool.onPointerDown(const Point(420, 410), ctx);
+        tool.onPointerMove(const Point(430, 420), ctx);
+        final result = tool.onPointerUp(const Point(430, 420), ctx);
 
-      expect(result, isA<CompoundResult>());
-      final compound = result! as CompoundResult;
-      final selResult = compound.results.whereType<SetSelectionResult>().first;
-      expect(selResult.selectedIds, {rect3.id});
-      final updates = compound.results.whereType<UpdateElementResult>().toList();
-      expect(updates, hasLength(1));
-      expect(updates.first.element.id, rect3.id);
-    });
+        expect(result, isA<CompoundResult>());
+        final compound = result! as CompoundResult;
+        final selResult = compound.results
+            .whereType<SetSelectionResult>()
+            .first;
+        expect(selResult.selectedIds, {rect3.id});
+        final updates = compound.results
+            .whereType<UpdateElementResult>()
+            .toList();
+        expect(updates, hasLength(1));
+        expect(updates.first.element.id, rect3.id);
+      },
+    );
 
     test('move delta is applied correctly to all group members', () {
       final ctx = contextWith(elements: [rect1, rect2, rect3]);
@@ -216,7 +230,9 @@ void main() {
       final result = tool.onPointerUp(const Point(70, 50), ctx);
 
       final compound = result! as CompoundResult;
-      final updates = compound.results.whereType<UpdateElementResult>().toList();
+      final updates = compound.results
+          .whereType<UpdateElementResult>()
+          .toList();
       // Both r1 and r2 should be moved by dx=20, dy=20
       final r1Update = updates.firstWhere((u) => u.element.id == rect1.id);
       final r2Update = updates.firstWhere((u) => u.element.id == rect2.id);
@@ -233,11 +249,17 @@ void main() {
     test('groups two or more selected elements', () {
       final ungroupedR1 = RectangleElement(
         id: const ElementId('r1'),
-        x: 10, y: 10, width: 100, height: 50,
+        x: 10,
+        y: 10,
+        width: 100,
+        height: 50,
       );
       final ungroupedR2 = RectangleElement(
         id: const ElementId('r2'),
-        x: 200, y: 200, width: 80, height: 40,
+        x: 200,
+        y: 200,
+        width: 80,
+        height: 40,
       );
       final ctx = contextWith(
         elements: [ungroupedR1, ungroupedR2],
@@ -246,20 +268,21 @@ void main() {
       final result = tool.onKeyEvent('g', ctrl: true, context: ctx);
       expect(result, isA<CompoundResult>());
       final compound = result! as CompoundResult;
-      final updates = compound.results.whereType<UpdateElementResult>().toList();
+      final updates = compound.results
+          .whereType<UpdateElementResult>()
+          .toList();
       expect(updates, hasLength(2));
       // Both should have the same new groupId
       expect(updates[0].element.groupIds, hasLength(1));
       expect(updates[1].element.groupIds, hasLength(1));
-      expect(updates[0].element.groupIds.first,
-          updates[1].element.groupIds.first);
+      expect(
+        updates[0].element.groupIds.first,
+        updates[1].element.groupIds.first,
+      );
     });
 
     test('Ctrl+G requires at least 2 selected elements', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       final result = tool.onKeyEvent('g', ctrl: true, context: ctx);
       expect(result, isNull);
     });
@@ -271,12 +294,22 @@ void main() {
       );
       final result = tool.onKeyEvent('g', ctrl: true, context: ctx);
       final compound = result! as CompoundResult;
-      final updates = compound.results.whereType<UpdateElementResult>().toList();
+      final updates = compound.results
+          .whereType<UpdateElementResult>()
+          .toList();
       // rect1 already has ['g1'], should now have ['g1', newGroupId]
-      expect(updates.firstWhere((u) => u.element.id == rect1.id)
-          .element.groupIds, hasLength(2));
-      expect(updates.firstWhere((u) => u.element.id == rect1.id)
-          .element.groupIds.first, 'g1');
+      expect(
+        updates.firstWhere((u) => u.element.id == rect1.id).element.groupIds,
+        hasLength(2),
+      );
+      expect(
+        updates
+            .firstWhere((u) => u.element.id == rect1.id)
+            .element
+            .groupIds
+            .first,
+        'g1',
+      );
     });
 
     test('Ctrl+G with no selection returns null', () {
@@ -288,11 +321,17 @@ void main() {
     test('Ctrl+G generates unique groupId', () {
       final ungrouped1 = RectangleElement(
         id: const ElementId('a1'),
-        x: 10, y: 10, width: 100, height: 50,
+        x: 10,
+        y: 10,
+        width: 100,
+        height: 50,
       );
       final ungrouped2 = RectangleElement(
         id: const ElementId('a2'),
-        x: 200, y: 200, width: 80, height: 40,
+        x: 200,
+        y: 200,
+        width: 80,
+        height: 40,
       );
       final ctx = contextWith(
         elements: [ungrouped1, ungrouped2],
@@ -300,10 +339,16 @@ void main() {
       );
       final result1 = tool.onKeyEvent('g', ctrl: true, context: ctx);
       final result2 = tool.onKeyEvent('g', ctrl: true, context: ctx);
-      final gid1 = ((result1! as CompoundResult).results.first
-          as UpdateElementResult).element.groupIds.first;
-      final gid2 = ((result2! as CompoundResult).results.first
-          as UpdateElementResult).element.groupIds.first;
+      final gid1 =
+          ((result1! as CompoundResult).results.first as UpdateElementResult)
+              .element
+              .groupIds
+              .first;
+      final gid2 =
+          ((result2! as CompoundResult).results.first as UpdateElementResult)
+              .element
+              .groupIds
+              .first;
       expect(gid1, isNot(gid2));
     });
   });
@@ -316,10 +361,17 @@ void main() {
         elements: [rect1, rect2],
         selectedIds: {rect1.id, rect2.id},
       );
-      final result = tool.onKeyEvent('g', ctrl: true, shift: true, context: ctx);
+      final result = tool.onKeyEvent(
+        'g',
+        ctrl: true,
+        shift: true,
+        context: ctx,
+      );
       expect(result, isA<CompoundResult>());
       final compound = result! as CompoundResult;
-      final updates = compound.results.whereType<UpdateElementResult>().toList();
+      final updates = compound.results
+          .whereType<UpdateElementResult>()
+          .toList();
       expect(updates, hasLength(2));
       // Both had ['g1'], now should be empty
       for (final u in updates) {
@@ -329,7 +381,12 @@ void main() {
 
     test('ungroup with no selection returns null', () {
       final ctx = contextWith(elements: [rect1]);
-      final result = tool.onKeyEvent('g', ctrl: true, shift: true, context: ctx);
+      final result = tool.onKeyEvent(
+        'g',
+        ctrl: true,
+        shift: true,
+        context: ctx,
+      );
       expect(result, isNull);
     });
 
@@ -338,37 +395,53 @@ void main() {
         elements: [rect1, rect3],
         selectedIds: {rect1.id, rect3.id},
       );
-      final result = tool.onKeyEvent('g', ctrl: true, shift: true, context: ctx);
+      final result = tool.onKeyEvent(
+        'g',
+        ctrl: true,
+        shift: true,
+        context: ctx,
+      );
       expect(result, isA<CompoundResult>());
       final compound = result! as CompoundResult;
-      final updates = compound.results.whereType<UpdateElementResult>().toList();
+      final updates = compound.results
+          .whereType<UpdateElementResult>()
+          .toList();
       // Only rect1 has groupIds, rect3 has none
       expect(updates, hasLength(1));
       expect(updates.first.element.id, rect1.id);
     });
 
     test('ungroup all ungrouped elements returns null', () {
-      final ctx = contextWith(
-        elements: [rect3],
-        selectedIds: {rect3.id},
+      final ctx = contextWith(elements: [rect3], selectedIds: {rect3.id});
+      final result = tool.onKeyEvent(
+        'g',
+        ctrl: true,
+        shift: true,
+        context: ctx,
       );
-      final result = tool.onKeyEvent('g', ctrl: true, shift: true, context: ctx);
       expect(result, isNull);
     });
 
     test('nested groups: ungroup removes only outermost', () {
       final nested = RectangleElement(
         id: const ElementId('n1'),
-        x: 10, y: 10, width: 100, height: 50,
+        x: 10,
+        y: 10,
+        width: 100,
+        height: 50,
         groupIds: const ['inner', 'outer'],
       );
-      final ctx = contextWith(
-        elements: [nested],
-        selectedIds: {nested.id},
+      final ctx = contextWith(elements: [nested], selectedIds: {nested.id});
+      final result = tool.onKeyEvent(
+        'g',
+        ctrl: true,
+        shift: true,
+        context: ctx,
       );
-      final result = tool.onKeyEvent('g', ctrl: true, shift: true, context: ctx);
       final compound = result! as CompoundResult;
-      final updates = compound.results.whereType<UpdateElementResult>().toList();
+      final updates = compound.results
+          .whereType<UpdateElementResult>()
+          .toList();
       expect(updates.first.element.groupIds, ['inner']);
     });
   });
@@ -407,10 +480,7 @@ void main() {
     });
 
     test('duplicating ungrouped elements preserves empty groupIds', () {
-      final ctx = contextWith(
-        elements: [rect3],
-        selectedIds: {rect3.id},
-      );
+      final ctx = contextWith(elements: [rect3], selectedIds: {rect3.id});
       final result = tool.onKeyEvent('d', ctrl: true, context: ctx);
       final compound = result! as CompoundResult;
       final adds = compound.results.whereType<AddElementResult>().toList();
@@ -420,12 +490,18 @@ void main() {
     test('duplicating preserves nested groupId structure', () {
       final nested1 = RectangleElement(
         id: const ElementId('n1'),
-        x: 10, y: 10, width: 100, height: 50,
+        x: 10,
+        y: 10,
+        width: 100,
+        height: 50,
         groupIds: const ['inner', 'outer'],
       );
       final nested2 = RectangleElement(
         id: const ElementId('n2'),
-        x: 200, y: 200, width: 80, height: 40,
+        x: 200,
+        y: 200,
+        width: 80,
+        height: 40,
         groupIds: const ['inner', 'outer'],
       );
       final ctx = contextWith(
@@ -481,10 +557,7 @@ void main() {
     });
 
     test('pasting ungrouped elements preserves empty groupIds', () {
-      final ctx = contextWith(
-        elements: [rect3],
-        clipboard: [rect3],
-      );
+      final ctx = contextWith(elements: [rect3], clipboard: [rect3]);
       final result = tool.onKeyEvent('v', ctrl: true, context: ctx);
       final compound = result! as CompoundResult;
       final adds = compound.results.whereType<AddElementResult>().toList();
@@ -499,10 +572,12 @@ void main() {
       // Paste twice — each paste should get its own independent groupId
       final result1 = tool.onKeyEvent('v', ctrl: true, context: ctx);
       final result2 = tool.onKeyEvent('v', ctrl: true, context: ctx);
-      final adds1 = (result1! as CompoundResult)
-          .results.whereType<AddElementResult>().toList();
-      final adds2 = (result2! as CompoundResult)
-          .results.whereType<AddElementResult>().toList();
+      final adds1 = (result1! as CompoundResult).results
+          .whereType<AddElementResult>()
+          .toList();
+      final adds2 = (result2! as CompoundResult).results
+          .whereType<AddElementResult>()
+          .toList();
       final gid1 = adds1.first.element.groupIds.first;
       final gid2 = adds2.first.element.groupIds.first;
       expect(gid1, isNot(gid2));
@@ -520,7 +595,9 @@ void main() {
       final result = tool.onKeyEvent('Delete', context: ctx);
       expect(result, isA<CompoundResult>());
       final compound = result! as CompoundResult;
-      final removes = compound.results.whereType<RemoveElementResult>().toList();
+      final removes = compound.results
+          .whereType<RemoveElementResult>()
+          .toList();
       expect(removes, hasLength(2));
       expect(removes.map((r) => r.id).toSet(), {rect1.id, rect2.id});
     });
@@ -532,7 +609,9 @@ void main() {
       );
       final result = tool.onKeyEvent('Delete', context: ctx);
       final compound = result! as CompoundResult;
-      final removes = compound.results.whereType<RemoveElementResult>().toList();
+      final removes = compound.results
+          .whereType<RemoveElementResult>()
+          .toList();
       expect(removes, hasLength(1));
       expect(removes.first.id, rect1.id);
     });
@@ -544,11 +623,17 @@ void main() {
     test('Ctrl+G produces scene-changing result', () {
       final ungrouped1 = RectangleElement(
         id: const ElementId('u1'),
-        x: 10, y: 10, width: 100, height: 50,
+        x: 10,
+        y: 10,
+        width: 100,
+        height: 50,
       );
       final ungrouped2 = RectangleElement(
         id: const ElementId('u2'),
-        x: 200, y: 200, width: 80, height: 40,
+        x: 200,
+        y: 200,
+        width: 80,
+        height: 40,
       );
       final ctx = contextWith(
         elements: [ungrouped1, ungrouped2],
@@ -563,7 +648,12 @@ void main() {
         elements: [rect1, rect2],
         selectedIds: {rect1.id, rect2.id},
       );
-      final result = tool.onKeyEvent('g', ctrl: true, shift: true, context: ctx);
+      final result = tool.onKeyEvent(
+        'g',
+        ctrl: true,
+        shift: true,
+        context: ctx,
+      );
       expect(isSceneChangingResult(result), isTrue);
     });
   });

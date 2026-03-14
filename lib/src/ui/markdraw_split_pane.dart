@@ -212,7 +212,8 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
         });
       } else {
         final bg = widget.controller.canvasBackgroundColor;
-        final wrapped = '---\nmarkdraw: 1\nbackground: "$bg"\n---\n\n'
+        final wrapped =
+            '---\nmarkdraw: 1\nbackground: "$bg"\n---\n\n'
             '```markdraw\n$text\n```';
         final parseResult = DocumentParser.parse(wrapped);
         final doc = parseResult.value;
@@ -291,8 +292,11 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
     );
   }
 
-  Widget _buildDivider(BuildContext context, double primarySize,
-      double usableSize) {
+  Widget _buildDivider(
+    BuildContext context,
+    double primarySize,
+    double usableSize,
+  ) {
     final dividerColor = _isDraggingDivider
         ? Theme.of(context).colorScheme.primary.withAlpha(80)
         : Theme.of(context).dividerColor;
@@ -306,8 +310,10 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
           },
           onVerticalDragUpdate: (details) {
             setState(() {
-              final newTop = (primarySize + details.delta.dy)
-                  .clamp(_minPaneWidth, usableSize - _minPaneWidth);
+              final newTop = (primarySize + details.delta.dy).clamp(
+                _minPaneWidth,
+                usableSize - _minPaneWidth,
+              );
               _splitRatio = newTop / usableSize;
             });
           },
@@ -327,8 +333,10 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
         },
         onHorizontalDragUpdate: (details) {
           setState(() {
-            final newLeft = (primarySize + details.delta.dx)
-                .clamp(_minPaneWidth, usableSize - _minPaneWidth);
+            final newLeft = (primarySize + details.delta.dx).clamp(
+              _minPaneWidth,
+              usableSize - _minPaneWidth,
+            );
             _splitRatio = newLeft / usableSize;
           });
         },
@@ -355,10 +363,7 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
           return Column(
             children: [
               ClipRect(
-                child: SizedBox(
-                  height: topHeight,
-                  child: _buildCanvasPane(),
-                ),
+                child: SizedBox(height: topHeight, child: _buildCanvasPane()),
               ),
               _buildDivider(context, topHeight, usableHeight),
               Expanded(child: _buildTextPane()),
@@ -376,10 +381,7 @@ class _MarkdrawSplitPaneState extends State<MarkdrawSplitPane>
         return Row(
           children: [
             ClipRect(
-              child: SizedBox(
-                width: leftWidth,
-                child: _buildCanvasPane(),
-              ),
+              child: SizedBox(width: leftWidth, child: _buildCanvasPane()),
             ),
             _buildDivider(context, leftWidth, usableWidth),
             Expanded(child: _buildTextPane()),
@@ -428,14 +430,15 @@ class _TextPane extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
             color: theme.colorScheme.surfaceContainerHighest,
-            border: Border(
-              bottom: BorderSide(color: theme.dividerColor),
-            ),
+            border: Border(bottom: BorderSide(color: theme.dividerColor)),
           ),
           child: Row(
             children: [
-              Icon(Icons.code,
-                  size: 16, color: theme.colorScheme.onSurfaceVariant),
+              Icon(
+                Icons.code,
+                size: 16,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
               const SizedBox(width: 8),
               Text(
                 'markdraw',
@@ -523,24 +526,24 @@ class _TextPane extends StatelessWidget {
                 fontHeight: 1.5,
                 codeTheme: CodeHighlightTheme(
                   languages: {
-                    'markdraw':
-                        CodeHighlightThemeMode(mode: langMarkdraw),
+                    'markdraw': CodeHighlightThemeMode(mode: langMarkdraw),
                   },
                   theme: isDark ? atomOneDarkTheme : atomOneLightTheme,
                 ),
               ),
               indicatorBuilder:
                   (context, editingController, chunkController, notifier) {
-                return DefaultCodeLineNumber(
-                  controller: editingController,
-                  notifier: notifier,
-                  textStyle: TextStyle(
-                    fontSize: 12,
-                    color: theme.colorScheme.onSurfaceVariant
-                        .withAlpha(120),
-                  ),
-                );
-              },
+                    return DefaultCodeLineNumber(
+                      controller: editingController,
+                      notifier: notifier,
+                      textStyle: TextStyle(
+                        fontSize: 12,
+                        color: theme.colorScheme.onSurfaceVariant.withAlpha(
+                          120,
+                        ),
+                      ),
+                    );
+                  },
               sperator: const SizedBox.shrink(),
               padding: const EdgeInsets.all(8),
             ),
@@ -602,9 +605,7 @@ class _ParseStatusBar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
           color: theme.colorScheme.surfaceContainerHighest,
-          border: Border(
-            top: BorderSide(color: theme.dividerColor),
-          ),
+          border: Border(top: BorderSide(color: theme.dividerColor)),
         ),
         child: Row(
           children: [

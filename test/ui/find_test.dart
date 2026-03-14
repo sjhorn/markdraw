@@ -189,7 +189,8 @@ void main() {
         text: 'match too',
       );
       controller.loadScene(
-          Scene().addElement(t1).addElement(t2).addElement(t3));
+        Scene().addElement(t1).addElement(t2).addElement(t3),
+      );
 
       controller.openFind();
       controller.updateFindQuery('match');

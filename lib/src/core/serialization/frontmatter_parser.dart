@@ -87,19 +87,22 @@ class FrontmatterParser {
         case 'grid':
           grid = int.tryParse(value);
         default:
-          warnings.add(ParseWarning(
-            line: i + 1,
-            message: 'Unknown frontmatter key: $key',
-            context: line,
-          ));
+          warnings.add(
+            ParseWarning(
+              line: i + 1,
+              message: 'Unknown frontmatter key: $key',
+              context: line,
+            ),
+          );
       }
     }
 
     // Remaining content after frontmatter
     final remaining = lines.sublist(closingIndex + 1).join('\n');
     // Strip leading newline if present
-    final trimmedRemaining =
-        remaining.startsWith('\n') ? remaining.substring(1) : remaining;
+    final trimmedRemaining = remaining.startsWith('\n')
+        ? remaining.substring(1)
+        : remaining;
 
     return ParseResult(
       value: FrontmatterResult(

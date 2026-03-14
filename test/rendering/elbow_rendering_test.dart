@@ -11,8 +11,12 @@ class _MockAdapter implements RoughAdapter {
   Arrowhead? lastEndArrowhead;
 
   @override
-  void drawRectangle(Canvas canvas, Bounds bounds, DrawStyle style,
-      {Roundness? roundness}) {
+  void drawRectangle(
+    Canvas canvas,
+    Bounds bounds,
+    DrawStyle style, {
+    Roundness? roundness,
+  }) {
     calls.add('drawRectangle');
   }
 
@@ -22,8 +26,12 @@ class _MockAdapter implements RoughAdapter {
   }
 
   @override
-  void drawDiamond(Canvas canvas, Bounds bounds, DrawStyle style,
-      {Roundness? roundness}) {
+  void drawDiamond(
+    Canvas canvas,
+    Bounds bounds,
+    DrawStyle style, {
+    Roundness? roundness,
+  }) {
     calls.add('drawDiamond');
   }
 
@@ -135,21 +143,20 @@ ArrowElement _elbowArrow({
   double opacity = 1.0,
   double angle = 0.0,
   StrokeStyle strokeStyle = StrokeStyle.solid,
-}) =>
-    ArrowElement(
-      id: const ElementId('ea1'),
-      x: x,
-      y: y,
-      width: w,
-      height: h,
-      points: points ?? const [Point(0, 0), Point(0, 50), Point(100, 50)],
-      startArrowhead: startArrowhead,
-      endArrowhead: endArrowhead,
-      arrowType: ArrowType.sharpElbow,
-      opacity: opacity,
-      angle: angle,
-      strokeStyle: strokeStyle,
-    );
+}) => ArrowElement(
+  id: const ElementId('ea1'),
+  x: x,
+  y: y,
+  width: w,
+  height: h,
+  points: points ?? const [Point(0, 0), Point(0, 50), Point(100, 50)],
+  startArrowhead: startArrowhead,
+  endArrowhead: endArrowhead,
+  arrowType: ArrowType.sharpElbow,
+  opacity: opacity,
+  angle: angle,
+  strokeStyle: strokeStyle,
+);
 
 ArrowElement _regularArrow({
   double x = 0,
@@ -157,15 +164,14 @@ ArrowElement _regularArrow({
   double w = 100,
   double h = 100,
   List<Point>? points,
-}) =>
-    ArrowElement(
-      id: const ElementId('ra1'),
-      x: x,
-      y: y,
-      width: w,
-      height: h,
-      points: points ?? const [Point(0, 0), Point(100, 100)],
-    );
+}) => ArrowElement(
+  id: const ElementId('ra1'),
+  x: x,
+  y: y,
+  width: w,
+  height: h,
+  points: points ?? const [Point(0, 0), Point(100, 100)],
+);
 
 void main() {
   group('Elbow arrow rendering', () {
@@ -240,20 +246,22 @@ void main() {
       expect(adapter.calls, contains('drawElbowArrow'));
     });
 
-    test('elbowed arrow ignores rotation (angle forced to 0 by convention)',
-        () {
-      // Elbowed arrows should ideally have angle=0, but if angle is set,
-      // the renderer still processes it via the standard rotation wrapper.
-      // The convention is that elbowed arrows always have angle=0.
-      final adapter = _MockAdapter();
-      final (recorder, canvas) = _makeCanvas();
-      final arrow = _elbowArrow(angle: 0.0);
+    test(
+      'elbowed arrow ignores rotation (angle forced to 0 by convention)',
+      () {
+        // Elbowed arrows should ideally have angle=0, but if angle is set,
+        // the renderer still processes it via the standard rotation wrapper.
+        // The convention is that elbowed arrows always have angle=0.
+        final adapter = _MockAdapter();
+        final (recorder, canvas) = _makeCanvas();
+        final arrow = _elbowArrow(angle: 0.0);
 
-      ElementRenderer.render(canvas, arrow, adapter);
-      recorder.endRecording();
+        ElementRenderer.render(canvas, arrow, adapter);
+        recorder.endRecording();
 
-      expect(adapter.calls, contains('drawElbowArrow'));
-    });
+        expect(adapter.calls, contains('drawElbowArrow'));
+      },
+    );
   });
 
   group('Elbow arrow SVG export', () {
@@ -274,9 +282,7 @@ void main() {
     });
 
     test('elbowed arrow SVG includes arrowhead paths', () {
-      final arrow = _elbowArrow(
-        endArrowhead: Arrowhead.arrow,
-      );
+      final arrow = _elbowArrow(endArrowhead: Arrowhead.arrow);
 
       final svg = SvgElementRenderer.render(arrow);
 

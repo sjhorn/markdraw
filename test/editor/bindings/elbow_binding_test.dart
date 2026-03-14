@@ -7,15 +7,14 @@ Element _rect({
   double y = 0,
   double w = 100,
   double h = 100,
-}) =>
-    Element(
-      id: ElementId(id),
-      type: 'rectangle',
-      x: x,
-      y: y,
-      width: w,
-      height: h,
-    );
+}) => Element(
+  id: ElementId(id),
+  type: 'rectangle',
+  x: x,
+  y: y,
+  width: w,
+  height: h,
+);
 
 ArrowElement _elbowArrow({
   required String id,
@@ -26,18 +25,17 @@ ArrowElement _elbowArrow({
   List<Point>? points,
   PointBinding? startBinding,
   PointBinding? endBinding,
-}) =>
-    ArrowElement(
-      id: ElementId(id),
-      x: x,
-      y: y,
-      width: w,
-      height: h,
-      points: points ?? const [Point(0, 0), Point(100, 100)],
-      startBinding: startBinding,
-      endBinding: endBinding,
-      arrowType: ArrowType.sharpElbow,
-    );
+}) => ArrowElement(
+  id: ElementId(id),
+  x: x,
+  y: y,
+  width: w,
+  height: h,
+  points: points ?? const [Point(0, 0), Point(100, 100)],
+  startBinding: startBinding,
+  endBinding: endBinding,
+  arrowType: ArrowType.sharpElbow,
+);
 
 ArrowElement _regularArrow({
   required String id,
@@ -48,17 +46,16 @@ ArrowElement _regularArrow({
   List<Point>? points,
   PointBinding? startBinding,
   PointBinding? endBinding,
-}) =>
-    ArrowElement(
-      id: ElementId(id),
-      x: x,
-      y: y,
-      width: w,
-      height: h,
-      points: points ?? const [Point(0, 0), Point(100, 100)],
-      startBinding: startBinding,
-      endBinding: endBinding,
-    );
+}) => ArrowElement(
+  id: ElementId(id),
+  x: x,
+  y: y,
+  width: w,
+  height: h,
+  points: points ?? const [Point(0, 0), Point(100, 100)],
+  startBinding: startBinding,
+  endBinding: endBinding,
+);
 
 Scene _scene(List<Element> elements) {
   var scene = Scene();
@@ -95,8 +92,7 @@ void main() {
         final movedRect1 = rect1.copyWith(y: 100.0);
         final scene = _scene([movedRect1, rect2, arrow]);
 
-        final updated =
-            BindingUtils.updateBoundArrowEndpoints(arrow, scene);
+        final updated = BindingUtils.updateBoundArrowEndpoints(arrow, scene);
 
         expect(updated.elbowed, isTrue);
         _assertOrthogonal(_absolutePoints(updated));
@@ -279,62 +275,75 @@ void main() {
     });
 
     group('middle segments preserved on bound shape move', () {
-      test('6-point elbow arrow preserves middle segments when end shape moves',
-          () {
-        final rect1 = _rect(id: 'r1', x: 0, y: 0, w: 100, h: 100);
-        final rect2 = _rect(id: 'r2', x: 400, y: 200, w: 100, h: 100);
-        // Pre-routed 6-point arrow with custom middle segments
-        // Absolute: (100,50)→(150,50)→(150,150)→(300,150)→(300,250)→(400,250)
-        final arrow = _elbowArrow(
-          id: 'a1',
-          x: 100,
-          y: 50,
-          w: 300,
-          h: 200,
-          points: const [
-            Point(0, 0), // abs (100,50)
-            Point(50, 0), // abs (150,50)
-            Point(50, 100), // abs (150,150)
-            Point(200, 100), // abs (300,150)
-            Point(200, 200), // abs (300,250)
-            Point(300, 200), // abs (400,250)
-          ],
-          startBinding: const PointBinding(
-            elementId: 'r1',
-            fixedPoint: Point(1.0, 0.5), // right edge
-          ),
-          endBinding: const PointBinding(
-            elementId: 'r2',
-            fixedPoint: Point(0.0, 0.5), // left edge
-          ),
-        );
+      test(
+        '6-point elbow arrow preserves middle segments when end shape moves',
+        () {
+          final rect1 = _rect(id: 'r1', x: 0, y: 0, w: 100, h: 100);
+          final rect2 = _rect(id: 'r2', x: 400, y: 200, w: 100, h: 100);
+          // Pre-routed 6-point arrow with custom middle segments
+          // Absolute: (100,50)→(150,50)→(150,150)→(300,150)→(300,250)→(400,250)
+          final arrow = _elbowArrow(
+            id: 'a1',
+            x: 100,
+            y: 50,
+            w: 300,
+            h: 200,
+            points: const [
+              Point(0, 0), // abs (100,50)
+              Point(50, 0), // abs (150,50)
+              Point(50, 100), // abs (150,150)
+              Point(200, 100), // abs (300,150)
+              Point(200, 200), // abs (300,250)
+              Point(300, 200), // abs (400,250)
+            ],
+            startBinding: const PointBinding(
+              elementId: 'r1',
+              fixedPoint: Point(1.0, 0.5), // right edge
+            ),
+            endBinding: const PointBinding(
+              elementId: 'r2',
+              fixedPoint: Point(0.0, 0.5), // left edge
+            ),
+          );
 
-        // Move rect2 down by 50 (left edge now at (400,300))
-        final movedRect2 = rect2.copyWith(y: 250.0);
-        final scene = _scene([rect1, movedRect2, arrow]);
+          // Move rect2 down by 50 (left edge now at (400,300))
+          final movedRect2 = rect2.copyWith(y: 250.0);
+          final scene = _scene([rect1, movedRect2, arrow]);
 
-        final updated =
-            BindingUtils.updateBoundArrowEndpoints(arrow, scene);
+          final updated = BindingUtils.updateBoundArrowEndpoints(arrow, scene);
 
-        final absPoints = _absolutePoints(updated);
-        _assertOrthogonal(absPoints);
+          final absPoints = _absolutePoints(updated);
+          _assertOrthogonal(absPoints);
 
-        // Start should be unchanged
-        expect(absPoints.first.x, closeTo(100, 0.1));
-        expect(absPoints.first.y, closeTo(50, 0.1));
+          // Start should be unchanged
+          expect(absPoints.first.x, closeTo(100, 0.1));
+          expect(absPoints.first.y, closeTo(50, 0.1));
 
-        // Middle segments P1(150,50) and P2(150,150) should be preserved
-        expect(absPoints.any((p) =>
-            (p.x - 150).abs() < 0.1 && (p.y - 50).abs() < 0.1), isTrue,
-            reason: 'P1 should be preserved at (150,50)');
-        expect(absPoints.any((p) =>
-            (p.x - 150).abs() < 0.1 && (p.y - 150).abs() < 0.1), isTrue,
-            reason: 'P2 should be preserved at (150,150)');
-        // P3 at (300,150) should be preserved too
-        expect(absPoints.any((p) =>
-            (p.x - 300).abs() < 0.1 && (p.y - 150).abs() < 0.1), isTrue,
-            reason: 'P3 should be preserved at (300,150)');
-      });
+          // Middle segments P1(150,50) and P2(150,150) should be preserved
+          expect(
+            absPoints.any(
+              (p) => (p.x - 150).abs() < 0.1 && (p.y - 50).abs() < 0.1,
+            ),
+            isTrue,
+            reason: 'P1 should be preserved at (150,50)',
+          );
+          expect(
+            absPoints.any(
+              (p) => (p.x - 150).abs() < 0.1 && (p.y - 150).abs() < 0.1,
+            ),
+            isTrue,
+            reason: 'P2 should be preserved at (150,150)',
+          );
+          // P3 at (300,150) should be preserved too
+          expect(
+            absPoints.any(
+              (p) => (p.x - 300).abs() < 0.1 && (p.y - 150).abs() < 0.1,
+            ),
+            isTrue,
+            reason: 'P3 should be preserved at (300,150)',
+          );
+        },
+      );
 
       test('segment drag then move bound shape preserves dragged segment', () {
         final rect1 = _rect(id: 'r1', x: 0, y: 0, w: 100, h: 100);
@@ -369,8 +378,7 @@ void main() {
         final movedRect2 = rect2.copyWith(y: 60.0);
         final scene = _scene([rect1, movedRect2, arrow]);
 
-        final updated =
-            BindingUtils.updateBoundArrowEndpoints(arrow, scene);
+        final updated = BindingUtils.updateBoundArrowEndpoints(arrow, scene);
 
         final absPoints = _absolutePoints(updated);
         _assertOrthogonal(absPoints);
@@ -380,8 +388,11 @@ void main() {
         expect(absPoints.first.y, closeTo(50, 0.1));
 
         // The dragged middle segment's Y=80 should be preserved
-        expect(absPoints.any((p) => (p.y - 80).abs() < 0.1), isTrue,
-            reason: 'Dragged middle segment y=80 should be preserved');
+        expect(
+          absPoints.any((p) => (p.y - 80).abs() < 0.1),
+          isTrue,
+          reason: 'Dragged middle segment y=80 should be preserved',
+        );
       });
 
       test('2-point elbow arrow falls back to full route', () {
@@ -409,8 +420,7 @@ void main() {
         final movedRect1 = rect1.copyWith(y: 100.0);
         final scene = _scene([movedRect1, rect2, arrow]);
 
-        final updated =
-            BindingUtils.updateBoundArrowEndpoints(arrow, scene);
+        final updated = BindingUtils.updateBoundArrowEndpoints(arrow, scene);
 
         expect(updated.elbowed, isTrue);
         _assertOrthogonal(_absolutePoints(updated));

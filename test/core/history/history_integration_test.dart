@@ -3,17 +3,20 @@ import 'package:markdraw/markdraw.dart';
 
 /// Helper to create a basic EditorState.
 EditorState _baseState([Scene? scene]) => EditorState(
-      scene: scene ?? Scene(),
-      viewport: const ViewportState(),
-      selectedIds: {},
-      activeToolType: ToolType.select,
-    );
+  scene: scene ?? Scene(),
+  viewport: const ViewportState(),
+  selectedIds: {},
+  activeToolType: ToolType.select,
+);
 
 /// Helper to create a rectangle element.
-RectangleElement _rect(String id,
-        {double x = 0, double y = 0, double w = 100, double h = 50}) =>
-    RectangleElement(
-        id: ElementId(id), x: x, y: y, width: w, height: h);
+RectangleElement _rect(
+  String id, {
+  double x = 0,
+  double y = 0,
+  double w = 100,
+  double h = 50,
+}) => RectangleElement(id: ElementId(id), x: x, y: y, width: w, height: h);
 
 void main() {
   group('Undo/Redo Integration', () {
@@ -27,7 +30,10 @@ void main() {
 
     /// Apply a result, pushing to history if scene-changing.
     EditorState applyWithHistory(
-        EditorState s, HistoryManager h, ToolResult result) {
+      EditorState s,
+      HistoryManager h,
+      ToolResult result,
+    ) {
       if (isSceneChangingResult(result)) {
         h.push(s.scene);
       }
@@ -89,7 +95,10 @@ void main() {
       state = applyWithHistory(state, history, AddElementResult(rect));
 
       state = applyWithHistory(
-          state, history, RemoveElementResult(const ElementId('r1')));
+        state,
+        history,
+        RemoveElementResult(const ElementId('r1')),
+      );
       expect(state.scene.activeElements, isEmpty);
 
       final undone = history.undo(state.scene);
@@ -208,8 +217,7 @@ void main() {
     test('undo preserves selection', () {
       final rect = _rect('r1');
       state = applyWithHistory(state, history, AddElementResult(rect));
-      state = state.applyResult(
-          SetSelectionResult({const ElementId('r1')}));
+      state = state.applyResult(SetSelectionResult({const ElementId('r1')}));
 
       state = state.copyWith(scene: history.undo(state.scene)!);
       // Selection preserved even though element was removed from scene
@@ -219,8 +227,10 @@ void main() {
     test('undo preserves viewport', () {
       state = applyWithHistory(state, history, AddElementResult(_rect('r1')));
       state = state.applyResult(
-          UpdateViewportResult(const ViewportState(
-              offset: Offset(100, 200), zoom: 2.0)));
+        UpdateViewportResult(
+          const ViewportState(offset: Offset(100, 200), zoom: 2.0),
+        ),
+      );
 
       state = state.copyWith(scene: history.undo(state.scene)!);
       expect(state.viewport.offset, const Offset(100, 200));
@@ -262,10 +272,8 @@ void main() {
 
       // Move both elements in a single compound result
       final compound = CompoundResult([
-        UpdateElementResult(
-            _rect('r1', x: 50, y: 50)),
-        UpdateElementResult(
-            _rect('r2', x: 150, y: 150)),
+        UpdateElementResult(_rect('r1', x: 50, y: 50)),
+        UpdateElementResult(_rect('r2', x: 150, y: 150)),
       ]);
       state = applyWithHistory(state, history, compound);
 

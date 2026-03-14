@@ -93,10 +93,7 @@ void main() {
       expect(modified, isA<ArrowElement>());
       expect(modified.type, 'arrow');
       expect(modified.points, [const Point(10, 20), const Point(200, 300)]);
-      expect(
-        (modified).startBinding!.elementId,
-        'rect-1',
-      );
+      expect((modified).startBinding!.elementId, 'rect-1');
     });
 
     test('bumpVersion returns ArrowElement', () {
@@ -149,10 +146,7 @@ void main() {
 
   group('PointBinding', () {
     test('constructs with elementId and fixedPoint', () {
-      const b = PointBinding(
-        elementId: 'rect-1',
-        fixedPoint: Point(0.5, 0.5),
-      );
+      const b = PointBinding(elementId: 'rect-1', fixedPoint: Point(0.5, 0.5));
       expect(b.elementId, 'rect-1');
       expect(b.fixedPoint, const Point(0.5, 0.5));
     });

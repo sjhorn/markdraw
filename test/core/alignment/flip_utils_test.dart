@@ -5,20 +5,23 @@ import 'package:markdraw/markdraw.dart';
 
 void main() {
   group('FlipUtils.flipHorizontal', () {
-    test('mirrors single element around its own center (no-op for position)', () {
-      final rect = RectangleElement(
-        id: const ElementId('r1'),
-        x: 100,
-        y: 50,
-        width: 80,
-        height: 40,
-      );
-      final result = FlipUtils.flipHorizontal([rect]);
-      expect(result.length, 1);
-      // Single element: center stays the same
-      expect(result.first.x, 100);
-      expect(result.first.y, 50);
-    });
+    test(
+      'mirrors single element around its own center (no-op for position)',
+      () {
+        final rect = RectangleElement(
+          id: const ElementId('r1'),
+          x: 100,
+          y: 50,
+          width: 80,
+          height: 40,
+        );
+        final result = FlipUtils.flipHorizontal([rect]);
+        expect(result.length, 1);
+        // Single element: center stays the same
+        expect(result.first.x, 100);
+        expect(result.first.y, 50);
+      },
+    );
 
     test('mirrors two elements horizontally', () {
       final r1 = RectangleElement(

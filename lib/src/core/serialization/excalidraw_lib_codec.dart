@@ -21,16 +21,12 @@ class ExcalidrawLibCodec {
       decoded = jsonDecode(json);
     } catch (e) {
       warnings.add(ParseWarning(line: 0, message: 'Invalid JSON: $e'));
-      return ParseResult(
-        value: LibraryDocument(),
-        warnings: warnings,
-      );
+      return ParseResult(value: LibraryDocument(), warnings: warnings);
     }
 
     if (decoded is! Map<String, dynamic>) {
       warnings.add(
-        const ParseWarning(
-            line: 0, message: 'Expected JSON object at root'),
+        const ParseWarning(line: 0, message: 'Expected JSON object at root'),
       );
       return ParseResult(value: LibraryDocument(), warnings: warnings);
     }
@@ -67,7 +63,10 @@ class ExcalidrawLibCodec {
       final raw = libraryItems[i];
       if (raw is! Map<String, dynamic>) {
         warnings.add(
-          ParseWarning(line: i, message: 'Library item $i is not a JSON object'),
+          ParseWarning(
+            line: i,
+            message: 'Library item $i is not a JSON object',
+          ),
         );
         continue;
       }
@@ -85,8 +84,12 @@ class ExcalidrawLibCodec {
           if (elRaw is! Map<String, dynamic>) continue;
           final type = elRaw['type'] as String?;
           if (type == null) continue;
-          final element =
-              ExcalidrawJsonCodec.parseElement(elRaw, type, j, warnings);
+          final element = ExcalidrawJsonCodec.parseElement(
+            elRaw,
+            type,
+            j,
+            warnings,
+          );
           if (element != null) elements.add(element);
         }
       }
@@ -96,13 +99,16 @@ class ExcalidrawLibCodec {
       final itemFilesJson = raw['files'];
       if (itemFilesJson != null) {
         itemFiles.addAll(
-            ExcalidrawJsonCodec.parseFilesJson(itemFilesJson, warnings));
+          ExcalidrawJsonCodec.parseFilesJson(itemFilesJson, warnings),
+        );
       }
       // Also check root-level files
       final rootFilesJson = root['files'];
       if (rootFilesJson != null) {
-        final rootFiles =
-            ExcalidrawJsonCodec.parseFilesJson(rootFilesJson, warnings);
+        final rootFiles = ExcalidrawJsonCodec.parseFilesJson(
+          rootFilesJson,
+          warnings,
+        );
         // Only include files referenced by this item's elements
         for (final el in elements) {
           if (el is ImageElement && rootFiles.containsKey(el.fileId)) {
@@ -111,17 +117,22 @@ class ExcalidrawLibCodec {
         }
       }
 
-      items.add(LibraryItem(
-        id: id,
-        name: name,
-        status: status,
-        created: created,
-        elements: elements,
-        files: itemFiles,
-      ));
+      items.add(
+        LibraryItem(
+          id: id,
+          name: name,
+          status: status,
+          created: created,
+          elements: elements,
+          files: itemFiles,
+        ),
+      );
     }
 
-    return ParseResult(value: LibraryDocument(items: items), warnings: warnings);
+    return ParseResult(
+      value: LibraryDocument(items: items),
+      warnings: warnings,
+    );
   }
 
   static ParseResult<LibraryDocument> _parseV1(
@@ -145,28 +156,38 @@ class ExcalidrawLibCodec {
         if (elRaw is! Map<String, dynamic>) continue;
         final type = elRaw['type'] as String?;
         if (type == null) continue;
-        final element =
-            ExcalidrawJsonCodec.parseElement(elRaw, type, j, warnings);
+        final element = ExcalidrawJsonCodec.parseElement(
+          elRaw,
+          type,
+          j,
+          warnings,
+        );
         if (element != null) elements.add(element);
       }
 
-      items.add(LibraryItem(
-        id: 'v1-item-$i',
-        name: '',
-        status: 'unpublished',
-        created: 0,
-        elements: elements,
-      ));
+      items.add(
+        LibraryItem(
+          id: 'v1-item-$i',
+          name: '',
+          status: 'unpublished',
+          created: 0,
+          elements: elements,
+        ),
+      );
     }
 
-    return ParseResult(value: LibraryDocument(items: items), warnings: warnings);
+    return ParseResult(
+      value: LibraryDocument(items: items),
+      warnings: warnings,
+    );
   }
 
   /// Serializes a [LibraryDocument] to .excalidrawlib JSON (v2 format).
   static String serialize(LibraryDocument doc) {
     final libraryItems = doc.items.map((item) {
-      final elementsJson =
-          item.elements.map(ExcalidrawJsonCodec.elementToJson).toList();
+      final elementsJson = item.elements
+          .map(ExcalidrawJsonCodec.elementToJson)
+          .toList();
       final result = <String, dynamic>{
         'id': item.id,
         'status': item.status,

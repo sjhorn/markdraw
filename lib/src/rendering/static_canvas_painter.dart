@@ -1,4 +1,3 @@
-
 import 'dart:ui' as ui;
 
 import 'package:flutter/rendering.dart';
@@ -84,12 +83,14 @@ class StaticCanvasPainter extends CustomPainter {
           : null;
       if (parentFrame != null) {
         canvas.save();
-        canvas.clipRect(Rect.fromLTWH(
-          parentFrame.x,
-          parentFrame.y,
-          parentFrame.width,
-          parentFrame.height,
-        ));
+        canvas.clipRect(
+          Rect.fromLTWH(
+            parentFrame.x,
+            parentFrame.y,
+            parentFrame.width,
+            parentFrame.height,
+          ),
+        );
       }
 
       // For arrows with bound text, wrap in a saveLayer so we can
@@ -99,14 +100,17 @@ class StaticCanvasPainter extends CustomPainter {
       final arrowLabel = element is ArrowElement
           ? scene.findBoundText(element.id)
           : null;
-      final hasArrowLabel =
-          arrowLabel != null && arrowLabel.text.isNotEmpty;
+      final hasArrowLabel = arrowLabel != null && arrowLabel.text.isNotEmpty;
       if (hasArrowLabel) {
         canvas.saveLayer(null, Paint());
       }
 
-      ElementRenderer.render(canvas, element, adapter,
-          resolvedImages: resolvedImages);
+      ElementRenderer.render(
+        canvas,
+        element,
+        adapter,
+        resolvedImages: resolvedImages,
+      );
       _renderBoundText(canvas, element);
 
       if (hasArrowLabel) {
@@ -120,16 +124,24 @@ class StaticCanvasPainter extends CustomPainter {
 
     // Render live creation preview on top
     if (previewElement != null) {
-      ElementRenderer.render(canvas, previewElement!, adapter,
-          resolvedImages: resolvedImages);
+      ElementRenderer.render(
+        canvas,
+        previewElement!,
+        adapter,
+        resolvedImages: resolvedImages,
+      );
     }
 
     // Render pending flowchart elements at 50% opacity
     if (pendingElements != null && pendingElements!.isNotEmpty) {
       canvas.saveLayer(null, Paint()..color = const Color(0x80FFFFFF));
       for (final element in pendingElements!) {
-        ElementRenderer.render(canvas, element, adapter,
-            resolvedImages: resolvedImages);
+        ElementRenderer.render(
+          canvas,
+          element,
+          adapter,
+          resolvedImages: resolvedImages,
+        );
       }
       canvas.restore();
     }
@@ -163,7 +175,10 @@ class StaticCanvasPainter extends CustomPainter {
 
   /// Renders bound text centered inside a container shape.
   void _renderShapeLabel(
-      Canvas canvas, Element shape, core.TextElement textElem) {
+    Canvas canvas,
+    Element shape,
+    core.TextElement textElem,
+  ) {
     final hasRotation = shape.angle != 0.0;
     if (hasRotation) {
       canvas.save();
@@ -190,8 +205,7 @@ class StaticCanvasPainter extends CustomPainter {
     };
     final textY = switch (textElem.verticalAlign) {
       VerticalAlign.top => shape.y + boundTextPadding,
-      VerticalAlign.middle =>
-        shape.y + (shape.height - painter.height) / 2,
+      VerticalAlign.middle => shape.y + (shape.height - painter.height) / 2,
       VerticalAlign.bottom =>
         shape.y + shape.height - painter.height - boundTextPadding,
     };
@@ -209,8 +223,11 @@ class StaticCanvasPainter extends CustomPainter {
   /// When [skipText] is true, only the clear rect is drawn (used during
   /// editing so the overlay text isn't drawn over the arrow line).
   void _renderArrowLabel(
-      Canvas canvas, ArrowElement arrow, core.TextElement textElem,
-      {bool skipText = false}) {
+    Canvas canvas,
+    ArrowElement arrow,
+    core.TextElement textElem, {
+    bool skipText = false,
+  }) {
     final mid = ArrowLabelUtils.computeArrowMidpoint(arrow);
 
     final painter = TextRenderer.buildTextPainter(textElem);

@@ -2,53 +2,65 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:markdraw/markdraw.dart';
 
 ToolContext _context({Scene? scene}) => ToolContext(
-      scene: scene ?? Scene(),
-      viewport: const ViewportState(),
-      selectedIds: {},
-    );
+  scene: scene ?? Scene(),
+  viewport: const ViewportState(),
+  selectedIds: {},
+);
 
-Scene _sceneWithRect(String id, double x, double y,
-    {double w = 100, double h = 100}) {
-  return Scene().addElement(Element(
-    id: ElementId(id),
-    type: 'rectangle',
-    x: x,
-    y: y,
-    width: w,
-    height: h,
-  ));
+Scene _sceneWithRect(
+  String id,
+  double x,
+  double y, {
+  double w = 100,
+  double h = 100,
+}) {
+  return Scene().addElement(
+    Element(
+      id: ElementId(id),
+      type: 'rectangle',
+      x: x,
+      y: y,
+      width: w,
+      height: h,
+    ),
+  );
 }
 
 void main() {
   group('ArrowTool elbowed creation', () {
-    test('ArrowTool(arrowType: ArrowType.sharpElbow) creates elbowed arrow', () {
-      final tool = ArrowTool(arrowType: ArrowType.sharpElbow);
-      final ctx = _context();
+    test(
+      'ArrowTool(arrowType: ArrowType.sharpElbow) creates elbowed arrow',
+      () {
+        final tool = ArrowTool(arrowType: ArrowType.sharpElbow);
+        final ctx = _context();
 
-      tool.onPointerDown(const Point(0, 0), ctx);
-      tool.onPointerUp(const Point(0, 0), ctx);
-      // Second click finalizes immediately for elbowed
-      tool.onPointerDown(const Point(100, 200), ctx);
-      final result = tool.onPointerUp(const Point(100, 200), ctx);
+        tool.onPointerDown(const Point(0, 0), ctx);
+        tool.onPointerUp(const Point(0, 0), ctx);
+        // Second click finalizes immediately for elbowed
+        tool.onPointerDown(const Point(100, 200), ctx);
+        final result = tool.onPointerUp(const Point(100, 200), ctx);
 
-      expect(result, isA<CompoundResult>());
-      final compound = result! as CompoundResult;
-      final arrow =
-          (compound.results[0] as AddElementResult).element as ArrowElement;
-      expect(arrow.elbowed, isTrue);
-    });
+        expect(result, isA<CompoundResult>());
+        final compound = result! as CompoundResult;
+        final arrow =
+            (compound.results[0] as AddElementResult).element as ArrowElement;
+        expect(arrow.elbowed, isTrue);
+      },
+    );
 
     test('two-click creation with binding', () {
       final tool = ArrowTool(arrowType: ArrowType.sharpElbow);
       var scene = _sceneWithRect('r1', 0, 0);
-      scene = scene.addElement(Element(
-        id: const ElementId('r2'),
-        type: 'rectangle',
-        x: 300,
-        y: 0,
-        width: 100,
-        height: 100,
-      ));
+      scene = scene.addElement(
+        Element(
+          id: const ElementId('r2'),
+          type: 'rectangle',
+          x: 300,
+          y: 0,
+          width: 100,
+          height: 100,
+        ),
+      );
       final ctx = _context(scene: scene);
 
       // Click on right edge of rect1
@@ -59,8 +71,9 @@ void main() {
       final result = tool.onPointerUp(const Point(300, 50), ctx);
 
       expect(result, isA<CompoundResult>());
-      final arrow = ((result! as CompoundResult).results[0]
-          as AddElementResult).element as ArrowElement;
+      final arrow =
+          ((result! as CompoundResult).results[0] as AddElementResult).element
+              as ArrowElement;
       expect(arrow.elbowed, isTrue);
       expect(arrow.startBinding, isNotNull);
       expect(arrow.endBinding, isNotNull);
@@ -76,8 +89,9 @@ void main() {
       final result = tool.onPointerUp(const Point(200, 150), ctx);
 
       expect(result, isA<CompoundResult>());
-      final arrow = ((result! as CompoundResult).results[0]
-          as AddElementResult).element as ArrowElement;
+      final arrow =
+          ((result! as CompoundResult).results[0] as AddElementResult).element
+              as ArrowElement;
       expect(arrow.elbowed, isTrue);
       expect(arrow.startBinding, isNull);
       expect(arrow.endBinding, isNull);
@@ -109,8 +123,9 @@ void main() {
       tool.onPointerDown(const Point(100, 200), ctx);
       final result = tool.onPointerUp(const Point(100, 200), ctx);
 
-      final arrow = ((result! as CompoundResult).results[0]
-          as AddElementResult).element as ArrowElement;
+      final arrow =
+          ((result! as CompoundResult).results[0] as AddElementResult).element
+              as ArrowElement;
 
       // Check that all segments are orthogonal (relative points)
       final absPoints = arrow.points
@@ -132,8 +147,10 @@ void main() {
 
       final finalResult = tool.onKeyEvent('Enter');
       expect(finalResult, isA<CompoundResult>());
-      final arrow = ((finalResult! as CompoundResult).results[0]
-          as AddElementResult).element as ArrowElement;
+      final arrow =
+          ((finalResult! as CompoundResult).results[0] as AddElementResult)
+                  .element
+              as ArrowElement;
       expect(arrow.elbowed, isFalse);
     });
 

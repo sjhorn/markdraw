@@ -1,6 +1,2 @@
 /// Stroke line style for drawing elements.
-enum StrokeStyle {
-  solid,
-  dashed,
-  dotted,
-}
+enum StrokeStyle { solid, dashed, dotted }

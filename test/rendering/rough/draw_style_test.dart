@@ -45,20 +45,23 @@ void main() {
     });
 
     test('parses hex background color', () {
-      final style =
-          DrawStyle.fromElement(makeElement(backgroundColor: '#0000ff'));
+      final style = DrawStyle.fromElement(
+        makeElement(backgroundColor: '#0000ff'),
+      );
       expect(style.backgroundColor, const Color(0xFF0000FF));
     });
 
     test('parses transparent background', () {
-      final style =
-          DrawStyle.fromElement(makeElement(backgroundColor: 'transparent'));
+      final style = DrawStyle.fromElement(
+        makeElement(backgroundColor: 'transparent'),
+      );
       expect(style.backgroundColor, const Color(0x00000000));
     });
 
     test('preserves fill style', () {
-      final style =
-          DrawStyle.fromElement(makeElement(fillStyle: FillStyle.hachure));
+      final style = DrawStyle.fromElement(
+        makeElement(fillStyle: FillStyle.hachure),
+      );
       expect(style.fillStyle, FillStyle.hachure);
     });
 
@@ -68,8 +71,9 @@ void main() {
     });
 
     test('preserves stroke style', () {
-      final style =
-          DrawStyle.fromElement(makeElement(strokeStyle: StrokeStyle.dashed));
+      final style = DrawStyle.fromElement(
+        makeElement(strokeStyle: StrokeStyle.dashed),
+      );
       expect(style.strokeStyle, StrokeStyle.dashed);
     });
 
@@ -105,26 +109,30 @@ void main() {
 
   group('toFiller', () {
     test('solid fill style returns SolidFiller', () {
-      final style =
-          DrawStyle.fromElement(makeElement(fillStyle: FillStyle.solid));
+      final style = DrawStyle.fromElement(
+        makeElement(fillStyle: FillStyle.solid),
+      );
       expect(style.toFiller(), isA<SolidFiller>());
     });
 
     test('hachure fill style returns HachureFiller', () {
-      final style =
-          DrawStyle.fromElement(makeElement(fillStyle: FillStyle.hachure));
+      final style = DrawStyle.fromElement(
+        makeElement(fillStyle: FillStyle.hachure),
+      );
       expect(style.toFiller(), isA<HachureFiller>());
     });
 
     test('crossHatch fill style returns CrossHatchFiller', () {
-      final style =
-          DrawStyle.fromElement(makeElement(fillStyle: FillStyle.crossHatch));
+      final style = DrawStyle.fromElement(
+        makeElement(fillStyle: FillStyle.crossHatch),
+      );
       expect(style.toFiller(), isA<CrossHatchFiller>());
     });
 
     test('zigzag fill style returns ZigZagFiller', () {
-      final style =
-          DrawStyle.fromElement(makeElement(fillStyle: FillStyle.zigzag));
+      final style = DrawStyle.fromElement(
+        makeElement(fillStyle: FillStyle.zigzag),
+      );
       expect(style.toFiller(), isA<ZigZagFiller>());
     });
   });
@@ -150,7 +158,8 @@ void main() {
 
     test('applies opacity', () {
       final style = DrawStyle.fromElement(
-          makeElement(strokeColor: '#ff0000', opacity: 0.5));
+        makeElement(strokeColor: '#ff0000', opacity: 0.5),
+      );
       final paint = style.toStrokePaint();
       expect(paint.color.a, closeTo(0.5, 0.01));
     });
@@ -170,29 +179,33 @@ void main() {
 
   group('toFillPaint', () {
     test('uses background color', () {
-      final style =
-          DrawStyle.fromElement(makeElement(backgroundColor: '#00ff00'));
+      final style = DrawStyle.fromElement(
+        makeElement(backgroundColor: '#00ff00'),
+      );
       final paint = style.toFillPaint();
       expect(paint.color, const Color(0xFF00FF00));
     });
 
     test('uses stroke style for sketch fillers', () {
-      final style =
-          DrawStyle.fromElement(makeElement(fillStyle: FillStyle.hachure));
+      final style = DrawStyle.fromElement(
+        makeElement(fillStyle: FillStyle.hachure),
+      );
       final paint = style.toFillPaint();
       expect(paint.style, PaintingStyle.stroke);
     });
 
     test('applies opacity to fill', () {
       final style = DrawStyle.fromElement(
-          makeElement(backgroundColor: '#00ff00', opacity: 0.5));
+        makeElement(backgroundColor: '#00ff00', opacity: 0.5),
+      );
       final paint = style.toFillPaint();
       expect(paint.color.a, closeTo(0.5, 0.01));
     });
 
     test('transparent background has zero alpha', () {
-      final style =
-          DrawStyle.fromElement(makeElement(backgroundColor: 'transparent'));
+      final style = DrawStyle.fromElement(
+        makeElement(backgroundColor: 'transparent'),
+      );
       final paint = style.toFillPaint();
       expect(paint.color.a, closeTo(0.0, 0.01));
     });

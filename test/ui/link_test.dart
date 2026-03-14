@@ -98,9 +98,7 @@ void main() {
     test('followLink with external URL calls onLinkOpen', () {
       String? openedUrl;
       final ctrl = MarkdrawController(
-        config: MarkdrawEditorConfig(
-          onLinkOpen: (url) => openedUrl = url,
-        ),
+        config: MarkdrawEditorConfig(onLinkOpen: (url) => openedUrl = url),
       );
 
       ctrl.followLink('https://flutter.dev', const Size(800, 600));
@@ -112,9 +110,7 @@ void main() {
     test('followLink prepends https:// when no scheme', () {
       String? openedUrl;
       final ctrl = MarkdrawController(
-        config: MarkdrawEditorConfig(
-          onLinkOpen: (url) => openedUrl = url,
-        ),
+        config: MarkdrawEditorConfig(onLinkOpen: (url) => openedUrl = url),
       );
 
       ctrl.followLink('example.com/page', const Size(800, 600));
@@ -126,9 +122,7 @@ void main() {
     test('followLink prepends file:/// for absolute paths', () {
       String? openedUrl;
       final ctrl = MarkdrawController(
-        config: MarkdrawEditorConfig(
-          onLinkOpen: (url) => openedUrl = url,
-        ),
+        config: MarkdrawEditorConfig(onLinkOpen: (url) => openedUrl = url),
       );
 
       ctrl.followLink('/Users/me/doc.pdf', const Size(800, 600));
@@ -140,9 +134,7 @@ void main() {
     test('followLink preserves existing schemes', () {
       String? openedUrl;
       final ctrl = MarkdrawController(
-        config: MarkdrawEditorConfig(
-          onLinkOpen: (url) => openedUrl = url,
-        ),
+        config: MarkdrawEditorConfig(onLinkOpen: (url) => openedUrl = url),
       );
 
       ctrl.followLink('http://insecure.example.com', const Size(800, 600));
@@ -152,15 +144,17 @@ void main() {
     });
 
     test('followLink with nonexistent element id does nothing', () {
-      controller.loadScene(sceneWith([
-        RectangleElement(
-          id: const ElementId('r1'),
-          x: 0,
-          y: 0,
-          width: 100,
-          height: 50,
-        ),
-      ]));
+      controller.loadScene(
+        sceneWith([
+          RectangleElement(
+            id: const ElementId('r1'),
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 50,
+          ),
+        ]),
+      );
 
       controller.followLink('#nonexistent', const Size(800, 600));
 

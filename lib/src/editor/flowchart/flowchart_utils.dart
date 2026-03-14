@@ -43,8 +43,9 @@ class FlowchartUtils {
         if (ElbowRouting.headingFromFixedPoint(fp) == heading) {
           // The other end is the target
           if (arrow.endBinding != null) {
-            final target =
-                scene.getElementById(ElementId(arrow.endBinding!.elementId));
+            final target = scene.getElementById(
+              ElementId(arrow.endBinding!.elementId),
+            );
             if (target != null && isFlowchartNode(target)) {
               results.add(target);
             }
@@ -56,8 +57,9 @@ class FlowchartUtils {
         final fp = arrow.endBinding!.fixedPoint;
         if (ElbowRouting.headingFromFixedPoint(fp) == heading) {
           if (arrow.startBinding != null) {
-            final target =
-                scene.getElementById(ElementId(arrow.startBinding!.elementId));
+            final target = scene.getElementById(
+              ElementId(arrow.startBinding!.elementId),
+            );
             if (target != null && isFlowchartNode(target)) {
               results.add(target);
             }
@@ -217,8 +219,9 @@ class FlowchartUtils {
       maxY = math.max(maxY, p.y);
     }
 
-    final relPoints =
-        routedPoints.map((p) => Point(p.x - minX, p.y - minY)).toList();
+    final relPoints = routedPoints
+        .map((p) => Point(p.x - minX, p.y - minY))
+        .toList();
 
     return ArrowElement(
       id: arrowId,
@@ -233,10 +236,7 @@ class FlowchartUtils {
         elementId: startNode.id.value,
         fixedPoint: startFP,
       ),
-      endBinding: PointBinding(
-        elementId: endNode.id.value,
-        fixedPoint: endFP,
-      ),
+      endBinding: PointBinding(elementId: endNode.id.value, fixedPoint: endFP),
     );
   }
 
@@ -247,25 +247,13 @@ class FlowchartUtils {
   static Offset _directOffset(Element startNode, LinkDirection direction) {
     switch (direction) {
       case LinkDirection.right:
-        return Offset(
-          startNode.x + startNode.width + _nodeGap,
-          startNode.y,
-        );
+        return Offset(startNode.x + startNode.width + _nodeGap, startNode.y);
       case LinkDirection.left:
-        return Offset(
-          startNode.x - startNode.width - _nodeGap,
-          startNode.y,
-        );
+        return Offset(startNode.x - startNode.width - _nodeGap, startNode.y);
       case LinkDirection.down:
-        return Offset(
-          startNode.x,
-          startNode.y + startNode.height + _nodeGap,
-        );
+        return Offset(startNode.x, startNode.y + startNode.height + _nodeGap);
       case LinkDirection.up:
-        return Offset(
-          startNode.x,
-          startNode.y - startNode.height - _nodeGap,
-        );
+        return Offset(startNode.x, startNode.y - startNode.height - _nodeGap);
     }
   }
 

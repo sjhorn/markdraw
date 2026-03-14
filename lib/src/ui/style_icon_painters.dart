@@ -343,8 +343,11 @@ class ArrowheadIcon extends CustomPainter {
   final bool isStart;
   final Color color;
 
-  ArrowheadIcon(this.arrowhead,
-      {this.isStart = false, this.color = const Color(0xFF1e1e1e)});
+  ArrowheadIcon(
+    this.arrowhead, {
+    this.isStart = false,
+    this.color = const Color(0xFF1e1e1e),
+  });
 
   @override
   void paint(Canvas canvas, Size size) {

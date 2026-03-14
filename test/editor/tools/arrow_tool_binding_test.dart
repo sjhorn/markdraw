@@ -7,15 +7,14 @@ Element _rect({
   double y = 0,
   double w = 100,
   double h = 100,
-}) =>
-    Element(
-      id: ElementId(id),
-      type: 'rectangle',
-      x: x,
-      y: y,
-      width: w,
-      height: h,
-    );
+}) => Element(
+  id: ElementId(id),
+  type: 'rectangle',
+  x: x,
+  y: y,
+  width: w,
+  height: h,
+);
 
 ArrowElement _extractArrow(ToolResult? result) {
   final compound = result! as CompoundResult;
@@ -45,8 +44,11 @@ void main() {
 
       // Second point far away
       tool.onPointerDown(const Point(400, 150), ctx);
-      final result = tool.onPointerUp(const Point(400, 150), ctx,
-          isDoubleClick: true);
+      final result = tool.onPointerUp(
+        const Point(400, 150),
+        ctx,
+        isDoubleClick: true,
+      );
 
       final arrow = _extractArrow(result);
       expect(arrow.startBinding, isNotNull);
@@ -71,8 +73,11 @@ void main() {
 
       // Second point near left edge of rect (at x=300)
       tool.onPointerDown(const Point(305, 150), ctx);
-      final result = tool.onPointerUp(const Point(305, 150), ctx,
-          isDoubleClick: true);
+      final result = tool.onPointerUp(
+        const Point(305, 150),
+        ctx,
+        isDoubleClick: true,
+      );
 
       final arrow = _extractArrow(result);
       expect(arrow.endBinding, isNotNull);
@@ -96,8 +101,11 @@ void main() {
 
       // Second point near left edge of rect2
       tool.onPointerDown(const Point(305, 50), ctx);
-      final result = tool.onPointerUp(const Point(305, 50), ctx,
-          isDoubleClick: true);
+      final result = tool.onPointerUp(
+        const Point(305, 50),
+        ctx,
+        isDoubleClick: true,
+      );
 
       final arrow = _extractArrow(result);
       expect(arrow.startBinding, isNotNull);
@@ -118,8 +126,11 @@ void main() {
       tool.onPointerDown(const Point(0, 0), ctx);
       tool.onPointerUp(const Point(0, 0), ctx);
       tool.onPointerDown(const Point(100, 100), ctx);
-      final result = tool.onPointerUp(const Point(100, 100), ctx,
-          isDoubleClick: true);
+      final result = tool.onPointerUp(
+        const Point(100, 100),
+        ctx,
+        isDoubleClick: true,
+      );
 
       final arrow = _extractArrow(result);
       expect(arrow.startBinding, isNull);
@@ -141,8 +152,11 @@ void main() {
 
       // End point far away
       tool.onPointerDown(const Point(400, 150), ctx);
-      final result = tool.onPointerUp(const Point(400, 150), ctx,
-          isDoubleClick: true);
+      final result = tool.onPointerUp(
+        const Point(400, 150),
+        ctx,
+        isDoubleClick: true,
+      );
 
       final arrow = _extractArrow(result);
       // The start point should be snapped to the left edge

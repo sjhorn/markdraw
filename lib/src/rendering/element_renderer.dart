@@ -67,13 +67,21 @@ class ElementRenderer {
 
     switch (element.type) {
       case 'rectangle':
-        adapter.drawRectangle(canvas, bounds, style,
-            roundness: element.roundness);
+        adapter.drawRectangle(
+          canvas,
+          bounds,
+          style,
+          roundness: element.roundness,
+        );
       case 'ellipse':
         adapter.drawEllipse(canvas, bounds, style);
       case 'diamond':
-        adapter.drawDiamond(canvas, bounds, style,
-            roundness: element.roundness);
+        adapter.drawDiamond(
+          canvas,
+          bounds,
+          style,
+          roundness: element.roundness,
+        );
       case 'frame':
         _renderFrame(canvas, element, bounds);
       case 'image':
@@ -82,7 +90,11 @@ class ElementRenderer {
         }
       case 'line':
         if (element is LineElement) {
-          final absPoints = _absolutePoints(element.points, element.x, element.y);
+          final absPoints = _absolutePoints(
+            element.points,
+            element.x,
+            element.y,
+          );
           if (element.closed) {
             if (element.roundness != null) {
               adapter.drawCurvedPolygon(canvas, absPoints, style);
@@ -97,7 +109,11 @@ class ElementRenderer {
         }
       case 'arrow':
         if (element is ArrowElement) {
-          final absPoints = _absolutePoints(element.points, element.x, element.y);
+          final absPoints = _absolutePoints(
+            element.points,
+            element.x,
+            element.y,
+          );
           switch (element.arrowType) {
             case ArrowType.sharp:
               adapter.drawArrow(
@@ -135,7 +151,11 @@ class ElementRenderer {
         }
       case 'freedraw':
         if (element is FreedrawElement) {
-          final absPoints = _absolutePoints(element.points, element.x, element.y);
+          final absPoints = _absolutePoints(
+            element.points,
+            element.x,
+            element.y,
+          );
           adapter.drawFreedraw(
             canvas,
             absPoints,
@@ -212,18 +232,19 @@ class ElementRenderer {
   }
 
   /// Renders a frame with clean (non-rough) lines and a label above the top.
-  static void _renderFrame(
-    Canvas canvas,
-    core.Element element,
-    Bounds bounds,
-  ) {
+  static void _renderFrame(Canvas canvas, core.Element element, Bounds bounds) {
     final strokePaint = Paint()
       ..color = Color(_parseColor(element.strokeColor))
       ..style = PaintingStyle.stroke
       ..strokeWidth = element.strokeWidth;
 
     canvas.drawRect(
-      Rect.fromLTWH(bounds.left, bounds.top, bounds.size.width, bounds.size.height),
+      Rect.fromLTWH(
+        bounds.left,
+        bounds.top,
+        bounds.size.width,
+        bounds.size.height,
+      ),
       strokePaint,
     );
 
@@ -253,8 +274,7 @@ class ElementRenderer {
   }
 
   /// Converts relative points to absolute by adding the element's origin.
-  static List<Point> _absolutePoints(
-      List<Point> points, double x, double y) {
+  static List<Point> _absolutePoints(List<Point> points, double x, double y) {
     return points.map((p) => Point(p.x + x, p.y + y)).toList();
   }
 }

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart' hide Element, SelectionOverlay;
 
 import 'package:markdraw/markdraw.dart' hide TextAlign;
 
-
 /// Desktop floating property panel (left side).
 class PropertyPanel extends StatelessWidget {
   final MarkdrawController controller;
@@ -29,15 +28,18 @@ class PropertyPanel extends StatelessWidget {
         final bt = controller.editorState.scene.findBoundText(e.id);
         if (bt != null) boundText.add(bt);
       }
-      style = PropertyPanelState.fromElements(elements,
-          boundTextElements: boundText);
+      style = PropertyPanelState.fromElements(
+        elements,
+        boundTextElements: boundText,
+      );
       // When editing bound text, show the text's strokeColor instead of the
       // parent shape's so the color picker reflects the text color.
       if (isEditingText && boundText.length == 1) {
         style = style.copyWith(strokeColor: boundText.first.strokeColor);
       }
       isLocked = style.locked == true;
-      showFullTextProps = style.hasText &&
+      showFullTextProps =
+          style.hasText &&
           (!style.hasArrowBoundText ||
               style.hasShapeBoundText ||
               elements.whereType<TextElement>().isNotEmpty);
@@ -63,8 +65,7 @@ class PropertyPanel extends StatelessWidget {
         hasText: _toolHasText(controller.editorState.activeToolType),
         hasLines: _toolHasLines(controller.editorState.activeToolType),
         hasArrows: _toolHasArrows(controller.editorState.activeToolType),
-        hasRoundness:
-            _toolHasRoundness(controller.editorState.activeToolType),
+        hasRoundness: _toolHasRoundness(controller.editorState.activeToolType),
       );
       isLocked = false;
       showFullTextProps = style.hasText;
@@ -117,14 +118,12 @@ class PropertyPanel extends StatelessWidget {
     );
   }
 
-  static bool _toolHasText(ToolType type) =>
-      type == ToolType.text;
+  static bool _toolHasText(ToolType type) => type == ToolType.text;
 
   static bool _toolHasLines(ToolType type) =>
       type == ToolType.line || type == ToolType.arrow;
 
-  static bool _toolHasArrows(ToolType type) =>
-      type == ToolType.arrow;
+  static bool _toolHasArrows(ToolType type) => type == ToolType.arrow;
 
   static bool _toolHasRoundness(ToolType type) =>
       type == ToolType.rectangle || type == ToolType.diamond;

@@ -32,11 +32,21 @@ void main() {
 
     test('parses all element keywords', () {
       for (final kw in [
-        'rect', 'ellipse', 'diamond', 'line', 'arrow',
-        'text', 'freedraw', 'frame', 'image',
+        'rect',
+        'ellipse',
+        'diamond',
+        'line',
+        'arrow',
+        'text',
+        'freedraw',
+        'frame',
+        'image',
       ]) {
-        expect(html(kw), contains('keyword'),
-            reason: '$kw should be highlighted as keyword');
+        expect(
+          html(kw),
+          contains('keyword'),
+          reason: '$kw should be highlighted as keyword',
+        );
       }
     });
 
@@ -92,8 +102,9 @@ void main() {
     });
 
     test('produces rich output for complex line', () {
-      final result =
-          html('rect "Label" id=r1 at 10,20 50x60 fill=#ff0000 locked');
+      final result = html(
+        'rect "Label" id=r1 at 10,20 50x60 fill=#ff0000 locked',
+      );
       expect(result, contains('keyword'));
       expect(result, contains('string'));
       expect(result, contains('attr'));
@@ -125,13 +136,24 @@ void main() {
 
     test('known value aliases all highlight as string', () {
       for (final alias in [
-        'hand-drawn', 'normal', 'code',
-        'small', 'medium', 'large', 'extra-large',
-        's', 'm', 'l', 'xl',
+        'hand-drawn',
+        'normal',
+        'code',
+        'small',
+        'medium',
+        'large',
+        'extra-large',
+        's',
+        'm',
+        'l',
+        'xl',
       ]) {
         final result = html('prop=$alias');
-        expect(result, contains('string'),
-            reason: '$alias should highlight as string');
+        expect(
+          result,
+          contains('string'),
+          reason: '$alias should highlight as string',
+        );
       }
     });
   });

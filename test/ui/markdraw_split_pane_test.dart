@@ -29,12 +29,14 @@ String extractSketchLines(String fullText) {
 void main() {
   group('extractSketchLines', () {
     test('extracts lines from simple document', () {
-      const doc = '---\nmarkdraw: 1\n---\n\n```markdraw\nrect at 0,0 100x50\n```';
+      const doc =
+          '---\nmarkdraw: 1\n---\n\n```markdraw\nrect at 0,0 100x50\n```';
       expect(extractSketchLines(doc), 'rect at 0,0 100x50');
     });
 
     test('extracts multiple element lines', () {
-      const doc = '```markdraw\n'
+      const doc =
+          '```markdraw\n'
           'rect id=r1 at 0,0 100x50\n'
           'ellipse id=e1 at 200,100 80x80\n'
           'arrow from r1 to e1\n'
@@ -48,18 +50,17 @@ void main() {
     });
 
     test('strips frontmatter', () {
-      const doc = '---\nmarkdraw: 1\nbackground: "#ffffff"\n---\n\n'
+      const doc =
+          '---\nmarkdraw: 1\nbackground: "#ffffff"\n---\n\n'
           '```markdraw\nrect at 10,20 30x40\n```';
       expect(extractSketchLines(doc), 'rect at 10,20 30x40');
     });
 
     test('strips files block', () {
-      const doc = '```markdraw\nimage id=i at 0,0 100x100 file=abc\n```\n\n'
+      const doc =
+          '```markdraw\nimage id=i at 0,0 100x100 file=abc\n```\n\n'
           '```files\nabc image/png AQIDBA==\n```';
-      expect(
-        extractSketchLines(doc),
-        'image id=i at 0,0 100x100 file=abc',
-      );
+      expect(extractSketchLines(doc), 'image id=i at 0,0 100x100 file=abc');
     });
 
     test('returns empty string when no sketch block', () {
@@ -87,7 +88,8 @@ void main() {
 
   /// Wraps sketch lines with frontmatter + fences, same as _syncTextToCanvas.
   ParseResult<MarkdrawDocument> parseSketchText(String text) {
-    final wrapped = '---\nmarkdraw: 1\nbackground: "#ffffff"\n---\n\n'
+    final wrapped =
+        '---\nmarkdraw: 1\nbackground: "#ffffff"\n---\n\n'
         '```markdraw\n$text\n```';
     return DocumentParser.parse(wrapped);
   }
@@ -101,10 +103,7 @@ void main() {
     test('unknown keyword produces a warning', () {
       final result = parseSketchText('bogus at 0,0 100x50');
       expect(result.warnings, isNotEmpty);
-      expect(
-        result.warnings.first.message,
-        contains('Unknown keyword'),
-      );
+      expect(result.warnings.first.message, contains('Unknown keyword'));
     });
 
     test('multiple unknown keywords produce multiple warnings', () {

@@ -11,9 +11,7 @@ import 'markdraw_document.dart';
 class ClipboardCodec {
   /// Serializes [elements] to a .markdraw sketch block string.
   static String serialize(List<Element> elements) {
-    final doc = MarkdrawDocument(
-      sections: [SketchSection(elements)],
-    );
+    final doc = MarkdrawDocument(sections: [SketchSection(elements)]);
     return DocumentSerializer.serialize(doc);
   }
 

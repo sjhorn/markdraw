@@ -95,15 +95,17 @@ void main() {
         bytes: Uint8List.fromList([1, 2, 3]),
       );
       scene = scene.addFile('abc12345', file);
-      scene = scene.addElement(ImageElement(
-        id: const ElementId('img1'),
-        x: 100,
-        y: 200,
-        width: 400,
-        height: 300,
-        fileId: 'abc12345',
-        seed: 42,
-      ));
+      scene = scene.addElement(
+        ImageElement(
+          id: const ElementId('img1'),
+          x: 100,
+          y: 200,
+          width: 400,
+          height: 300,
+          fileId: 'abc12345',
+          seed: 42,
+        ),
+      );
 
       final svg = SvgExporter.export(scene, embedMarkdraw: false);
       expect(svg, contains('<image'));
@@ -117,16 +119,18 @@ void main() {
         bytes: Uint8List.fromList([10, 20, 30]),
       );
       scene = scene.addFile('abc12345', file);
-      scene = scene.addElement(ImageElement(
-        id: const ElementId('img1'),
-        x: 50,
-        y: 60,
-        width: 200,
-        height: 150,
-        fileId: 'abc12345',
-        crop: const ImageCrop(x: 0.1, y: 0.2, width: 0.8, height: 0.6),
-        seed: 42,
-      ));
+      scene = scene.addElement(
+        ImageElement(
+          id: const ElementId('img1'),
+          x: 50,
+          y: 60,
+          width: 200,
+          height: 150,
+          fileId: 'abc12345',
+          crop: const ImageCrop(x: 0.1, y: 0.2, width: 0.8, height: 0.6),
+          seed: 42,
+        ),
+      );
 
       final svg = SvgExporter.export(scene, embedMarkdraw: true);
       expect(svg, contains('<image'));

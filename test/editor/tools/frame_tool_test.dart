@@ -2,10 +2,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:markdraw/markdraw.dart';
 
 ToolContext _ctx([Scene? scene]) => ToolContext(
-      scene: scene ?? Scene(),
-      viewport: const ViewportState(),
-      selectedIds: {},
-    );
+  scene: scene ?? Scene(),
+  viewport: const ViewportState(),
+  selectedIds: {},
+);
 
 void main() {
   group('FrameTool', () {
@@ -21,9 +21,7 @@ void main() {
 
       expect(result, isA<CompoundResult>());
       final compound = result as CompoundResult;
-      final add = compound.results
-          .whereType<AddElementResult>()
-          .first;
+      final add = compound.results.whereType<AddElementResult>().first;
       expect(add.element, isA<FrameElement>());
       final frame = add.element as FrameElement;
       expect(frame.x, 10);
@@ -37,9 +35,7 @@ void main() {
       tool.onPointerDown(const Point(0, 0), _ctx());
       final result = tool.onPointerUp(const Point(100, 100), _ctx());
       final compound = result as CompoundResult;
-      final add = compound.results
-          .whereType<AddElementResult>()
-          .first;
+      final add = compound.results.whereType<AddElementResult>().first;
       final frame = add.element as FrameElement;
       expect(frame.label, 'Frame 1');
     });
@@ -80,9 +76,7 @@ void main() {
       tool.onPointerDown(const Point(0, 0), _ctx());
       final result = tool.onPointerUp(const Point(100, 100), _ctx());
       final compound = result as CompoundResult;
-      final switchResult = compound.results
-          .whereType<SwitchToolResult>()
-          .first;
+      final switchResult = compound.results.whereType<SwitchToolResult>().first;
       expect(switchResult.toolType, ToolType.select);
     });
 
@@ -91,9 +85,7 @@ void main() {
       tool.onPointerDown(const Point(0, 0), _ctx());
       final result = tool.onPointerUp(const Point(100, 100), _ctx());
       final compound = result as CompoundResult;
-      final selResult = compound.results
-          .whereType<SetSelectionResult>()
-          .first;
+      final selResult = compound.results.whereType<SetSelectionResult>().first;
       expect(selResult.selectedIds, hasLength(1));
     });
 
@@ -112,9 +104,7 @@ void main() {
       tool.onPointerDown(const Point(0, 0), _ctx());
       final result = tool.onPointerUp(const Point(100, 100), _ctx());
       final compound = result as CompoundResult;
-      final add = compound.results
-          .whereType<AddElementResult>()
-          .first;
+      final add = compound.results.whereType<AddElementResult>().first;
       expect(add.element.type, 'frame');
     });
   });

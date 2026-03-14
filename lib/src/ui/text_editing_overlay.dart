@@ -5,7 +5,6 @@ import 'package:flutter/material.dart' hide Element, SelectionOverlay;
 import 'package:markdraw/markdraw.dart' as core show TextAlign;
 import 'package:markdraw/markdraw.dart' hide TextAlign;
 
-
 /// Delegate for [TextSelectionGestureDetectorBuilder] to enable text
 /// selection (tap-to-place-cursor, drag-to-select) on [EditableText].
 class TextSelectionDelegate
@@ -30,8 +29,9 @@ class TextEditingOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final element = controller.editorState.scene
-        .getElementById(controller.editingTextElementId!);
+    final element = controller.editorState.scene.getElementById(
+      controller.editingTextElementId!,
+    );
     if (element == null) return const SizedBox.shrink();
 
     final zoom = controller.editorState.viewport.zoom;
@@ -54,14 +54,25 @@ class TextEditingOverlay extends StatelessWidget {
       );
       if (parent != null && parent is ArrowElement) {
         return _buildArrowLabelOverlay(
-          parent, zoom, fontSize, fontFamily, lineHeight,
-          textColor, flutterTextAlign,
+          parent,
+          zoom,
+          fontSize,
+          fontFamily,
+          lineHeight,
+          textColor,
+          flutterTextAlign,
         );
       }
       if (parent != null && parent is! LineElement) {
         return _buildBoundTextOverlay(
-          parent, textElem, zoom, fontSize, fontFamily, lineHeight,
-          textColor, flutterTextAlign,
+          parent,
+          textElem,
+          zoom,
+          fontSize,
+          fontFamily,
+          lineHeight,
+          textColor,
+          flutterTextAlign,
         );
       }
     }
@@ -69,15 +80,26 @@ class TextEditingOverlay extends StatelessWidget {
     // Fixed-width text
     if (textElem != null && !textElem.autoResize && textElem.width > 0) {
       return _buildFixedWidthTextOverlay(
-        element, textElem, zoom, fontSize, fontFamily, lineHeight,
-        textColor, flutterTextAlign,
+        element,
+        textElem,
+        zoom,
+        fontSize,
+        fontFamily,
+        lineHeight,
+        textColor,
+        flutterTextAlign,
       );
     }
 
     // Standalone text
     return _buildStandaloneTextOverlay(
-      element, zoom, fontSize, fontFamily, lineHeight,
-      textColor, flutterTextAlign,
+      element,
+      zoom,
+      fontSize,
+      fontFamily,
+      lineHeight,
+      textColor,
+      flutterTextAlign,
     );
   }
 
@@ -124,7 +146,11 @@ class TextEditingOverlay extends StatelessWidget {
               child: SizedBox(
                 width: double.infinity,
                 child: _buildEditableText(
-                  fontSize, fontFamily, lineHeight, textColor, flutterTextAlign,
+                  fontSize,
+                  fontFamily,
+                  lineHeight,
+                  textColor,
+                  flutterTextAlign,
                 ),
               ),
             ),
@@ -145,16 +171,18 @@ class TextEditingOverlay extends StatelessWidget {
     TextAlign flutterTextAlign,
   ) {
     final topLeftScene = Offset(element.x, element.y);
-    final screenTopLeft =
-        controller.editorState.viewport.sceneToScreen(topLeftScene);
+    final screenTopLeft = controller.editorState.viewport.sceneToScreen(
+      topLeftScene,
+    );
     final screenW = textElem.width * zoom;
     final screenH = element.height * zoom;
     final centerScene = Offset(
       element.x + element.width / 2,
       element.y + element.height / 2,
     );
-    final screenCenter =
-        controller.editorState.viewport.sceneToScreen(centerScene);
+    final screenCenter = controller.editorState.viewport.sceneToScreen(
+      centerScene,
+    );
 
     return Positioned(
       left: screenTopLeft.dx,
@@ -175,7 +203,11 @@ class TextEditingOverlay extends StatelessWidget {
               VerticalAlign.bottom => Alignment.bottomLeft,
             },
             child: _buildEditableText(
-              fontSize, fontFamily, lineHeight, textColor, flutterTextAlign,
+              fontSize,
+              fontFamily,
+              lineHeight,
+              textColor,
+              flutterTextAlign,
             ),
           ),
         ),
@@ -206,7 +238,11 @@ class TextEditingOverlay extends StatelessWidget {
         translation: const Offset(-0.5, -0.5),
         child: IntrinsicWidth(
           child: _buildEditableText(
-            fontSize, fontFamily, lineHeight, textColor, flutterTextAlign,
+            fontSize,
+            fontFamily,
+            lineHeight,
+            textColor,
+            flutterTextAlign,
           ),
         ),
       ),
@@ -226,8 +262,9 @@ class TextEditingOverlay extends StatelessWidget {
       element.x + element.width / 2,
       element.y + element.height / 2,
     );
-    final screenCenter =
-        controller.editorState.viewport.sceneToScreen(centerScene);
+    final screenCenter = controller.editorState.viewport.sceneToScreen(
+      centerScene,
+    );
 
     return Positioned(
       left: screenCenter.dx,
@@ -239,7 +276,11 @@ class TextEditingOverlay extends StatelessWidget {
           alignment: Alignment.center,
           child: IntrinsicWidth(
             child: _buildEditableText(
-              fontSize, fontFamily, lineHeight, textColor, flutterTextAlign,
+              fontSize,
+              fontFamily,
+              lineHeight,
+              textColor,
+              flutterTextAlign,
             ),
           ),
         ),

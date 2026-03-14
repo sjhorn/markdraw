@@ -20,8 +20,11 @@ class HandTool implements Tool {
   }
 
   @override
-  ToolResult? onPointerMove(Point point, ToolContext context,
-      {Offset? screenDelta}) {
+  ToolResult? onPointerMove(
+    Point point,
+    ToolContext context, {
+    Offset? screenDelta,
+  }) {
     if (!_isPanning || screenDelta == null) return null;
     final panned = context.viewport.pan(screenDelta);
     return UpdateViewportResult(panned);
@@ -34,7 +37,12 @@ class HandTool implements Tool {
   }
 
   @override
-  ToolResult? onKeyEvent(String key, {bool shift = false, bool ctrl = false, ToolContext? context}) {
+  ToolResult? onKeyEvent(
+    String key, {
+    bool shift = false,
+    bool ctrl = false,
+    ToolContext? context,
+  }) {
     return null;
   }
 

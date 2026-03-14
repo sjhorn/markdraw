@@ -33,8 +33,7 @@ Widget iconWidgetFor(
 IconData iconFor(ToolType type, {bool isActive = false}) {
   return switch (type) {
     ToolType.select => Icons.near_me,
-    ToolType.rectangle =>
-      isActive ? Icons.rectangle : Icons.rectangle_outlined,
+    ToolType.rectangle => isActive ? Icons.rectangle : Icons.rectangle_outlined,
     ToolType.ellipse => isActive ? Icons.circle : Icons.circle_outlined,
     ToolType.diamond => Icons.square_outlined,
     ToolType.line => Icons.show_chart,

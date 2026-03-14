@@ -73,7 +73,8 @@ class BindingUtils {
     final w = target.width;
     final h = target.height;
 
-    final isInside = local.x >= left &&
+    final isInside =
+        local.x >= left &&
         local.x <= right &&
         local.y >= top &&
         local.y <= bottom;
@@ -130,7 +131,9 @@ class BindingUtils {
   /// If a binding's target is not found in the scene, that endpoint is left
   /// unchanged.
   static ArrowElement updateBoundArrowEndpoints(
-      ArrowElement arrow, Scene scene) {
+    ArrowElement arrow,
+    Scene scene,
+  ) {
     if (arrow.startBinding == null && arrow.endBinding == null) return arrow;
 
     final absPoints = arrow.points
@@ -141,8 +144,9 @@ class BindingUtils {
 
     // Update start point
     if (arrow.startBinding != null) {
-      final target =
-          scene.getElementById(ElementId(arrow.startBinding!.elementId));
+      final target = scene.getElementById(
+        ElementId(arrow.startBinding!.elementId),
+      );
       if (target != null) {
         absPoints[0] = resolveBindingPoint(target, arrow.startBinding!);
         changed = true;
@@ -151,11 +155,14 @@ class BindingUtils {
 
     // Update end point
     if (arrow.endBinding != null) {
-      final target =
-          scene.getElementById(ElementId(arrow.endBinding!.elementId));
+      final target = scene.getElementById(
+        ElementId(arrow.endBinding!.elementId),
+      );
       if (target != null) {
-        absPoints[absPoints.length - 1] =
-            resolveBindingPoint(target, arrow.endBinding!);
+        absPoints[absPoints.length - 1] = resolveBindingPoint(
+          target,
+          arrow.endBinding!,
+        );
         changed = true;
       }
     }
@@ -171,12 +178,12 @@ class BindingUtils {
           .toList();
 
       // Determine which sides changed
-      final newStart = (arrow.startBinding != null &&
-              absPoints.first != origAbsPoints.first)
+      final newStart =
+          (arrow.startBinding != null && absPoints.first != origAbsPoints.first)
           ? absPoints.first
           : null;
-      final newEnd = (arrow.endBinding != null &&
-              absPoints.last != origAbsPoints.last)
+      final newEnd =
+          (arrow.endBinding != null && absPoints.last != origAbsPoints.last)
           ? absPoints.last
           : null;
 
@@ -192,8 +199,7 @@ class BindingUtils {
       } else {
         // Fall back to full re-route for short paths
         final startHeading = arrow.startBinding != null
-            ? ElbowRouting.headingFromFixedPoint(
-                arrow.startBinding!.fixedPoint)
+            ? ElbowRouting.headingFromFixedPoint(arrow.startBinding!.fixedPoint)
             : null;
         final endHeading = arrow.endBinding != null
             ? ElbowRouting.headingFromFixedPoint(arrow.endBinding!.fixedPoint)
@@ -219,14 +225,13 @@ class BindingUtils {
       maxY = math.max(maxY, p.y);
     }
 
-    final relPoints = routedPoints.map((p) => Point(p.x - minX, p.y - minY)).toList();
+    final relPoints = routedPoints
+        .map((p) => Point(p.x - minX, p.y - minY))
+        .toList();
 
-    return arrow.copyWithLine(points: relPoints).copyWith(
-      x: minX,
-      y: minY,
-      width: maxX - minX,
-      height: maxY - minY,
-    );
+    return arrow
+        .copyWithLine(points: relPoints)
+        .copyWith(x: minX, y: minY, width: maxX - minX, height: maxY - minY);
   }
 
   /// Find all arrows in [scene] that are bound to [elementId].
@@ -304,15 +309,11 @@ class BindingUtils {
   }
 
   /// Rotate [point] around ([cx], [cy]) by [angle] radians.
-  static Point _rotatePoint(
-      Point point, double cx, double cy, double angle) {
+  static Point _rotatePoint(Point point, double cx, double cy, double angle) {
     final cosA = math.cos(angle);
     final sinA = math.sin(angle);
     final dx = point.x - cx;
     final dy = point.y - cy;
-    return Point(
-      cx + dx * cosA - dy * sinA,
-      cy + dx * sinA + dy * cosA,
-    );
+    return Point(cx + dx * cosA - dy * sinA, cy + dx * sinA + dy * cosA);
   }
 }

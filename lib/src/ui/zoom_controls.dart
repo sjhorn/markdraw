@@ -18,17 +18,14 @@ class ZoomControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final zoomPercent =
-        (controller.editorState.viewport.zoom * 100).round();
+    final zoomPercent = (controller.editorState.viewport.zoom * 100).round();
     return Container(
       decoration: BoxDecoration(
         color: cs.surface,
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.17), blurRadius: 1),
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08), blurRadius: 3),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.17), blurRadius: 1),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 3),
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 14,
@@ -43,8 +40,7 @@ class ZoomControls extends StatelessWidget {
             icon: const Icon(Icons.undo, size: 16),
             onPressed: controller.undo,
             tooltip: 'Undo (Ctrl+Z)',
-            constraints:
-                const BoxConstraints(minWidth: 32, minHeight: 32),
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
             iconSize: 16,
             padding: EdgeInsets.zero,
           ),
@@ -52,8 +48,7 @@ class ZoomControls extends StatelessWidget {
             icon: const Icon(Icons.redo, size: 16),
             onPressed: controller.redo,
             tooltip: 'Redo (Ctrl+Shift+Z)',
-            constraints:
-                const BoxConstraints(minWidth: 32, minHeight: 32),
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
             iconSize: 16,
             padding: EdgeInsets.zero,
           ),
@@ -72,8 +67,7 @@ class ZoomControls extends StatelessWidget {
             icon: const Icon(Icons.remove, size: 16),
             onPressed: () => controller.zoomOut(getCanvasSize()),
             tooltip: 'Zoom out (Ctrl+\u2212)',
-            constraints:
-                const BoxConstraints(minWidth: 32, minHeight: 32),
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
             iconSize: 16,
             padding: EdgeInsets.zero,
           ),
@@ -84,8 +78,7 @@ class ZoomControls extends StatelessWidget {
               onTap: () => controller.resetZoom(),
               borderRadius: BorderRadius.circular(4),
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: Text(
                   '$zoomPercent%',
                   style: TextStyle(fontSize: 12, color: cs.onSurface),
@@ -97,8 +90,7 @@ class ZoomControls extends StatelessWidget {
             icon: const Icon(Icons.add, size: 16),
             onPressed: () => controller.zoomIn(getCanvasSize()),
             tooltip: 'Zoom in (Ctrl++)',
-            constraints:
-                const BoxConstraints(minWidth: 32, minHeight: 32),
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
             iconSize: 16,
             padding: EdgeInsets.zero,
           ),

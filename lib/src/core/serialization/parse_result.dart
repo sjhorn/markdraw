@@ -4,11 +4,7 @@ class ParseWarning {
   final String message;
   final String? context;
 
-  const ParseWarning({
-    required this.line,
-    required this.message,
-    this.context,
-  });
+  const ParseWarning({required this.line, required this.message, this.context});
 
   @override
   bool operator ==(Object other) =>
@@ -31,7 +27,7 @@ class ParseResult<T> {
   final List<ParseWarning> warnings;
 
   ParseResult({required this.value, List<ParseWarning> warnings = const []})
-      : warnings = List.unmodifiable(warnings);
+    : warnings = List.unmodifiable(warnings);
 
   bool get hasWarnings => warnings.isNotEmpty;
 }

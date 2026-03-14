@@ -4,7 +4,6 @@ import 'package:flutter/material.dart' hide Element, SelectionOverlay;
 
 import 'package:markdraw/markdraw.dart' hide TextAlign;
 
-
 /// A full-featured drawing editor widget.
 ///
 /// Composes canvas, toolbar, property panel, zoom controls, help button,
@@ -60,7 +59,8 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
   MarkdrawController? _ownController;
 
   MarkdrawController get _controller =>
-      widget.controller ?? (_ownController ??= MarkdrawController(config: widget.config));
+      widget.controller ??
+      (_ownController ??= MarkdrawController(config: widget.config));
 
   @override
   void initState() {
@@ -132,9 +132,7 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
             context: context,
             onShowLinkDialog: (_) => _controller.openLinkEditor(),
           );
-          return handled
-              ? KeyEventResult.handled
-              : KeyEventResult.ignored;
+          return handled ? KeyEventResult.handled : KeyEventResult.ignored;
         },
         child: Scaffold(
           body: LayoutBuilder(
@@ -142,7 +140,8 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
               final isCompact =
                   constraints.maxWidth < widget.config.compactBreakpoint;
               _controller.lastCanvasSize = Size(
-                constraints.maxWidth, constraints.maxHeight,
+                constraints.maxWidth,
+                constraints.maxHeight,
               );
               if (isCompact != _controller.isCompact) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -170,13 +169,10 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
               child: DragTarget<LibraryItem>(
                 onAcceptWithDetails: (details) {
                   // Convert global drop position to local canvas position
-                  final renderBox =
-                      context.findRenderObject() as RenderBox?;
+                  final renderBox = context.findRenderObject() as RenderBox?;
                   if (renderBox == null) return;
-                  final localPos =
-                      renderBox.globalToLocal(details.offset);
-                  _controller.placeLibraryItemAt(
-                      details.data, localPos);
+                  final localPos = renderBox.globalToLocal(details.offset);
+                  _controller.placeLibraryItemAt(details.data, localPos);
                 },
                 builder: (context, candidateData, rejectedData) {
                   return EditorCanvas(controller: _controller);
@@ -201,11 +197,7 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
               bottom: 12,
               left: 0,
               right: 0,
-              child: Center(
-                child: CompactToolbar(
-                  controller: _controller,
-                ),
-              ),
+              child: Center(child: CompactToolbar(controller: _controller)),
             )
           else ...[
             Positioned(
@@ -228,22 +220,25 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
                 onTap: () => showRenameDocumentDialog(context, _controller),
                 child: MouseRegion(
                   cursor: SystemMouseCursors.click,
-                  child: Builder(builder: (context) {
-                    final canvasBg = parseColor(
-                        _controller.canvasBackgroundColor);
-                    final textColor = canvasBg.computeLuminance() > 0.5
-                        ? Colors.black
-                        : Colors.white;
-                    return Text(
-                      _controller.documentName ?? 'Untitled',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: _controller.documentName != null
-                            ? textColor.withValues(alpha: 0.7)
-                            : textColor.withValues(alpha: 0.3),
-                      ),
-                    );
-                  }),
+                  child: Builder(
+                    builder: (context) {
+                      final canvasBg = parseColor(
+                        _controller.canvasBackgroundColor,
+                      );
+                      final textColor = canvasBg.computeLuminance() > 0.5
+                          ? Colors.black
+                          : Colors.white;
+                      return Text(
+                        _controller.documentName ?? 'Untitled',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: _controller.documentName != null
+                              ? textColor.withValues(alpha: 0.7)
+                              : textColor.withValues(alpha: 0.3),
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
@@ -273,11 +268,7 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
                 ),
               ),
             if (widget.config.showHelpButton)
-              const Positioned(
-                bottom: 12,
-                right: 12,
-                child: HelpButton(),
-              ),
+              const Positioned(bottom: 12, right: 12, child: HelpButton()),
           ],
         ],
         // Floating property panel — desktop left side
@@ -307,11 +298,11 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
               onImportImage: widget.onImportImage,
               onShowLibrary: widget.config.showLibraryPanel
                   ? () => showCompactLibrary(
-                        context,
-                        _controller,
-                        onImportLibrary: widget.onImportLibrary,
-                        onExportLibrary: widget.onExportLibrary,
-                      )
+                      context,
+                      _controller,
+                      onImportLibrary: widget.onImportLibrary,
+                      onExportLibrary: widget.onExportLibrary,
+                    )
                   : null,
               onThemeModeChanged: widget.onThemeModeChanged,
               currentThemeMode: widget.currentThemeMode,
@@ -371,9 +362,7 @@ class _MarkdrawEditorState extends State<MarkdrawEditor> {
     final viewport = _controller.editorState.viewport;
 
     // Position the overlay above the selected element, centered horizontally
-    final topLeft = viewport.sceneToScreen(
-      Offset(element.x, element.y),
-    );
+    final topLeft = viewport.sceneToScreen(Offset(element.x, element.y));
     final bottomRight = viewport.sceneToScreen(
       Offset(element.x + element.width, element.y + element.height),
     );

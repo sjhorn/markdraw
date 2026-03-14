@@ -76,8 +76,11 @@ void main() {
         if (t != null) reachable.add(t);
       }
       for (final type in ToolType.values) {
-        expect(reachable, contains(type),
-            reason: '${type.name} has no keyboard shortcut');
+        expect(
+          reachable,
+          contains(type),
+          reason: '${type.name} has no keyboard shortcut',
+        );
       }
     });
   });
@@ -85,16 +88,22 @@ void main() {
   group('shortcutForToolType', () {
     test('every tool type has a shortcut label', () {
       for (final type in ToolType.values) {
-        expect(shortcutForToolType(type), isNotNull,
-            reason: '${type.name} should have a shortcut');
+        expect(
+          shortcutForToolType(type),
+          isNotNull,
+          reason: '${type.name} should have a shortcut',
+        );
       }
     });
 
     test('shortcut round-trips with toolTypeForKey', () {
       for (final type in ToolType.values) {
         final key = shortcutForToolType(type)!.toLowerCase();
-        expect(toolTypeForKey(key), type,
-            reason: 'shortcut "$key" should map back to ${type.name}');
+        expect(
+          toolTypeForKey(key),
+          type,
+          reason: 'shortcut "$key" should map back to ${type.name}',
+        );
       }
     });
   });

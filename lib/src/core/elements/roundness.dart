@@ -1,8 +1,5 @@
 /// The type of corner rounding applied to a shape.
-enum RoundnessType {
-  adaptive,
-  proportional,
-}
+enum RoundnessType { adaptive, proportional }
 
 /// Roundness configuration for shape corners.
 class Roundness {
@@ -12,10 +9,10 @@ class Roundness {
   const Roundness._({required this.type, required this.value});
 
   const Roundness.adaptive({required double value})
-      : this._(type: RoundnessType.adaptive, value: value);
+    : this._(type: RoundnessType.adaptive, value: value);
 
   const Roundness.proportional({required double value})
-      : this._(type: RoundnessType.proportional, value: value);
+    : this._(type: RoundnessType.proportional, value: value);
 
   @override
   bool operator ==(Object other) =>
@@ -39,8 +36,9 @@ class Roundness {
       case RoundnessType.proportional:
         return dimension * proportionalFactor;
       case RoundnessType.adaptive:
-        final fixedRadius =
-            roundness.value > 0 ? roundness.value : defaultAdaptiveRadius;
+        final fixedRadius = roundness.value > 0
+            ? roundness.value
+            : defaultAdaptiveRadius;
         final cutoff = fixedRadius / proportionalFactor;
         if (dimension <= cutoff) {
           return dimension * proportionalFactor;

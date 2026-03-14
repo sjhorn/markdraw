@@ -33,17 +33,27 @@ void main() {
       tool = SelectTool();
       // Create a rectangle with bound text
       scene = Scene()
-          .addElement(RectangleElement(
-            id: const ElementId('r1'),
-            x: 100, y: 100, width: 200, height: 100,
-            boundElements: [const BoundElement(id: 't1', type: 'text')],
-          ))
-          .addElement(TextElement(
-            id: const ElementId('t1'),
-            x: 100, y: 100, width: 200, height: 100,
-            text: 'Hello',
-            containerId: 'r1',
-          ));
+          .addElement(
+            RectangleElement(
+              id: const ElementId('r1'),
+              x: 100,
+              y: 100,
+              width: 200,
+              height: 100,
+              boundElements: [const BoundElement(id: 't1', type: 'text')],
+            ),
+          )
+          .addElement(
+            TextElement(
+              id: const ElementId('t1'),
+              x: 100,
+              y: 100,
+              width: 200,
+              height: 100,
+              text: 'Hello',
+              containerId: 'r1',
+            ),
+          );
     });
 
     ToolContext ctx({
@@ -90,10 +100,7 @@ void main() {
       final newScene = applyToScene(scene, result!);
       final parent = newScene.getElementById(const ElementId('r1'));
       expect(parent, isNotNull);
-      expect(
-        parent!.boundElements.where((b) => b.id == 't1'),
-        isEmpty,
-      );
+      expect(parent!.boundElements.where((b) => b.id == 't1'), isEmpty);
     });
 
     test('move shape syncs bound text position', () {
@@ -101,9 +108,7 @@ void main() {
 
       // Simulate drag: down, then move, then up
       tool.onPointerDown(const Point(150, 150), context);
-      final moveResult = tool.onPointerMove(
-        const Point(200, 200), context,
-      );
+      final moveResult = tool.onPointerMove(const Point(200, 200), context);
       tool.reset();
 
       expect(moveResult, isNotNull);
@@ -169,8 +174,7 @@ void main() {
 
     test('select all excludes bound text', () {
       final context = ctx(selectedIds: {});
-      final result =
-          tool.onKeyEvent('a', ctrl: true, context: context);
+      final result = tool.onKeyEvent('a', ctrl: true, context: context);
 
       final selectedIds = extractSelection(result!);
       expect(selectedIds, isNotNull);
@@ -183,23 +187,35 @@ void main() {
 
       setUp(() {
         arrowScene = Scene()
-            .addElement(ArrowElement(
-              id: const ElementId('a1'),
-              x: 0, y: 0, width: 200, height: 0,
-              points: [const Point(0, 0), const Point(200, 0)],
-              boundElements: [const BoundElement(id: 'tl1', type: 'text')],
-            ))
-            .addElement(TextElement(
-              id: const ElementId('tl1'),
-              x: 80, y: -20, width: 40, height: 20,
-              text: 'Label',
-              containerId: 'a1',
-            ));
+            .addElement(
+              ArrowElement(
+                id: const ElementId('a1'),
+                x: 0,
+                y: 0,
+                width: 200,
+                height: 0,
+                points: [const Point(0, 0), const Point(200, 0)],
+                boundElements: [const BoundElement(id: 'tl1', type: 'text')],
+              ),
+            )
+            .addElement(
+              TextElement(
+                id: const ElementId('tl1'),
+                x: 80,
+                y: -20,
+                width: 40,
+                height: 20,
+                text: 'Label',
+                containerId: 'a1',
+              ),
+            );
       });
 
       test('delete arrow deletes label', () {
         final context = ctx(
-            s: arrowScene, selectedIds: {const ElementId('a1')});
+          s: arrowScene,
+          selectedIds: {const ElementId('a1')},
+        );
         final result = tool.onKeyEvent('Delete', context: context);
         expect(result, isNotNull);
 
@@ -210,7 +226,9 @@ void main() {
 
       test('duplicate arrow duplicates label', () {
         final context = ctx(
-            s: arrowScene, selectedIds: {const ElementId('a1')});
+          s: arrowScene,
+          selectedIds: {const ElementId('a1')},
+        );
         final result = tool.onKeyEvent('d', ctrl: true, context: context);
         expect(result, isNotNull);
 

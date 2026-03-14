@@ -51,14 +51,28 @@ void main() {
               'id': 'item-1',
               'name': 'Box',
               'elements': [
-                {'id': 'r1', 'type': 'rectangle', 'x': 0, 'y': 0, 'width': 100, 'height': 50},
+                {
+                  'id': 'r1',
+                  'type': 'rectangle',
+                  'x': 0,
+                  'y': 0,
+                  'width': 100,
+                  'height': 50,
+                },
               ],
             },
             {
               'id': 'item-2',
               'name': 'Circle',
               'elements': [
-                {'id': 'e1', 'type': 'ellipse', 'x': 0, 'y': 0, 'width': 80, 'height': 80},
+                {
+                  'id': 'e1',
+                  'type': 'ellipse',
+                  'x': 0,
+                  'y': 0,
+                  'width': 80,
+                  'height': 80,
+                },
               ],
             },
           ],
@@ -117,11 +131,32 @@ void main() {
           'version': 1,
           'library': [
             [
-              {'id': 'r1', 'type': 'rectangle', 'x': 0, 'y': 0, 'width': 100, 'height': 50},
+              {
+                'id': 'r1',
+                'type': 'rectangle',
+                'x': 0,
+                'y': 0,
+                'width': 100,
+                'height': 50,
+              },
             ],
             [
-              {'id': 'e1', 'type': 'ellipse', 'x': 10, 'y': 10, 'width': 60, 'height': 60},
-              {'id': 'r2', 'type': 'rectangle', 'x': 80, 'y': 10, 'width': 40, 'height': 40},
+              {
+                'id': 'e1',
+                'type': 'ellipse',
+                'x': 10,
+                'y': 10,
+                'width': 60,
+                'height': 60,
+              },
+              {
+                'id': 'r2',
+                'type': 'rectangle',
+                'x': 80,
+                'y': 10,
+                'width': 40,
+                'height': 40,
+              },
             ],
           ],
         });
@@ -151,23 +186,25 @@ void main() {
 
     group('serialize v2', () {
       test('serializes a single item', () {
-        final doc = LibraryDocument(items: [
-          LibraryItem(
-            id: 'item-1',
-            name: 'Test',
-            status: 'published',
-            created: 1000,
-            elements: [
-              RectangleElement(
-                id: const ElementId('r1'),
-                x: 0,
-                y: 0,
-                width: 100,
-                height: 50,
-              ),
-            ],
-          ),
-        ]);
+        final doc = LibraryDocument(
+          items: [
+            LibraryItem(
+              id: 'item-1',
+              name: 'Test',
+              status: 'published',
+              created: 1000,
+              elements: [
+                RectangleElement(
+                  id: const ElementId('r1'),
+                  x: 0,
+                  y: 0,
+                  width: 100,
+                  height: 50,
+                ),
+              ],
+            ),
+          ],
+        );
 
         final json = ExcalidrawLibCodec.serialize(doc);
         final decoded = jsonDecode(json) as Map<String, dynamic>;
@@ -183,14 +220,36 @@ void main() {
       });
 
       test('serializes multiple items', () {
-        final doc = LibraryDocument(items: [
-          LibraryItem(id: '1', name: 'A', elements: [
-            RectangleElement(id: const ElementId('r1'), x: 0, y: 0, width: 100, height: 50),
-          ]),
-          LibraryItem(id: '2', name: 'B', elements: [
-            EllipseElement(id: const ElementId('e1'), x: 0, y: 0, width: 80, height: 80),
-          ]),
-        ]);
+        final doc = LibraryDocument(
+          items: [
+            LibraryItem(
+              id: '1',
+              name: 'A',
+              elements: [
+                RectangleElement(
+                  id: const ElementId('r1'),
+                  x: 0,
+                  y: 0,
+                  width: 100,
+                  height: 50,
+                ),
+              ],
+            ),
+            LibraryItem(
+              id: '2',
+              name: 'B',
+              elements: [
+                EllipseElement(
+                  id: const ElementId('e1'),
+                  x: 0,
+                  y: 0,
+                  width: 80,
+                  height: 80,
+                ),
+              ],
+            ),
+          ],
+        );
 
         final json = ExcalidrawLibCodec.serialize(doc);
         final decoded = jsonDecode(json) as Map<String, dynamic>;
@@ -199,28 +258,30 @@ void main() {
       });
 
       test('serializes item with files', () {
-        final doc = LibraryDocument(items: [
-          LibraryItem(
-            id: 'img-item',
-            name: 'Image',
-            elements: [
-              ImageElement(
-                id: const ElementId('img1'),
-                x: 0,
-                y: 0,
-                width: 200,
-                height: 150,
-                fileId: 'file-abc',
-              ),
-            ],
-            files: {
-              'file-abc': ImageFile(
-                mimeType: 'image/png',
-                bytes: Uint8List.fromList([1, 2, 3]),
-              ),
-            },
-          ),
-        ]);
+        final doc = LibraryDocument(
+          items: [
+            LibraryItem(
+              id: 'img-item',
+              name: 'Image',
+              elements: [
+                ImageElement(
+                  id: const ElementId('img1'),
+                  x: 0,
+                  y: 0,
+                  width: 200,
+                  height: 150,
+                  fileId: 'file-abc',
+                ),
+              ],
+              files: {
+                'file-abc': ImageFile(
+                  mimeType: 'image/png',
+                  bytes: Uint8List.fromList([1, 2, 3]),
+                ),
+              },
+            ),
+          ],
+        );
 
         final json = ExcalidrawLibCodec.serialize(doc);
         final decoded = jsonDecode(json) as Map<String, dynamic>;
@@ -232,24 +293,26 @@ void main() {
 
     group('round-trip', () {
       test('serialize then parse preserves items', () {
-        final original = LibraryDocument(items: [
-          LibraryItem(
-            id: 'item-1',
-            name: 'Box',
-            status: 'published',
-            created: 12345,
-            elements: [
-              RectangleElement(
-                id: const ElementId('r1'),
-                x: 10,
-                y: 20,
-                width: 100,
-                height: 50,
-                strokeColor: '#ff0000',
-              ),
-            ],
-          ),
-        ]);
+        final original = LibraryDocument(
+          items: [
+            LibraryItem(
+              id: 'item-1',
+              name: 'Box',
+              status: 'published',
+              created: 12345,
+              elements: [
+                RectangleElement(
+                  id: const ElementId('r1'),
+                  x: 10,
+                  y: 20,
+                  width: 100,
+                  height: 50,
+                  strokeColor: '#ff0000',
+                ),
+              ],
+            ),
+          ],
+        );
 
         final json = ExcalidrawLibCodec.serialize(original);
         final result = ExcalidrawLibCodec.parse(json);
@@ -268,25 +331,27 @@ void main() {
 
       test('round-trip preserves files', () {
         final imageBytes = Uint8List.fromList([10, 20, 30, 40]);
-        final original = LibraryDocument(items: [
-          LibraryItem(
-            id: 'img-item',
-            name: 'With Image',
-            elements: [
-              ImageElement(
-                id: const ElementId('img1'),
-                x: 0,
-                y: 0,
-                width: 200,
-                height: 150,
-                fileId: 'file-1',
-              ),
-            ],
-            files: {
-              'file-1': ImageFile(mimeType: 'image/jpeg', bytes: imageBytes),
-            },
-          ),
-        ]);
+        final original = LibraryDocument(
+          items: [
+            LibraryItem(
+              id: 'img-item',
+              name: 'With Image',
+              elements: [
+                ImageElement(
+                  id: const ElementId('img1'),
+                  x: 0,
+                  y: 0,
+                  width: 200,
+                  height: 150,
+                  fileId: 'file-1',
+                ),
+              ],
+              files: {
+                'file-1': ImageFile(mimeType: 'image/jpeg', bytes: imageBytes),
+              },
+            ),
+          ],
+        );
 
         final json = ExcalidrawLibCodec.serialize(original);
         final result = ExcalidrawLibCodec.parse(json);
@@ -297,30 +362,32 @@ void main() {
     });
 
     test('item with grouped elements preserves groupIds', () {
-      final doc = LibraryDocument(items: [
-        LibraryItem(
-          id: 'grouped',
-          name: 'Grouped',
-          elements: [
-            RectangleElement(
-              id: const ElementId('r1'),
-              x: 0,
-              y: 0,
-              width: 100,
-              height: 50,
-              groupIds: ['group-a'],
-            ),
-            RectangleElement(
-              id: const ElementId('r2'),
-              x: 110,
-              y: 0,
-              width: 100,
-              height: 50,
-              groupIds: ['group-a'],
-            ),
-          ],
-        ),
-      ]);
+      final doc = LibraryDocument(
+        items: [
+          LibraryItem(
+            id: 'grouped',
+            name: 'Grouped',
+            elements: [
+              RectangleElement(
+                id: const ElementId('r1'),
+                x: 0,
+                y: 0,
+                width: 100,
+                height: 50,
+                groupIds: ['group-a'],
+              ),
+              RectangleElement(
+                id: const ElementId('r2'),
+                x: 110,
+                y: 0,
+                width: 100,
+                height: 50,
+                groupIds: ['group-a'],
+              ),
+            ],
+          ),
+        ],
+      );
 
       final json = ExcalidrawLibCodec.serialize(doc);
       final result = ExcalidrawLibCodec.parse(json);
@@ -355,7 +422,12 @@ void main() {
         'height': 50,
       };
       final warnings = <ParseWarning>[];
-      final element = ExcalidrawJsonCodec.parseElement(raw, 'rectangle', 0, warnings);
+      final element = ExcalidrawJsonCodec.parseElement(
+        raw,
+        'rectangle',
+        0,
+        warnings,
+      );
       expect(element, isA<RectangleElement>());
       expect(element!.x, 10);
     });

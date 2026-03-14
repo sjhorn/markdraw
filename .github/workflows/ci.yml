@@ -18,6 +18,9 @@ jobs:
 
       - run: flutter pub get
 
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed .
+
       - run: flutter analyze
 
       - name: Run tests with coverage
@@ -40,3 +43,34 @@ jobs:
         with:
           name: coverage-report
           path: coverage/lcov.info
+
+  pana:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - run: flutter pub get
+
+      - name: Install pana
+        run: dart pub global activate pana
+
+      - name: Run pana analysis
+        run: |
+          RESULT=$(dart pub global run pana --no-warning . 2>&1)
+          echo "$RESULT"
+          # Extract the score line (e.g., "Points: 130/160.")
+          SCORE_LINE=$(echo "$RESULT" | grep -oP 'Points: \K\d+(?=/)')
+          TOTAL_LINE=$(echo "$RESULT" | grep -oP 'Points: \d+/\K\d+')
+          if [ -n "$SCORE_LINE" ] && [ -n "$TOTAL_LINE" ]; then
+            echo "Pana score: $SCORE_LINE/$TOTAL_LINE"
+            if [ "$SCORE_LINE" -lt 120 ]; then
+              echo "::error::Pana score $SCORE_LINE/$TOTAL_LINE is below 120 threshold"
+              exit 1
+            fi
+          else
+            echo "::warning::Could not parse pana score"
+          fi

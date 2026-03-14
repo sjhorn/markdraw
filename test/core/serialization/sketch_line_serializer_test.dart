@@ -38,10 +38,7 @@ void main() {
         updated: 0,
       );
       final line = serializer.serialize(rect, alias: 'auth');
-      expect(
-        line,
-        'rect id=auth at 100,200 160x80 fill=#e3f2fd rounded=8',
-      );
+      expect(line, 'rect id=auth at 100,200 160x80 fill=#e3f2fd rounded=8');
     });
 
     test('rectangle with label emits bound text info', () {
@@ -166,10 +163,7 @@ void main() {
         updated: 0,
       );
       final line = serializer.serialize(ellipse, alias: 'db');
-      expect(
-        line,
-        'ellipse id=db at 225,400 120x80 fill=#e8f5e9',
-      );
+      expect(line, 'ellipse id=db at 225,400 120x80 fill=#e8f5e9');
     });
   });
 
@@ -297,10 +291,15 @@ void main() {
     test('text with non-default verticalAlign', () {
       final text = TextElement(
         id: const ElementId('t1'),
-        x: 0, y: 0, width: 100, height: 30,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 30,
         text: 'Top',
         verticalAlign: VerticalAlign.top,
-        seed: 5, versionNonce: 1, updated: 0,
+        seed: 5,
+        versionNonce: 1,
+        updated: 0,
       );
       final line = serializer.serialize(text);
       expect(line, contains('valign=top'));
@@ -309,9 +308,14 @@ void main() {
     test('text with default verticalAlign omits valign', () {
       final text = TextElement(
         id: const ElementId('t1'),
-        x: 0, y: 0, width: 100, height: 30,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 30,
         text: 'Middle',
-        seed: 5, versionNonce: 1, updated: 0,
+        seed: 5,
+        versionNonce: 1,
+        updated: 0,
       );
       final line = serializer.serialize(text);
       expect(line, isNot(contains('valign=')));
@@ -659,10 +663,7 @@ void main() {
         versionNonce: 1,
         updated: 0,
       );
-      final line = serializer.serialize(
-        arrow,
-        aliasMap: {'r1': 'auth'},
-      );
+      final line = serializer.serialize(arrow, aliasMap: {'r1': 'auth'});
       expect(line, contains('from auth'));
       expect(line, contains('to 500,300'));
     });
@@ -683,10 +684,7 @@ void main() {
         versionNonce: 1,
         updated: 0,
       );
-      final line = serializer.serialize(
-        arrow,
-        aliasMap: {'r2': 'dest'},
-      );
+      final line = serializer.serialize(arrow, aliasMap: {'r2': 'dest'});
       expect(line, contains('from 100,50'));
       expect(line, contains('to dest'));
     });

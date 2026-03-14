@@ -72,7 +72,9 @@ void main() {
 
     test('isMarkdrawText detects sketch blocks', () {
       expect(
-        ClipboardCodec.isMarkdrawText('```markdraw\nrect id=r1 at 0,0 size 100x80\n```'),
+        ClipboardCodec.isMarkdrawText(
+          '```markdraw\nrect id=r1 at 0,0 size 100x80\n```',
+        ),
         isTrue,
       );
     });

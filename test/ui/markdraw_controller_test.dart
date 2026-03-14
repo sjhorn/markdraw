@@ -26,23 +26,11 @@ RectangleElement _rect({
 }
 
 EllipseElement _ellipse({String id = 'e1', double x = 0, double y = 0}) {
-  return EllipseElement(
-    id: ElementId(id),
-    x: x,
-    y: y,
-    width: 80,
-    height: 80,
-  );
+  return EllipseElement(id: ElementId(id), x: x, y: y, width: 80, height: 80);
 }
 
 DiamondElement _diamond({String id = 'd1'}) {
-  return DiamondElement(
-    id: ElementId(id),
-    x: 0,
-    y: 0,
-    width: 60,
-    height: 60,
-  );
+  return DiamondElement(id: ElementId(id), x: 0, y: 0, width: 60, height: 60);
 }
 
 TextElement _text({
@@ -408,9 +396,11 @@ void main() {
       final c = MarkdrawController();
       addTearDown(c.dispose);
 
-      c.loadScene(Scene()
-          .addElement(_rect(x: 0, y: 0, w: 1000, h: 1000))
-          .addElement(_rect(id: 'r2', x: 2000, y: 2000, w: 500, h: 500)));
+      c.loadScene(
+        Scene()
+            .addElement(_rect(x: 0, y: 0, w: 1000, h: 1000))
+            .addElement(_rect(id: 'r2', x: 2000, y: 2000, w: 500, h: 500)),
+      );
       c.zoomToFit(_canvasSize);
       // Viewport should have changed from default
       expect(c.editorState.viewport.zoom, isNot(1.0));
@@ -472,10 +462,7 @@ void main() {
     test('applies font size and family to text element', () {
       final c = MarkdrawController(
         config: const MarkdrawEditorConfig(
-          initialStyle: ElementStyle(
-            fontSize: 28.0,
-            fontFamily: 'Excalifont',
-          ),
+          initialStyle: ElementStyle(fontSize: 28.0, fontFamily: 'Excalifont'),
         ),
       );
       addTearDown(c.dispose);
@@ -489,9 +476,7 @@ void main() {
     test('applies arrowhead style to line element', () {
       final c = MarkdrawController(
         config: const MarkdrawEditorConfig(
-          initialStyle: ElementStyle(
-            endArrowhead: Arrowhead.arrow,
-          ),
+          initialStyle: ElementStyle(endArrowhead: Arrowhead.arrow),
         ),
       );
       addTearDown(c.dispose);
@@ -504,9 +489,7 @@ void main() {
     test('applies roundness to rectangle', () {
       final c = MarkdrawController(
         config: const MarkdrawEditorConfig(
-          initialStyle: ElementStyle(
-            roundness: Roundness.adaptive(value: 10),
-          ),
+          initialStyle: ElementStyle(roundness: Roundness.adaptive(value: 10)),
         ),
       );
       addTearDown(c.dispose);
@@ -519,9 +502,7 @@ void main() {
     test('applies roundness to diamond as proportional', () {
       final c = MarkdrawController(
         config: const MarkdrawEditorConfig(
-          initialStyle: ElementStyle(
-            roundness: Roundness.adaptive(value: 5),
-          ),
+          initialStyle: ElementStyle(roundness: Roundness.adaptive(value: 5)),
         ),
       );
       addTearDown(c.dispose);
@@ -581,9 +562,11 @@ void main() {
       final c = MarkdrawController();
       addTearDown(c.dispose);
 
-      c.applyResult(UpdateViewportResult(
-        const ViewportState(zoom: 2.0, offset: Offset(100, 200)),
-      ));
+      c.applyResult(
+        UpdateViewportResult(
+          const ViewportState(zoom: 2.0, offset: Offset(100, 200)),
+        ),
+      );
       expect(c.editorState.viewport.zoom, 2.0);
       expect(c.editorState.viewport.offset, const Offset(100, 200));
     });
@@ -594,10 +577,7 @@ void main() {
 
       final r = _rect();
       final e = _ellipse();
-      c.applyResult(CompoundResult([
-        AddElementResult(r),
-        AddElementResult(e),
-      ]));
+      c.applyResult(CompoundResult([AddElementResult(r), AddElementResult(e)]));
       expect(c.editorState.scene.activeElements, hasLength(2));
     });
 
@@ -719,8 +699,10 @@ void main() {
       c.commitTextEditing();
 
       // Bound text removed
-      expect(c.editorState.scene.getElementById(const ElementId('bt1')),
-          isNull);
+      expect(
+        c.editorState.scene.getElementById(const ElementId('bt1')),
+        isNull,
+      );
       // Parent's boundElements cleaned up
       final parent = c.editorState.scene.getElementById(const ElementId('r1'))!;
       expect(parent.boundElements, isEmpty);
@@ -832,8 +814,9 @@ void main() {
 
       // Verify a text element was created
       final scene = c.editorState.scene;
-      final textElements =
-          scene.activeElements.whereType<TextElement>().toList();
+      final textElements = scene.activeElements
+          .whereType<TextElement>()
+          .toList();
       expect(textElements, hasLength(1));
       expect(textElements.first.containerId, r.id.value);
     });
@@ -914,8 +897,7 @@ void main() {
       c.commitFrameLabel('New Label');
 
       expect(c.editingFrameLabelId, isNull);
-      final updated =
-          c.editorState.scene.getElementById(f.id) as FrameElement;
+      final updated = c.editorState.scene.getElementById(f.id) as FrameElement;
       expect(updated.label, 'New Label');
     });
 
@@ -928,8 +910,7 @@ void main() {
       c.startFrameLabelEditing(f);
       c.commitFrameLabel('  ');
 
-      final updated =
-          c.editorState.scene.getElementById(f.id) as FrameElement;
+      final updated = c.editorState.scene.getElementById(f.id) as FrameElement;
       expect(updated.label, 'Keep Me');
     });
 
@@ -1326,14 +1307,20 @@ void main() {
       addTearDown(c.dispose);
 
       final f = _frame();
-      final child = _rect(id: 'child1', x: 10, y: 10, w: 50, h: 50)
-          .copyWith(frameId: 'f1');
+      final child = _rect(
+        id: 'child1',
+        x: 10,
+        y: 10,
+        w: 50,
+        h: 50,
+      ).copyWith(frameId: 'f1');
       c.loadScene(Scene().addElement(f).addElement(child));
       c.applyResult(SetSelectionResult({f.id}));
       c.applyStyleChange(const ElementStyle(opacity: 50));
 
-      final updatedChild =
-          c.editorState.scene.getElementById(const ElementId('child1'))!;
+      final updatedChild = c.editorState.scene.getElementById(
+        const ElementId('child1'),
+      )!;
       expect(updatedChild.opacity, 50);
     });
 
@@ -1659,9 +1646,7 @@ void main() {
     test('followLink with URL calls onLinkOpen', () {
       String? openedUrl;
       final c = MarkdrawController(
-        config: MarkdrawEditorConfig(
-          onLinkOpen: (url) => openedUrl = url,
-        ),
+        config: MarkdrawEditorConfig(onLinkOpen: (url) => openedUrl = url),
       );
       addTearDown(c.dispose);
 
@@ -1672,9 +1657,7 @@ void main() {
     test('followLink normalizes URL without protocol', () {
       String? openedUrl;
       final c = MarkdrawController(
-        config: MarkdrawEditorConfig(
-          onLinkOpen: (url) => openedUrl = url,
-        ),
+        config: MarkdrawEditorConfig(onLinkOpen: (url) => openedUrl = url),
       );
       addTearDown(c.dispose);
 
@@ -1685,9 +1668,7 @@ void main() {
     test('followLink normalizes absolute path to file URL', () {
       String? openedUrl;
       final c = MarkdrawController(
-        config: MarkdrawEditorConfig(
-          onLinkOpen: (url) => openedUrl = url,
-        ),
+        config: MarkdrawEditorConfig(onLinkOpen: (url) => openedUrl = url),
       );
       addTearDown(c.dispose);
 
@@ -1754,8 +1735,7 @@ void main() {
       addTearDown(c.dispose);
 
       c.loadScene(Scene().addElement(_rect()));
-      final content =
-          c.serializeScene(format: DocumentFormat.excalidraw);
+      final content = c.serializeScene(format: DocumentFormat.excalidraw);
       expect(content, contains('"type"'));
     });
 
@@ -1776,8 +1756,7 @@ void main() {
       addTearDown(c.dispose);
 
       c.loadScene(Scene().addElement(_rect()));
-      final content =
-          c.serializeScene(format: DocumentFormat.excalidraw);
+      final content = c.serializeScene(format: DocumentFormat.excalidraw);
       c.clear();
 
       c.loadFromContent(content, 'test.excalidraw');
@@ -1986,9 +1965,7 @@ void main() {
       final c = MarkdrawController();
       addTearDown(c.dispose);
 
-      c.applyResult(UpdateViewportResult(
-        const ViewportState(zoom: 2.0),
-      ));
+      c.applyResult(UpdateViewportResult(const ViewportState(zoom: 2.0)));
       final p = c.toScene(const Offset(100, 200));
       expect(p.x, 50); // 100 / 2
       expect(p.y, 100); // 200 / 2
@@ -2011,9 +1988,12 @@ void main() {
       addTearDown(c.dispose);
 
       c.loadScene(Scene().addElement(_rect()));
-      c.applyResult(SetSelectionResult(
-        {const ElementId('r1'), const ElementId('nonexistent')},
-      ));
+      c.applyResult(
+        SetSelectionResult({
+          const ElementId('r1'),
+          const ElementId('nonexistent'),
+        }),
+      );
       expect(c.selectedElements, hasLength(1));
     });
   });
@@ -2074,32 +2054,34 @@ void main() {
       expect(handles, hasLength(2));
     });
 
-    test('buildPointHandles returns null for multi-point line without editing',
-        () {
-      final c = MarkdrawController();
-      addTearDown(c.dispose);
+    test(
+      'buildPointHandles returns null for multi-point line without editing',
+      () {
+        final c = MarkdrawController();
+        addTearDown(c.dispose);
 
-      final l = LineElement(
-        id: const ElementId('l1'),
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 100,
-        points: [
-          const Point(0, 0),
-          const Point(50, 50),
-          const Point(100, 100),
-        ],
-      );
-      c.loadScene(Scene().addElement(l));
-      c.applyResult(SetSelectionResult({l.id}));
+        final l = LineElement(
+          id: const ElementId('l1'),
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+          points: [
+            const Point(0, 0),
+            const Point(50, 50),
+            const Point(100, 100),
+          ],
+        );
+        c.loadScene(Scene().addElement(l));
+        c.applyResult(SetSelectionResult({l.id}));
 
-      expect(c.buildPointHandles(), isNull);
+        expect(c.buildPointHandles(), isNull);
 
-      // Enable editing mode
-      c.isEditingLinear = true;
-      expect(c.buildPointHandles(), isNotNull);
-    });
+        // Enable editing mode
+        c.isEditingLinear = true;
+        expect(c.buildPointHandles(), isNotNull);
+      },
+    );
 
     test('buildPointHandles returns null for rectangle', () {
       final c = MarkdrawController();
@@ -2233,9 +2215,7 @@ void main() {
       addTearDown(c.dispose);
 
       c.switchTool(ToolType.arrow);
-      const overlay = ToolOverlay(
-        creationPoints: [Point(0, 0), Point(50, 0)],
-      );
+      const overlay = ToolOverlay(creationPoints: [Point(0, 0), Point(50, 0)]);
       final preview = c.buildPreviewElement(overlay);
       expect(preview, isA<ArrowElement>());
     });
@@ -2246,11 +2226,7 @@ void main() {
 
       c.switchTool(ToolType.freedraw);
       const overlay = ToolOverlay(
-        creationPoints: [
-          Point(0, 0),
-          Point(10, 10),
-          Point(20, 5),
-        ],
+        creationPoints: [Point(0, 0), Point(10, 10), Point(20, 5)],
       );
       final preview = c.buildPreviewElement(overlay);
       expect(preview, isA<FreedrawElement>());
@@ -2273,9 +2249,7 @@ void main() {
       addTearDown(c.dispose);
 
       c.switchTool(ToolType.line);
-      const overlay = ToolOverlay(
-        creationPoints: [Point(0, 0)],
-      );
+      const overlay = ToolOverlay(creationPoints: [Point(0, 0)]);
       final preview = c.buildPreviewElement(overlay);
       expect(preview, isNull);
     });
@@ -2543,9 +2517,9 @@ void main() {
       c.textEditingController.text = 'New bound text';
       c.onTextChanged();
 
-      final updated = c.editorState.scene.getElementById(
-        const ElementId('bt1'),
-      ) as TextElement;
+      final updated =
+          c.editorState.scene.getElementById(const ElementId('bt1'))
+              as TextElement;
       expect(updated.text, 'New bound text');
     });
   });
@@ -2679,9 +2653,9 @@ void main() {
       c.applyResult(SetSelectionResult({r.id}));
       c.applyStyleChange(const ElementStyle(fontSize: 36));
 
-      final updatedBt = c.editorState.scene.getElementById(
-        const ElementId('bt1'),
-      ) as TextElement;
+      final updatedBt =
+          c.editorState.scene.getElementById(const ElementId('bt1'))
+              as TextElement;
       expect(updatedBt.fontSize, 36);
     });
   });
@@ -2726,9 +2700,11 @@ void main() {
       final c = MarkdrawController();
       addTearDown(c.dispose);
 
-      c.applyResult(UpdateViewportResult(
-        const ViewportState(zoom: 1.5, offset: Offset(10, 20)),
-      ));
+      c.applyResult(
+        UpdateViewportResult(
+          const ViewportState(zoom: 1.5, offset: Offset(10, 20)),
+        ),
+      );
       c.onScaleStart(ScaleStartDetails());
       expect(c.pinchStartZoom, 1.5);
       expect(c.pinchStartOffset, const Offset(10, 20));
@@ -2740,11 +2716,13 @@ void main() {
 
       c.onScaleStart(ScaleStartDetails());
       final before = c.editorState.viewport.zoom;
-      c.onScaleUpdate(ScaleUpdateDetails(
-        scale: 2.0,
-        localFocalPoint: const Offset(400, 300),
-        pointerCount: 1,
-      ));
+      c.onScaleUpdate(
+        ScaleUpdateDetails(
+          scale: 2.0,
+          localFocalPoint: const Offset(400, 300),
+          pointerCount: 1,
+        ),
+      );
       expect(c.editorState.viewport.zoom, before);
     });
   });
@@ -2815,28 +2793,34 @@ void main() {
       expect(c.buildMidpointHandles(), isNull);
     });
 
-    test('buildSegmentMidpoints returns midpoints for elbow arrow in edit mode',
-        () {
-      final c = MarkdrawController();
-      addTearDown(c.dispose);
+    test(
+      'buildSegmentMidpoints returns midpoints for elbow arrow in edit mode',
+      () {
+        final c = MarkdrawController();
+        addTearDown(c.dispose);
 
-      final a = ArrowElement(
-        id: const ElementId('ea1'),
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 100,
-        points: [const Point(0, 0), const Point(100, 0), const Point(100, 100)],
-        arrowType: ArrowType.sharpElbow,
-      );
-      c.loadScene(Scene().addElement(a));
-      c.applyResult(SetSelectionResult({a.id}));
-      c.isEditingLinear = true;
+        final a = ArrowElement(
+          id: const ElementId('ea1'),
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+          points: [
+            const Point(0, 0),
+            const Point(100, 0),
+            const Point(100, 100),
+          ],
+          arrowType: ArrowType.sharpElbow,
+        );
+        c.loadScene(Scene().addElement(a));
+        c.applyResult(SetSelectionResult({a.id}));
+        c.isEditingLinear = true;
 
-      final midpoints = c.buildSegmentMidpoints();
-      expect(midpoints, isNotNull);
-      expect(midpoints, hasLength(2)); // 3 points -> 2 segments
-    });
+        final midpoints = c.buildSegmentMidpoints();
+        expect(midpoints, isNotNull);
+        expect(midpoints, hasLength(2)); // 3 points -> 2 segments
+      },
+    );
 
     test('buildSegmentMidpoints null for non-elbow arrow', () {
       final c = MarkdrawController();

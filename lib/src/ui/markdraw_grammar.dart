@@ -11,12 +11,7 @@ final langMarkdraw = Mode(
   caseInsensitive: false,
   contains: <Mode>[
     // Comments: # at start of line only (avoid matching hex colors)
-    Mode(
-      scope: 'comment',
-      begin: r'^\s*#',
-      end: r'$',
-      relevance: 0,
-    ),
+    Mode(scope: 'comment', begin: r'^\s*#', end: r'$', relevance: 0),
 
     // Quoted strings: "Hello World"
     QUOTE_STRING_MODE,
@@ -29,16 +24,10 @@ final langMarkdraw = Mode(
     ),
 
     // Position keywords
-    Mode(
-      scope: 'keyword',
-      begin: r'\b(from|to|at)\b',
-    ),
+    Mode(scope: 'keyword', begin: r'\b(from|to|at)\b'),
 
     // Property keys before '='
-    Mode(
-      scope: 'attr',
-      begin: r'[a-z][a-z0-9-]*(?==)',
-    ),
+    Mode(scope: 'attr', begin: r'[a-z][a-z0-9-]*(?==)'),
 
     // Known property values after '=' (font aliases, named sizes)
     Mode(
@@ -48,23 +37,13 @@ final langMarkdraw = Mode(
     ),
 
     // Quoted property values: key="value with spaces"
-    Mode(
-      scope: 'string',
-      begin: r'(?<==)"',
-      end: r'"',
-    ),
+    Mode(scope: 'string', begin: r'(?<==)"', end: r'"'),
 
     // Hex colors: #RRGGBB (after comment to avoid false match)
-    Mode(
-      scope: 'number',
-      begin: r'#[0-9a-fA-F]{3,6}\b',
-    ),
+    Mode(scope: 'number', begin: r'#[0-9a-fA-F]{3,6}\b'),
 
     // Dimensions: WxH
-    Mode(
-      scope: 'number',
-      begin: r'\b\d+x\d+\b',
-    ),
+    Mode(scope: 'number', begin: r'\b\d+x\d+\b'),
 
     // Flags
     Mode(

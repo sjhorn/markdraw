@@ -36,8 +36,11 @@ class LineTool implements Tool {
   }
 
   @override
-  ToolResult? onPointerMove(Point point, ToolContext context,
-      {Offset? screenDelta}) {
+  ToolResult? onPointerMove(
+    Point point,
+    ToolContext context, {
+    Offset? screenDelta,
+  }) {
     if (_points.isNotEmpty) {
       // Check proximity to start point for close detection
       if (_points.length >= 3) {
@@ -59,8 +62,11 @@ class LineTool implements Tool {
 
   /// Extended onPointerUp with double-click detection.
   @override
-  ToolResult? onPointerUp(Point point, ToolContext context,
-      {bool isDoubleClick = false}) {
+  ToolResult? onPointerUp(
+    Point point,
+    ToolContext context, {
+    bool isDoubleClick = false,
+  }) {
     if (_isDragCreating) {
       _isDragCreating = false;
       final origin = _dragOrigin!;
@@ -95,7 +101,12 @@ class LineTool implements Tool {
   }
 
   @override
-  ToolResult? onKeyEvent(String key, {bool shift = false, bool ctrl = false, ToolContext? context}) {
+  ToolResult? onKeyEvent(
+    String key, {
+    bool shift = false,
+    bool ctrl = false,
+    ToolContext? context,
+  }) {
     if ((key == 'Escape' || key == 'Enter') && _points.length >= 2) {
       return _finalize();
     }
@@ -139,8 +150,9 @@ class LineTool implements Tool {
     final maxY = points.map((p) => p.y).reduce(math.max);
 
     // Make points relative to origin
-    final relativePoints =
-        points.map((p) => Point(p.x - minX, p.y - minY)).toList();
+    final relativePoints = points
+        .map((p) => Point(p.x - minX, p.y - minY))
+        .toList();
 
     return LineElement(
       id: ElementId.generate(),

@@ -23,8 +23,10 @@ class LayerUtils {
 
     // Generate keys after the last existing index
     final lastIndex = withIndex.isNotEmpty ? withIndex.last.index : null;
-    final keys =
-        FractionalIndex.generateNKeys(withoutIndex.length, after: lastIndex);
+    final keys = FractionalIndex.generateNKeys(
+      withoutIndex.length,
+      after: lastIndex,
+    );
 
     final results = <Element>[];
     for (var i = 0; i < withoutIndex.length; i++) {
@@ -57,8 +59,10 @@ class LayerUtils {
       return indexUpdates;
     }
 
-    final keys =
-        FractionalIndex.generateNKeys(selected.length, after: topIndex);
+    final keys = FractionalIndex.generateNKeys(
+      selected.length,
+      after: topIndex,
+    );
     final results = <Element>[...indexUpdates];
     final indexUpdateIds = indexUpdates.map((e) => e.id).toSet();
     for (var i = 0; i < selected.length; i++) {
@@ -88,8 +92,10 @@ class LayerUtils {
     if (selected.isEmpty || others.isEmpty) return indexUpdates;
 
     final bottomIndex = others.first.index;
-    final keys =
-        FractionalIndex.generateNKeys(selected.length, before: bottomIndex);
+    final keys = FractionalIndex.generateNKeys(
+      selected.length,
+      before: bottomIndex,
+    );
     final results = <Element>[...indexUpdates];
     final indexUpdateIds = indexUpdates.map((e) => e.id).toSet();
     for (var i = 0; i < selected.length; i++) {
@@ -201,8 +207,10 @@ class LayerUtils {
     if (withoutIndex.isEmpty) return (withIndex, []);
 
     final lastIndex = withIndex.isNotEmpty ? withIndex.last.index : null;
-    final keys =
-        FractionalIndex.generateNKeys(withoutIndex.length, after: lastIndex);
+    final keys = FractionalIndex.generateNKeys(
+      withoutIndex.length,
+      after: lastIndex,
+    );
 
     final indexUpdates = <Element>[];
     final indexed = <Element>[];

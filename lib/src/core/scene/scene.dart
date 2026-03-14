@@ -8,15 +8,11 @@ class Scene {
   final List<Element> _elements;
   final Map<String, ImageFile> files;
 
-  Scene()
-      : _elements = const [],
-        files = const {};
+  Scene() : _elements = const [], files = const {};
 
   Scene._(List<Element> elements, [Map<String, ImageFile>? files])
-      : _elements = List.unmodifiable(elements),
-        files = files != null
-            ? Map.unmodifiable(files)
-            : const {};
+    : _elements = List.unmodifiable(elements),
+      files = files != null ? Map.unmodifiable(files) : const {};
 
   /// All elements in the scene (including soft-deleted).
   List<Element> get elements => _elements;
@@ -141,7 +137,11 @@ class Scene {
   }
 
   /// Returns true if [point] is within [threshold] of any segment of [line].
-  static bool _isPointNearLine(Point point, LineElement line, double threshold) {
+  static bool _isPointNearLine(
+    Point point,
+    LineElement line,
+    double threshold,
+  ) {
     final pts = line.points;
     if (pts.isEmpty) return false;
 

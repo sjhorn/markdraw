@@ -1,6 +1,7 @@
 /// Tests for text editing logic: double-click dispatch, bound text creation,
 /// commit/cancel behavior, and auto-resize via TextRenderer.measure.
 library;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:markdraw/markdraw.dart';
 
@@ -18,11 +19,16 @@ Scene applyToScene(Scene scene, ToolResult result) {
 void main() {
   group('Text editing logic', () {
     test('double-click hit on TextElement returns the text element', () {
-      final scene = Scene().addElement(TextElement(
-        id: const ElementId('t1'),
-        x: 100, y: 100, width: 200, height: 40,
-        text: 'Existing text',
-      ));
+      final scene = Scene().addElement(
+        TextElement(
+          id: const ElementId('t1'),
+          x: 100,
+          y: 100,
+          width: 200,
+          height: 40,
+          text: 'Existing text',
+        ),
+      );
 
       final hit = scene.getElementAtPoint(const Point(150, 120));
       expect(hit, isNotNull);
@@ -33,7 +39,10 @@ void main() {
     test('commit updates element text and size via measure', () {
       final element = TextElement(
         id: const ElementId('t1'),
-        x: 100, y: 100, width: 50, height: 24,
+        x: 100,
+        y: 100,
+        width: 50,
+        height: 24,
         text: '',
       );
       // Simulate commit: update text, then measure
@@ -46,21 +55,28 @@ void main() {
     });
 
     test('commit empty text should result in removal', () {
-      final scene = Scene().addElement(TextElement(
-        id: const ElementId('t1'),
-        x: 100, y: 100, width: 200, height: 40,
-        text: 'Original',
-      ));
+      final scene = Scene().addElement(
+        TextElement(
+          id: const ElementId('t1'),
+          x: 100,
+          y: 100,
+          width: 200,
+          height: 40,
+          text: 'Original',
+        ),
+      );
       // Simulate empty text commit → remove
-      final newScene =
-          scene.removeElement(const ElementId('t1'));
+      final newScene = scene.removeElement(const ElementId('t1'));
       expect(newScene.getElementById(const ElementId('t1')), isNull);
     });
 
     test('cancel editing existing restores original text', () {
       final element = TextElement(
         id: const ElementId('t1'),
-        x: 100, y: 100, width: 200, height: 40,
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 40,
         text: 'Original',
       );
       var scene = Scene().addElement(element);
@@ -77,7 +93,10 @@ void main() {
     test('cancel editing new removes element', () {
       final element = TextElement(
         id: const ElementId('t1'),
-        x: 100, y: 100, width: 200, height: 40,
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 40,
         text: '',
       );
       var scene = Scene().addElement(element);
@@ -89,7 +108,10 @@ void main() {
     test('double-click shape creates bound text with containerId', () {
       final rect = RectangleElement(
         id: const ElementId('r1'),
-        x: 100, y: 100, width: 200, height: 100,
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 100,
       );
       var scene = Scene().addElement(rect);
       expect(BoundTextUtils.isTextContainer(rect), isTrue);
@@ -97,8 +119,10 @@ void main() {
       // Simulate creation of bound text
       final newText = TextElement(
         id: const ElementId('bt1'),
-        x: rect.x, y: rect.y,
-        width: rect.width, height: rect.height,
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height,
         text: '',
         containerId: 'r1',
       );
@@ -110,16 +134,26 @@ void main() {
 
     test('double-click shape with existing bound text edits it', () {
       var scene = Scene()
-          .addElement(RectangleElement(
-            id: const ElementId('r1'),
-            x: 100, y: 100, width: 200, height: 100,
-          ))
-          .addElement(TextElement(
-            id: const ElementId('bt1'),
-            x: 100, y: 100, width: 200, height: 100,
-            text: 'Existing label',
-            containerId: 'r1',
-          ));
+          .addElement(
+            RectangleElement(
+              id: const ElementId('r1'),
+              x: 100,
+              y: 100,
+              width: 200,
+              height: 100,
+            ),
+          )
+          .addElement(
+            TextElement(
+              id: const ElementId('bt1'),
+              x: 100,
+              y: 100,
+              width: 200,
+              height: 100,
+              text: 'Existing label',
+              containerId: 'r1',
+            ),
+          );
       final existing = scene.findBoundText(const ElementId('r1'));
       expect(existing, isNotNull);
       expect(existing!.text, 'Existing label');
@@ -134,15 +168,20 @@ void main() {
     test('double-click arrow creates label', () {
       final arrow = ArrowElement(
         id: const ElementId('a1'),
-        x: 0, y: 0, width: 200, height: 0,
+        x: 0,
+        y: 0,
+        width: 200,
+        height: 0,
         points: [const Point(0, 0), const Point(200, 0)],
       );
       var scene = Scene().addElement(arrow);
       final mid = ArrowLabelUtils.computeLabelPosition(arrow);
       final label = TextElement(
         id: const ElementId('al1'),
-        x: mid.x, y: mid.y,
-        width: 100, height: 24,
+        x: mid.x,
+        y: mid.y,
+        width: 100,
+        height: 24,
         text: '',
         containerId: 'a1',
       );
@@ -152,36 +191,54 @@ void main() {
 
     test('double-click arrow with existing label edits it', () {
       final scene = Scene()
-          .addElement(ArrowElement(
-            id: const ElementId('a1'),
-            x: 0, y: 0, width: 200, height: 0,
-            points: [const Point(0, 0), const Point(200, 0)],
-          ))
-          .addElement(TextElement(
-            id: const ElementId('al1'),
-            x: 80, y: -20, width: 40, height: 20,
-            text: 'Existing',
-            containerId: 'a1',
-          ));
+          .addElement(
+            ArrowElement(
+              id: const ElementId('a1'),
+              x: 0,
+              y: 0,
+              width: 200,
+              height: 0,
+              points: [const Point(0, 0), const Point(200, 0)],
+            ),
+          )
+          .addElement(
+            TextElement(
+              id: const ElementId('al1'),
+              x: 80,
+              y: -20,
+              width: 40,
+              height: 20,
+              text: 'Existing',
+              containerId: 'a1',
+            ),
+          );
       final found = scene.findBoundText(const ElementId('a1'));
       expect(found!.text, 'Existing');
     });
 
     test('commit empty bound text removes text and cleans parent', () {
       var scene = Scene()
-          .addElement(RectangleElement(
-            id: const ElementId('r1'),
-            x: 100, y: 100, width: 200, height: 100,
-            boundElements: [
-              const BoundElement(id: 'bt1', type: 'text'),
-            ],
-          ))
-          .addElement(TextElement(
-            id: const ElementId('bt1'),
-            x: 100, y: 100, width: 200, height: 100,
-            text: 'Label',
-            containerId: 'r1',
-          ));
+          .addElement(
+            RectangleElement(
+              id: const ElementId('r1'),
+              x: 100,
+              y: 100,
+              width: 200,
+              height: 100,
+              boundElements: [const BoundElement(id: 'bt1', type: 'text')],
+            ),
+          )
+          .addElement(
+            TextElement(
+              id: const ElementId('bt1'),
+              x: 100,
+              y: 100,
+              width: 200,
+              height: 100,
+              text: 'Label',
+              containerId: 'r1',
+            ),
+          );
 
       // Simulate empty commit: remove bound text
       scene = scene.removeElement(const ElementId('bt1'));
@@ -195,10 +252,7 @@ void main() {
       );
       scene = scene.updateElement(cleaned);
       final updatedParent = scene.getElementById(const ElementId('r1'))!;
-      expect(
-        updatedParent.boundElements.where((b) => b.id == 'bt1'),
-        isEmpty,
-      );
+      expect(updatedParent.boundElements.where((b) => b.id == 'bt1'), isEmpty);
     });
   });
 }

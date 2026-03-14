@@ -84,8 +84,7 @@ class SceneDocumentConverter {
     for (final element in scene.activeElements) {
       if (element is ArrowElement &&
           (element.startBinding != null || element.endBinding != null)) {
-        final updated =
-            BindingUtils.updateBoundArrowEndpoints(element, scene);
+        final updated = BindingUtils.updateBoundArrowEndpoints(element, scene);
         if (!identical(updated, element)) {
           scene = scene.updateElement(updated);
         }

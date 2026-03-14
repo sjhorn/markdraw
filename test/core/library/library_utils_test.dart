@@ -335,8 +335,7 @@ void main() {
       );
 
       final compound = result as CompoundResult;
-      final fileResults =
-          compound.results.whereType<AddFileResult>().toList();
+      final fileResults = compound.results.whereType<AddFileResult>().toList();
       expect(fileResults, hasLength(1));
       expect(fileResults.first.fileId, 'file-abc');
       expect(fileResults.first.file.bytes, imageBytes);
@@ -369,8 +368,9 @@ void main() {
       );
 
       final compound = result as CompoundResult;
-      final selectionResult =
-          compound.results.whereType<SetSelectionResult>().first;
+      final selectionResult = compound.results
+          .whereType<SetSelectionResult>()
+          .first;
       // Only the rectangle should be selected, not the bound text
       expect(selectionResult.selectedIds, hasLength(1));
     });

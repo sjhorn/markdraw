@@ -3,16 +3,17 @@ import 'package:markdraw/markdraw.dart';
 
 void main() {
   RectangleElement makeRect(String id, {String? index}) => RectangleElement(
-        id: ElementId(id),
-        x: 0, y: 0, width: 100, height: 100,
-        index: index,
-      );
+    id: ElementId(id),
+    x: 0,
+    y: 0,
+    width: 100,
+    height: 100,
+    index: index,
+  );
 
   group('LayerUtils.ensureIndices', () {
     test('assigns indices to elements without them', () {
-      final scene = Scene()
-          .addElement(makeRect('a'))
-          .addElement(makeRect('b'));
+      final scene = Scene().addElement(makeRect('a')).addElement(makeRect('b'));
       final updated = LayerUtils.ensureIndices(scene);
       expect(updated, hasLength(2));
       expect(updated[0].index, isNotNull);
@@ -45,8 +46,7 @@ void main() {
           .addElement(makeRect('a', index: 'A'))
           .addElement(makeRect('b', index: 'B'))
           .addElement(makeRect('c', index: 'C'));
-      final updated =
-          LayerUtils.bringToFront(scene, {const ElementId('a')});
+      final updated = LayerUtils.bringToFront(scene, {const ElementId('a')});
       expect(updated, hasLength(1));
       expect(updated[0].id, const ElementId('a'));
       expect(updated[0].index!.compareTo('C'), greaterThan(0));
@@ -64,8 +64,10 @@ void main() {
           .addElement(makeRect('b', index: 'B'))
           .addElement(makeRect('c', index: 'C'))
           .addElement(makeRect('d', index: 'D'));
-      final updated = LayerUtils.bringToFront(
-          scene, {const ElementId('a'), const ElementId('b')});
+      final updated = LayerUtils.bringToFront(scene, {
+        const ElementId('a'),
+        const ElementId('b'),
+      });
       expect(updated, hasLength(2));
       // Both should be above D
       for (final e in updated) {
@@ -82,8 +84,7 @@ void main() {
           .addElement(makeRect('a', index: 'A'))
           .addElement(makeRect('b', index: 'B'))
           .addElement(makeRect('c', index: 'C'));
-      final updated =
-          LayerUtils.sendToBack(scene, {const ElementId('c')});
+      final updated = LayerUtils.sendToBack(scene, {const ElementId('c')});
       expect(updated, hasLength(1));
       expect(updated[0].id, const ElementId('c'));
       expect(updated[0].index!.compareTo('A'), lessThan(0));
@@ -102,8 +103,7 @@ void main() {
           .addElement(makeRect('a', index: 'A'))
           .addElement(makeRect('b', index: 'B'))
           .addElement(makeRect('c', index: 'C'));
-      final updated =
-          LayerUtils.bringForward(scene, {const ElementId('a')});
+      final updated = LayerUtils.bringForward(scene, {const ElementId('a')});
       expect(updated, hasLength(2));
       // a should now have b's old index, b should have a's old index
       final aResult = updated.firstWhere((e) => e.id == const ElementId('a'));
@@ -116,8 +116,7 @@ void main() {
       final scene = Scene()
           .addElement(makeRect('a', index: 'A'))
           .addElement(makeRect('b', index: 'B'));
-      final updated =
-          LayerUtils.bringForward(scene, {const ElementId('b')});
+      final updated = LayerUtils.bringForward(scene, {const ElementId('b')});
       expect(updated, isEmpty);
     });
   });
@@ -128,8 +127,7 @@ void main() {
           .addElement(makeRect('a', index: 'A'))
           .addElement(makeRect('b', index: 'B'))
           .addElement(makeRect('c', index: 'C'));
-      final updated =
-          LayerUtils.sendBackward(scene, {const ElementId('c')});
+      final updated = LayerUtils.sendBackward(scene, {const ElementId('c')});
       expect(updated, hasLength(2));
       final cResult = updated.firstWhere((e) => e.id == const ElementId('c'));
       final bResult = updated.firstWhere((e) => e.id == const ElementId('b'));
@@ -141,8 +139,7 @@ void main() {
       final scene = Scene()
           .addElement(makeRect('a', index: 'A'))
           .addElement(makeRect('b', index: 'B'));
-      final updated =
-          LayerUtils.sendBackward(scene, {const ElementId('a')});
+      final updated = LayerUtils.sendBackward(scene, {const ElementId('a')});
       expect(updated, isEmpty);
     });
 
@@ -159,8 +156,7 @@ void main() {
           .addElement(makeRect('a'))
           .addElement(makeRect('b'))
           .addElement(makeRect('c'));
-      final updated =
-          LayerUtils.bringToFront(scene, {const ElementId('a')});
+      final updated = LayerUtils.bringToFront(scene, {const ElementId('a')});
 
       // Should assign indices to all elements and move 'a' to front
       final aResult = updated.firstWhere((e) => e.id == const ElementId('a'));
@@ -183,8 +179,7 @@ void main() {
           .addElement(makeRect('a'))
           .addElement(makeRect('b'))
           .addElement(makeRect('c'));
-      final updated =
-          LayerUtils.sendToBack(scene, {const ElementId('c')});
+      final updated = LayerUtils.sendToBack(scene, {const ElementId('c')});
 
       final cResult = updated.firstWhere((e) => e.id == const ElementId('c'));
       expect(cResult.index, isNotNull);
@@ -201,8 +196,7 @@ void main() {
           .addElement(makeRect('a'))
           .addElement(makeRect('b'))
           .addElement(makeRect('c'));
-      final updated =
-          LayerUtils.bringForward(scene, {const ElementId('a')});
+      final updated = LayerUtils.bringForward(scene, {const ElementId('a')});
 
       // All results should have non-null indices
       for (final e in updated) {
@@ -220,8 +214,7 @@ void main() {
           .addElement(makeRect('a'))
           .addElement(makeRect('b'))
           .addElement(makeRect('c'));
-      final updated =
-          LayerUtils.sendBackward(scene, {const ElementId('c')});
+      final updated = LayerUtils.sendBackward(scene, {const ElementId('c')});
 
       for (final e in updated) {
         expect(e.index, isNotNull);
@@ -238,8 +231,7 @@ void main() {
           .addElement(makeRect('a', index: 'A'))
           .addElement(makeRect('b'))
           .addElement(makeRect('c', index: 'C'));
-      final updated =
-          LayerUtils.bringToFront(scene, {const ElementId('a')});
+      final updated = LayerUtils.bringToFront(scene, {const ElementId('a')});
 
       final aResult = updated.firstWhere((e) => e.id == const ElementId('a'));
       expect(aResult.index, isNotNull);

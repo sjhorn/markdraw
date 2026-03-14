@@ -61,7 +61,11 @@ class SketchLineSerializer {
   }) {
     if (element is ArrowElement) {
       return _serializeArrowWithLabel(
-        element, alias, aliasMap, elementMap, labelElement,
+        element,
+        alias,
+        aliasMap,
+        elementMap,
+        labelElement,
       );
     }
     final keyword = switch (element) {
@@ -109,15 +113,19 @@ class SketchLineSerializer {
   void _addTextProperties(List<String> parts, TextElement labelElement) {
     if (labelElement.fontSize != 20.0) {
       final sizeAlias = _sizeAlias(labelElement.fontSize);
-      parts.add(sizeAlias != null
-          ? 'text-size=$sizeAlias'
-          : 'text-size=${_formatNum(labelElement.fontSize)}');
+      parts.add(
+        sizeAlias != null
+            ? 'text-size=$sizeAlias'
+            : 'text-size=${_formatNum(labelElement.fontSize)}',
+      );
     }
     if (labelElement.fontFamily != 'Excalifont') {
       final fontAlias = _fontToAlias[labelElement.fontFamily];
-      parts.add(fontAlias != null
-          ? 'text-font=$fontAlias'
-          : 'text-font=${_quoteIfNeeded(labelElement.fontFamily)}');
+      parts.add(
+        fontAlias != null
+            ? 'text-font=$fontAlias'
+            : 'text-font=${_quoteIfNeeded(labelElement.fontFamily)}',
+      );
     }
     if (labelElement.textAlign != TextAlign.center) {
       parts.add('text-align=${labelElement.textAlign.name}');
@@ -176,15 +184,19 @@ class SketchLineSerializer {
     _addSize(parts, element.width, element.height);
     if (element.fontSize != 20.0) {
       final sizeAlias = _sizeAlias(element.fontSize);
-      parts.add(sizeAlias != null
-          ? 'size=$sizeAlias'
-          : 'size=${_formatNum(element.fontSize)}');
+      parts.add(
+        sizeAlias != null
+            ? 'size=$sizeAlias'
+            : 'size=${_formatNum(element.fontSize)}',
+      );
     }
     if (element.fontFamily != 'Excalifont') {
       final fontAlias = _fontToAlias[element.fontFamily];
-      parts.add(fontAlias != null
-          ? 'font=$fontAlias'
-          : 'font=${_quoteIfNeeded(element.fontFamily)}');
+      parts.add(
+        fontAlias != null
+            ? 'font=$fontAlias'
+            : 'font=${_quoteIfNeeded(element.fontFamily)}',
+      );
     }
     if (element.textAlign != TextAlign.left) {
       parts.add('align=${element.textAlign.name}');
@@ -348,8 +360,11 @@ class SketchLineSerializer {
     }
   }
 
-  void _addCommonProperties(List<String> parts, Element element,
-      {bool isArrow = false}) {
+  void _addCommonProperties(
+    List<String> parts,
+    Element element, {
+    bool isArrow = false,
+  }) {
     if (element.backgroundColor != 'transparent') {
       parts.add('fill=${formatColor(element.backgroundColor)}');
     }
@@ -422,10 +437,12 @@ class SketchLineSerializer {
       _ => <Point>[],
     };
     return pts
-        .map((p) => Point(
-              (p.x + element.x).roundToDouble(),
-              (p.y + element.y).roundToDouble(),
-            ))
+        .map(
+          (p) => Point(
+            (p.x + element.x).roundToDouble(),
+            (p.y + element.y).roundToDouble(),
+          ),
+        )
         .toList();
   }
 

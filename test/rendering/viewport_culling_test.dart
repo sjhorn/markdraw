@@ -13,11 +13,17 @@ void main() {
       final elements = [
         RectangleElement(
           id: const ElementId('r1'),
-          x: 100, y: 100, width: 200, height: 100,
+          x: 100,
+          y: 100,
+          width: 200,
+          height: 100,
         ),
         EllipseElement(
           id: const ElementId('e1'),
-          x: 400, y: 200, width: 150, height: 100,
+          x: 400,
+          y: 200,
+          width: 150,
+          height: 100,
         ),
       ];
 
@@ -29,11 +35,17 @@ void main() {
       final elements = [
         RectangleElement(
           id: const ElementId('r1'),
-          x: 100, y: 100, width: 200, height: 100,
+          x: 100,
+          y: 100,
+          width: 200,
+          height: 100,
         ),
         RectangleElement(
           id: const ElementId('r2'),
-          x: 2000, y: 2000, width: 100, height: 100,
+          x: 2000,
+          y: 2000,
+          width: 100,
+          height: 100,
         ),
       ];
 
@@ -46,7 +58,10 @@ void main() {
       final elements = [
         RectangleElement(
           id: const ElementId('r1'),
-          x: -50, y: -30, width: 100, height: 100,
+          x: -50,
+          y: -30,
+          width: 100,
+          height: 100,
         ),
       ];
 
@@ -58,7 +73,10 @@ void main() {
       final elements = [
         RectangleElement(
           id: const ElementId('r1'),
-          x: 100, y: 100, width: 200, height: 100,
+          x: 100,
+          y: 100,
+          width: 200,
+          height: 100,
           isDeleted: true,
         ),
       ];
@@ -71,7 +89,10 @@ void main() {
       final elements = [
         core.TextElement(
           id: const ElementId('t1'),
-          x: 100, y: 100, width: 200, height: 40,
+          x: 100,
+          y: 100,
+          width: 200,
+          height: 40,
           text: 'Bound text',
           containerId: 'r1',
         ),
@@ -87,7 +108,10 @@ void main() {
       final elements = [
         RectangleElement(
           id: const ElementId('r1'),
-          x: 810, y: 100, width: 100, height: 100,
+          x: 810,
+          y: 100,
+          width: 100,
+          height: 100,
         ),
       ];
 
@@ -101,7 +125,10 @@ void main() {
       final elements = [
         RectangleElement(
           id: const ElementId('r1'),
-          x: 900, y: 100, width: 100, height: 100,
+          x: 900,
+          y: 100,
+          width: 100,
+          height: 100,
         ),
       ];
 
@@ -115,7 +142,10 @@ void main() {
       final elements = [
         RectangleElement(
           id: const ElementId('r1'),
-          x: 500, y: 100, width: 100, height: 100,
+          x: 500,
+          y: 100,
+          width: 100,
+          height: 100,
         ),
       ];
 
@@ -129,11 +159,17 @@ void main() {
       final elements = [
         RectangleElement(
           id: const ElementId('r1'),
-          x: 100, y: 100, width: 200, height: 100,
+          x: 100,
+          y: 100,
+          width: 200,
+          height: 100,
         ),
         RectangleElement(
           id: const ElementId('r2'),
-          x: 1200, y: 1200, width: 200, height: 100,
+          x: 1200,
+          y: 1200,
+          width: 200,
+          height: 100,
         ),
       ];
 
@@ -153,25 +189,40 @@ void main() {
       final elements = [
         RectangleElement(
           id: const ElementId('visible1'),
-          x: 100, y: 100, width: 200, height: 100,
+          x: 100,
+          y: 100,
+          width: 200,
+          height: 100,
         ),
         RectangleElement(
           id: const ElementId('invisible1'),
-          x: 5000, y: 5000, width: 100, height: 100,
+          x: 5000,
+          y: 5000,
+          width: 100,
+          height: 100,
         ),
         EllipseElement(
           id: const ElementId('visible2'),
-          x: 300, y: 200, width: 150, height: 80,
+          x: 300,
+          y: 200,
+          width: 150,
+          height: 80,
         ),
         RectangleElement(
           id: const ElementId('invisible2'),
-          x: -500, y: -500, width: 100, height: 100,
+          x: -500,
+          y: -500,
+          width: 100,
+          height: 100,
         ),
       ];
 
       final result = cullElements(elements, defaultViewport, canvasSize);
       expect(result.length, 2);
-      expect(result.map((e) => e.id.value), containsAll(['visible1', 'visible2']));
+      expect(
+        result.map((e) => e.id.value),
+        containsAll(['visible1', 'visible2']),
+      );
     });
 
     test('custom margin value', () {
@@ -179,19 +230,28 @@ void main() {
       final elements = [
         RectangleElement(
           id: const ElementId('r1'),
-          x: 860, y: 100, width: 100, height: 100,
+          x: 860,
+          y: 100,
+          width: 100,
+          height: 100,
         ),
       ];
 
       // With margin=0, filtered (860 > 800)
       final noMargin = cullElements(
-        elements, defaultViewport, canvasSize, margin: 0,
+        elements,
+        defaultViewport,
+        canvasSize,
+        margin: 0,
       );
       expect(noMargin, isEmpty);
 
       // With margin=100, included (860 < 800 + 100 = 900)
       final bigMargin = cullElements(
-        elements, defaultViewport, canvasSize, margin: 100,
+        elements,
+        defaultViewport,
+        canvasSize,
+        margin: 100,
       );
       expect(bigMargin.length, 1);
     });

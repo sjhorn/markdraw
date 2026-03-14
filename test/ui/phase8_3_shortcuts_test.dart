@@ -78,13 +78,15 @@ void main() {
       final controller = MarkdrawController();
       addTearDown(controller.dispose);
 
-      final scene = Scene().addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 50,
-      ));
+      final scene = Scene().addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 50,
+        ),
+      );
       controller.loadScene(scene);
       controller.applyResult(SetSelectionResult({const ElementId('r1')}));
       expect(controller.editorState.selectedIds, isNotEmpty);

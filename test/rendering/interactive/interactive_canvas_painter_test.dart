@@ -14,24 +14,22 @@ void main() {
     test('paints nothing when all inputs are null/empty', () {
       final (recorder, canvas) = _makeCanvas();
 
-      const painter = InteractiveCanvasPainter(
-        viewport: ViewportState(),
-      );
+      const painter = InteractiveCanvasPainter(viewport: ViewportState());
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
     });
 
     test('draws selection box when selection is provided', () {
       final (recorder, canvas) = _makeCanvas();
       final element = RectangleElement(
         id: const ElementId('r1'),
-        x: 100, y: 100, width: 200, height: 150,
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 150,
       );
       final overlay = SelectionOverlay.fromElements([element]);
 
@@ -40,13 +38,10 @@ void main() {
         selection: overlay,
       );
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
     });
 
     test('draws hover highlight when hoveredBounds is provided', () {
@@ -57,13 +52,10 @@ void main() {
         hoveredBounds: Bounds.fromLTWH(50, 50, 200, 100),
       );
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
     });
 
     test('draws marquee rectangle when marqueeRect is provided', () {
@@ -74,13 +66,10 @@ void main() {
         marqueeRect: Rect.fromLTWH(10, 20, 300, 200),
       );
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
     });
 
     test('draws snap lines when provided', () {
@@ -104,13 +93,10 @@ void main() {
         ],
       );
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
     });
 
     test('draws creation preview line when creationPoints provided', () {
@@ -121,13 +107,10 @@ void main() {
         creationPoints: [Point(10, 20), Point(200, 300)],
       );
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
     });
 
     test('draws creation preview shape when creationBounds provided', () {
@@ -138,20 +121,20 @@ void main() {
         creationBounds: Bounds.fromLTWH(50, 50, 200, 150),
       );
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
     });
 
     test('applies viewport transform', () {
       final (recorder, canvas) = _makeCanvas();
       final element = RectangleElement(
         id: const ElementId('r1'),
-        x: 100, y: 100, width: 200, height: 150,
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 150,
       );
       final overlay = SelectionOverlay.fromElements([element]);
 
@@ -169,13 +152,10 @@ void main() {
         ],
       );
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
     });
 
     test('draws point handles when pointHandles provided', () {
@@ -186,20 +166,20 @@ void main() {
         pointHandles: [Point(10, 20), Point(200, 300)],
       );
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
     });
 
     test('draws only point handles when showBoundingBox is false', () {
       final (recorder, canvas) = _makeCanvas();
       final line = LineElement(
         id: const ElementId('l1'),
-        x: 0, y: 0, width: 200, height: 0,
+        x: 0,
+        y: 0,
+        width: 200,
+        height: 0,
         points: [const Point(0, 0), const Point(200, 0)],
       );
       final overlay = SelectionOverlay.fromElements([line]);
@@ -212,20 +192,20 @@ void main() {
         pointHandles: const [Point(0, 0), Point(200, 0)],
       );
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
     });
 
     test('draws point handles with rotated selection', () {
       final (recorder, canvas) = _makeCanvas();
       final line = LineElement(
         id: const ElementId('l1'),
-        x: 100, y: 100, width: 200, height: 0,
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 0,
         angle: 0.5,
         points: [const Point(0, 0), const Point(200, 0)],
       );
@@ -237,13 +217,10 @@ void main() {
         pointHandles: const [Point(100, 100), Point(300, 100)],
       );
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
     });
 
     test('shouldRepaint returns true when pointHandles change', () {
@@ -263,13 +240,19 @@ void main() {
       final overlay1 = SelectionOverlay.fromElements([
         RectangleElement(
           id: const ElementId('r1'),
-          x: 0, y: 0, width: 100, height: 100,
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
         ),
       ]);
       final overlay2 = SelectionOverlay.fromElements([
         RectangleElement(
           id: const ElementId('r2'),
-          x: 200, y: 200, width: 50, height: 50,
+          x: 200,
+          y: 200,
+          width: 50,
+          height: 50,
         ),
       ]);
 
@@ -286,12 +269,8 @@ void main() {
     });
 
     test('shouldRepaint returns true when viewport changes', () {
-      const p1 = InteractiveCanvasPainter(
-        viewport: ViewportState(),
-      );
-      const p2 = InteractiveCanvasPainter(
-        viewport: ViewportState(zoom: 2.0),
-      );
+      const p1 = InteractiveCanvasPainter(viewport: ViewportState());
+      const p2 = InteractiveCanvasPainter(viewport: ViewportState(zoom: 2.0));
 
       expect(p2.shouldRepaint(p1), isTrue);
     });
@@ -310,9 +289,7 @@ void main() {
     });
 
     test('shouldRepaint returns true when snapLines change', () {
-      const p1 = InteractiveCanvasPainter(
-        viewport: ViewportState(),
-      );
+      const p1 = InteractiveCanvasPainter(viewport: ViewportState());
       const p2 = InteractiveCanvasPainter(
         viewport: ViewportState(),
         snapLines: [
@@ -332,7 +309,10 @@ void main() {
       final overlay = SelectionOverlay.fromElements([
         RectangleElement(
           id: const ElementId('r1'),
-          x: 0, y: 0, width: 100, height: 100,
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
         ),
       ]);
       final bounds = Bounds.fromLTWH(50, 50, 100, 80);
@@ -369,29 +349,21 @@ void main() {
         bindTargetBounds: Bounds.fromLTWH(100, 100, 200, 150),
       );
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
     });
 
     test('does not render binding indicator when null', () {
       final (recorder, canvas) = _makeCanvas();
 
-      const painter = InteractiveCanvasPainter(
-        viewport: ViewportState(),
-      );
+      const painter = InteractiveCanvasPainter(viewport: ViewportState());
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
     });
 
     test('shouldRepaint returns true when bindTargetBounds changes', () {
@@ -411,7 +383,10 @@ void main() {
       final (recorder, canvas) = _makeCanvas();
       final element = RectangleElement(
         id: const ElementId('r1'),
-        x: 100, y: 100, width: 200, height: 150,
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 150,
       );
       final overlay = SelectionOverlay.fromElements([element]);
 
@@ -432,19 +407,14 @@ void main() {
         creationBounds: Bounds.fromLTWH(200, 400, 100, 80),
       );
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
     });
 
     test('accepts InteractionMode and defaults to pointer', () {
-      const painter = InteractiveCanvasPainter(
-        viewport: ViewportState(),
-      );
+      const painter = InteractiveCanvasPainter(viewport: ViewportState());
       expect(painter.interactionMode, InteractionMode.pointer);
     });
 
@@ -452,10 +422,14 @@ void main() {
       final (recorder, canvas) = _makeCanvas();
       final element = RectangleElement(
         id: const ElementId('r1'),
-        x: 100, y: 100, width: 200, height: 150,
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 150,
       );
-      final overlay = SelectionOverlay.fromElements([element],
-          mode: InteractionMode.touch);
+      final overlay = SelectionOverlay.fromElements([
+        element,
+      ], mode: InteractionMode.touch);
 
       final painter = InteractiveCanvasPainter(
         viewport: const ViewportState(),
@@ -464,24 +438,27 @@ void main() {
         pointHandles: const [Point(100, 100), Point(300, 250)],
       );
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
     });
 
     test('draws multi-select with per-element outlines and dashed box', () {
       final (recorder, canvas) = _makeCanvas();
       final e1 = RectangleElement(
         id: const ElementId('r1'),
-        x: 50, y: 50, width: 100, height: 80,
+        x: 50,
+        y: 50,
+        width: 100,
+        height: 80,
       );
       final e2 = EllipseElement(
         id: const ElementId('e1'),
-        x: 200, y: 100, width: 150, height: 120,
+        x: 200,
+        y: 100,
+        width: 150,
+        height: 120,
       );
       final overlay = SelectionOverlay.fromElements([e1, e2]);
 
@@ -493,25 +470,28 @@ void main() {
         selection: overlay,
       );
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
     });
 
     test('draws multi-select with rotated elements', () {
       final (recorder, canvas) = _makeCanvas();
       final e1 = RectangleElement(
         id: const ElementId('r1'),
-        x: 50, y: 50, width: 100, height: 80,
+        x: 50,
+        y: 50,
+        width: 100,
+        height: 80,
         angle: 0.5,
       );
       final e2 = DiamondElement(
         id: const ElementId('d1'),
-        x: 200, y: 100, width: 150, height: 120,
+        x: 200,
+        y: 100,
+        width: 150,
+        height: 120,
         angle: 1.2,
       );
       final overlay = SelectionOverlay.fromElements([e1, e2]);
@@ -521,13 +501,10 @@ void main() {
         selection: overlay,
       );
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
     });
 
     test('shouldRepaint returns true when segmentMidpoints changes', () {
@@ -560,7 +537,10 @@ void main() {
       final overlay = SelectionOverlay.fromElements([
         RectangleElement(
           id: const ElementId('r1'),
-          x: 0, y: 0, width: 100, height: 100,
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
         ),
       ]);
 

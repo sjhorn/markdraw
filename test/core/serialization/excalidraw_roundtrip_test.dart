@@ -245,7 +245,11 @@ void main() {
           y: 300,
           width: 100,
           height: 50,
-          points: [const Point(0, 0), const Point(50, 25), const Point(100, 50)],
+          points: [
+            const Point(0, 0),
+            const Point(50, 25),
+            const Point(100, 50),
+          ],
           seed: 48,
         ),
       ]);
@@ -255,15 +259,18 @@ void main() {
 
       expect(parsed.value.allElements.length, 7);
       final types = parsed.value.allElements.map((e) => e.type).toSet();
-      expect(types, containsAll([
-        'rectangle',
-        'ellipse',
-        'diamond',
-        'text',
-        'line',
-        'arrow',
-        'freedraw',
-      ]));
+      expect(
+        types,
+        containsAll([
+          'rectangle',
+          'ellipse',
+          'diamond',
+          'text',
+          'line',
+          'arrow',
+          'freedraw',
+        ]),
+      );
     });
 
     test('non-default styles preserved', () {
@@ -325,15 +332,14 @@ void main() {
       final parsed = ExcalidrawJsonCodec.parse(json);
 
       expect(parsed.value.allElements.length, 2);
-      final textEl = parsed.value.allElements
-          .whereType<TextElement>()
-          .first;
+      final textEl = parsed.value.allElements.whereType<TextElement>().first;
       expect(textEl.containerId, 'r1');
       expect(textEl.text, 'Inside');
     });
 
     test('all arrowhead types round-trip without warnings', () {
-      const jsonStr = '{"type":"excalidraw","version":2,"elements":[{'
+      const jsonStr =
+          '{"type":"excalidraw","version":2,"elements":[{'
           '"id":"a1","type":"arrow","x":0,"y":0,"width":100,"height":0,'
           '"points":[[0,0],[100,0]],"endArrowhead":"circle_outline",'
           '"angle":0,"strokeColor":"#000000","backgroundColor":"transparent",'
@@ -356,7 +362,8 @@ void main() {
     });
 
     test('warnings for unknown arrowhead types', () {
-      const jsonStr = '{"type":"excalidraw","version":2,"elements":[{'
+      const jsonStr =
+          '{"type":"excalidraw","version":2,"elements":[{'
           '"id":"a1","type":"arrow","x":0,"y":0,"width":100,"height":0,'
           '"points":[[0,0],[100,0]],"endArrowhead":"unknown_type",'
           '"angle":0,"strokeColor":"#000000","backgroundColor":"transparent",'

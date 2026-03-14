@@ -12,9 +12,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: DesktopToolbar(controller: controller),
-          ),
+          home: Scaffold(body: DesktopToolbar(controller: controller)),
         ),
       );
 
@@ -27,9 +25,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: CompactToolbar(controller: controller),
-          ),
+          home: Scaffold(body: CompactToolbar(controller: controller)),
         ),
       );
 
@@ -42,9 +38,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: DesktopToolbar(controller: controller),
-          ),
+          home: Scaffold(body: DesktopToolbar(controller: controller)),
         ),
       );
 
@@ -59,9 +53,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: CompactToolbar(controller: controller),
-          ),
+          home: Scaffold(body: CompactToolbar(controller: controller)),
         ),
       );
 
@@ -73,11 +65,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: ToggleChip(
-              label: 'Test',
-              isSelected: false,
-              onTap: () {},
-            ),
+            body: ToggleChip(label: 'Test', isSelected: false, onTap: () {}),
           ),
         ),
       );

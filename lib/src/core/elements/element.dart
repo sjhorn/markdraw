@@ -85,9 +85,9 @@ class Element {
     this.link,
     this.locked = false,
     this.index,
-  })  : seed = seed ?? (id.value.hashCode & 0x7FFFFFFF),
-        versionNonce = versionNonce ?? _random.nextInt(1 << 31),
-        updated = updated ?? DateTime.now().millisecondsSinceEpoch;
+  }) : seed = seed ?? (id.value.hashCode & 0x7FFFFFFF),
+       versionNonce = versionNonce ?? _random.nextInt(1 << 31),
+       updated = updated ?? DateTime.now().millisecondsSinceEpoch;
 
   /// Creates a copy with the given fields replaced.
   Element copyWith({

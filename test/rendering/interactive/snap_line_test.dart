@@ -5,8 +5,13 @@ void main() {
   group('SnapLineOrientation', () {
     test('has horizontal and vertical', () {
       expect(SnapLineOrientation.values.length, 2);
-      expect(SnapLineOrientation.values,
-          containsAll([SnapLineOrientation.horizontal, SnapLineOrientation.vertical]));
+      expect(
+        SnapLineOrientation.values,
+        containsAll([
+          SnapLineOrientation.horizontal,
+          SnapLineOrientation.vertical,
+        ]),
+      );
     });
   });
 

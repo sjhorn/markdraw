@@ -48,8 +48,11 @@ void main() {
       tool.onPointerUp(const Point(10, 20), context);
       // Second click (double-click)
       tool.onPointerDown(const Point(100, 100), context);
-      final result =
-          tool.onPointerUp(const Point(100, 100), context, isDoubleClick: true);
+      final result = tool.onPointerUp(
+        const Point(100, 100),
+        context,
+        isDoubleClick: true,
+      );
 
       expect(result, isA<CompoundResult>());
       final compound = result! as CompoundResult;
@@ -91,8 +94,11 @@ void main() {
       tool.onPointerDown(const Point(10, 20), context);
       tool.onPointerUp(const Point(10, 20), context);
       tool.onPointerDown(const Point(110, 70), context);
-      final result =
-          tool.onPointerUp(const Point(110, 70), context, isDoubleClick: true);
+      final result = tool.onPointerUp(
+        const Point(110, 70),
+        context,
+        isDoubleClick: true,
+      );
       final compound = result! as CompoundResult;
       final line = (compound.results[0] as AddElementResult).element;
       expect(line.x, 10);
@@ -105,20 +111,28 @@ void main() {
       tool.onPointerDown(const Point(0, 0), context);
       tool.onPointerUp(const Point(0, 0), context);
       tool.onPointerDown(const Point(100, 100), context);
-      final result =
-          tool.onPointerUp(const Point(100, 100), context, isDoubleClick: true);
+      final result = tool.onPointerUp(
+        const Point(100, 100),
+        context,
+        isDoubleClick: true,
+      );
       final compound = result! as CompoundResult;
       expect(compound.results[1], isA<SetSelectionResult>());
-      expect((compound.results[2] as SwitchToolResult).toolType,
-          ToolType.select);
+      expect(
+        (compound.results[2] as SwitchToolResult).toolType,
+        ToolType.select,
+      );
     });
 
     test('points are stored relative to origin', () {
       tool.onPointerDown(const Point(50, 100), context);
       tool.onPointerUp(const Point(50, 100), context);
       tool.onPointerDown(const Point(150, 200), context);
-      final result =
-          tool.onPointerUp(const Point(150, 200), context, isDoubleClick: true);
+      final result = tool.onPointerUp(
+        const Point(150, 200),
+        context,
+        isDoubleClick: true,
+      );
       final compound = result! as CompoundResult;
       final line =
           (compound.results[0] as AddElementResult).element as LineElement;
@@ -132,22 +146,25 @@ void main() {
     });
 
     group('closed polygon', () {
-      test('move near start with >= 3 points snaps preview and sets creationClosed', () {
-        // Click 3 points to form a triangle
-        tool.onPointerDown(const Point(0, 0), context);
-        tool.onPointerUp(const Point(0, 0), context);
-        tool.onPointerDown(const Point(100, 0), context);
-        tool.onPointerUp(const Point(100, 0), context);
-        tool.onPointerDown(const Point(50, 100), context);
-        tool.onPointerUp(const Point(50, 100), context);
+      test(
+        'move near start with >= 3 points snaps preview and sets creationClosed',
+        () {
+          // Click 3 points to form a triangle
+          tool.onPointerDown(const Point(0, 0), context);
+          tool.onPointerUp(const Point(0, 0), context);
+          tool.onPointerDown(const Point(100, 0), context);
+          tool.onPointerUp(const Point(100, 0), context);
+          tool.onPointerDown(const Point(50, 100), context);
+          tool.onPointerUp(const Point(50, 100), context);
 
-        // Move near start point (within 10px threshold)
-        tool.onPointerMove(const Point(3, 3), context);
+          // Move near start point (within 10px threshold)
+          tool.onPointerMove(const Point(3, 3), context);
 
-        expect(tool.overlay!.creationClosed, isTrue);
-        // Preview should snap to start point
-        expect(tool.overlay!.creationPoints!.last, const Point(0, 0));
-      });
+          expect(tool.overlay!.creationClosed, isTrue);
+          // Preview should snap to start point
+          expect(tool.overlay!.creationPoints!.last, const Point(0, 0));
+        },
+      );
 
       test('move outside threshold does not snap', () {
         tool.onPointerDown(const Point(0, 0), context);
@@ -256,8 +273,10 @@ void main() {
         expect(line.y, 20);
         // Should also select and switch to select tool
         expect(compound.results[1], isA<SetSelectionResult>());
-        expect((compound.results[2] as SwitchToolResult).toolType,
-            ToolType.select);
+        expect(
+          (compound.results[2] as SwitchToolResult).toolType,
+          ToolType.select,
+        );
       });
 
       test('short drag (same point) stays in multi-click mode', () {

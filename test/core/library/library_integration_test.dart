@@ -5,64 +5,70 @@ import 'package:markdraw/markdraw.dart';
 
 void main() {
   group('Library integration', () {
-    test('create elements → add to library → instantiate → verify on canvas', () {
-      // Create some elements on a "canvas"
-      final rect = RectangleElement(
-        id: const ElementId('r1'),
-        x: 100,
-        y: 200,
-        width: 80,
-        height: 40,
-        strokeColor: '#ff0000',
-      );
-      final ellipse = EllipseElement(
-        id: const ElementId('e1'),
-        x: 200,
-        y: 250,
-        width: 60,
-        height: 60,
-        backgroundColor: '#00ff00',
-      );
+    test(
+      'create elements → add to library → instantiate → verify on canvas',
+      () {
+        // Create some elements on a "canvas"
+        final rect = RectangleElement(
+          id: const ElementId('r1'),
+          x: 100,
+          y: 200,
+          width: 80,
+          height: 40,
+          strokeColor: '#ff0000',
+        );
+        final ellipse = EllipseElement(
+          id: const ElementId('e1'),
+          x: 200,
+          y: 250,
+          width: 60,
+          height: 60,
+          backgroundColor: '#00ff00',
+        );
 
-      // Add to library
-      final item = LibraryUtils.createFromElements(
-        elements: [rect, ellipse],
-        name: 'My Shapes',
-      );
+        // Add to library
+        final item = LibraryUtils.createFromElements(
+          elements: [rect, ellipse],
+          name: 'My Shapes',
+        );
 
-      expect(item.name, 'My Shapes');
-      expect(item.elements, hasLength(2));
-      // Positions normalized to origin
-      expect(item.elements[0].x, 0);
-      expect(item.elements[0].y, 0);
+        expect(item.name, 'My Shapes');
+        expect(item.elements, hasLength(2));
+        // Positions normalized to origin
+        expect(item.elements[0].x, 0);
+        expect(item.elements[0].y, 0);
 
-      // Instantiate at a position
-      final result = LibraryUtils.instantiate(
-        item: item,
-        position: const Point(500, 500),
-      );
+        // Instantiate at a position
+        final result = LibraryUtils.instantiate(
+          item: item,
+          position: const Point(500, 500),
+        );
 
-      // Apply to scene
-      var scene = Scene();
-      final compound = result as CompoundResult;
-      for (final r in compound.results) {
-        if (r is AddElementResult) {
-          scene = scene.addElement(r.element);
+        // Apply to scene
+        var scene = Scene();
+        final compound = result as CompoundResult;
+        for (final r in compound.results) {
+          if (r is AddElementResult) {
+            scene = scene.addElement(r.element);
+          }
         }
-      }
 
-      expect(scene.activeElements, hasLength(2));
-      // Elements have fresh IDs
-      expect(
-        scene.activeElements.every((e) =>
-            e.id != const ElementId('r1') && e.id != const ElementId('e1')),
-        isTrue,
-      );
-      // Styles preserved
-      final placedRect = scene.activeElements
-          .firstWhere((e) => e is RectangleElement) as RectangleElement;
-      expect(placedRect.strokeColor, '#ff0000');
-    });
+        expect(scene.activeElements, hasLength(2));
+        // Elements have fresh IDs
+        expect(
+          scene.activeElements.every(
+            (e) =>
+                e.id != const ElementId('r1') && e.id != const ElementId('e1'),
+          ),
+          isTrue,
+        );
+        // Styles preserved
+        final placedRect =
+            scene.activeElements.firstWhere((e) => e is RectangleElement)
+                as RectangleElement;
+        expect(placedRect.strokeColor, '#ff0000');
+      },
+    );
 
     test('instantiate then verify elements are independent', () {
       final item = LibraryItem(
@@ -270,8 +276,7 @@ void main() {
         position: const Point(0, 0),
       );
       final compound = result as CompoundResult;
-      final fileResults =
-          compound.results.whereType<AddFileResult>().toList();
+      final fileResults = compound.results.whereType<AddFileResult>().toList();
       expect(fileResults, hasLength(1));
       expect(fileResults.first.file.bytes, imageBytes);
     });

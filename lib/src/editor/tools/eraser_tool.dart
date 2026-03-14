@@ -32,8 +32,11 @@ class EraserTool implements Tool {
   }
 
   @override
-  ToolResult? onPointerMove(Point point, ToolContext context,
-      {Offset? screenDelta}) {
+  ToolResult? onPointerMove(
+    Point point,
+    ToolContext context, {
+    Offset? screenDelta,
+  }) {
     if (!_isDragging) return null;
     _hitTestAndExpand(point, context);
     return null;
@@ -51,8 +54,12 @@ class EraserTool implements Tool {
   }
 
   @override
-  ToolResult? onKeyEvent(String key,
-      {bool shift = false, bool ctrl = false, ToolContext? context}) {
+  ToolResult? onKeyEvent(
+    String key, {
+    bool shift = false,
+    bool ctrl = false,
+    ToolContext? context,
+  }) {
     if (key == 'Escape') {
       reset();
       return null;
@@ -91,7 +98,9 @@ class EraserTool implements Tool {
 
   /// Build cascading delete results matching SelectTool's Delete behavior.
   CompoundResult _buildDeleteResults(
-      Set<ElementId> idsToDelete, ToolContext context) {
+    Set<ElementId> idsToDelete,
+    ToolContext context,
+  ) {
     // Resolve elements
     final deletable = <Element>[];
     for (final id in idsToDelete) {
@@ -123,8 +132,9 @@ class EraserTool implements Tool {
             final newBound = parent.boundElements
                 .where((b) => b.id != elem.id.value)
                 .toList();
-            results
-                .add(UpdateElementResult(parent.copyWith(boundElements: newBound)));
+            results.add(
+              UpdateElementResult(parent.copyWith(boundElements: newBound)),
+            );
           }
         }
       }
@@ -133,8 +143,10 @@ class EraserTool implements Tool {
     // Release children of deleted frames
     for (final elem in deletable) {
       if (elem is FrameElement) {
-        final released =
-            FrameUtils.releaseFrameChildren(context.scene, elem.id);
+        final released = FrameUtils.releaseFrameChildren(
+          context.scene,
+          elem.id,
+        );
         for (final child in released) {
           if (!deletedIds.contains(child.id)) {
             results.add(UpdateElementResult(child));
@@ -169,13 +181,11 @@ class EraserTool implements Tool {
         seen.add(arrow.id);
         var updated = arrow;
         if (arrow.startBinding != null &&
-            deletedIds
-                .contains(ElementId(arrow.startBinding!.elementId))) {
+            deletedIds.contains(ElementId(arrow.startBinding!.elementId))) {
           updated = updated.copyWithArrow(clearStartBinding: true);
         }
         if (arrow.endBinding != null &&
-            deletedIds
-                .contains(ElementId(arrow.endBinding!.elementId))) {
+            deletedIds.contains(ElementId(arrow.endBinding!.elementId))) {
           updated = updated.copyWithArrow(clearEndBinding: true);
         }
         if (!identical(updated, arrow)) {

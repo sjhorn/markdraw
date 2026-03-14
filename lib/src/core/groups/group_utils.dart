@@ -90,8 +90,7 @@ class GroupUtils {
     for (var i = clicked.groupIds.length - 1; i >= 0; i--) {
       final groupId = clicked.groupIds[i];
       final members = findGroupMembers(scene, groupId);
-      final allSelected =
-          members.every((m) => currentSelection.contains(m.id));
+      final allSelected = members.every((m) => currentSelection.contains(m.id));
       if (!allSelected) {
         return groupId;
       }

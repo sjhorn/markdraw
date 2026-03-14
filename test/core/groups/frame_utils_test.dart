@@ -8,15 +8,14 @@ FrameElement _frame({
   double w = 400,
   double h = 300,
   String label = 'Frame',
-}) =>
-    FrameElement(
-      id: ElementId(id),
-      x: x,
-      y: y,
-      width: w,
-      height: h,
-      label: label,
-    );
+}) => FrameElement(
+  id: ElementId(id),
+  x: x,
+  y: y,
+  width: w,
+  height: h,
+  label: label,
+);
 
 Element _rect({
   required String id,
@@ -25,16 +24,15 @@ Element _rect({
   double w = 50,
   double h = 50,
   String? frameId,
-}) =>
-    Element(
-      id: ElementId(id),
-      type: 'rectangle',
-      x: x,
-      y: y,
-      width: w,
-      height: h,
-      frameId: frameId,
-    );
+}) => Element(
+  id: ElementId(id),
+  type: 'rectangle',
+  x: x,
+  y: y,
+  width: w,
+  height: h,
+  frameId: frameId,
+);
 
 void main() {
   group('findFrameChildren', () {
@@ -42,8 +40,10 @@ void main() {
       final scene = Scene()
           .addElement(_frame(id: 'f1'))
           .addElement(_rect(id: 'r1'));
-      expect(FrameUtils.findFrameChildren(scene, const ElementId('f1')),
-          isEmpty);
+      expect(
+        FrameUtils.findFrameChildren(scene, const ElementId('f1')),
+        isEmpty,
+      );
     });
 
     test('finds elements with matching frameId', () {
@@ -52,8 +52,10 @@ void main() {
           .addElement(_rect(id: 'r1', frameId: 'f1'))
           .addElement(_rect(id: 'r2', frameId: 'f1'))
           .addElement(_rect(id: 'r3'));
-      final children =
-          FrameUtils.findFrameChildren(scene, const ElementId('f1'));
+      final children = FrameUtils.findFrameChildren(
+        scene,
+        const ElementId('f1'),
+      );
       expect(children, hasLength(2));
       expect(children.map((e) => e.id.value), containsAll(['r1', 'r2']));
     });
@@ -64,8 +66,10 @@ void main() {
           .addElement(_rect(id: 'r1', frameId: 'f1'))
           .addElement(_rect(id: 'r2', frameId: 'f1'));
       scene = scene.softDeleteElement(const ElementId('r2'));
-      final children =
-          FrameUtils.findFrameChildren(scene, const ElementId('f1'));
+      final children = FrameUtils.findFrameChildren(
+        scene,
+        const ElementId('f1'),
+      );
       expect(children, hasLength(1));
       expect(children.first.id.value, 'r1');
     });
@@ -75,8 +79,10 @@ void main() {
           .addElement(_frame(id: 'f1'))
           .addElement(_frame(id: 'f2'))
           .addElement(_rect(id: 'r1', frameId: 'f2'));
-      expect(FrameUtils.findFrameChildren(scene, const ElementId('f1')),
-          isEmpty);
+      expect(
+        FrameUtils.findFrameChildren(scene, const ElementId('f1')),
+        isEmpty,
+      );
     });
   });
 
@@ -109,16 +115,20 @@ void main() {
   group('assignToFrame', () {
     test('sets frameId on elements', () {
       final elements = [_rect(id: 'r1'), _rect(id: 'r2')];
-      final assigned =
-          FrameUtils.assignToFrame(elements, const ElementId('f1'));
+      final assigned = FrameUtils.assignToFrame(
+        elements,
+        const ElementId('f1'),
+      );
       expect(assigned[0].frameId, 'f1');
       expect(assigned[1].frameId, 'f1');
     });
 
     test('overwrites existing frameId', () {
       final elements = [_rect(id: 'r1', frameId: 'f1')];
-      final assigned =
-          FrameUtils.assignToFrame(elements, const ElementId('f2'));
+      final assigned = FrameUtils.assignToFrame(
+        elements,
+        const ElementId('f2'),
+      );
       expect(assigned[0].frameId, 'f2');
     });
 
@@ -174,8 +184,10 @@ void main() {
       final outer = _frame(id: 'f1', x: 0, y: 0, w: 400, h: 300);
       final inner = _frame(id: 'f2', x: 10, y: 10, w: 200, h: 150);
       final rect = _rect(id: 'r1', x: 20, y: 20, w: 50, h: 50);
-      final scene =
-          Scene().addElement(outer).addElement(inner).addElement(rect);
+      final scene = Scene()
+          .addElement(outer)
+          .addElement(inner)
+          .addElement(rect);
       final result = FrameUtils.findContainingFrame(scene, rect);
       expect(result!.id, const ElementId('f2'));
     });
@@ -193,8 +205,10 @@ void main() {
           .addElement(_frame(id: 'f1'))
           .addElement(_rect(id: 'r1', frameId: 'f1'))
           .addElement(_rect(id: 'r2', frameId: 'f1'));
-      final released =
-          FrameUtils.releaseFrameChildren(scene, const ElementId('f1'));
+      final released = FrameUtils.releaseFrameChildren(
+        scene,
+        const ElementId('f1'),
+      );
       expect(released, hasLength(2));
       expect(released[0].frameId, isNull);
       expect(released[1].frameId, isNull);
@@ -202,8 +216,10 @@ void main() {
 
     test('returns empty when no children', () {
       final scene = Scene().addElement(_frame(id: 'f1'));
-      final released =
-          FrameUtils.releaseFrameChildren(scene, const ElementId('f1'));
+      final released = FrameUtils.releaseFrameChildren(
+        scene,
+        const ElementId('f1'),
+      );
       expect(released, isEmpty);
     });
 
@@ -213,8 +229,10 @@ void main() {
           .addElement(_frame(id: 'f2'))
           .addElement(_rect(id: 'r1', frameId: 'f1'))
           .addElement(_rect(id: 'r2', frameId: 'f2'));
-      final released =
-          FrameUtils.releaseFrameChildren(scene, const ElementId('f1'));
+      final released = FrameUtils.releaseFrameChildren(
+        scene,
+        const ElementId('f1'),
+      );
       expect(released, hasLength(1));
       expect(released[0].id.value, 'r1');
     });

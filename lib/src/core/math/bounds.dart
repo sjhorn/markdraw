@@ -10,18 +10,20 @@ class Bounds {
 
   const Bounds(this.origin, this.size);
 
-  factory Bounds.fromLTWH(double left, double top, double width, double height) =>
-      Bounds(Point(left, top), DrawSize(width, height));
+  factory Bounds.fromLTWH(
+    double left,
+    double top,
+    double width,
+    double height,
+  ) => Bounds(Point(left, top), DrawSize(width, height));
 
   double get left => origin.x;
   double get top => origin.y;
   double get right => origin.x + size.width;
   double get bottom => origin.y + size.height;
 
-  Point get center => Point(
-        origin.x + size.width / 2,
-        origin.y + size.height / 2,
-      );
+  Point get center =>
+      Point(origin.x + size.width / 2, origin.y + size.height / 2);
 
   bool containsPoint(Point point) =>
       point.x >= left &&

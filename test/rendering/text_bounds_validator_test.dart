@@ -39,7 +39,11 @@ void main() {
     group('validateElement', () {
       test('expands width when text is wider than stored bounds', () {
         // Create a text element with very small width
-        final element = _text(text: 'A very long text string', width: 5, height: 5);
+        final element = _text(
+          text: 'A very long text string',
+          width: 5,
+          height: 5,
+        );
 
         final result = TextBoundsValidator.validateElement(element);
 
@@ -87,18 +91,21 @@ void main() {
         expect(result.height, greaterThan(1));
       });
 
-      test('autoResize=false returns same instance when height is sufficient', () {
-        final element = _text(
-          text: 'Hi',
-          width: 200,
-          height: 500,
-          autoResize: false,
-        );
+      test(
+        'autoResize=false returns same instance when height is sufficient',
+        () {
+          final element = _text(
+            text: 'Hi',
+            width: 200,
+            height: 500,
+            autoResize: false,
+          );
 
-        final result = TextBoundsValidator.validateElement(element);
+          final result = TextBoundsValidator.validateElement(element);
 
-        expect(identical(result, element), isTrue);
-      });
+          expect(identical(result, element), isTrue);
+        },
+      );
 
       test('preserves element id after validation', () {
         final elementId = ElementId.generate();
@@ -115,13 +122,7 @@ void main() {
       });
 
       test('preserves position after validation', () {
-        final element = _text(
-          text: 'Hello',
-          x: 42,
-          y: 99,
-          width: 1,
-          height: 1,
-        );
+        final element = _text(text: 'Hello', x: 42, y: 99, width: 1, height: 1);
 
         final result = TextBoundsValidator.validateElement(element);
 
@@ -245,8 +246,9 @@ void main() {
 
         // Parse back — this may produce different bounds
         final parsed = DocumentParser.parse(content);
-        final parsedScene =
-            SceneDocumentConverter.documentToScene(parsed.value);
+        final parsedScene = SceneDocumentConverter.documentToScene(
+          parsed.value,
+        );
 
         // Validate should ensure bounds are correct
         final validated = TextBoundsValidator.validateScene(parsedScene);
@@ -259,12 +261,12 @@ void main() {
         expect(validatedElements, hasLength(1));
 
         // Measure what the actual rendered size would be
-        final (measuredW, measuredH) =
-            TextRenderer.measure(validatedElements.first);
+        final (measuredW, measuredH) = TextRenderer.measure(
+          validatedElements.first,
+        );
         // Validated bounds should be >= measured size
         expect(validatedElements.first.width, greaterThanOrEqualTo(measuredW));
-        expect(
-            validatedElements.first.height, greaterThanOrEqualTo(measuredH));
+        expect(validatedElements.first.height, greaterThanOrEqualTo(measuredH));
       });
     });
   });

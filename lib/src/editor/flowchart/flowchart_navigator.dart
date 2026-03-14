@@ -49,8 +49,11 @@ class FlowchartNavigator {
     _direction = direction;
 
     // Try the requested direction
-    final linked =
-        FlowchartUtils.getLinkedNodesInDirection(scene, element, direction);
+    final linked = FlowchartUtils.getLinkedNodesInDirection(
+      scene,
+      element,
+      direction,
+    );
     if (linked.isNotEmpty) {
       _sameLevelNodes = linked;
       _sameLevelIndex = 0;
@@ -63,7 +66,10 @@ class FlowchartNavigator {
     for (final fallbackDir in LinkDirection.values) {
       if (fallbackDir == direction) continue;
       final others = FlowchartUtils.getLinkedNodesInDirection(
-          scene, element, fallbackDir);
+        scene,
+        element,
+        fallbackDir,
+      );
       final unvisited = others.where((e) => !_visitedIds.contains(e.id));
       if (unvisited.isNotEmpty) {
         final target = unvisited.first;

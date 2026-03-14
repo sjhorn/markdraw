@@ -54,8 +54,12 @@ void main() {
   }
 
   /// Simulate a drag: down at [from], move to [to], up at [to].
-  ToolResult? drag(Point from, Point to, ToolContext context,
-      {bool shift = false}) {
+  ToolResult? drag(
+    Point from,
+    Point to,
+    ToolContext context, {
+    bool shift = false,
+  }) {
     tool.onPointerDown(from, context, shift: shift);
     tool.onPointerMove(to, context);
     return tool.onPointerUp(to, context);
@@ -87,13 +91,18 @@ void main() {
 
       expect(result, isA<CompoundResult>());
       final compound = result! as CompoundResult;
-      final updates = compound.results.whereType<UpdateElementResult>().toList();
+      final updates = compound.results
+          .whereType<UpdateElementResult>()
+          .toList();
       // Should have the move update + a frame assignment update
       final frameAssigned = updates.where(
         (u) => u.element.id == movedRect.id && u.element.frameId == 'f1',
       );
-      expect(frameAssigned, isNotEmpty,
-          reason: 'Element moved inside frame should get frameId assigned');
+      expect(
+        frameAssigned,
+        isNotEmpty,
+        reason: 'Element moved inside frame should get frameId assigned',
+      );
     });
 
     test('moving element out of frame clears frameId', () {
@@ -112,13 +121,18 @@ void main() {
 
       expect(result, isA<CompoundResult>());
       final compound = result! as CompoundResult;
-      final updates = compound.results.whereType<UpdateElementResult>().toList();
+      final updates = compound.results
+          .whereType<UpdateElementResult>()
+          .toList();
       // The element should have frameId cleared
       final cleared = updates.where(
         (u) => u.element.id == childRect.id && u.element.frameId == null,
       );
-      expect(cleared, isNotEmpty,
-          reason: 'Element moved outside frame should have frameId cleared');
+      expect(
+        cleared,
+        isNotEmpty,
+        reason: 'Element moved outside frame should have frameId cleared',
+      );
     });
 
     test('moving element that stays inside frame keeps frameId', () {
@@ -137,8 +151,9 @@ void main() {
       expect(result, isNotNull);
       // The element should still have frameId = 'f1'
       if (result is CompoundResult) {
-        final updates =
-            result.results.whereType<UpdateElementResult>().toList();
+        final updates = result.results
+            .whereType<UpdateElementResult>()
+            .toList();
         final elem = updates.firstWhere((u) => u.element.id == childRect.id);
         expect(elem.element.frameId, 'f1');
       } else if (result is UpdateElementResult) {
@@ -175,11 +190,15 @@ void main() {
       // Should have UpdateElementResults clearing frameId on children
       final updates = compound.results.whereType<UpdateElementResult>();
       final childUpdates = updates.where(
-        (u) => u.element.frameId == null &&
+        (u) =>
+            u.element.frameId == null &&
             (u.element.id == childRect.id || u.element.id == child2.id),
       );
-      expect(childUpdates.length, 2,
-          reason: 'Both children should have frameId cleared');
+      expect(
+        childUpdates.length,
+        2,
+        reason: 'Both children should have frameId cleared',
+      );
     });
 
     test('deleting non-frame element does not release frame children', () {
@@ -202,9 +221,7 @@ void main() {
 
   group('Double-click frame', () {
     test('clicking on frame selects only the frame', () {
-      final ctx = contextWith(
-        elements: [frame1, childRect],
-      );
+      final ctx = contextWith(elements: [frame1, childRect]);
 
       // Click on frame body (not on any child)
       final result = click(const Point(350, 250), ctx);
@@ -256,10 +273,7 @@ void main() {
         frameId: 'cf1',
       );
 
-      final ctx = contextWith(
-        elements: [],
-        clipboard: [clipFrame, clipChild],
-      );
+      final ctx = contextWith(elements: [], clipboard: [clipFrame, clipChild]);
 
       final result = tool.onKeyEvent('v', ctrl: true, context: ctx);
       expect(result, isA<CompoundResult>());
@@ -291,7 +305,9 @@ void main() {
 
       expect(result, isA<CompoundResult>());
       final compound = result! as CompoundResult;
-      final updates = compound.results.whereType<UpdateElementResult>().toList();
+      final updates = compound.results
+          .whereType<UpdateElementResult>()
+          .toList();
 
       // Should update both frame and child
       final frameUpdate = updates.where((u) => u.element.id == frame1.id);
@@ -314,10 +330,13 @@ void main() {
       final result = tool.onKeyEvent('ArrowRight', context: ctx);
       expect(result, isA<CompoundResult>());
       final compound = result! as CompoundResult;
-      final updates = compound.results.whereType<UpdateElementResult>().toList();
+      final updates = compound.results
+          .whereType<UpdateElementResult>()
+          .toList();
 
-      final childUpdate =
-          updates.where((u) => u.element.id == childRect.id).toList();
+      final childUpdate = updates
+          .where((u) => u.element.id == childRect.id)
+          .toList();
       expect(childUpdate, hasLength(1));
       expect(childUpdate.first.element.x, childRect.x + 1);
     });

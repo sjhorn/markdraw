@@ -28,7 +28,7 @@ class SketchSection extends DocumentSection {
   final List<Element> elements;
 
   SketchSection(List<Element> elements)
-      : elements = List.unmodifiable(elements);
+    : elements = List.unmodifiable(elements);
 
   @override
   bool operator ==(Object other) {

@@ -5,10 +5,7 @@ import '../core/math/math.dart';
 Point snapToGrid(Point point, int? gridSize) {
   if (gridSize == null) return point;
   final g = gridSize.toDouble();
-  return Point(
-    (point.x / g).round() * g,
-    (point.y / g).round() * g,
-  );
+  return Point((point.x / g).round() * g, (point.y / g).round() * g);
 }
 
 /// Snaps a single coordinate value to the grid.

@@ -21,22 +21,24 @@ DrawStyle _style({
   double opacity = 1.0,
   int seed = 42,
 }) {
-  return DrawStyle.fromElement(Element(
-    id: ElementId.generate(),
-    type: 'rectangle',
-    x: 0,
-    y: 0,
-    width: 100,
-    height: 100,
-    strokeColor: strokeColor,
-    backgroundColor: backgroundColor,
-    fillStyle: fillStyle,
-    strokeWidth: strokeWidth,
-    strokeStyle: strokeStyle,
-    roughness: roughness,
-    opacity: opacity,
-    seed: seed,
-  ));
+  return DrawStyle.fromElement(
+    Element(
+      id: ElementId.generate(),
+      type: 'rectangle',
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+      strokeColor: strokeColor,
+      backgroundColor: backgroundColor,
+      fillStyle: fillStyle,
+      strokeWidth: strokeWidth,
+      strokeStyle: strokeStyle,
+      roughness: roughness,
+      opacity: opacity,
+      seed: seed,
+    ),
+  );
 }
 
 void main() {
@@ -69,7 +71,10 @@ void main() {
 
       expect(
         () => adapter.drawRectangle(
-            canvas, bounds, _style(strokeStyle: StrokeStyle.dashed)),
+          canvas,
+          bounds,
+          _style(strokeStyle: StrokeStyle.dashed),
+        ),
         returnsNormally,
       );
 
@@ -126,11 +131,7 @@ void main() {
       // Diamond should use 4 midpoints: top-center, right-center,
       // bottom-center, left-center
       final (recorder, canvas) = _makeCanvas();
-      adapter.drawDiamond(
-        canvas,
-        Bounds.fromLTWH(0, 0, 100, 100),
-        _style(),
-      );
+      adapter.drawDiamond(canvas, Bounds.fromLTWH(0, 0, 100, 100), _style());
       recorder.endRecording();
     });
   });
@@ -138,30 +139,26 @@ void main() {
   group('drawLine', () {
     test('two-point line', () {
       final (recorder, canvas) = _makeCanvas();
-      adapter.drawLine(
-        canvas,
-        [const Point(0, 0), const Point(100, 100)],
-        _style(),
-      );
+      adapter.drawLine(canvas, [
+        const Point(0, 0),
+        const Point(100, 100),
+      ], _style());
       recorder.endRecording();
     });
 
     test('multi-segment line', () {
       final (recorder, canvas) = _makeCanvas();
-      adapter.drawLine(
-        canvas,
-        [const Point(0, 0), const Point(50, 50), const Point(100, 0)],
-        _style(),
-      );
+      adapter.drawLine(canvas, [
+        const Point(0, 0),
+        const Point(50, 50),
+        const Point(100, 0),
+      ], _style());
       recorder.endRecording();
     });
 
     test('empty points does not throw', () {
       final (recorder, canvas) = _makeCanvas();
-      expect(
-        () => adapter.drawLine(canvas, [], _style()),
-        returnsNormally,
-      );
+      expect(() => adapter.drawLine(canvas, [], _style()), returnsNormally);
       recorder.endRecording();
     });
 
@@ -178,22 +175,21 @@ void main() {
   group('drawCurvedLine', () {
     test('renders without error', () {
       final (recorder, canvas) = _makeCanvas();
-      adapter.drawCurvedLine(
-        canvas,
-        [const Point(0, 0), const Point(50, 50), const Point(100, 0)],
-        _style(),
-      );
+      adapter.drawCurvedLine(canvas, [
+        const Point(0, 0),
+        const Point(50, 50),
+        const Point(100, 0),
+      ], _style());
       final picture = recorder.endRecording();
       expect(picture, isNotNull);
     });
 
     test('two-point line renders without error', () {
       final (recorder, canvas) = _makeCanvas();
-      adapter.drawCurvedLine(
-        canvas,
-        [const Point(0, 0), const Point(100, 100)],
-        _style(),
-      );
+      adapter.drawCurvedLine(canvas, [
+        const Point(0, 0),
+        const Point(100, 100),
+      ], _style());
       recorder.endRecording();
     });
 
@@ -218,11 +214,11 @@ void main() {
     test('with dashed stroke does not throw', () {
       final (recorder, canvas) = _makeCanvas();
       expect(
-        () => adapter.drawCurvedLine(
-          canvas,
-          [const Point(0, 0), const Point(50, 50), const Point(100, 0)],
-          _style(strokeStyle: StrokeStyle.dashed),
-        ),
+        () => adapter.drawCurvedLine(canvas, [
+          const Point(0, 0),
+          const Point(50, 50),
+          const Point(100, 0),
+        ], _style(strokeStyle: StrokeStyle.dashed)),
         returnsNormally,
       );
       recorder.endRecording();
@@ -374,14 +370,12 @@ void main() {
       // Render twice with same seed
       final recorder1 = PictureRecorder();
       final canvas1 = Canvas(recorder1);
-      adapter.drawRectangle(
-          canvas1, Bounds.fromLTWH(0, 0, 100, 100), style);
+      adapter.drawRectangle(canvas1, Bounds.fromLTWH(0, 0, 100, 100), style);
       final pic1 = recorder1.endRecording();
 
       final recorder2 = PictureRecorder();
       final canvas2 = Canvas(recorder2);
-      adapter.drawRectangle(
-          canvas2, Bounds.fromLTWH(0, 0, 100, 100), style);
+      adapter.drawRectangle(canvas2, Bounds.fromLTWH(0, 0, 100, 100), style);
       final pic2 = recorder2.endRecording();
 
       // Approximate size should be the same
@@ -412,11 +406,10 @@ void main() {
 
     test('dashed line does not throw', () {
       final (recorder, canvas) = _makeCanvas();
-      adapter.drawLine(
-        canvas,
-        [const Point(0, 0), const Point(100, 0)],
-        _style(strokeStyle: StrokeStyle.dashed),
-      );
+      adapter.drawLine(canvas, [
+        const Point(0, 0),
+        const Point(100, 0),
+      ], _style(strokeStyle: StrokeStyle.dashed));
       recorder.endRecording();
     });
   });

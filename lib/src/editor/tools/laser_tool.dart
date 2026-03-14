@@ -49,8 +49,11 @@ class LaserTool implements Tool {
   }
 
   @override
-  ToolResult? onPointerMove(Point point, ToolContext context,
-      {Offset? screenDelta}) {
+  ToolResult? onPointerMove(
+    Point point,
+    ToolContext context, {
+    Offset? screenDelta,
+  }) {
     if (!_isDragging) return null;
     _trail.add(LaserPoint(point, DateTime.now().millisecondsSinceEpoch));
     return null;
@@ -64,8 +67,12 @@ class LaserTool implements Tool {
   }
 
   @override
-  ToolResult? onKeyEvent(String key,
-      {bool shift = false, bool ctrl = false, ToolContext? context}) {
+  ToolResult? onKeyEvent(
+    String key, {
+    bool shift = false,
+    bool ctrl = false,
+    ToolContext? context,
+  }) {
     return null;
   }
 

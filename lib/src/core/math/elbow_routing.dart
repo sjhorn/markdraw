@@ -107,8 +107,8 @@ class ElbowRouting {
       final p2 = newEnd ?? pts[2];
 
       // Determine if the original first segment was horizontal or vertical
-      final origHorizontal = (pts[0].y - pts[1].y).abs() <=
-          (pts[0].x - pts[1].x).abs();
+      final origHorizontal =
+          (pts[0].y - pts[1].y).abs() <= (pts[0].x - pts[1].x).abs();
 
       Point newMid;
       if (origHorizontal) {
@@ -130,8 +130,7 @@ class ElbowRouting {
       // Look at direction of second segment (P1→P2)
       final p1 = pts[1];
       final p2 = pts[2];
-      final secondSegHorizontal = (p1.y - p2.y).abs() <=
-          (p1.x - p2.x).abs();
+      final secondSegHorizontal = (p1.y - p2.y).abs() <= (p1.x - p2.x).abs();
 
       if (secondSegHorizontal) {
         // Second segment is horizontal → adjust P1 to keep vertical
@@ -152,8 +151,8 @@ class ElbowRouting {
       // Look at direction of second-to-last segment (PN-3→PN-2)
       final pn3 = pts[lastIdx - 2];
       final pn2 = pts[lastIdx - 1];
-      final penultSegHorizontal = (pn3.y - pn2.y).abs() <=
-          (pn3.x - pn2.x).abs();
+      final penultSegHorizontal =
+          (pn3.y - pn2.y).abs() <= (pn3.x - pn2.x).abs();
 
       if (penultSegHorizontal) {
         // Second-to-last is horizontal → adjust PN-2 to keep vertical
@@ -272,24 +271,16 @@ class ElbowRouting {
   }
 
   /// Both headings horizontal → connect via vertical segment.
-  static List<Point> _connectHH(
-      Point p1, Point p2, Heading sh, Heading eh) {
+  static List<Point> _connectHH(Point p1, Point p2, Heading sh, Heading eh) {
     // Simple case: use midpoint X
     final midX = (p1.x + p2.x) / 2;
-    return [
-      Point(midX, p1.y),
-      Point(midX, p2.y),
-    ];
+    return [Point(midX, p1.y), Point(midX, p2.y)];
   }
 
   /// Both headings vertical → connect via horizontal segment.
-  static List<Point> _connectVV(
-      Point p1, Point p2, Heading sh, Heading eh) {
+  static List<Point> _connectVV(Point p1, Point p2, Heading sh, Heading eh) {
     final midY = (p1.y + p2.y) / 2;
-    return [
-      Point(p1.x, midY),
-      Point(p2.x, midY),
-    ];
+    return [Point(p1.x, midY), Point(p2.x, midY)];
   }
 
   /// Start horizontal, end vertical → L-shape.

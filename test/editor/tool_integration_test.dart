@@ -1,4 +1,3 @@
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:markdraw/markdraw.dart';
 
@@ -268,8 +267,9 @@ void main() {
       expect(state.scene.activeElements, hasLength(2));
       expect(state.selectedIds, hasLength(1));
       // Pasted element is at offset
-      final pasted = state.scene.activeElements
-          .firstWhere((e) => e.id != rect.id);
+      final pasted = state.scene.activeElements.firstWhere(
+        (e) => e.id != rect.id,
+      );
       expect(pasted.x, 20); // 10 + 10
       expect(pasted.y, 20); // 10 + 10
     });

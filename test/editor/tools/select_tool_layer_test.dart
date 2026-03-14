@@ -5,16 +5,19 @@ void main() {
   SelectTool tool = SelectTool();
 
   ToolContext makeCtx(Scene scene, Set<ElementId> selectedIds) => ToolContext(
-        scene: scene,
-        viewport: const ViewportState(),
-        selectedIds: selectedIds,
-        clipboard: const [],
-      );
+    scene: scene,
+    viewport: const ViewportState(),
+    selectedIds: selectedIds,
+    clipboard: const [],
+  );
 
   RectangleElement makeRect(String id, {String? index, bool locked = false}) =>
       RectangleElement(
         id: ElementId(id),
-        x: 0, y: 0, width: 100, height: 100,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
         index: index,
         locked: locked,
       );
@@ -42,8 +45,12 @@ void main() {
           .addElement(makeRect('b', index: 'B'))
           .addElement(makeRect('c', index: 'C'));
       final ctx = makeCtx(scene, {const ElementId('a')});
-      final result =
-          tool.onKeyEvent(']', ctrl: true, shift: true, context: ctx);
+      final result = tool.onKeyEvent(
+        ']',
+        ctrl: true,
+        shift: true,
+        context: ctx,
+      );
       expect(result, isA<CompoundResult>());
       final compound = result as CompoundResult;
       final updated = (compound.results[0] as UpdateElementResult).element;
@@ -66,8 +73,12 @@ void main() {
           .addElement(makeRect('b', index: 'B'))
           .addElement(makeRect('c', index: 'C'));
       final ctx = makeCtx(scene, {const ElementId('c')});
-      final result =
-          tool.onKeyEvent('[', ctrl: true, shift: true, context: ctx);
+      final result = tool.onKeyEvent(
+        '[',
+        ctrl: true,
+        shift: true,
+        context: ctx,
+      );
       expect(result, isA<CompoundResult>());
       final compound = result as CompoundResult;
       final updated = (compound.results[0] as UpdateElementResult).element;

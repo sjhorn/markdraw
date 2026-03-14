@@ -42,12 +42,8 @@ class LibraryUtils {
     }
 
     // Compute union bounds
-    final minX = withBoundText
-        .map((e) => e.x)
-        .reduce((a, b) => a < b ? a : b);
-    final minY = withBoundText
-        .map((e) => e.y)
-        .reduce((a, b) => a < b ? a : b);
+    final minX = withBoundText.map((e) => e.x).reduce((a, b) => a < b ? a : b);
+    final minY = withBoundText.map((e) => e.y).reduce((a, b) => a < b ? a : b);
 
     // Normalize positions to origin
     final normalized = withBoundText
@@ -120,8 +116,9 @@ class LibraryUtils {
         newIds.add(newId);
       }
 
-      final remappedGroupIds =
-          e.groupIds.map((gid) => groupIdMap[gid]!).toList();
+      final remappedGroupIds = e.groupIds
+          .map((gid) => groupIdMap[gid]!)
+          .toList();
 
       // Remap frameId
       String? remappedFrameId = e.frameId;
@@ -132,10 +129,7 @@ class LibraryUtils {
       // Remap boundElements
       final remappedBoundElements = e.boundElements.map((be) {
         final newBeId = idMap[be.id];
-        return BoundElement(
-          id: newBeId?.value ?? be.id,
-          type: be.type,
-        );
+        return BoundElement(id: newBeId?.value ?? be.id, type: be.type);
       }).toList();
 
       var newElement = e.copyWith(
@@ -151,9 +145,7 @@ class LibraryUtils {
       if (newElement is TextElement && newElement.containerId != null) {
         final newParentId = idMap[newElement.containerId];
         if (newParentId != null) {
-          newElement = newElement.copyWithText(
-            containerId: newParentId.value,
-          );
+          newElement = newElement.copyWithText(containerId: newParentId.value);
         }
       }
 

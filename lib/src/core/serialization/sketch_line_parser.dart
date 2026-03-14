@@ -76,15 +76,15 @@ class SketchLineParser {
         'arrow' => _parseArrow(trimmed, lineNumber),
         'freedraw' => _parseFreedraw(trimmed, lineNumber),
         _ => ParseResult(
-            value: null,
-            warnings: [
-              ParseWarning(
-                line: lineNumber,
-                message: 'Unknown keyword: $keyword',
-                context: trimmed,
-              ),
-            ],
-          ),
+          value: null,
+          warnings: [
+            ParseWarning(
+              line: lineNumber,
+              message: 'Unknown keyword: $keyword',
+              context: trimmed,
+            ),
+          ],
+        ),
       };
     } catch (e) {
       return ParseResult(
@@ -104,9 +104,7 @@ class SketchLineParser {
   ///
   /// Returns a list of updated ArrowElements with bindings set, plus
   /// any warnings for unresolved aliases.
-  ParseResult<List<ArrowElement>> resolveBindings(
-    List<Element> elements,
-  ) {
+  ParseResult<List<ArrowElement>> resolveBindings(List<Element> elements) {
     final warnings = <ParseWarning>[];
     final resolved = <ArrowElement>[];
 
@@ -136,10 +134,12 @@ class SketchLineParser {
             fixedPoint: fixedPoint,
           );
         } else {
-          warnings.add(ParseWarning(
-            line: 0,
-            message: 'Unresolved alias: ${binding.fromAlias}',
-          ));
+          warnings.add(
+            ParseWarning(
+              line: 0,
+              message: 'Unresolved alias: ${binding.fromAlias}',
+            ),
+          );
         }
       }
 
@@ -149,22 +149,20 @@ class SketchLineParser {
           final fixedPoint = binding.toFixedPoint != null
               ? _pixelToNormalized(binding.toFixedPoint!, elementMap[toId])
               : const Point(0, 0.5);
-          endBinding = PointBinding(
-            elementId: toId,
-            fixedPoint: fixedPoint,
-          );
+          endBinding = PointBinding(elementId: toId, fixedPoint: fixedPoint);
         } else {
-          warnings.add(ParseWarning(
-            line: 0,
-            message: 'Unresolved alias: ${binding.toAlias}',
-          ));
+          warnings.add(
+            ParseWarning(
+              line: 0,
+              message: 'Unresolved alias: ${binding.toAlias}',
+            ),
+          );
         }
       }
 
-      resolved.add(arrow.copyWithArrow(
-        startBinding: startBinding,
-        endBinding: endBinding,
-      ));
+      resolved.add(
+        arrow.copyWithArrow(startBinding: startBinding, endBinding: endBinding),
+      );
     }
 
     return ParseResult(value: resolved, warnings: warnings);
@@ -188,65 +186,65 @@ class SketchLineParser {
 
     final element = switch (keyword) {
       'rect' => RectangleElement(
-          id: elementId,
-          x: pos.$1,
-          y: pos.$2,
-          width: size.$1,
-          height: size.$2,
-          strokeColor: common.strokeColor,
-          backgroundColor: common.backgroundColor,
-          fillStyle: common.fillStyle,
-          strokeWidth: common.strokeWidth,
-          strokeStyle: common.strokeStyle,
-          roughness: common.roughness,
-          opacity: common.opacity,
-          roundness: common.roundness,
-          angle: common.angle,
-          locked: common.locked,
-          frameId: common.frameId,
-          groupIds: common.groupIds,
-          link: common.link,
-        ),
+        id: elementId,
+        x: pos.$1,
+        y: pos.$2,
+        width: size.$1,
+        height: size.$2,
+        strokeColor: common.strokeColor,
+        backgroundColor: common.backgroundColor,
+        fillStyle: common.fillStyle,
+        strokeWidth: common.strokeWidth,
+        strokeStyle: common.strokeStyle,
+        roughness: common.roughness,
+        opacity: common.opacity,
+        roundness: common.roundness,
+        angle: common.angle,
+        locked: common.locked,
+        frameId: common.frameId,
+        groupIds: common.groupIds,
+        link: common.link,
+      ),
       'ellipse' => EllipseElement(
-          id: elementId,
-          x: pos.$1,
-          y: pos.$2,
-          width: size.$1,
-          height: size.$2,
-          strokeColor: common.strokeColor,
-          backgroundColor: common.backgroundColor,
-          fillStyle: common.fillStyle,
-          strokeWidth: common.strokeWidth,
-          strokeStyle: common.strokeStyle,
-          roughness: common.roughness,
-          opacity: common.opacity,
-          roundness: common.roundness,
-          angle: common.angle,
-          locked: common.locked,
-          frameId: common.frameId,
-          groupIds: common.groupIds,
-          link: common.link,
-        ),
+        id: elementId,
+        x: pos.$1,
+        y: pos.$2,
+        width: size.$1,
+        height: size.$2,
+        strokeColor: common.strokeColor,
+        backgroundColor: common.backgroundColor,
+        fillStyle: common.fillStyle,
+        strokeWidth: common.strokeWidth,
+        strokeStyle: common.strokeStyle,
+        roughness: common.roughness,
+        opacity: common.opacity,
+        roundness: common.roundness,
+        angle: common.angle,
+        locked: common.locked,
+        frameId: common.frameId,
+        groupIds: common.groupIds,
+        link: common.link,
+      ),
       'diamond' => DiamondElement(
-          id: elementId,
-          x: pos.$1,
-          y: pos.$2,
-          width: size.$1,
-          height: size.$2,
-          strokeColor: common.strokeColor,
-          backgroundColor: common.backgroundColor,
-          fillStyle: common.fillStyle,
-          strokeWidth: common.strokeWidth,
-          strokeStyle: common.strokeStyle,
-          roughness: common.roughness,
-          opacity: common.opacity,
-          roundness: common.roundness,
-          angle: common.angle,
-          locked: common.locked,
-          frameId: common.frameId,
-          groupIds: common.groupIds,
-          link: common.link,
-        ),
+        id: elementId,
+        x: pos.$1,
+        y: pos.$2,
+        width: size.$1,
+        height: size.$2,
+        strokeColor: common.strokeColor,
+        backgroundColor: common.backgroundColor,
+        fillStyle: common.fillStyle,
+        strokeWidth: common.strokeWidth,
+        strokeStyle: common.strokeStyle,
+        roughness: common.roughness,
+        opacity: common.opacity,
+        roundness: common.roundness,
+        angle: common.angle,
+        locked: common.locked,
+        frameId: common.frameId,
+        groupIds: common.groupIds,
+        link: common.link,
+      ),
       _ => null,
     };
 
@@ -353,11 +351,13 @@ class SketchLineParser {
     final pos = props.position;
     final common = props.commonProperties;
     final text = props.quotedString;
-    final fontSize = _namedFontSizes[props.namedString('font-size')]
-        ?? props.namedDouble('size')
-        ?? 20.0;
-    final fontFamily =
-        _resolveFontAlias(props.namedString('font') ?? 'Excalifont');
+    final fontSize =
+        _namedFontSizes[props.namedString('font-size')] ??
+        props.namedDouble('size') ??
+        20.0;
+    final fontFamily = _resolveFontAlias(
+      props.namedString('font') ?? 'Excalifont',
+    );
     final alignStr = props.namedString('align');
     final textAlign = _parseTextAlign(alignStr);
     final valignStr = props.namedString('valign');
@@ -549,13 +549,15 @@ class SketchLineParser {
     );
 
     if (hasBindings) {
-      pendingBindings.add(PendingBinding(
-        arrowElementId: elementId.value,
-        fromAlias: fromAlias,
-        toAlias: toAlias,
-        fromFixedPoint: fromFixedPoint,
-        toFixedPoint: toFixedPoint,
-      ));
+      pendingBindings.add(
+        PendingBinding(
+          arrowElementId: elementId.value,
+          fromAlias: fromAlias,
+          toAlias: toAlias,
+          fromFixedPoint: fromFixedPoint,
+          toFixedPoint: toFixedPoint,
+        ),
+      );
     }
 
     return ParseResult(value: arrow);
@@ -751,8 +753,9 @@ class _PropertyBag {
 
   (double, double) get size {
     // Shape size: "WxH" (also accepts legacy "size WxH")
-    final match =
-        RegExp(r'(?:^|size\s+|\s)([\d.]+)x([\d.]+)(?:\s|$)').firstMatch(line);
+    final match = RegExp(
+      r'(?:^|size\s+|\s)([\d.]+)x([\d.]+)(?:\s|$)',
+    ).firstMatch(line);
     if (match == null) return (0, 0);
     return (double.parse(match.group(1)!), double.parse(match.group(2)!));
   }
@@ -767,8 +770,7 @@ class _PropertyBag {
     if (match == null) return [];
     final inner = match.group(1)!;
     // Support both new "x,y x,y" and legacy "[[x,y],[x,y]]" formats
-    final pointMatches =
-        RegExp(r'([\d.+-]+),([\d.+-]+)').allMatches(inner);
+    final pointMatches = RegExp(r'([\d.+-]+),([\d.+-]+)').allMatches(inner);
     return pointMatches.map((m) {
       return Point(double.parse(m.group(1)!), double.parse(m.group(2)!));
     }).toList();
@@ -836,7 +838,9 @@ class _PropertyBag {
 
     return _CommonProperties(
       strokeColor: colorStr != null ? normalizeColor(colorStr) : '#000000',
-      backgroundColor: fillStr != null ? normalizeColor(fillStr) : 'transparent',
+      backgroundColor: fillStr != null
+          ? normalizeColor(fillStr)
+          : 'transparent',
       fillStyle: _parseFillStyle(fillStyleStr),
       strokeWidth: strokeWidthVal ?? 2.0,
       strokeStyle: _parseStrokeStyle(strokeStr),

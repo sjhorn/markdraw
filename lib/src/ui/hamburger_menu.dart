@@ -6,8 +6,13 @@ import 'package:flutter/material.dart';
 import '../../markdraw.dart' hide TextAlign;
 
 /// Shows a dialog to rename the document.
-void showRenameDocumentDialog(BuildContext context, MarkdrawController controller) {
-  final textController = TextEditingController(text: controller.documentName ?? '');
+void showRenameDocumentDialog(
+  BuildContext context,
+  MarkdrawController controller,
+) {
+  final textController = TextEditingController(
+    text: controller.documentName ?? '',
+  );
   showDialog<String>(
     context: context,
     builder: (context) => AlertDialog(
@@ -67,18 +72,15 @@ class HamburgerMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final isMac =
-        Theme.of(context).platform == TargetPlatform.macOS || kIsWeb;
+    final isMac = Theme.of(context).platform == TargetPlatform.macOS || kIsWeb;
     final mod = isMac ? 'Cmd' : 'Ctrl';
     return Container(
       decoration: BoxDecoration(
         color: cs.surface,
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.17), blurRadius: 1),
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08), blurRadius: 3),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.17), blurRadius: 1),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 3),
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 14,
@@ -131,14 +133,29 @@ class HamburgerMenu extends StatelessWidget {
             _menuItem(context, 'save', Icons.save, 'Save', '$mod+S'),
           if (onSaveAs != null)
             _menuItem(
-                context, 'save_as', Icons.save_as, 'Save As', '$mod+Shift+S'),
-          _menuItem(context, 'rename', Icons.drive_file_rename_outline,
-              'Rename...', null),
+              context,
+              'save_as',
+              Icons.save_as,
+              'Save As',
+              '$mod+Shift+S',
+            ),
+          _menuItem(
+            context,
+            'rename',
+            Icons.drive_file_rename_outline,
+            'Rename...',
+            null,
+          ),
           if (onOpen != null || onSave != null || onSaveAs != null)
             const PopupMenuDivider(),
           if (onExportPng != null)
             _menuItem(
-                context, 'export_png', Icons.image, 'Export PNG', '$mod+Shift+E'),
+              context,
+              'export_png',
+              Icons.image,
+              'Export PNG',
+              '$mod+Shift+E',
+            ),
           if (onExportSvg != null)
             _menuItem(context, 'export_svg', Icons.code, 'Export SVG', null),
           if (onExportPng != null || onExportSvg != null)
@@ -162,8 +179,13 @@ class HamburgerMenu extends StatelessWidget {
             ),
           ),
           if (onImportImage != null)
-            _menuItem(context, 'import_image', Icons.add_photo_alternate,
-                'Import Image', '9'),
+            _menuItem(
+              context,
+              'import_image',
+              Icons.add_photo_alternate,
+              'Import Image',
+              '9',
+            ),
           const PopupMenuDivider(),
           PopupMenuItem<String>(
             value: 'toggle_grid',
@@ -203,9 +225,10 @@ class HamburgerMenu extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 const Expanded(child: Text('Snap to Objects')),
-                Text('Alt+S',
-                    style:
-                        TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+                Text(
+                  'Alt+S',
+                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                ),
                 if (controller.objectsSnapMode)
                   Padding(
                     padding: const EdgeInsets.only(left: 8),
@@ -214,10 +237,14 @@ class HamburgerMenu extends StatelessWidget {
               ],
             ),
           ),
+          _menuItem(context, 'frame_tool', Icons.crop_free, 'Frame Tool', 'F'),
           _menuItem(
-              context, 'frame_tool', Icons.crop_free, 'Frame Tool', 'F'),
-          _menuItem(context, 'reset_canvas', Icons.delete_sweep,
-              'Reset Canvas', '$mod+Del'),
+            context,
+            'reset_canvas',
+            Icons.delete_sweep,
+            'Reset Canvas',
+            '$mod+Del',
+          ),
           const PopupMenuDivider(),
           PopupMenuItem<String>(
             value: 'zen_mode',
@@ -226,15 +253,14 @@ class HamburgerMenu extends StatelessWidget {
                 Icon(
                   Icons.self_improvement,
                   size: 18,
-                  color: controller.zenMode
-                      ? cs.primary
-                      : cs.onSurfaceVariant,
+                  color: controller.zenMode ? cs.primary : cs.onSurfaceVariant,
                 ),
                 const SizedBox(width: 12),
                 const Expanded(child: Text('Zen Mode')),
-                Text('Alt+Z',
-                    style:
-                        TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+                Text(
+                  'Alt+Z',
+                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                ),
                 if (controller.zenMode)
                   Padding(
                     padding: const EdgeInsets.only(left: 8),
@@ -250,15 +276,14 @@ class HamburgerMenu extends StatelessWidget {
                 Icon(
                   Icons.visibility,
                   size: 18,
-                  color: controller.viewMode
-                      ? cs.primary
-                      : cs.onSurfaceVariant,
+                  color: controller.viewMode ? cs.primary : cs.onSurfaceVariant,
                 ),
                 const SizedBox(width: 12),
                 const Expanded(child: Text('View Mode')),
-                Text('Alt+R',
-                    style:
-                        TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+                Text(
+                  'Alt+R',
+                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                ),
                 if (controller.viewMode)
                   Padding(
                     padding: const EdgeInsets.only(left: 8),

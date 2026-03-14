@@ -85,16 +85,16 @@ void main() {
         1,
       );
       final img = result.value! as ImageElement;
-      expect(img.crop, const ImageCrop(x: 0.1, y: 0.2, width: 0.8, height: 0.6));
+      expect(
+        img.crop,
+        const ImageCrop(x: 0.1, y: 0.2, width: 0.8, height: 0.6),
+      );
       expect(img.imageScale, 1.5);
     });
 
     test('parses image without crop or scale', () {
       final parser = SketchLineParser();
-      final result = parser.parseLine(
-        'image at 0,0 100x100 file=test123',
-        1,
-      );
+      final result = parser.parseLine('image at 0,0 100x100 file=test123', 1);
       final img = result.value! as ImageElement;
       expect(img.crop, isNull);
       expect(img.imageScale, 1.0);
@@ -260,7 +260,10 @@ def67890 image/jpeg AgME
 
       expect(parsed.warnings, isEmpty);
       final img = parsed.value.allElements.first as ImageElement;
-      expect(img.crop, const ImageCrop(x: 0.1, y: 0.2, width: 0.8, height: 0.6));
+      expect(
+        img.crop,
+        const ImageCrop(x: 0.1, y: 0.2, width: 0.8, height: 0.6),
+      );
       expect(img.imageScale, 2.0);
     });
   });

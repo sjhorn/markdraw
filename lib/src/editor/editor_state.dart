@@ -32,35 +32,33 @@ class EditorState {
 
     return switch (result) {
       AddElementResult(:final element) => copyWith(
-          scene: scene.addElement(element),
-        ),
+        scene: scene.addElement(element),
+      ),
       UpdateElementResult(:final element) => copyWith(
-          scene: scene.updateElement(element),
-        ),
+        scene: scene.updateElement(element),
+      ),
       RemoveElementResult(:final id) => copyWith(
-          scene: scene.removeElement(id),
-        ),
+        scene: scene.removeElement(id),
+      ),
       SetSelectionResult(:final selectedIds) => copyWith(
-          selectedIds: selectedIds,
-        ),
-      UpdateViewportResult(:final viewport) => copyWith(
-          viewport: viewport,
-        ),
-      SwitchToolResult(:final toolType) => toolLocked &&
-              toolType == ToolType.select
-          ? this
-          : copyWith(activeToolType: toolType),
-      SetClipboardResult(:final elements) => copyWith(
-          clipboard: elements,
-        ),
+        selectedIds: selectedIds,
+      ),
+      UpdateViewportResult(:final viewport) => copyWith(viewport: viewport),
+      SwitchToolResult(:final toolType) =>
+        toolLocked && toolType == ToolType.select
+            ? this
+            : copyWith(activeToolType: toolType),
+      SetClipboardResult(:final elements) => copyWith(clipboard: elements),
       AddFileResult(:final fileId, :final file) => copyWith(
-          scene: scene.addFile(fileId, file),
-        ),
+        scene: scene.addFile(fileId, file),
+      ),
       RemoveFileResult(:final fileId) => copyWith(
-          scene: scene.removeFile(fileId),
-        ),
-      CompoundResult(:final results) => results.fold(this,
-          (state, r) => state.applyResult(r)),
+        scene: scene.removeFile(fileId),
+      ),
+      CompoundResult(:final results) => results.fold(
+        this,
+        (state, r) => state.applyResult(r),
+      ),
     };
   }
 

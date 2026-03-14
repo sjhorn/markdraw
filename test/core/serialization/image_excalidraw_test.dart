@@ -4,8 +4,10 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:markdraw/markdraw.dart';
 
-String _wrapElements(List<Map<String, dynamic>> elements,
-    {Map<String, dynamic>? files}) {
+String _wrapElements(
+  List<Map<String, dynamic>> elements, {
+  Map<String, dynamic>? files,
+}) {
   return jsonEncode({
     'type': 'excalidraw',
     'version': 2,

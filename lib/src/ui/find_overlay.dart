@@ -100,9 +100,13 @@ class _FindOverlayState extends State<FindOverlay> {
           borderRadius: BorderRadius.circular(8),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withValues(alpha: 0.17), blurRadius: 1),
+              color: Colors.black.withValues(alpha: 0.17),
+              blurRadius: 1,
+            ),
             BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08), blurRadius: 3),
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 3,
+            ),
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 14,
@@ -158,8 +162,9 @@ class _FindOverlayState extends State<FindOverlay> {
                 tooltip: 'Previous (Shift+Enter)',
                 onPressed: results.isEmpty
                     ? null
-                    : () => widget.controller
-                        .findPrevious(widget.getCanvasSize()),
+                    : () => widget.controller.findPrevious(
+                        widget.getCanvasSize(),
+                      ),
                 icon: const Icon(Icons.keyboard_arrow_up),
               ),
             ),
@@ -172,8 +177,7 @@ class _FindOverlayState extends State<FindOverlay> {
                 tooltip: 'Next (Enter)',
                 onPressed: results.isEmpty
                     ? null
-                    : () =>
-                        widget.controller.findNext(widget.getCanvasSize()),
+                    : () => widget.controller.findNext(widget.getCanvasSize()),
                 icon: const Icon(Icons.keyboard_arrow_down),
               ),
             ),

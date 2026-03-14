@@ -122,11 +122,7 @@ class SelectionRenderer {
       ..strokeWidth = _handleStrokeWidth;
 
     final radius = rotationHandleRadius(mode);
-    canvas.drawCircle(
-      Offset(rotationPos.x, rotationPos.y),
-      radius,
-      fillPaint,
-    );
+    canvas.drawCircle(Offset(rotationPos.x, rotationPos.y), radius, fillPaint);
     canvas.drawCircle(
       Offset(rotationPos.x, rotationPos.y),
       radius,
@@ -290,7 +286,8 @@ class SelectionRenderer {
     InteractionMode mode = InteractionMode.pointer,
   }) {
     final fillPaint = Paint()
-      ..color = const Color(0x664A90D9) // ~40% opacity blue
+      ..color =
+          const Color(0x664A90D9) // ~40% opacity blue
       ..style = PaintingStyle.fill;
     final strokePaint = Paint()
       ..color = _selectionColor
@@ -345,8 +342,7 @@ class SelectionRenderer {
   ///
   /// When [angle] is non-zero the indicator is drawn rotated around the
   /// element's center to match a rotated target.
-  static void drawBindingIndicator(
-      Canvas canvas, Bounds bounds, double angle) {
+  static void drawBindingIndicator(Canvas canvas, Bounds bounds, double angle) {
     final fillPaint = Paint()
       ..color = const Color(0x2200CC66)
       ..style = PaintingStyle.fill;
@@ -390,11 +386,7 @@ class SelectionRenderer {
       ..color = _selectionColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
-    canvas.drawCircle(
-      Offset(center.x, center.y),
-      _closeIndicatorRadius,
-      paint,
-    );
+    canvas.drawCircle(Offset(center.x, center.y), _closeIndicatorRadius, paint);
   }
 
   /// Draws a creation preview shape (rectangle outline) from [bounds].
@@ -423,8 +415,13 @@ class SelectionRenderer {
   }
 
   static void _drawDashedLine(
-      Canvas canvas, Offset start, Offset end, Paint paint,
-      {double dashLength = 6, double gapLength = 4}) {
+    Canvas canvas,
+    Offset start,
+    Offset end,
+    Paint paint, {
+    double dashLength = 6,
+    double gapLength = 4,
+  }) {
     final dx = end.dx - start.dx;
     final dy = end.dy - start.dy;
     final distance = Offset(dx, dy).distance;
@@ -444,7 +441,9 @@ class SelectionRenderer {
         canvas.drawLine(
           Offset(start.dx + unitX * drawn, start.dy + unitY * drawn),
           Offset(
-              start.dx + unitX * (drawn + len), start.dy + unitY * (drawn + len)),
+            start.dx + unitX * (drawn + len),
+            start.dy + unitY * (drawn + len),
+          ),
           paint,
         );
       }

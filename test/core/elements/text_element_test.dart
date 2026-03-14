@@ -74,7 +74,10 @@ void main() {
     test('constructs with custom verticalAlign', () {
       final t = TextElement(
         id: const ElementId('txt-1'),
-        x: 0, y: 0, width: 100, height: 25,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 25,
         text: 'Hi',
         verticalAlign: VerticalAlign.top,
       );
@@ -91,7 +94,10 @@ void main() {
     test('copyWithText preserves verticalAlign when not specified', () {
       final t = TextElement(
         id: const ElementId('txt-1'),
-        x: 0, y: 0, width: 100, height: 25,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 25,
         text: 'Hi',
         verticalAlign: VerticalAlign.top,
       );
@@ -102,7 +108,10 @@ void main() {
     test('copyWith preserves verticalAlign', () {
       final t = TextElement(
         id: const ElementId('txt-1'),
-        x: 0, y: 0, width: 100, height: 25,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 25,
         text: 'Hi',
         verticalAlign: VerticalAlign.bottom,
       );

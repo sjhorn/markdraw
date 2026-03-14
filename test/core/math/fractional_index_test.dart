@@ -40,8 +40,12 @@ void main() {
       final keys = FractionalIndex.generateNKeys(5, after: 'A');
       expect(keys, hasLength(5));
       for (var i = 0; i < keys.length - 1; i++) {
-        expect(keys[i].compareTo(keys[i + 1]), lessThan(0),
-            reason: 'keys[$i] "${keys[i]}" should be < keys[${i + 1}] "${keys[i + 1]}"');
+        expect(
+          keys[i].compareTo(keys[i + 1]),
+          lessThan(0),
+          reason:
+              'keys[$i] "${keys[i]}" should be < keys[${i + 1}] "${keys[i + 1]}"',
+        );
       }
       // All should be after 'A'
       for (final k in keys) {
@@ -58,8 +62,7 @@ void main() {
     });
 
     test('generateNKeys with both constraints', () {
-      final keys =
-          FractionalIndex.generateNKeys(3, after: 'A', before: 'z');
+      final keys = FractionalIndex.generateNKeys(3, after: 'A', before: 'z');
       expect(keys, hasLength(3));
       for (final k in keys) {
         expect(k.compareTo('A'), greaterThan(0));

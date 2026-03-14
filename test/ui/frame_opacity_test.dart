@@ -40,7 +40,9 @@ void main() {
 
       // Assign the rect to the frame
       final rectInFrame = scene.getElementById(rect.id)!;
-      scene = scene.updateElement(rectInFrame.copyWith(frameId: frame.id.value));
+      scene = scene.updateElement(
+        rectInFrame.copyWith(frameId: frame.id.value),
+      );
 
       controller.loadScene(scene);
 
@@ -70,13 +72,13 @@ void main() {
       controller.applyStyleChange(const ElementStyle(opacity: 0.5));
 
       // Frame should be 0.5
-      final updatedFrame =
-          controller.editorState.scene.getElementById(frame.id)!;
+      final updatedFrame = controller.editorState.scene.getElementById(
+        frame.id,
+      )!;
       expect(updatedFrame.opacity, 0.5);
 
       // Child rect should also be 0.5
-      final updatedRect =
-          controller.editorState.scene.getElementById(rect.id)!;
+      final updatedRect = controller.editorState.scene.getElementById(rect.id)!;
       expect(updatedRect.opacity, 0.5);
     });
 
@@ -202,8 +204,7 @@ void main() {
       final frame = elements.firstWhere((e) => e is FrameElement);
 
       // The rect should now be a child of the frame
-      final updatedRect =
-          controller.editorState.scene.getElementById(rect.id)!;
+      final updatedRect = controller.editorState.scene.getElementById(rect.id)!;
       expect(updatedRect.frameId, frame.id.value);
 
       // Select the frame and adjust opacity
@@ -229,7 +230,10 @@ void main() {
 
       final rect = RectangleElement(
         id: const ElementId('r1'),
-        x: 0, y: 0, width: 100, height: 50,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 50,
         strokeColor: '#ff0000',
       );
       final line = serializer.serialize(rect, alias: 'r1');
@@ -244,7 +248,10 @@ void main() {
 
       final rect = RectangleElement(
         id: const ElementId('r1'),
-        x: 0, y: 0, width: 100, height: 50,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 50,
         backgroundColor: '#00ff00',
       );
       final line = serializer.serialize(rect, alias: 'r1');
@@ -259,7 +266,10 @@ void main() {
 
       final rect = RectangleElement(
         id: const ElementId('r1'),
-        x: 0, y: 0, width: 100, height: 50,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 50,
         strokeWidth: 4.0,
       );
       final line = serializer.serialize(rect, alias: 'r1');
@@ -274,7 +284,10 @@ void main() {
 
       final rect = RectangleElement(
         id: const ElementId('r1'),
-        x: 0, y: 0, width: 100, height: 50,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 50,
         strokeStyle: StrokeStyle.dashed,
       );
       final line = serializer.serialize(rect, alias: 'r1');
@@ -289,7 +302,10 @@ void main() {
 
       final rect = RectangleElement(
         id: const ElementId('r1'),
-        x: 0, y: 0, width: 100, height: 50,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 50,
         fillStyle: FillStyle.hachure,
       );
       final line = serializer.serialize(rect, alias: 'r1');
@@ -304,7 +320,10 @@ void main() {
 
       final rect = RectangleElement(
         id: const ElementId('r1'),
-        x: 0, y: 0, width: 100, height: 50,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 50,
         roughness: 2.0,
       );
       final line = serializer.serialize(rect, alias: 'r1');
@@ -319,7 +338,10 @@ void main() {
 
       final rect = RectangleElement(
         id: const ElementId('r1'),
-        x: 0, y: 0, width: 100, height: 50,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 50,
         opacity: 0.6,
       );
       final line = serializer.serialize(rect, alias: 'r1');
@@ -334,7 +356,10 @@ void main() {
 
       final rect = RectangleElement(
         id: const ElementId('r1'),
-        x: 0, y: 0, width: 100, height: 50,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 50,
         angle: 0.7854, // ~45 degrees
       );
       final line = serializer.serialize(rect, alias: 'r1');
@@ -350,7 +375,10 @@ void main() {
 
       final rect = RectangleElement(
         id: const ElementId('r1'),
-        x: 0, y: 0, width: 100, height: 50,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 50,
         locked: true,
       );
       final line = serializer.serialize(rect, alias: 'r1');
@@ -365,7 +393,10 @@ void main() {
 
       final rect = RectangleElement(
         id: const ElementId('r1'),
-        x: 0, y: 0, width: 100, height: 50,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 50,
         roundness: const Roundness.adaptive(value: 8.0),
       );
       final line = serializer.serialize(rect, alias: 'r1');
@@ -381,7 +412,10 @@ void main() {
 
       final rect = RectangleElement(
         id: const ElementId('r1'),
-        x: 0, y: 0, width: 100, height: 50,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 50,
         link: 'https://example.com',
       );
       final line = serializer.serialize(rect, alias: 'r1');
@@ -396,7 +430,10 @@ void main() {
 
       final rect = RectangleElement(
         id: const ElementId('r1'),
-        x: 0, y: 0, width: 100, height: 50,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 50,
         groupIds: ['g1', 'g2'],
       );
       final line = serializer.serialize(rect, alias: 'r1');
@@ -411,7 +448,10 @@ void main() {
 
       final rect = RectangleElement(
         id: const ElementId('r1'),
-        x: 0, y: 0, width: 100, height: 50,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 50,
         frameId: 'f1',
       );
       final line = serializer.serialize(rect, alias: 'r1');
@@ -426,7 +466,10 @@ void main() {
 
       final frame = FrameElement(
         id: const ElementId('f1'),
-        x: 0, y: 0, width: 200, height: 200,
+        x: 0,
+        y: 0,
+        width: 200,
+        height: 200,
         label: 'My Section',
       );
       final line = serializer.serialize(frame, alias: 'f1');
@@ -441,7 +484,10 @@ void main() {
 
       final rect = RectangleElement(
         id: const ElementId('r1'),
-        x: 0, y: 0, width: 100, height: 50,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 50,
         // All defaults
       );
       final line = serializer.serialize(rect, alias: 'r1');
@@ -466,7 +512,10 @@ void main() {
 
       final rect = RectangleElement(
         id: const ElementId('r1'),
-        x: 10, y: 20, width: 100, height: 50,
+        x: 10,
+        y: 20,
+        width: 100,
+        height: 50,
         strokeColor: '#ff0000',
         backgroundColor: '#00ff00',
         strokeWidth: 4.0,

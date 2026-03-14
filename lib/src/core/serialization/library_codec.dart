@@ -41,17 +41,22 @@ class LibraryCodec {
         files.addAll(docResult.value.files);
       }
 
-      items.add(LibraryItem(
-        id: id,
-        name: name,
-        status: status,
-        created: created,
-        elements: elements,
-        files: files,
-      ));
+      items.add(
+        LibraryItem(
+          id: id,
+          name: name,
+          status: status,
+          created: created,
+          elements: elements,
+          files: files,
+        ),
+      );
     }
 
-    return ParseResult(value: LibraryDocument(items: items), warnings: warnings);
+    return ParseResult(
+      value: LibraryDocument(items: items),
+      warnings: warnings,
+    );
   }
 
   /// Serializes a [LibraryDocument] to .markdrawlib format.
@@ -132,10 +137,9 @@ class LibraryCodec {
             bodyLines.add(lines[i]);
             i++;
           }
-          blocks.add(_ItemBlock(
-            header: headerText,
-            body: bodyLines.join('\n').trim(),
-          ));
+          blocks.add(
+            _ItemBlock(header: headerText, body: bodyLines.join('\n').trim()),
+          );
         }
       } else {
         i++;

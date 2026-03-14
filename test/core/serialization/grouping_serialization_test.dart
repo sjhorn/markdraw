@@ -78,10 +78,7 @@ void main() {
 
     test('defaults to empty groupIds when group= absent', () {
       final parser = SketchLineParser();
-      final result = parser.parseLine(
-        'rect id=auth at 100,200 size 160x80',
-        1,
-      );
+      final result = parser.parseLine('rect id=auth at 100,200 size 160x80', 1);
       expect(result.value, isNotNull);
       expect(result.value!.groupIds, isEmpty);
     });
@@ -260,7 +257,11 @@ void main() {
         containerId: 'r1',
         seed: 43,
       );
-      final line = serializer.serializeWithLabel(rect, labelElement, alias: 'auth');
+      final line = serializer.serializeWithLabel(
+        rect,
+        labelElement,
+        alias: 'auth',
+      );
       expect(line, contains('group=g1'));
 
       // Parse it back

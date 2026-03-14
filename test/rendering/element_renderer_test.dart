@@ -13,8 +13,12 @@ class MockRoughAdapter implements RoughAdapter {
   List<Point>? lastPoints;
 
   @override
-  void drawRectangle(Canvas canvas, Bounds bounds, DrawStyle style,
-      {Roundness? roundness}) {
+  void drawRectangle(
+    Canvas canvas,
+    Bounds bounds,
+    DrawStyle style, {
+    Roundness? roundness,
+  }) {
     calls.add('drawRectangle');
     lastBounds = bounds;
   }
@@ -26,8 +30,12 @@ class MockRoughAdapter implements RoughAdapter {
   }
 
   @override
-  void drawDiamond(Canvas canvas, Bounds bounds, DrawStyle style,
-      {Roundness? roundness}) {
+  void drawDiamond(
+    Canvas canvas,
+    Bounds bounds,
+    DrawStyle style, {
+    Roundness? roundness,
+  }) {
     calls.add('drawDiamond');
     lastBounds = bounds;
   }
@@ -398,11 +406,7 @@ void main() {
         y: 75,
         width: 100,
         height: 100,
-        points: [
-          const Point(0, 0),
-          const Point(50, 50),
-          const Point(100, 0),
-        ],
+        points: [const Point(0, 0), const Point(50, 50), const Point(100, 0)],
       );
 
       ElementRenderer.render(canvas, element, adapter);
@@ -422,11 +426,7 @@ void main() {
         y: 0,
         width: 100,
         height: 50,
-        points: [
-          const Point(0, 0),
-          const Point(50, 50),
-          const Point(100, 0),
-        ],
+        points: [const Point(0, 0), const Point(50, 50), const Point(100, 0)],
         roundness: const Roundness.proportional(value: 32),
       );
 
@@ -444,11 +444,7 @@ void main() {
         y: 0,
         width: 100,
         height: 100,
-        points: [
-          const Point(0, 0),
-          const Point(100, 0),
-          const Point(50, 100),
-        ],
+        points: [const Point(0, 0), const Point(100, 0), const Point(50, 100)],
         closed: true,
         roundness: const Roundness.proportional(value: 0),
       );
@@ -467,11 +463,7 @@ void main() {
         y: 0,
         width: 100,
         height: 100,
-        points: [
-          const Point(0, 0),
-          const Point(100, 0),
-          const Point(50, 100),
-        ],
+        points: [const Point(0, 0), const Point(100, 0), const Point(50, 100)],
         closed: true,
       );
 
@@ -489,11 +481,7 @@ void main() {
         y: 0,
         width: 100,
         height: 50,
-        points: [
-          const Point(0, 0),
-          const Point(50, 50),
-          const Point(100, 0),
-        ],
+        points: [const Point(0, 0), const Point(50, 50), const Point(100, 0)],
         arrowType: ArrowType.round,
         endArrowhead: Arrowhead.arrow,
       );

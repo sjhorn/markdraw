@@ -27,9 +27,7 @@ void main() {
     });
 
     test('supports roundness property', () {
-      final r = createRect(
-        roundness: const Roundness.adaptive(value: 10.0),
-      );
+      final r = createRect(roundness: const Roundness.adaptive(value: 10.0));
       expect(r.roundness, const Roundness.adaptive(value: 10.0));
     });
 

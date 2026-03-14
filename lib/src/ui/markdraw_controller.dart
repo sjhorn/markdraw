@@ -11,7 +11,6 @@ import 'package:flutter/services.dart';
 import 'package:markdraw/markdraw.dart' as core show TextAlign;
 import 'package:markdraw/markdraw.dart' hide TextAlign;
 
-
 /// Which color picker to open programmatically.
 enum ColorPickerTarget { stroke, background, font }
 
@@ -380,26 +379,42 @@ class MarkdrawController extends ChangeNotifier {
   void zoomIn(Size canvasSize) {
     final viewport = _editorState.viewport;
     final center = Offset(canvasSize.width / 2, canvasSize.height / 2);
-    final newZoom = (viewport.zoom + _config.zoomStep)
-        .clamp(_config.minZoom, _config.maxZoom);
+    final newZoom = (viewport.zoom + _config.zoomStep).clamp(
+      _config.minZoom,
+      _config.maxZoom,
+    );
     final factor = newZoom / viewport.zoom;
-    applyResult(UpdateViewportResult(
-      viewport.zoomAt(factor, center,
-          minZoom: _config.minZoom, maxZoom: _config.maxZoom),
-    ));
+    applyResult(
+      UpdateViewportResult(
+        viewport.zoomAt(
+          factor,
+          center,
+          minZoom: _config.minZoom,
+          maxZoom: _config.maxZoom,
+        ),
+      ),
+    );
   }
 
   /// Zooms out by one step, centered on the canvas.
   void zoomOut(Size canvasSize) {
     final viewport = _editorState.viewport;
     final center = Offset(canvasSize.width / 2, canvasSize.height / 2);
-    final newZoom = (viewport.zoom - _config.zoomStep)
-        .clamp(_config.minZoom, _config.maxZoom);
+    final newZoom = (viewport.zoom - _config.zoomStep).clamp(
+      _config.minZoom,
+      _config.maxZoom,
+    );
     final factor = newZoom / viewport.zoom;
-    applyResult(UpdateViewportResult(
-      viewport.zoomAt(factor, center,
-          minZoom: _config.minZoom, maxZoom: _config.maxZoom),
-    ));
+    applyResult(
+      UpdateViewportResult(
+        viewport.zoomAt(
+          factor,
+          center,
+          minZoom: _config.minZoom,
+          maxZoom: _config.maxZoom,
+        ),
+      ),
+    );
   }
 
   /// Resets the viewport to default zoom (1x) and offset (0, 0).
@@ -411,9 +426,11 @@ class MarkdrawController extends ChangeNotifier {
   void zoomToFit(Size canvasSize) {
     final bounds = ExportBounds.compute(_editorState.scene);
     if (bounds == null) return;
-    applyResult(UpdateViewportResult(
-      _editorState.viewport.fitToBounds(bounds, canvasSize, padding: 40),
-    ));
+    applyResult(
+      UpdateViewportResult(
+        _editorState.viewport.fitToBounds(bounds, canvasSize, padding: 40),
+      ),
+    );
   }
 
   /// Zooms to fit the currently selected elements within the canvas.
@@ -424,9 +441,11 @@ class MarkdrawController extends ChangeNotifier {
       selectedIds: _editorState.selectedIds,
     );
     if (bounds == null) return;
-    applyResult(UpdateViewportResult(
-      _editorState.viewport.fitToBounds(bounds, canvasSize, padding: 40),
-    ));
+    applyResult(
+      UpdateViewportResult(
+        _editorState.viewport.fitToBounds(bounds, canvasSize, padding: 40),
+      ),
+    );
   }
 
   // --- Default style application ---
@@ -489,9 +508,7 @@ class MarkdrawController extends ChangeNotifier {
   void applyResult(ToolResult? result) {
     if (result == null) return;
 
-    final styled = isCreationTool
-        ? _applyDefaultStyleToResult(result)
-        : result;
+    final styled = isCreationTool ? _applyDefaultStyleToResult(result) : result;
 
     _syncToSystemClipboard(styled);
 
@@ -565,8 +582,7 @@ class MarkdrawController extends ChangeNotifier {
       baseOffset: 0,
       extentOffset: element.text.length,
     );
-    _editorState =
-        _editorState.applyResult(SetSelectionResult({element.id}));
+    _editorState = _editorState.applyResult(SetSelectionResult({element.id}));
     notifyListeners();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _textFocusNode.requestFocus();
@@ -710,18 +726,14 @@ class MarkdrawController extends ChangeNotifier {
           final updated = measured.copyWith(
             height: math.max(h, element.height),
           );
-          _editorState = _editorState.applyResult(
-            UpdateElementResult(updated),
-          );
+          _editorState = _editorState.applyResult(UpdateElementResult(updated));
         } else {
           final (w, h) = TextRenderer.measure(measured);
           final updated = measured.copyWith(
             width: math.max(w + 4, 20.0),
             height: math.max(h, element.fontSize * element.lineHeight),
           );
-          _editorState = _editorState.applyResult(
-            UpdateElementResult(updated),
-          );
+          _editorState = _editorState.applyResult(UpdateElementResult(updated));
         }
       }
     }
@@ -832,8 +844,10 @@ class MarkdrawController extends ChangeNotifier {
       final labelTop = element.y - labelPadding - labelHeight;
       final labelBottom = element.y - labelPadding;
       // Estimate label width: ~8px per character at 14px font
-      final labelWidth =
-          (element.label.length * 8.0).clamp(40.0, element.width);
+      final labelWidth = (element.label.length * 8.0).clamp(
+        40.0,
+        element.width,
+      );
       if (scenePoint.x >= element.x &&
           scenePoint.x <= element.x + labelWidth &&
           scenePoint.y >= labelTop &&
@@ -856,23 +870,18 @@ class MarkdrawController extends ChangeNotifier {
     final measured = element.copyWithText(text: text);
     final isBound = element.containerId != null;
     if (isBound) {
-      _editorState =
-          _editorState.applyResult(UpdateElementResult(measured));
+      _editorState = _editorState.applyResult(UpdateElementResult(measured));
     } else if (!element.autoResize && element.width > 0) {
-      final (_, h) =
-          TextRenderer.measure(measured, maxWidth: element.width);
-      final updated =
-          measured.copyWith(height: math.max(h, element.height));
-      _editorState =
-          _editorState.applyResult(UpdateElementResult(updated));
+      final (_, h) = TextRenderer.measure(measured, maxWidth: element.width);
+      final updated = measured.copyWith(height: math.max(h, element.height));
+      _editorState = _editorState.applyResult(UpdateElementResult(updated));
     } else {
       final (w, h) = TextRenderer.measure(measured);
       final updated = measured.copyWith(
         width: math.max(w + 4, 20.0),
         height: math.max(h, element.fontSize * element.lineHeight),
       );
-      _editorState =
-          _editorState.applyResult(UpdateElementResult(updated));
+      _editorState = _editorState.applyResult(UpdateElementResult(updated));
     }
     onSceneChanged?.call(_editorState.scene);
     notifyListeners();
@@ -1032,7 +1041,8 @@ class MarkdrawController extends ChangeNotifier {
   void onPointerUp(Offset localPosition) {
     final point = toScene(localPosition);
     final now = DateTime.now();
-    final isDoubleClick = _lastPointerUpTime != null &&
+    final isDoubleClick =
+        _lastPointerUpTime != null &&
         now.difference(_lastPointerUpTime!).inMilliseconds < 300;
     _lastPointerUpTime = now;
 
@@ -1148,8 +1158,7 @@ class MarkdrawController extends ChangeNotifier {
     // Update sticky defaults
     _defaultStyle = ElementStyle(
       strokeColor: style.strokeColor ?? _defaultStyle.strokeColor,
-      backgroundColor:
-          style.backgroundColor ?? _defaultStyle.backgroundColor,
+      backgroundColor: style.backgroundColor ?? _defaultStyle.backgroundColor,
       strokeWidth: style.strokeWidth ?? _defaultStyle.strokeWidth,
       strokeStyle: style.strokeStyle ?? _defaultStyle.strokeStyle,
       fillStyle: style.fillStyle ?? _defaultStyle.fillStyle,
@@ -1162,16 +1171,18 @@ class MarkdrawController extends ChangeNotifier {
       startArrowhead: style.startArrowheadNone
           ? null
           : (style.startArrowhead ?? _defaultStyle.startArrowhead),
-      startArrowheadNone: style.startArrowheadNone ||
-          (style.startArrowhead == null &&
-              _defaultStyle.startArrowheadNone),
+      startArrowheadNone:
+          style.startArrowheadNone ||
+          (style.startArrowhead == null && _defaultStyle.startArrowheadNone),
       endArrowhead: style.endArrowheadNone
           ? null
           : (style.endArrowhead ?? _defaultStyle.endArrowhead),
-      endArrowheadNone: style.endArrowheadNone ||
+      endArrowheadNone:
+          style.endArrowheadNone ||
           (style.endArrowhead == null && _defaultStyle.endArrowheadNone),
       arrowType: style.arrowType ?? _defaultStyle.arrowType,
-      roundness: style.roundness ??
+      roundness:
+          style.roundness ??
           (style.hasRoundness ? null : _defaultStyle.roundness),
     );
 
@@ -1203,8 +1214,10 @@ class MarkdrawController extends ChangeNotifier {
     if (style.opacity != null) {
       for (final e in elements) {
         if (e is FrameElement) {
-          final children =
-              FrameUtils.findFrameChildren(_editorState.scene, e.id);
+          final children = FrameUtils.findFrameChildren(
+            _editorState.scene,
+            e.id,
+          );
           for (final child in children) {
             applyResult(
               UpdateElementResult(child.copyWith(opacity: style.opacity)),
@@ -1230,9 +1243,7 @@ class MarkdrawController extends ChangeNotifier {
             verticalAlign: style.verticalAlign,
           );
           if (style.strokeColor != null) {
-            updated = updated.copyWith(
-              strokeColor: style.strokeColor,
-            );
+            updated = updated.copyWith(strokeColor: style.strokeColor);
           }
           applyResult(UpdateElementResult(updated));
         }
@@ -1344,8 +1355,7 @@ class MarkdrawController extends ChangeNotifier {
     for (var i = 0; i < elem.points.length - 1; i++) {
       final a = elem.points[i];
       final b = elem.points[i + 1];
-      midpoints.add(
-          Point(elem.x + (a.x + b.x) / 2, elem.y + (a.y + b.y) / 2));
+      midpoints.add(Point(elem.x + (a.x + b.x) / 2, elem.y + (a.y + b.y) / 2));
     }
     return midpoints;
   }
@@ -1366,8 +1376,7 @@ class MarkdrawController extends ChangeNotifier {
     for (var i = 0; i < elem.points.length - 1; i++) {
       final a = elem.points[i];
       final b = elem.points[i + 1];
-      midpoints.add(
-          Point(elem.x + (a.x + b.x) / 2, elem.y + (a.y + b.y) / 2));
+      midpoints.add(Point(elem.x + (a.x + b.x) / 2, elem.y + (a.y + b.y) / 2));
     }
     return midpoints;
   }
@@ -1400,29 +1409,29 @@ class MarkdrawController extends ChangeNotifier {
       final b = overlay.creationBounds!;
       element = switch (toolType) {
         ToolType.rectangle => RectangleElement(
-            id: previewId,
-            x: b.left,
-            y: b.top,
-            width: b.size.width,
-            height: b.size.height,
-            seed: previewSeed,
-          ),
+          id: previewId,
+          x: b.left,
+          y: b.top,
+          width: b.size.width,
+          height: b.size.height,
+          seed: previewSeed,
+        ),
         ToolType.ellipse => EllipseElement(
-            id: previewId,
-            x: b.left,
-            y: b.top,
-            width: b.size.width,
-            height: b.size.height,
-            seed: previewSeed,
-          ),
+          id: previewId,
+          x: b.left,
+          y: b.top,
+          width: b.size.width,
+          height: b.size.height,
+          seed: previewSeed,
+        ),
         ToolType.diamond => DiamondElement(
-            id: previewId,
-            x: b.left,
-            y: b.top,
-            width: b.size.width,
-            height: b.size.height,
-            seed: previewSeed,
-          ),
+          id: previewId,
+          x: b.left,
+          y: b.top,
+          width: b.size.width,
+          height: b.size.height,
+          seed: previewSeed,
+        ),
         _ => null,
       };
     }
@@ -1435,39 +1444,38 @@ class MarkdrawController extends ChangeNotifier {
       final minY = pts.map((p) => p.y).reduce(math.min);
       final maxX = pts.map((p) => p.x).reduce(math.max);
       final maxY = pts.map((p) => p.y).reduce(math.max);
-      final relPts =
-          pts.map((p) => Point(p.x - minX, p.y - minY)).toList();
+      final relPts = pts.map((p) => Point(p.x - minX, p.y - minY)).toList();
 
       element = switch (toolType) {
         ToolType.line => LineElement(
-            id: previewId,
-            x: minX,
-            y: minY,
-            width: maxX - minX,
-            height: maxY - minY,
-            points: relPts,
-            seed: previewSeed,
-            closed: overlay.creationClosed,
-          ),
+          id: previewId,
+          x: minX,
+          y: minY,
+          width: maxX - minX,
+          height: maxY - minY,
+          points: relPts,
+          seed: previewSeed,
+          closed: overlay.creationClosed,
+        ),
         ToolType.arrow => ArrowElement(
-            id: previewId,
-            x: minX,
-            y: minY,
-            width: maxX - minX,
-            height: maxY - minY,
-            points: relPts,
-            seed: previewSeed,
-            endArrowhead: Arrowhead.arrow,
-          ),
+          id: previewId,
+          x: minX,
+          y: minY,
+          width: maxX - minX,
+          height: maxY - minY,
+          points: relPts,
+          seed: previewSeed,
+          endArrowhead: Arrowhead.arrow,
+        ),
         ToolType.freedraw => FreedrawElement(
-            id: previewId,
-            x: minX,
-            y: minY,
-            width: maxX - minX,
-            height: maxY - minY,
-            points: relPts,
-            seed: previewSeed,
-          ),
+          id: previewId,
+          x: minX,
+          y: minY,
+          width: maxX - minX,
+          height: maxY - minY,
+          points: relPts,
+          seed: previewSeed,
+        ),
         _ => null,
       };
     }
@@ -1519,10 +1527,7 @@ class MarkdrawController extends ChangeNotifier {
   /// Clears the scene and undo history.
   void clear() {
     _historyManager.clear();
-    _editorState = _editorState.copyWith(
-      scene: Scene(),
-      selectedIds: {},
-    );
+    _editorState = _editorState.copyWith(scene: Scene(), selectedIds: {});
     notifyListeners();
   }
 
@@ -1680,10 +1685,12 @@ class MarkdrawController extends ChangeNotifier {
     );
 
     _historyManager.push(_editorState.scene);
-    applyResult(CompoundResult([
-      AddElementResult(applyDefaultStyleToElement(sized)),
-      SetSelectionResult({sized.id}),
-    ]));
+    applyResult(
+      CompoundResult([
+        AddElementResult(applyDefaultStyleToElement(sized)),
+        SetSelectionResult({sized.id}),
+      ]),
+    );
   }
 
   /// Renames the document. Empty string is treated as null (no name).
@@ -1695,10 +1702,7 @@ class MarkdrawController extends ChangeNotifier {
   /// Clears the canvas, pushing the current scene to undo history.
   void resetCanvas() {
     _historyManager.push(_editorState.scene);
-    _editorState = _editorState.copyWith(
-      scene: Scene(),
-      selectedIds: {},
-    );
+    _editorState = _editorState.copyWith(scene: Scene(), selectedIds: {});
     _documentName = null;
     onSceneChanged?.call(_editorState.scene);
     notifyListeners();
@@ -1856,9 +1860,7 @@ class MarkdrawController extends ChangeNotifier {
   void followLink(String link, Size canvasSize) {
     if (link.startsWith('#')) {
       final targetIdStr = link.substring(1);
-      final target = _editorState.scene.getElementById(
-        ElementId(targetIdStr),
-      );
+      final target = _editorState.scene.getElementById(ElementId(targetIdStr));
       if (target == null) return;
       _selectAndRevealElement(ElementId(targetIdStr), canvasSize);
     } else {
@@ -1892,9 +1894,11 @@ class MarkdrawController extends ChangeNotifier {
       bounds.size.height,
     );
     if (!visible.overlaps(elemRect)) {
-      applyResult(UpdateViewportResult(
-        _editorState.viewport.fitToBounds(bounds, canvasSize, padding: 80),
-      ));
+      applyResult(
+        UpdateViewportResult(
+          _editorState.viewport.fitToBounds(bounds, canvasSize, padding: 80),
+        ),
+      );
     }
     notifyListeners();
   }
@@ -1927,7 +1931,8 @@ class MarkdrawController extends ChangeNotifier {
   /// Creates flowchart node(s) from the selected node in [direction].
   void flowchartCreate(LinkDirection direction) {
     final selected = selectedElements;
-    if (selected.length != 1 || !FlowchartUtils.isFlowchartNode(selected.first)) {
+    if (selected.length != 1 ||
+        !FlowchartUtils.isFlowchartNode(selected.first)) {
       return;
     }
     _flowchartCreator.createNodes(
@@ -2067,7 +2072,9 @@ class MarkdrawController extends ChangeNotifier {
     final parseResult = switch (format) {
       DocumentFormat.markdraw => DocumentParser.parse(content),
       DocumentFormat.excalidraw => ExcalidrawJsonCodec.parse(content),
-      _ => throw ArgumentError('Use importLibraryFromContent for library files'),
+      _ => throw ArgumentError(
+        'Use importLibraryFromContent for library files',
+      ),
     };
     _canvasBackgroundColor = parseResult.value.settings.background;
     _gridSize = parseResult.value.settings.grid;

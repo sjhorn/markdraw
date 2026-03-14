@@ -11,20 +11,24 @@ void main() {
     setUp(() {
       history = HistoryManager();
       emptyScene = Scene();
-      sceneWithRect = emptyScene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 20,
-        width: 100,
-        height: 50,
-      ));
-      sceneWithTwo = sceneWithRect.addElement(RectangleElement(
-        id: const ElementId('r2'),
-        x: 200,
-        y: 200,
-        width: 80,
-        height: 60,
-      ));
+      sceneWithRect = emptyScene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 20,
+          width: 100,
+          height: 50,
+        ),
+      );
+      sceneWithTwo = sceneWithRect.addElement(
+        RectangleElement(
+          id: const ElementId('r2'),
+          x: 200,
+          y: 200,
+          width: 80,
+          height: 60,
+        ),
+      );
     });
 
     test('canUndo and canRedo are false initially', () {

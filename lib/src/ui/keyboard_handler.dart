@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 
 import 'package:markdraw/markdraw.dart' hide TextAlign;
 
-
 /// Builds shortcut bindings for system-level shortcuts (Cmd+S, Cmd+O, etc.)
 /// that macOS intercepts before KeyEvent reaches Flutter.
 Map<ShortcutActivator, VoidCallback> buildShortcutBindings({
@@ -94,9 +93,9 @@ bool handleKeyEvent({
   if (event is! KeyDownEvent) return false;
   final key = event.logicalKey;
   final shift = HardwareKeyboard.instance.isShiftPressed;
-  final ctrl = HardwareKeyboard.instance.isControlPressed ||
+  final ctrl =
+      HardwareKeyboard.instance.isControlPressed ||
       HardwareKeyboard.instance.isMetaPressed;
-
 
   final alt = HardwareKeyboard.instance.isAltPressed;
 
@@ -158,19 +157,22 @@ bool handleKeyEvent({
   }
 
   // Page scrolling: PgDn/PgUp pans viewport by canvas height (Shift for horizontal)
-  if (key == LogicalKeyboardKey.pageDown ||
-      key == LogicalKeyboardKey.pageUp) {
+  if (key == LogicalKeyboardKey.pageDown || key == LogicalKeyboardKey.pageUp) {
     final size = getCanvasSize();
     final down = key == LogicalKeyboardKey.pageDown;
     if (shift) {
       controller.panViewport(
-        down ? size.width / controller.editorState.viewport.zoom : -size.width / controller.editorState.viewport.zoom,
+        down
+            ? size.width / controller.editorState.viewport.zoom
+            : -size.width / controller.editorState.viewport.zoom,
         0,
       );
     } else {
       controller.panViewport(
         0,
-        down ? size.height / controller.editorState.viewport.zoom : -size.height / controller.editorState.viewport.zoom,
+        down
+            ? size.height / controller.editorState.viewport.zoom
+            : -size.height / controller.editorState.viewport.zoom,
       );
     }
     return true;
@@ -183,13 +185,14 @@ bool handleKeyEvent({
   }
 
   // Font size cycling: Ctrl+Shift+< / Ctrl+Shift+>
-  if (ctrl && shift &&
+  if (ctrl &&
+      shift &&
       (key == LogicalKeyboardKey.comma ||
           key == LogicalKeyboardKey.period ||
           key == LogicalKeyboardKey.less ||
           key == LogicalKeyboardKey.greater)) {
-    final increase = key == LogicalKeyboardKey.period ||
-        key == LogicalKeyboardKey.greater;
+    final increase =
+        key == LogicalKeyboardKey.period || key == LogicalKeyboardKey.greater;
     controller.cycleFontSize(increase: increase);
     return true;
   }
@@ -312,7 +315,9 @@ bool handleKeyEvent({
   }
 
   // Color picker shortcuts: S (stroke), G (background) — select tool only
-  if (!ctrl && !shift && !alt &&
+  if (!ctrl &&
+      !shift &&
+      !alt &&
       controller.editorState.activeToolType == ToolType.select) {
     if (key == LogicalKeyboardKey.keyS) {
       controller.requestColorPicker(ColorPickerTarget.stroke);
@@ -325,7 +330,9 @@ bool handleKeyEvent({
   }
 
   // Font picker shortcut: Shift+F — select tool only
-  if (!ctrl && shift && !alt &&
+  if (!ctrl &&
+      shift &&
+      !alt &&
       controller.editorState.activeToolType == ToolType.select &&
       key == LogicalKeyboardKey.keyF) {
     controller.requestColorPicker(ColorPickerTarget.font);
@@ -356,8 +363,7 @@ bool handleKeyEvent({
 
   // Pass to tool
   String? keyName;
-  if (key == LogicalKeyboardKey.delete ||
-      key == LogicalKeyboardKey.backspace) {
+  if (key == LogicalKeyboardKey.delete || key == LogicalKeyboardKey.backspace) {
     keyName = key == LogicalKeyboardKey.delete ? 'Delete' : 'Backspace';
   } else if (key == LogicalKeyboardKey.escape) {
     keyName = 'Escape';
@@ -414,5 +420,4 @@ bool _isCtrlOrMeta(LogicalKeyboardKey key) =>
     key == LogicalKeyboardKey.metaRight;
 
 bool _isAlt(LogicalKeyboardKey key) =>
-    key == LogicalKeyboardKey.altLeft ||
-    key == LogicalKeyboardKey.altRight;
+    key == LogicalKeyboardKey.altLeft || key == LogicalKeyboardKey.altRight;

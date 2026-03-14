@@ -41,10 +41,7 @@ class ObjectSnapResult {
 }
 
 /// Builds a snap cache from the scene, excluding [excludeIds] and bound text.
-ObjectSnapCache buildObjectSnapCache(
-  Scene scene,
-  Set<ElementId> excludeIds,
-) {
+ObjectSnapCache buildObjectSnapCache(Scene scene, Set<ElementId> excludeIds) {
   final xPositions = <double>[];
   final yPositions = <double>[];
   final sourceBounds = <Bounds>[];
@@ -150,12 +147,14 @@ ObjectSnapResult snapToObjects(
       }
     }
 
-    snapLines.add(SnapLine(
-      orientation: SnapLineOrientation.vertical,
-      position: snapX,
-      start: minY,
-      end: maxY,
-    ));
+    snapLines.add(
+      SnapLine(
+        orientation: SnapLineOrientation.vertical,
+        position: snapX,
+        start: minY,
+        end: maxY,
+      ),
+    );
   }
 
   if (snapY != null) {
@@ -175,12 +174,14 @@ ObjectSnapResult snapToObjects(
       }
     }
 
-    snapLines.add(SnapLine(
-      orientation: SnapLineOrientation.horizontal,
-      position: snapY,
-      start: minX,
-      end: maxX,
-    ));
+    snapLines.add(
+      SnapLine(
+        orientation: SnapLineOrientation.horizontal,
+        position: snapY,
+        start: minX,
+        end: maxX,
+      ),
+    );
   }
 
   return ObjectSnapResult(dx: dx, dy: dy, snapLines: snapLines);

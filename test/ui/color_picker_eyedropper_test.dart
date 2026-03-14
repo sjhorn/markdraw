@@ -7,8 +7,11 @@ import 'package:markdraw/markdraw.dart' hide TextAlign, ColorSwatch;
 
 void main() {
   // Helper to create a test image of a solid color
-  Future<ui.Image> createTestImage(Color color,
-      {int width = 100, int height = 100}) async {
+  Future<ui.Image> createTestImage(
+    Color color, {
+    int width = 100,
+    int height = 100,
+  }) async {
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
     canvas.drawRect(
@@ -24,10 +27,14 @@ void main() {
   /// Finds the Container wrapping the eyedropper icon and returns its
   /// background color from the BoxDecoration.
   Color? eyedropperButtonColor(WidgetTester tester) {
-    final container = tester.widget<Container>(find.ancestor(
-      of: find.byIcon(Icons.colorize),
-      matching: find.byType(Container),
-    ).first);
+    final container = tester.widget<Container>(
+      find
+          .ancestor(
+            of: find.byIcon(Icons.colorize),
+            matching: find.byType(Container),
+          )
+          .first,
+    );
     final decoration = container.decoration as BoxDecoration?;
     return decoration?.color;
   }
@@ -56,41 +63,50 @@ void main() {
   }
 
   group('ColorPaletteOverlay eyedropper', () {
-    testWidgets('eyedropper button visible when onRenderScene provided',
-        (tester) async {
-      await tester.pumpWidget(buildOverlay(
-        currentColor: '#ff0000',
-        onSelect: (_) {},
-        onDismiss: () {},
-        onRenderScene: (_) async => await createTestImage(Colors.red),
-        onSampleColor: (_, _) async => '#ff0000',
-        canvasSize: const Size(100, 100),
-      ));
+    testWidgets('eyedropper button visible when onRenderScene provided', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildOverlay(
+          currentColor: '#ff0000',
+          onSelect: (_) {},
+          onDismiss: () {},
+          onRenderScene: (_) async => await createTestImage(Colors.red),
+          onSampleColor: (_, _) async => '#ff0000',
+          canvasSize: const Size(100, 100),
+        ),
+      );
 
       expect(find.byIcon(Icons.colorize), findsOneWidget);
     });
 
-    testWidgets('eyedropper button hidden when onRenderScene is null',
-        (tester) async {
-      await tester.pumpWidget(buildOverlay(
-        currentColor: '#ff0000',
-        onSelect: (_) {},
-        onDismiss: () {},
-      ));
+    testWidgets('eyedropper button hidden when onRenderScene is null', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildOverlay(
+          currentColor: '#ff0000',
+          onSelect: (_) {},
+          onDismiss: () {},
+        ),
+      );
 
       expect(find.byIcon(Icons.colorize), findsNothing);
     });
 
-    testWidgets('tapping eyedropper button activates eyedropper mode',
-        (tester) async {
-      await tester.pumpWidget(buildOverlay(
-        currentColor: '#ff0000',
-        onSelect: (_) {},
-        onDismiss: () {},
-        onRenderScene: (_) async => await createTestImage(Colors.red),
-        onSampleColor: (_, _) async => '#ff0000',
-        canvasSize: const Size(100, 100),
-      ));
+    testWidgets('tapping eyedropper button activates eyedropper mode', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildOverlay(
+          currentColor: '#ff0000',
+          onSelect: (_) {},
+          onDismiss: () {},
+          onRenderScene: (_) async => await createTestImage(Colors.red),
+          onSampleColor: (_, _) async => '#ff0000',
+          canvasSize: const Size(100, 100),
+        ),
+      );
 
       await tester.tap(find.byIcon(Icons.colorize));
       await tester.pumpAndSettle();
@@ -100,14 +116,16 @@ void main() {
     });
 
     testWidgets('I key toggles eyedropper mode', (tester) async {
-      await tester.pumpWidget(buildOverlay(
-        currentColor: '#ff0000',
-        onSelect: (_) {},
-        onDismiss: () {},
-        onRenderScene: (_) async => await createTestImage(Colors.red),
-        onSampleColor: (_, _) async => '#ff0000',
-        canvasSize: const Size(100, 100),
-      ));
+      await tester.pumpWidget(
+        buildOverlay(
+          currentColor: '#ff0000',
+          onSelect: (_) {},
+          onDismiss: () {},
+          onRenderScene: (_) async => await createTestImage(Colors.red),
+          onSampleColor: (_, _) async => '#ff0000',
+          canvasSize: const Size(100, 100),
+        ),
+      );
 
       // Press I to activate
       await tester.sendKeyEvent(LogicalKeyboardKey.keyI);
@@ -122,17 +140,20 @@ void main() {
       expect(eyedropperButtonColor(tester), Colors.transparent);
     });
 
-    testWidgets('Escape deactivates eyedropper without closing palette',
-        (tester) async {
+    testWidgets('Escape deactivates eyedropper without closing palette', (
+      tester,
+    ) async {
       var dismissed = false;
-      await tester.pumpWidget(buildOverlay(
-        currentColor: '#ff0000',
-        onSelect: (_) {},
-        onDismiss: () => dismissed = true,
-        onRenderScene: (_) async => await createTestImage(Colors.red),
-        onSampleColor: (_, _) async => '#ff0000',
-        canvasSize: const Size(100, 100),
-      ));
+      await tester.pumpWidget(
+        buildOverlay(
+          currentColor: '#ff0000',
+          onSelect: (_) {},
+          onDismiss: () => dismissed = true,
+          onRenderScene: (_) async => await createTestImage(Colors.red),
+          onSampleColor: (_, _) async => '#ff0000',
+          canvasSize: const Size(100, 100),
+        ),
+      );
 
       // Activate eyedropper
       await tester.tap(find.byIcon(Icons.colorize));
@@ -153,18 +174,20 @@ void main() {
 
   group('ColorPickerButton eyedropper passthrough', () {
     testWidgets('passes eyedropper callbacks to overlay', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: ColorPickerButton(
-            color: '#ff0000',
-            isActive: false,
-            onColorSelected: (_) {},
-            onRenderScene: (_) async => await createTestImage(Colors.red),
-            onSampleColor: (_, _) async => '#ff0000',
-            canvasSize: const Size(100, 100),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ColorPickerButton(
+              color: '#ff0000',
+              isActive: false,
+              onColorSelected: (_) {},
+              onRenderScene: (_) async => await createTestImage(Colors.red),
+              onSampleColor: (_, _) async => '#ff0000',
+              canvasSize: const Size(100, 100),
+            ),
           ),
         ),
-      ));
+      );
 
       // Tap the button to open the palette
       await tester.tap(find.byType(ColorPickerButton));
@@ -178,17 +201,19 @@ void main() {
   group('ColorPickerButton autoOpen', () {
     testWidgets('autoOpen opens palette popup automatically', (tester) async {
       var autoOpenedCalled = false;
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: ColorPickerButton(
-            color: '#ff0000',
-            isActive: false,
-            onColorSelected: (_) {},
-            autoOpen: true,
-            onAutoOpened: () => autoOpenedCalled = true,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ColorPickerButton(
+              color: '#ff0000',
+              isActive: false,
+              onColorSelected: (_) {},
+              autoOpen: true,
+              onAutoOpened: () => autoOpenedCalled = true,
+            ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Palette should be visible (has the hex input)

@@ -61,10 +61,7 @@ void main() {
 
   group('Handle hit-testing', () {
     test('hit-test on bottomRight resize handle detects resize', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       // bottomRight handle is at (306, 206) — padded 6px from element edge
       tool.onPointerDown(const Point(306, 206), ctx);
       // Drag enough to start
@@ -76,10 +73,7 @@ void main() {
     });
 
     test('hit-test on topLeft resize handle detects resize', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       // topLeft handle is at (100, 100)
       tool.onPointerDown(const Point(100, 100), ctx);
       final result = tool.onPointerMove(const Point(80, 80), ctx);
@@ -90,10 +84,7 @@ void main() {
     });
 
     test('hit-test on rotation handle returns rotation', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       // Rotation handle is at (200, 80) — 20 above topCenter
       tool.onPointerDown(const Point(200, 80), ctx);
       final result = tool.onPointerMove(const Point(220, 80), ctx);
@@ -115,22 +106,23 @@ void main() {
       expect(result, isA<UpdateElementResult>());
       final updated = (result! as UpdateElementResult).element as LineElement;
       // First point moved to absolute (60, 60)
-      final absFirst = Point(updated.x + updated.points[0].x,
-          updated.y + updated.points[0].y);
+      final absFirst = Point(
+        updated.x + updated.points[0].x,
+        updated.y + updated.points[0].y,
+      );
       expect(absFirst.x, closeTo(60, 0.1));
       expect(absFirst.y, closeTo(60, 0.1));
       // Second point stays at absolute (150, 150)
-      final absSecond = Point(updated.x + updated.points[1].x,
-          updated.y + updated.points[1].y);
+      final absSecond = Point(
+        updated.x + updated.points[1].x,
+        updated.y + updated.points[1].y,
+      );
       expect(absSecond.x, closeTo(150, 0.1));
       expect(absSecond.y, closeTo(150, 0.1));
     });
 
     test('hit-test on element body does not trigger handle mode', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       // Center of element is at (200, 150) — far from any handle
       tool.onPointerDown(const Point(200, 150), ctx);
       final result = tool.onPointerMove(const Point(220, 170), ctx);
@@ -174,10 +166,7 @@ void main() {
     });
 
     test('no hit when point is far from handles', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       // Point at (500, 500) is far from element and all handles
       tool.onPointerDown(const Point(500, 500), ctx);
       tool.onPointerMove(const Point(520, 520), ctx);
@@ -186,36 +175,43 @@ void main() {
       expect(tool.overlay!.marqueeRect, isNotNull);
     });
 
-    test('priority: point handle over resize handle for line endpoint at corner', () {
-      // Create a line whose first point is at the element's origin (like topLeft)
-      final lineAtCorner = LineElement(
-        id: const ElementId('lc1'),
-        x: 100,
-        y: 100,
-        width: 100,
-        height: 100,
-        points: [const Point(0, 0), const Point(100, 100)],
-      );
-      final ctx = contextWith(
-        elements: [lineAtCorner],
-        selectedIds: {lineAtCorner.id},
-        isEditingLinear: true,
-      );
-      // Click at the first point (100, 100) which is also where a "topLeft" handle would be
-      tool.onPointerDown(const Point(100, 100), ctx);
-      final result = tool.onPointerMove(const Point(110, 110), ctx);
-      expect(result, isA<UpdateElementResult>());
-      final updated = (result! as UpdateElementResult).element as LineElement;
-      // Should be a point drag, not a resize — check absolute positions
-      final absFirst = Point(updated.x + updated.points[0].x,
-          updated.y + updated.points[0].y);
-      expect(absFirst.x, closeTo(110, 0.1));
-      expect(absFirst.y, closeTo(110, 0.1));
-      final absSecond = Point(updated.x + updated.points[1].x,
-          updated.y + updated.points[1].y);
-      expect(absSecond.x, closeTo(200, 0.1));
-      expect(absSecond.y, closeTo(200, 0.1));
-    });
+    test(
+      'priority: point handle over resize handle for line endpoint at corner',
+      () {
+        // Create a line whose first point is at the element's origin (like topLeft)
+        final lineAtCorner = LineElement(
+          id: const ElementId('lc1'),
+          x: 100,
+          y: 100,
+          width: 100,
+          height: 100,
+          points: [const Point(0, 0), const Point(100, 100)],
+        );
+        final ctx = contextWith(
+          elements: [lineAtCorner],
+          selectedIds: {lineAtCorner.id},
+          isEditingLinear: true,
+        );
+        // Click at the first point (100, 100) which is also where a "topLeft" handle would be
+        tool.onPointerDown(const Point(100, 100), ctx);
+        final result = tool.onPointerMove(const Point(110, 110), ctx);
+        expect(result, isA<UpdateElementResult>());
+        final updated = (result! as UpdateElementResult).element as LineElement;
+        // Should be a point drag, not a resize — check absolute positions
+        final absFirst = Point(
+          updated.x + updated.points[0].x,
+          updated.y + updated.points[0].y,
+        );
+        expect(absFirst.x, closeTo(110, 0.1));
+        expect(absFirst.y, closeTo(110, 0.1));
+        final absSecond = Point(
+          updated.x + updated.points[1].x,
+          updated.y + updated.points[1].y,
+        );
+        expect(absSecond.x, closeTo(200, 0.1));
+        expect(absSecond.y, closeTo(200, 0.1));
+      },
+    );
   });
 
   group('Rotated element resize', () {
@@ -266,65 +262,65 @@ void main() {
       expect(anchorAfter.y, closeTo(anchorBefore.y, 1.0));
     });
 
-    test('resize rotated element via topCenter preserves bottomCenter anchor', () {
-      final ctx = contextWith(
-        elements: [rotatedRect],
-        selectedIds: {rotatedRect.id},
-      );
-      // Record the world-space position of the bottomCenter before resize
-      final anchorBefore = worldCorner(rotatedRect, 0, 1);
+    test(
+      'resize rotated element via topCenter preserves bottomCenter anchor',
+      () {
+        final ctx = contextWith(
+          elements: [rotatedRect],
+          selectedIds: {rotatedRect.id},
+        );
+        // Record the world-space position of the bottomCenter before resize
+        final anchorBefore = worldCorner(rotatedRect, 0, 1);
 
-      // topCenter handle at (200, 100) in unrotated space
-      final cos45 = math.cos(math.pi / 4);
-      final sin45 = math.sin(math.pi / 4);
-      final handleX = 200 + 50 * sin45;
-      final handleY = 150 - 50 * cos45;
-      tool.onPointerDown(Point(handleX, handleY), ctx);
+        // topCenter handle at (200, 100) in unrotated space
+        final cos45 = math.cos(math.pi / 4);
+        final sin45 = math.sin(math.pi / 4);
+        final handleX = 200 + 50 * sin45;
+        final handleY = 150 - 50 * cos45;
+        tool.onPointerDown(Point(handleX, handleY), ctx);
 
-      // Drag outward from center (extending the top edge)
-      final dirX = handleX - 200;
-      final dirY = handleY - 150;
-      final dirLen = math.sqrt(dirX * dirX + dirY * dirY);
-      final dragX = handleX + (dirX / dirLen) * 20;
-      final dragY = handleY + (dirY / dirLen) * 20;
-      final result = tool.onPointerMove(Point(dragX, dragY), ctx);
-      expect(result, isA<UpdateElementResult>());
-      final updated = (result! as UpdateElementResult).element;
+        // Drag outward from center (extending the top edge)
+        final dirX = handleX - 200;
+        final dirY = handleY - 150;
+        final dirLen = math.sqrt(dirX * dirX + dirY * dirY);
+        final dragX = handleX + (dirX / dirLen) * 20;
+        final dragY = handleY + (dirY / dirLen) * 20;
+        final result = tool.onPointerMove(Point(dragX, dragY), ctx);
+        expect(result, isA<UpdateElementResult>());
+        final updated = (result! as UpdateElementResult).element;
 
-      // Height should increase
-      expect(updated.height, greaterThan(rotatedRect.height));
+        // Height should increase
+        expect(updated.height, greaterThan(rotatedRect.height));
 
-      // The bottomCenter anchor should remain at the same world position
-      final anchorAfter = worldCorner(updated, 0, 1);
-      expect(anchorAfter.x, closeTo(anchorBefore.x, 1.0));
-      expect(anchorAfter.y, closeTo(anchorBefore.y, 1.0));
-    });
+        // The bottomCenter anchor should remain at the same world position
+        final anchorAfter = worldCorner(updated, 0, 1);
+        expect(anchorAfter.x, closeTo(anchorBefore.x, 1.0));
+        expect(anchorAfter.y, closeTo(anchorBefore.y, 1.0));
+      },
+    );
 
-    test('resize non-rotated element via bottomRight preserves topLeft position', () {
-      // Sanity check: non-rotated case should also preserve anchor
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
-      // bottomRight handle padded 6px from element edge
-      tool.onPointerDown(const Point(306, 206), ctx);
-      final result = tool.onPointerMove(const Point(356, 256), ctx);
-      expect(result, isA<UpdateElementResult>());
-      final updated = (result! as UpdateElementResult).element;
-      // For non-rotated, x/y should stay unchanged (topLeft is the anchor)
-      expect(updated.x, 100);
-      expect(updated.y, 100);
-      expect(updated.width, 250);
-      expect(updated.height, 150);
-    });
+    test(
+      'resize non-rotated element via bottomRight preserves topLeft position',
+      () {
+        // Sanity check: non-rotated case should also preserve anchor
+        final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
+        // bottomRight handle padded 6px from element edge
+        tool.onPointerDown(const Point(306, 206), ctx);
+        final result = tool.onPointerMove(const Point(356, 256), ctx);
+        expect(result, isA<UpdateElementResult>());
+        final updated = (result! as UpdateElementResult).element;
+        // For non-rotated, x/y should stay unchanged (topLeft is the anchor)
+        expect(updated.x, 100);
+        expect(updated.y, 100);
+        expect(updated.width, 250);
+        expect(updated.height, 150);
+      },
+    );
   });
 
   group('Single-element resize', () {
     test('drag bottomRight handle increases width and height', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       // bottomRight handle padded 6px from element edge
       tool.onPointerDown(const Point(306, 206), ctx);
       final result = tool.onPointerMove(const Point(356, 256), ctx);
@@ -337,10 +333,7 @@ void main() {
     });
 
     test('drag topLeft handle adjusts x, y, width, height', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       // topLeft handle padded 6px from element edge
       tool.onPointerDown(const Point(94, 94), ctx);
       // Drag by (-20, -30)
@@ -354,10 +347,7 @@ void main() {
     });
 
     test('drag topCenter only changes y and height', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       tool.onPointerDown(const Point(200, 100), ctx);
       final result = tool.onPointerMove(const Point(220, 80), ctx);
       expect(result, isA<UpdateElementResult>());
@@ -369,10 +359,7 @@ void main() {
     });
 
     test('drag middleRight only changes width', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       tool.onPointerDown(const Point(300, 150), ctx);
       final result = tool.onPointerMove(const Point(350, 170), ctx);
       expect(result, isA<UpdateElementResult>());
@@ -384,10 +371,7 @@ void main() {
     });
 
     test('minimum size enforced when shrinking below 10', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       // Drag bottomRight way past topLeft
       tool.onPointerDown(const Point(300, 200), ctx);
       final result = tool.onPointerMove(const Point(100, 100), ctx);
@@ -398,10 +382,7 @@ void main() {
     });
 
     test('shift+resize maintains aspect ratio', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       // rect1 is 200x100, aspect = 2:1
       tool.onPointerDown(const Point(300, 200), ctx, shift: true);
       // Drag only width significantly more than height
@@ -414,10 +395,7 @@ void main() {
     });
 
     test('resize on pointerUp returns final result', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       // bottomRight handle padded 6px from element edge
       tool.onPointerDown(const Point(306, 206), ctx);
       tool.onPointerMove(const Point(326, 226), ctx);
@@ -429,10 +407,7 @@ void main() {
     });
 
     test('drag middleLeft only changes x and width', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       tool.onPointerDown(const Point(100, 150), ctx);
       final result = tool.onPointerMove(const Point(80, 170), ctx);
       expect(result, isA<UpdateElementResult>());
@@ -444,10 +419,7 @@ void main() {
     });
 
     test('drag topRight adjusts right edge and top', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       // topRight handle padded 6px from element edge
       tool.onPointerDown(const Point(306, 94), ctx);
       final result = tool.onPointerMove(const Point(326, 74), ctx);
@@ -460,10 +432,7 @@ void main() {
     });
 
     test('drag bottomLeft adjusts left edge and bottom', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       // bottomLeft handle padded 6px from element edge
       tool.onPointerDown(const Point(94, 206), ctx);
       final result = tool.onPointerMove(const Point(74, 226), ctx);
@@ -476,10 +445,7 @@ void main() {
     });
 
     test('drag bottomCenter only changes height', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       tool.onPointerDown(const Point(200, 200), ctx);
       final result = tool.onPointerMove(const Point(220, 230), ctx);
       expect(result, isA<UpdateElementResult>());
@@ -493,10 +459,7 @@ void main() {
 
   group('Single-element rotation', () {
     test('drag rotation handle clockwise produces positive angle delta', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       // Rotation handle at (200, 80)
       tool.onPointerDown(const Point(200, 80), ctx);
       // Drag clockwise (to the right and down)
@@ -507,10 +470,7 @@ void main() {
     });
 
     test('shift+rotate snaps to 15 degree increments', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       tool.onPointerDown(const Point(200, 80), ctx, shift: true);
       // Make a large drag to produce a rotation
       final result = tool.onPointerMove(const Point(300, 150), ctx);
@@ -523,10 +483,7 @@ void main() {
     });
 
     test('rotation preserves element position and size', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       tool.onPointerDown(const Point(200, 80), ctx);
       final result = tool.onPointerMove(const Point(250, 100), ctx);
       expect(result, isA<UpdateElementResult>());
@@ -581,17 +538,10 @@ void main() {
         y: 100,
         width: 100,
         height: 50,
-        points: [
-          const Point(0, 0),
-          const Point(50, 25),
-          const Point(100, 50),
-        ],
+        points: [const Point(0, 0), const Point(50, 25), const Point(100, 50)],
         endArrowhead: Arrowhead.arrow,
       );
-      final ctx = contextWith(
-        elements: [arrow],
-        selectedIds: {arrow.id},
-      );
+      final ctx = contextWith(elements: [arrow], selectedIds: {arrow.id});
       // middleRight handle at (216, 125) — padded 16px from element edge
       tool.onPointerDown(const Point(216, 125), ctx);
       // Drag to (266, 125) → new width=150
@@ -651,16 +601,9 @@ void main() {
         y: 50,
         width: 100,
         height: 80,
-        points: [
-          const Point(0, 0),
-          const Point(50, 40),
-          const Point(100, 80),
-        ],
+        points: [const Point(0, 0), const Point(50, 40), const Point(100, 80)],
       );
-      final ctx = contextWith(
-        elements: [freedraw],
-        selectedIds: {freedraw.id},
-      );
+      final ctx = contextWith(elements: [freedraw], selectedIds: {freedraw.id});
       // middleRight handle at (150, 90) — not near any point
       tool.onPointerDown(const Point(150, 90), ctx);
       // Drag to (200, 90) → width 100→150
@@ -726,12 +669,16 @@ void main() {
       expect(result, isA<UpdateElementResult>());
       final updated = (result! as UpdateElementResult).element as LineElement;
       // Check absolute positions: first moved to (40, 30), second stays at (150, 150)
-      final absFirst = Point(updated.x + updated.points[0].x,
-          updated.y + updated.points[0].y);
+      final absFirst = Point(
+        updated.x + updated.points[0].x,
+        updated.y + updated.points[0].y,
+      );
       expect(absFirst.x, closeTo(40, 0.1));
       expect(absFirst.y, closeTo(30, 0.1));
-      final absSecond = Point(updated.x + updated.points[1].x,
-          updated.y + updated.points[1].y);
+      final absSecond = Point(
+        updated.x + updated.points[1].x,
+        updated.y + updated.points[1].y,
+      );
       expect(absSecond.x, closeTo(150, 0.1));
       expect(absSecond.y, closeTo(150, 0.1));
     });
@@ -768,53 +715,56 @@ void main() {
       expect(result, isA<UpdateElementResult>());
     });
 
-    test('point drag on rotated line preserves visual position of other points', () {
-      // Horizontal line rotated 90° CW
-      final rotatedLine = LineElement(
-        id: const ElementId('rl2'),
-        x: 100,
-        y: 100,
-        width: 200,
-        height: 0,
-        angle: math.pi / 2,
-        points: [const Point(0, 0), const Point(200, 0)],
-      );
-      final ctx = contextWith(
-        elements: [rotatedLine],
-        selectedIds: {rotatedLine.id},
-        isEditingLinear: true,
-      );
-      // Visual positions before drag:
-      // center = (200, 100), first at (200, 0), second at (200, 200)
-      tool.onPointerDown(const Point(200, 200), ctx);
-      // Drag right in screen space (+10x, 0y)
-      final result = tool.onPointerMove(const Point(210, 200), ctx);
-      expect(result, isA<UpdateElementResult>());
-      final updated = (result! as UpdateElementResult).element as LineElement;
+    test(
+      'point drag on rotated line preserves visual position of other points',
+      () {
+        // Horizontal line rotated 90° CW
+        final rotatedLine = LineElement(
+          id: const ElementId('rl2'),
+          x: 100,
+          y: 100,
+          width: 200,
+          height: 0,
+          angle: math.pi / 2,
+          points: [const Point(0, 0), const Point(200, 0)],
+        );
+        final ctx = contextWith(
+          elements: [rotatedLine],
+          selectedIds: {rotatedLine.id},
+          isEditingLinear: true,
+        );
+        // Visual positions before drag:
+        // center = (200, 100), first at (200, 0), second at (200, 200)
+        tool.onPointerDown(const Point(200, 200), ctx);
+        // Drag right in screen space (+10x, 0y)
+        final result = tool.onPointerMove(const Point(210, 200), ctx);
+        expect(result, isA<UpdateElementResult>());
+        final updated = (result! as UpdateElementResult).element as LineElement;
 
-      // Compute visual positions (rotate absLocal around center by angle)
-      final cx = updated.x + updated.width / 2;
-      final cy = updated.y + updated.height / 2;
-      final cos = math.cos(updated.angle);
-      final sin = math.sin(updated.angle);
+        // Compute visual positions (rotate absLocal around center by angle)
+        final cx = updated.x + updated.width / 2;
+        final cy = updated.y + updated.height / 2;
+        final cos = math.cos(updated.angle);
+        final sin = math.sin(updated.angle);
 
-      Point visualPos(Point relPt) {
-        final ax = updated.x + relPt.x;
-        final ay = updated.y + relPt.y;
-        final dx = ax - cx;
-        final dy = ay - cy;
-        return Point(dx * cos - dy * sin + cx, dx * sin + dy * cos + cy);
-      }
+        Point visualPos(Point relPt) {
+          final ax = updated.x + relPt.x;
+          final ay = updated.y + relPt.y;
+          final dx = ax - cx;
+          final dy = ay - cy;
+          return Point(dx * cos - dy * sin + cx, dx * sin + dy * cos + cy);
+        }
 
-      // First point (unchanged) should stay visually at (200, 0)
-      final vis0 = visualPos(updated.points[0]);
-      expect(vis0.x, closeTo(200, 1.0));
-      expect(vis0.y, closeTo(0, 1.0));
-      // Second point should have moved right by 10: visually at (210, 200)
-      final vis1 = visualPos(updated.points[1]);
-      expect(vis1.x, closeTo(210, 1.0));
-      expect(vis1.y, closeTo(200, 1.0));
-    });
+        // First point (unchanged) should stay visually at (200, 0)
+        final vis0 = visualPos(updated.points[0]);
+        expect(vis0.x, closeTo(200, 1.0));
+        expect(vis0.y, closeTo(0, 1.0));
+        // Second point should have moved right by 10: visually at (210, 200)
+        final vis1 = visualPos(updated.points[1]);
+        expect(vis1.x, closeTo(210, 1.0));
+        expect(vis1.y, closeTo(200, 1.0));
+      },
+    );
   });
 
   group('Touch mode hit radii', () {
@@ -877,10 +827,7 @@ void main() {
     });
 
     test('pointer mode: 15px from handle does not hit', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       // bottomRight handle at (306, 206) in pointer mode
       // Click 15px away: at (321, 206) — outside 8px radius
       tool.onPointerDown(const Point(321, 206), ctx);

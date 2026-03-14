@@ -67,8 +67,10 @@ void main() {
       final result = tool.onPointerUp(const Point(100, 100), context);
       final compound = result! as CompoundResult;
       expect(compound.results[1], isA<SetSelectionResult>());
-      expect((compound.results[2] as SwitchToolResult).toolType,
-          ToolType.select);
+      expect(
+        (compound.results[2] as SwitchToolResult).toolType,
+        ToolType.select,
+      );
     });
   });
 }

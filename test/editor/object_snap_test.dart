@@ -5,20 +5,24 @@ void main() {
   group('buildObjectSnapCache', () {
     test('collects positions from elements', () {
       final scene = Scene()
-          .addElement(RectangleElement(
-            id: const ElementId('r1'),
-            x: 100,
-            y: 200,
-            width: 50,
-            height: 30,
-          ))
-          .addElement(EllipseElement(
-            id: const ElementId('e1'),
-            x: 300,
-            y: 400,
-            width: 60,
-            height: 40,
-          ));
+          .addElement(
+            RectangleElement(
+              id: const ElementId('r1'),
+              x: 100,
+              y: 200,
+              width: 50,
+              height: 30,
+            ),
+          )
+          .addElement(
+            EllipseElement(
+              id: const ElementId('e1'),
+              x: 300,
+              y: 400,
+              width: 60,
+              height: 40,
+            ),
+          );
 
       final cache = buildObjectSnapCache(scene, {});
 
@@ -31,23 +35,26 @@ void main() {
 
     test('excludes specified IDs', () {
       final scene = Scene()
-          .addElement(RectangleElement(
-            id: const ElementId('r1'),
-            x: 100,
-            y: 200,
-            width: 50,
-            height: 30,
-          ))
-          .addElement(EllipseElement(
-            id: const ElementId('e1'),
-            x: 300,
-            y: 400,
-            width: 60,
-            height: 40,
-          ));
+          .addElement(
+            RectangleElement(
+              id: const ElementId('r1'),
+              x: 100,
+              y: 200,
+              width: 50,
+              height: 30,
+            ),
+          )
+          .addElement(
+            EllipseElement(
+              id: const ElementId('e1'),
+              x: 300,
+              y: 400,
+              width: 60,
+              height: 40,
+            ),
+          );
 
-      final cache =
-          buildObjectSnapCache(scene, {const ElementId('r1')});
+      final cache = buildObjectSnapCache(scene, {const ElementId('r1')});
 
       // Only e1 positions
       expect(cache.xPositions, hasLength(3));
@@ -57,22 +64,26 @@ void main() {
 
     test('excludes bound text elements', () {
       final scene = Scene()
-          .addElement(RectangleElement(
-            id: const ElementId('r1'),
-            x: 100,
-            y: 200,
-            width: 50,
-            height: 30,
-          ))
-          .addElement(TextElement(
-            id: const ElementId('t1'),
-            x: 100,
-            y: 200,
-            width: 50,
-            height: 30,
-            text: 'bound',
-            containerId: 'r1',
-          ));
+          .addElement(
+            RectangleElement(
+              id: const ElementId('r1'),
+              x: 100,
+              y: 200,
+              width: 50,
+              height: 30,
+            ),
+          )
+          .addElement(
+            TextElement(
+              id: const ElementId('t1'),
+              x: 100,
+              y: 200,
+              width: 50,
+              height: 30,
+              text: 'bound',
+              containerId: 'r1',
+            ),
+          );
 
       final cache = buildObjectSnapCache(scene, {});
 
@@ -100,9 +111,7 @@ void main() {
       cache = const ObjectSnapCache(
         xPositions: [100, 125, 150],
         yPositions: [200, 215, 230],
-        sourceBounds: [
-          Bounds(Point(100, 200), DrawSize(50, 30)),
-        ],
+        sourceBounds: [Bounds(Point(100, 200), DrawSize(50, 30))],
       );
     });
 

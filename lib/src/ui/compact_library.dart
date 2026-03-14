@@ -22,8 +22,7 @@ void showCompactLibrary(
       builder: (ctx, scrollController) => Container(
         decoration: BoxDecoration(
           color: Theme.of(ctx).colorScheme.surface,
-          borderRadius:
-              const BorderRadius.vertical(top: Radius.circular(16)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
         ),
         child: Column(
           children: [
@@ -39,14 +38,12 @@ void showCompactLibrary(
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
                   const Text(
                     'Library',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 16),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   const Spacer(),
                   if (onImportLibrary != null)
@@ -93,9 +90,8 @@ void showCompactLibrary(
                       child: Text(
                         'No library items.',
                         style: TextStyle(
-                            color: Theme.of(ctx)
-                                .colorScheme
-                                .onSurfaceVariant),
+                          color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     )
                   : ListView.builder(
@@ -109,10 +105,9 @@ void showCompactLibrary(
                             '${item.elements.length} element${item.elements.length == 1 ? '' : 's'}',
                           ),
                           onTap: () {
-                            final box = context.findRenderObject()
-                                as RenderBox?;
-                            final size =
-                                box?.size ?? const Size(800, 600);
+                            final box =
+                                context.findRenderObject() as RenderBox?;
+                            final size = box?.size ?? const Size(800, 600);
                             controller.placeLibraryItem(item, size);
                             Navigator.pop(ctx);
                           },

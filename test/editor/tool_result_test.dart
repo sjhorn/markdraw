@@ -1,4 +1,3 @@
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:markdraw/markdraw.dart';
 
@@ -6,20 +5,23 @@ void main() {
   group('ToolType', () {
     test('has all 12 values', () {
       expect(ToolType.values.length, 12);
-      expect(ToolType.values, containsAll([
-        ToolType.select,
-        ToolType.rectangle,
-        ToolType.ellipse,
-        ToolType.diamond,
-        ToolType.line,
-        ToolType.arrow,
-        ToolType.freedraw,
-        ToolType.text,
-        ToolType.hand,
-        ToolType.frame,
-        ToolType.eraser,
-        ToolType.laser,
-      ]));
+      expect(
+        ToolType.values,
+        containsAll([
+          ToolType.select,
+          ToolType.rectangle,
+          ToolType.ellipse,
+          ToolType.diamond,
+          ToolType.line,
+          ToolType.arrow,
+          ToolType.freedraw,
+          ToolType.text,
+          ToolType.hand,
+          ToolType.frame,
+          ToolType.eraser,
+          ToolType.laser,
+        ]),
+      );
     });
   });
 
@@ -185,18 +187,18 @@ void main() {
 
     test('true for RemoveElementResult', () {
       expect(
-          isSceneChangingResult(RemoveElementResult(const ElementId('r1'))),
-          isTrue);
+        isSceneChangingResult(RemoveElementResult(const ElementId('r1'))),
+        isTrue,
+      );
     });
 
     test('false for non-scene-changing results', () {
       expect(isSceneChangingResult(SetSelectionResult({})), isFalse);
       expect(
-          isSceneChangingResult(
-              UpdateViewportResult(const ViewportState())),
-          isFalse);
-      expect(
-          isSceneChangingResult(SwitchToolResult(ToolType.select)), isFalse);
+        isSceneChangingResult(UpdateViewportResult(const ViewportState())),
+        isFalse,
+      );
+      expect(isSceneChangingResult(SwitchToolResult(ToolType.select)), isFalse);
       expect(isSceneChangingResult(SetClipboardResult([])), isFalse);
     });
 

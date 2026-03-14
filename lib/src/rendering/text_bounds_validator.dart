@@ -54,8 +54,10 @@ class TextBoundsValidator {
       );
     } else {
       // Fixed width — only expand height
-      final (_, measuredH) =
-          TextRenderer.measure(element, maxWidth: element.width);
+      final (_, measuredH) = TextRenderer.measure(
+        element,
+        maxWidth: element.width,
+      );
       if (measuredH <= element.height) return element;
 
       return element.copyWith(height: measuredH.ceilToDouble());

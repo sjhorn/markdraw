@@ -64,8 +64,8 @@ void main() {
       final result = tool.onPointerUp(const Point(50, 80), context);
 
       final compound = result! as CompoundResult;
-      final freedraw = (compound.results[0] as AddElementResult).element
-          as FreedrawElement;
+      final freedraw =
+          (compound.results[0] as AddElementResult).element as FreedrawElement;
       expect(freedraw.simulatePressure, isTrue);
     });
 
@@ -75,8 +75,8 @@ void main() {
       final result = tool.onPointerUp(const Point(150, 200), context);
 
       final compound = result! as CompoundResult;
-      final freedraw = (compound.results[0] as AddElementResult).element
-          as FreedrawElement;
+      final freedraw =
+          (compound.results[0] as AddElementResult).element as FreedrawElement;
       expect(freedraw.points[0], const Point(0, 0));
       expect(freedraw.points[1], const Point(100, 100));
     });

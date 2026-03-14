@@ -3,33 +3,25 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:markdraw/markdraw.dart';
 
-LineElement _closedLine({
-  String id = 'l1',
-  List<Point>? points,
-}) =>
-    LineElement(
-      id: ElementId(id),
-      x: 0,
-      y: 0,
-      width: 100,
-      height: 100,
-      points: points ??
-          const [Point(0, 0), Point(100, 0), Point(50, 100), Point(0, 0)],
-      closed: true,
-    );
+LineElement _closedLine({String id = 'l1', List<Point>? points}) => LineElement(
+  id: ElementId(id),
+  x: 0,
+  y: 0,
+  width: 100,
+  height: 100,
+  points:
+      points ?? const [Point(0, 0), Point(100, 0), Point(50, 100), Point(0, 0)],
+  closed: true,
+);
 
-LineElement _openLine({
-  String id = 'l2',
-  List<Point>? points,
-}) =>
-    LineElement(
-      id: ElementId(id),
-      x: 0,
-      y: 0,
-      width: 100,
-      height: 100,
-      points: points ?? const [Point(0, 0), Point(100, 100)],
-    );
+LineElement _openLine({String id = 'l2', List<Point>? points}) => LineElement(
+  id: ElementId(id),
+  x: 0,
+  y: 0,
+  width: 100,
+  height: 100,
+  points: points ?? const [Point(0, 0), Point(100, 100)],
+);
 
 MarkdrawDocument _doc(List<LineElement> elements) =>
     MarkdrawDocument(sections: [SketchSection(elements)]);
@@ -55,8 +47,7 @@ void main() {
 
     test('parse closed line', () {
       final parser = SketchLineParser();
-      const text =
-          'line id=l1 points=[[0,0],[100,0],[50,100],[0,0]] closed';
+      const text = 'line id=l1 points=[[0,0],[100,0],[50,100],[0,0]] closed';
       final result = parser.parseLine(text, 1);
 
       expect(result.value, isA<LineElement>());

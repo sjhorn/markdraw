@@ -4,10 +4,11 @@ import 'package:flutter/material.dart' hide Element, SelectionOverlay;
 
 import 'package:markdraw/markdraw.dart' hide TextAlign;
 
-
 /// Shows compact property panel as a bottom sheet.
 void showCompactPropertyPanel(
-    BuildContext context, MarkdrawController controller) {
+  BuildContext context,
+  MarkdrawController controller,
+) {
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -27,15 +28,18 @@ void showCompactPropertyPanel(
           final bt = controller.editorState.scene.findBoundText(e.id);
           if (bt != null) boundText.add(bt);
         }
-        var style = PropertyPanelState.fromElements(elements,
-            boundTextElements: boundText);
+        var style = PropertyPanelState.fromElements(
+          elements,
+          boundTextElements: boundText,
+        );
         // When editing bound text, show the text's strokeColor instead of the
         // parent shape's so the color picker reflects the text color.
         if (isEditingText && boundText.length == 1) {
           style = style.copyWith(strokeColor: boundText.first.strokeColor);
         }
         final isLocked = style.locked == true;
-        final showFullTextProps = style.hasText &&
+        final showFullTextProps =
+            style.hasText &&
             (!style.hasArrowBoundText ||
                 style.hasShapeBoundText ||
                 elements.whereType<TextElement>().isNotEmpty);
@@ -46,8 +50,9 @@ void showCompactPropertyPanel(
           child: Container(
             decoration: BoxDecoration(
               color: cs.surface,
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
             ),
             child: ListView(
               controller: scrollController,

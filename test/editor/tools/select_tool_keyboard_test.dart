@@ -43,10 +43,7 @@ void main() {
 
   group('Delete', () {
     test('delete removes single selected element', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       final result = tool.onKeyEvent('Delete', context: ctx);
       expect(result, isA<CompoundResult>());
       final compound = result! as CompoundResult;
@@ -55,7 +52,9 @@ void main() {
       // Should also clear selection
       expect(compound.results.last, isA<SetSelectionResult>());
       expect(
-          (compound.results.last as SetSelectionResult).selectedIds, isEmpty);
+        (compound.results.last as SetSelectionResult).selectedIds,
+        isEmpty,
+      );
     });
 
     test('delete removes all selected elements (multi)', () {
@@ -67,8 +66,9 @@ void main() {
       expect(result, isA<CompoundResult>());
       final compound = result! as CompoundResult;
       // Should have 2 RemoveElementResults + 1 SetSelectionResult
-      final removes =
-          compound.results.whereType<RemoveElementResult>().toList();
+      final removes = compound.results
+          .whereType<RemoveElementResult>()
+          .toList();
       expect(removes, hasLength(2));
       expect(removes.map((r) => r.id).toSet(), {rect1.id, rect2.id});
     });
@@ -80,10 +80,7 @@ void main() {
     });
 
     test('backspace also deletes', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       final result = tool.onKeyEvent('Backspace', context: ctx);
       expect(result, isA<CompoundResult>());
     });
@@ -91,10 +88,7 @@ void main() {
 
   group('Duplicate', () {
     test('ctrl+d creates new elements at offset', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       final result = tool.onKeyEvent('d', ctrl: true, context: ctx);
       expect(result, isA<CompoundResult>());
       final compound = result! as CompoundResult;
@@ -138,8 +132,7 @@ void main() {
       );
       final result = tool.onKeyEvent('d', ctrl: true, context: ctx);
       final compound = result! as CompoundResult;
-      final selection =
-          compound.results.whereType<SetSelectionResult>().first;
+      final selection = compound.results.whereType<SetSelectionResult>().first;
       final adds = compound.results.whereType<AddElementResult>().toList();
       expect(selection.selectedIds, hasLength(2));
       for (final add in adds) {
@@ -153,17 +146,13 @@ void main() {
       final ctx = contextWith(elements: [rect1, rect2]);
       final result = tool.onKeyEvent('a', ctrl: true, context: ctx);
       expect(result, isA<SetSelectionResult>());
-      expect((result! as SetSelectionResult).selectedIds,
-          {rect1.id, rect2.id});
+      expect((result! as SetSelectionResult).selectedIds, {rect1.id, rect2.id});
     });
   });
 
   group('Arrow key nudge', () {
     test('arrow right nudges x+1', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       final result = tool.onKeyEvent('ArrowRight', context: ctx);
       expect(result, isA<UpdateElementResult>());
       final updated = (result! as UpdateElementResult).element;
@@ -172,10 +161,7 @@ void main() {
     });
 
     test('arrow left nudges x-1', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       final result = tool.onKeyEvent('ArrowLeft', context: ctx);
       expect(result, isA<UpdateElementResult>());
       final updated = (result! as UpdateElementResult).element;
@@ -183,10 +169,7 @@ void main() {
     });
 
     test('arrow up nudges y-1', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       final result = tool.onKeyEvent('ArrowUp', context: ctx);
       expect(result, isA<UpdateElementResult>());
       final updated = (result! as UpdateElementResult).element;
@@ -194,10 +177,7 @@ void main() {
     });
 
     test('arrow down nudges y+1', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       final result = tool.onKeyEvent('ArrowDown', context: ctx);
       expect(result, isA<UpdateElementResult>());
       final updated = (result! as UpdateElementResult).element;
@@ -205,12 +185,8 @@ void main() {
     });
 
     test('shift+arrow right nudges x+10', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
-      final result =
-          tool.onKeyEvent('ArrowRight', shift: true, context: ctx);
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
+      final result = tool.onKeyEvent('ArrowRight', shift: true, context: ctx);
       expect(result, isA<UpdateElementResult>());
       final updated = (result! as UpdateElementResult).element;
       expect(updated.x, rect1.x + 10);
@@ -244,10 +220,7 @@ void main() {
 
   group('Copy/Paste/Cut', () {
     test('ctrl+c copies elements to clipboard', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       final result = tool.onKeyEvent('c', ctrl: true, context: ctx);
       expect(result, isA<SetClipboardResult>());
       final clipboard = (result! as SetClipboardResult).elements;
@@ -256,10 +229,7 @@ void main() {
     });
 
     test('ctrl+v pastes from clipboard with new IDs', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        clipboard: [rect1],
-      );
+      final ctx = contextWith(elements: [rect1], clipboard: [rect1]);
       final result = tool.onKeyEvent('v', ctrl: true, context: ctx);
       expect(result, isA<CompoundResult>());
       final compound = result! as CompoundResult;
@@ -271,10 +241,7 @@ void main() {
     });
 
     test('paste preserves element properties', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        clipboard: [rect1],
-      );
+      final ctx = contextWith(elements: [rect1], clipboard: [rect1]);
       final result = tool.onKeyEvent('v', ctrl: true, context: ctx);
       final compound = result! as CompoundResult;
       final added = compound.results.whereType<AddElementResult>().first;
@@ -284,10 +251,7 @@ void main() {
     });
 
     test('ctrl+x cuts: removes originals and stores in clipboard', () {
-      final ctx = contextWith(
-        elements: [rect1],
-        selectedIds: {rect1.id},
-      );
+      final ctx = contextWith(elements: [rect1], selectedIds: {rect1.id});
       final result = tool.onKeyEvent('x', ctrl: true, context: ctx);
       expect(result, isA<CompoundResult>());
       final compound = result! as CompoundResult;
@@ -322,12 +286,10 @@ void main() {
       final result1 = tool.onKeyEvent('v', ctrl: true, context: ctx);
       final result2 = tool.onKeyEvent('v', ctrl: true, context: ctx);
 
-      final adds1 = (result1! as CompoundResult)
-          .results
+      final adds1 = (result1! as CompoundResult).results
           .whereType<AddElementResult>()
           .toList();
-      final adds2 = (result2! as CompoundResult)
-          .results
+      final adds2 = (result2! as CompoundResult).results
           .whereType<AddElementResult>()
           .toList();
 

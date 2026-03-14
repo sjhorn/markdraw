@@ -23,8 +23,7 @@ class ArrowheadRenderer {
       Arrowhead.diamond || Arrowhead.diamondOutline => 12.0,
       Arrowhead.crowfootOne ||
       Arrowhead.crowfootMany ||
-      Arrowhead.crowfootOneOrMany =>
-        20.0,
+      Arrowhead.crowfootOneOrMany => 20.0,
       _ => 15.0, // bar, triangle, triangleOutline, dot, circle, circleOutline
     };
   }
@@ -80,8 +79,11 @@ class ArrowheadRenderer {
       Arrowhead.diamondOutline => _buildDiamondPath(tip, angle, size),
       Arrowhead.crowfootOne => _buildCrowfootOnePath(tip, angle, size),
       Arrowhead.crowfootMany => _buildCrowfootManyPath(tip, angle, size),
-      Arrowhead.crowfootOneOrMany =>
-        _buildCrowfootOneOrManyPath(tip, angle, size),
+      Arrowhead.crowfootOneOrMany => _buildCrowfootOneOrManyPath(
+        tip,
+        angle,
+        size,
+      ),
     };
   }
 
@@ -133,10 +135,7 @@ class ArrowheadRenderer {
   static Path _buildCirclePath(Point tip, double size, double strokeWidth) {
     final radius = (size + strokeWidth - 2) / 2;
     return Path()
-      ..addOval(Rect.fromCircle(
-        center: Offset(tip.x, tip.y),
-        radius: radius,
-      ));
+      ..addOval(Rect.fromCircle(center: Offset(tip.x, tip.y), radius: radius));
   }
 
   /// Diamond (4-point polygon): tip → right → back → left.
@@ -202,7 +201,10 @@ class ArrowheadRenderer {
 
   /// Crow's foot "one or many": V-fork + bar.
   static Path _buildCrowfootOneOrManyPath(
-      Point tip, double angle, double size) {
+    Point tip,
+    double angle,
+    double size,
+  ) {
     final manyPath = _buildCrowfootManyPath(tip, angle, size);
     final onePath = _buildCrowfootOnePath(tip, angle, size);
     return manyPath..addPath(onePath, Offset.zero);
@@ -211,7 +213,12 @@ class ArrowheadRenderer {
   /// Rotates point (px, py) around center (cx, cy) by [radians].
   /// Returns the new x coordinate.
   static double _rotateX(
-      double px, double py, double cx, double cy, double radians) {
+    double px,
+    double py,
+    double cx,
+    double cy,
+    double radians,
+  ) {
     final cos = math.cos(radians);
     final sin = math.sin(radians);
     return cx + (px - cx) * cos - (py - cy) * sin;
@@ -220,7 +227,12 @@ class ArrowheadRenderer {
   /// Rotates point (px, py) around center (cx, cy) by [radians].
   /// Returns the new y coordinate.
   static double _rotateY(
-      double px, double py, double cx, double cy, double radians) {
+    double px,
+    double py,
+    double cx,
+    double cy,
+    double radians,
+  ) {
     final cos = math.cos(radians);
     final sin = math.sin(radians);
     return cy + (px - cx) * sin + (py - cy) * cos;

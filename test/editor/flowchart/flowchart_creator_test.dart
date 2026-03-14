@@ -11,7 +11,10 @@ void main() {
       creator = FlowchartCreator();
       startNode = RectangleElement(
         id: const ElementId('start'),
-        x: 100, y: 100, width: 200, height: 100,
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 100,
       );
       scene = Scene().addElement(startNode);
     });

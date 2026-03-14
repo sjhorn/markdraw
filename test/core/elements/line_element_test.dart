@@ -82,7 +82,12 @@ void main() {
           y: 0,
           width: 100,
           height: 100,
-          points: const [Point(0, 0), Point(100, 0), Point(50, 100), Point(0, 0)],
+          points: const [
+            Point(0, 0),
+            Point(100, 0),
+            Point(50, 100),
+            Point(0, 0),
+          ],
           closed: true,
         );
         expect(l.closed, isTrue);

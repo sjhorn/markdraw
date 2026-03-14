@@ -141,7 +141,10 @@ void main() {
       final movedImg = moved;
       expect(movedImg.fileId, 'abc12345');
       expect(movedImg.mimeType, 'image/png');
-      expect(movedImg.crop, const ImageCrop(x: 0.1, y: 0.2, width: 0.8, height: 0.6));
+      expect(
+        movedImg.crop,
+        const ImageCrop(x: 0.1, y: 0.2, width: 0.8, height: 0.6),
+      );
       expect(movedImg.imageScale, 1.5);
     });
 
@@ -177,7 +180,10 @@ void main() {
       );
       expect(updated.fileId, 'def67890');
       expect(updated.mimeType, 'image/jpeg');
-      expect(updated.crop, const ImageCrop(x: 0.1, y: 0.2, width: 0.8, height: 0.6));
+      expect(
+        updated.crop,
+        const ImageCrop(x: 0.1, y: 0.2, width: 0.8, height: 0.6),
+      );
       expect(updated.imageScale, 2.0);
       // Position preserved
       expect(updated.x, 100);

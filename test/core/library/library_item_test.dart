@@ -55,18 +55,20 @@ void main() {
 
   group('LibraryDocument', () {
     test('constructs with items list', () {
-      final doc = LibraryDocument(items: [
-        LibraryItem(id: '1', name: 'Item 1'),
-        LibraryItem(id: '2', name: 'Item 2'),
-      ]);
+      final doc = LibraryDocument(
+        items: [
+          LibraryItem(id: '1', name: 'Item 1'),
+          LibraryItem(id: '2', name: 'Item 2'),
+        ],
+      );
 
       expect(doc.items, hasLength(2));
     });
 
     test('addItem appends a new item', () {
-      final doc = LibraryDocument(items: [
-        LibraryItem(id: '1', name: 'Item 1'),
-      ]);
+      final doc = LibraryDocument(
+        items: [LibraryItem(id: '1', name: 'Item 1')],
+      );
       final updated = doc.addItem(LibraryItem(id: '2', name: 'Item 2'));
 
       expect(updated.items, hasLength(2));
@@ -76,11 +78,13 @@ void main() {
     });
 
     test('removeItem removes by id', () {
-      final doc = LibraryDocument(items: [
-        LibraryItem(id: '1', name: 'Item 1'),
-        LibraryItem(id: '2', name: 'Item 2'),
-        LibraryItem(id: '3', name: 'Item 3'),
-      ]);
+      final doc = LibraryDocument(
+        items: [
+          LibraryItem(id: '1', name: 'Item 1'),
+          LibraryItem(id: '2', name: 'Item 2'),
+          LibraryItem(id: '3', name: 'Item 3'),
+        ],
+      );
       final updated = doc.removeItem('2');
 
       expect(updated.items, hasLength(2));

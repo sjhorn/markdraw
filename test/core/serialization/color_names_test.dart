@@ -145,24 +145,28 @@ void main() {
       }
     });
 
-    test('every named color round-trips through normalize → format → normalize', () {
-      for (final entry in colorNameToHex.entries) {
-        final name = entry.key;
-        final hex = entry.value;
+    test(
+      'every named color round-trips through normalize → format → normalize',
+      () {
+        for (final entry in colorNameToHex.entries) {
+          final name = entry.key;
+          final hex = entry.value;
 
-        // name → hex → formatted name → hex again
-        final normalized = normalizeColor(name);
-        expect(normalized, hex, reason: '$name should normalize to $hex');
+          // name → hex → formatted name → hex again
+          final normalized = normalizeColor(name);
+          expect(normalized, hex, reason: '$name should normalize to $hex');
 
-        final formatted = formatColor(normalized);
-        final renormalized = normalizeColor(formatted);
-        expect(
-          renormalized,
-          hex,
-          reason: '$name → $hex → $formatted → $renormalized should round-trip to $hex',
-        );
-      }
-    });
+          final formatted = formatColor(normalized);
+          final renormalized = normalizeColor(formatted);
+          expect(
+            renormalized,
+            hex,
+            reason:
+                '$name → $hex → $formatted → $renormalized should round-trip to $hex',
+          );
+        }
+      },
+    );
 
     test('every named color hex round-trips through format → normalize', () {
       // Collect unique hex values (some names share the same hex)

@@ -1,7 +1,9 @@
 import 'package:flutter/painting.dart';
 import 'package:rough_flutter/rough_flutter.dart';
 
-import '../../core/elements/elements.dart' as core show Element, FillStyle, StrokeStyle;
+import '../../core/elements/elements.dart'
+    as core
+    show Element, FillStyle, StrokeStyle;
 import '../../core/elements/elements.dart' hide Element, FillStyle, StrokeStyle;
 
 /// Maps core [Element] string-based properties to Flutter/rough_flutter types.
@@ -48,10 +50,7 @@ class DrawStyle {
 
   /// Converts to a rough_flutter [DrawConfig].
   DrawConfig toDrawConfig() {
-    return DrawConfig.build(
-      roughness: roughness,
-      seed: seed,
-    );
+    return DrawConfig.build(roughness: roughness, seed: seed);
   }
 
   /// Returns the appropriate rough_flutter [Filler] for this style's fill.
@@ -62,14 +61,34 @@ class DrawStyle {
     final drawConfig = toDrawConfig();
     final fw = strokeWidth / 2;
     return switch (fillStyle) {
-      core.FillStyle.solid => SolidFiller(FillerConfig.build(
-          drawConfig: drawConfig, hachureGap: strokeWidth * 2, fillWeight: fw)),
-      core.FillStyle.hachure => HachureFiller(FillerConfig.build(
-          drawConfig: drawConfig, hachureGap: strokeWidth * 2, fillWeight: fw)),
-      core.FillStyle.crossHatch => CrossHatchFiller(FillerConfig.build(
-          drawConfig: drawConfig, hachureGap: strokeWidth * 3, fillWeight: fw)),
-      core.FillStyle.zigzag => ZigZagFiller(FillerConfig.build(
-          drawConfig: drawConfig, hachureGap: strokeWidth * 3, fillWeight: fw)),
+      core.FillStyle.solid => SolidFiller(
+        FillerConfig.build(
+          drawConfig: drawConfig,
+          hachureGap: strokeWidth * 2,
+          fillWeight: fw,
+        ),
+      ),
+      core.FillStyle.hachure => HachureFiller(
+        FillerConfig.build(
+          drawConfig: drawConfig,
+          hachureGap: strokeWidth * 2,
+          fillWeight: fw,
+        ),
+      ),
+      core.FillStyle.crossHatch => CrossHatchFiller(
+        FillerConfig.build(
+          drawConfig: drawConfig,
+          hachureGap: strokeWidth * 3,
+          fillWeight: fw,
+        ),
+      ),
+      core.FillStyle.zigzag => ZigZagFiller(
+        FillerConfig.build(
+          drawConfig: drawConfig,
+          hachureGap: strokeWidth * 3,
+          fillWeight: fw,
+        ),
+      ),
     };
   }
 

@@ -82,8 +82,7 @@ class ExportBounds {
       // Include frame when any of its children is in selection
       for (final e in scene.elements) {
         if (e.isDeleted) continue;
-        if (e.frameId != null &&
-            selectedIdValues.contains(e.id.value)) {
+        if (e.frameId != null && selectedIdValues.contains(e.id.value)) {
           if (!selectedIdValues.contains(e.frameId) &&
               !addedIds.contains(e.frameId)) {
             final frame = scene.getElementById(ElementId(e.frameId!));

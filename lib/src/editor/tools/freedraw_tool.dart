@@ -23,8 +23,11 @@ class FreedrawTool implements Tool {
   }
 
   @override
-  ToolResult? onPointerMove(Point point, ToolContext context,
-      {Offset? screenDelta}) {
+  ToolResult? onPointerMove(
+    Point point,
+    ToolContext context, {
+    Offset? screenDelta,
+  }) {
     if (!_isDrawing) return null;
     _points.add(point);
     return null;
@@ -42,8 +45,9 @@ class FreedrawTool implements Tool {
     final maxX = _points.map((p) => p.x).reduce(math.max);
     final maxY = _points.map((p) => p.y).reduce(math.max);
 
-    final relativePoints =
-        _points.map((p) => Point(p.x - minX, p.y - minY)).toList();
+    final relativePoints = _points
+        .map((p) => Point(p.x - minX, p.y - minY))
+        .toList();
 
     final element = FreedrawElement(
       id: ElementId.generate(),
@@ -64,7 +68,12 @@ class FreedrawTool implements Tool {
   }
 
   @override
-  ToolResult? onKeyEvent(String key, {bool shift = false, bool ctrl = false, ToolContext? context}) {
+  ToolResult? onKeyEvent(
+    String key, {
+    bool shift = false,
+    bool ctrl = false,
+    ToolContext? context,
+  }) {
     if (key == 'Escape') reset();
     return null;
   }

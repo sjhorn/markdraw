@@ -139,7 +139,8 @@ void main() {
       final scene = Scene()
           .addElement(createRect(id: 'r1', x: 0, y: 0, width: 100, height: 50))
           .addElement(
-              createRect(id: 'r2', x: 200, y: 200, width: 100, height: 50));
+            createRect(id: 'r2', x: 200, y: 200, width: 100, height: 50),
+          );
       final hit = scene.getElementAtPoint(const Point(50.0, 25.0));
       expect(hit, isNotNull);
       expect(hit!.id, const ElementId('r1'));
@@ -147,7 +148,8 @@ void main() {
 
     test('getElementAtPoint returns null when no hit', () {
       final scene = Scene().addElement(
-          createRect(id: 'r1', x: 0, y: 0, width: 100, height: 50));
+        createRect(id: 'r1', x: 0, y: 0, width: 100, height: 50),
+      );
       final hit = scene.getElementAtPoint(const Point(500.0, 500.0));
       expect(hit, isNull);
     });
@@ -160,16 +162,34 @@ void main() {
       expect(hit, isNull);
     });
 
-    test('getElementAtPoint returns topmost (last ordered) element on overlap',
-        () {
-      final scene = Scene()
-          .addElement(createRect(
-              id: 'r1', x: 0, y: 0, width: 100, height: 100, index: 'a'))
-          .addElement(createRect(
-              id: 'r2', x: 50, y: 50, width: 100, height: 100, index: 'b'));
-      final hit = scene.getElementAtPoint(const Point(75.0, 75.0));
-      expect(hit!.id, const ElementId('r2'));
-    });
+    test(
+      'getElementAtPoint returns topmost (last ordered) element on overlap',
+      () {
+        final scene = Scene()
+            .addElement(
+              createRect(
+                id: 'r1',
+                x: 0,
+                y: 0,
+                width: 100,
+                height: 100,
+                index: 'a',
+              ),
+            )
+            .addElement(
+              createRect(
+                id: 'r2',
+                x: 50,
+                y: 50,
+                width: 100,
+                height: 100,
+                index: 'b',
+              ),
+            );
+        final hit = scene.getElementAtPoint(const Point(75.0, 75.0));
+        expect(hit!.id, const ElementId('r2'));
+      },
+    );
 
     test('multiple add and remove operations', () {
       var scene = Scene();
@@ -186,12 +206,17 @@ void main() {
       test('returns matching text element', () {
         final scene = Scene()
             .addElement(createRect(id: 'r1'))
-            .addElement(TextElement(
-              id: const ElementId('t1'),
-              x: 0, y: 0, width: 100, height: 20,
-              text: 'Label',
-              containerId: 'r1',
-            ));
+            .addElement(
+              TextElement(
+                id: const ElementId('t1'),
+                x: 0,
+                y: 0,
+                width: 100,
+                height: 20,
+                text: 'Label',
+                containerId: 'r1',
+              ),
+            );
         final found = scene.findBoundText(const ElementId('r1'));
         expect(found, isNotNull);
         expect(found!.id, const ElementId('t1'));
@@ -207,12 +232,17 @@ void main() {
       test('skips deleted bound text', () {
         final scene = Scene()
             .addElement(createRect(id: 'r1'))
-            .addElement(TextElement(
-              id: const ElementId('t1'),
-              x: 0, y: 0, width: 100, height: 20,
-              text: 'Label',
-              containerId: 'r1',
-            ))
+            .addElement(
+              TextElement(
+                id: const ElementId('t1'),
+                x: 0,
+                y: 0,
+                width: 100,
+                height: 20,
+                text: 'Label',
+                containerId: 'r1',
+              ),
+            )
             .softDeleteElement(const ElementId('t1'));
         final found = scene.findBoundText(const ElementId('r1'));
         expect(found, isNull);
@@ -222,15 +252,28 @@ void main() {
     group('getElementAtPoint skips bound text', () {
       test('skips bound text and returns parent shape', () {
         final scene = Scene()
-            .addElement(createRect(
-                id: 'r1', x: 0, y: 0, width: 100, height: 100, index: 'a'))
-            .addElement(TextElement(
-              id: const ElementId('t1'),
-              x: 10, y: 10, width: 80, height: 20,
-              text: 'Label',
-              containerId: 'r1',
-              index: 'b',
-            ));
+            .addElement(
+              createRect(
+                id: 'r1',
+                x: 0,
+                y: 0,
+                width: 100,
+                height: 100,
+                index: 'a',
+              ),
+            )
+            .addElement(
+              TextElement(
+                id: const ElementId('t1'),
+                x: 10,
+                y: 10,
+                width: 80,
+                height: 20,
+                text: 'Label',
+                containerId: 'r1',
+                index: 'b',
+              ),
+            );
         final hit = scene.getElementAtPoint(const Point(50.0, 15.0));
         expect(hit, isNotNull);
         expect(hit!.id, const ElementId('r1'));
@@ -238,12 +281,17 @@ void main() {
 
       test('returns null when only bound text at point', () {
         // Bound text exists at the point, but no parent overlaps
-        final scene = Scene().addElement(TextElement(
-          id: const ElementId('t1'),
-          x: 0, y: 0, width: 100, height: 20,
-          text: 'Orphan',
-          containerId: 'r1',
-        ));
+        final scene = Scene().addElement(
+          TextElement(
+            id: const ElementId('t1'),
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 20,
+            text: 'Orphan',
+            containerId: 'r1',
+          ),
+        );
         final hit = scene.getElementAtPoint(const Point(50.0, 10.0));
         expect(hit, isNull);
       });

@@ -7,15 +7,14 @@ Element _rect({
   double y = 0,
   double w = 100,
   double h = 100,
-}) =>
-    Element(
-      id: ElementId(id),
-      type: 'rectangle',
-      x: x,
-      y: y,
-      width: w,
-      height: h,
-    );
+}) => Element(
+  id: ElementId(id),
+  type: 'rectangle',
+  x: x,
+  y: y,
+  width: w,
+  height: h,
+);
 
 ArrowElement _arrow({
   required String id,
@@ -26,17 +25,16 @@ ArrowElement _arrow({
   List<Point>? points,
   PointBinding? startBinding,
   PointBinding? endBinding,
-}) =>
-    ArrowElement(
-      id: ElementId(id),
-      x: x,
-      y: y,
-      width: w,
-      height: h,
-      points: points ?? [const Point(0, 0), Point(w, h)],
-      startBinding: startBinding,
-      endBinding: endBinding,
-    );
+}) => ArrowElement(
+  id: ElementId(id),
+  x: x,
+  y: y,
+  width: w,
+  height: h,
+  points: points ?? [const Point(0, 0), Point(w, h)],
+  startBinding: startBinding,
+  endBinding: endBinding,
+);
 
 /// Extracts all UpdateElementResult elements from a result.
 List<Element> _extractUpdates(ToolResult? result) {
@@ -51,8 +49,7 @@ List<Element> _extractUpdates(ToolResult? result) {
 }
 
 /// Simulate a point drag: pointerDown on a point handle, then move+up.
-ToolResult? _pointDrag(
-    SelectTool tool, ToolContext ctx, Point from, Point to) {
+ToolResult? _pointDrag(SelectTool tool, ToolContext ctx, Point from, Point to) {
   tool.onPointerDown(from, ctx);
   tool.onPointerMove(to, ctx);
   return tool.onPointerUp(to, ctx);
@@ -89,14 +86,22 @@ void main() {
       );
 
       // Drag the start point (at absolute 100, 50) far away
-      final result =
-          _pointDrag(tool, ctx, const Point(100, 50), const Point(500, 300));
+      final result = _pointDrag(
+        tool,
+        ctx,
+        const Point(100, 50),
+        const Point(500, 300),
+      );
       final updates = _extractUpdates(result);
 
       final arrowUpdate =
-          updates.where((e) => e.id == const ElementId('a1')).first as ArrowElement;
-      expect(arrowUpdate.startBinding, isNull,
-          reason: 'Start binding should be cleared');
+          updates.where((e) => e.id == const ElementId('a1')).first
+              as ArrowElement;
+      expect(
+        arrowUpdate.startBinding,
+        isNull,
+        reason: 'Start binding should be cleared',
+      );
     });
 
     test('drag end near shape → bind', () {
@@ -119,14 +124,22 @@ void main() {
       );
 
       // Drag the last point (at absolute 200, 50) near rect's left edge
-      final result =
-          _pointDrag(tool, ctx, const Point(200, 50), const Point(405, 50));
+      final result = _pointDrag(
+        tool,
+        ctx,
+        const Point(200, 50),
+        const Point(405, 50),
+      );
       final updates = _extractUpdates(result);
 
       final arrowUpdate =
-          updates.where((e) => e.id == const ElementId('a1')).first as ArrowElement;
-      expect(arrowUpdate.endBinding, isNotNull,
-          reason: 'End binding should be set');
+          updates.where((e) => e.id == const ElementId('a1')).first
+              as ArrowElement;
+      expect(
+        arrowUpdate.endBinding,
+        isNotNull,
+        reason: 'End binding should be set',
+      );
       expect(arrowUpdate.endBinding!.elementId, 'r1');
     });
 
@@ -145,8 +158,10 @@ void main() {
           fixedPoint: Point(1.0, 0.5),
         ),
       );
-      final scene =
-          Scene().addElement(rect1).addElement(rect2).addElement(arrow);
+      final scene = Scene()
+          .addElement(rect1)
+          .addElement(rect2)
+          .addElement(arrow);
       final ctx = ToolContext(
         scene: scene,
         viewport: const ViewportState(),
@@ -155,15 +170,23 @@ void main() {
       );
 
       // Drag start point near rect2's right edge
-      final result =
-          _pointDrag(tool, ctx, const Point(100, 50), const Point(95, 350));
+      final result = _pointDrag(
+        tool,
+        ctx,
+        const Point(100, 50),
+        const Point(95, 350),
+      );
       final updates = _extractUpdates(result);
 
       final arrowUpdate =
-          updates.where((e) => e.id == const ElementId('a1')).first as ArrowElement;
+          updates.where((e) => e.id == const ElementId('a1')).first
+              as ArrowElement;
       expect(arrowUpdate.startBinding, isNotNull);
-      expect(arrowUpdate.startBinding!.elementId, 'r2',
-          reason: 'Should rebind to rect2');
+      expect(
+        arrowUpdate.startBinding!.elementId,
+        'r2',
+        reason: 'Should rebind to rect2',
+      );
     });
 
     test('drag middle point → no binding change', () {
@@ -190,12 +213,17 @@ void main() {
       );
 
       // Drag the middle point (at absolute 200, 50) somewhere
-      final result =
-          _pointDrag(tool, ctx, const Point(200, 50), const Point(250, 80));
+      final result = _pointDrag(
+        tool,
+        ctx,
+        const Point(200, 50),
+        const Point(250, 80),
+      );
       final updates = _extractUpdates(result);
 
       final arrowUpdate =
-          updates.where((e) => e.id == const ElementId('a1')).first as ArrowElement;
+          updates.where((e) => e.id == const ElementId('a1')).first
+              as ArrowElement;
       // Binding should be unchanged — middle points don't affect bindings
       expect(arrowUpdate.startBinding, isNotNull);
       expect(arrowUpdate.startBinding!.elementId, 'r1');
@@ -224,11 +252,16 @@ void main() {
       );
 
       // Step 1: Drag start point away to unbind
-      final result1 =
-          _pointDrag(tool, ctx, const Point(100, 50), const Point(500, 300));
+      final result1 = _pointDrag(
+        tool,
+        ctx,
+        const Point(100, 50),
+        const Point(500, 300),
+      );
       final updates1 = _extractUpdates(result1);
       final unboundArrow =
-          updates1.where((e) => e.id == const ElementId('a1')).first as ArrowElement;
+          updates1.where((e) => e.id == const ElementId('a1')).first
+              as ArrowElement;
       expect(unboundArrow.startBinding, isNull);
 
       // Step 2: Now move the rect with the unbound arrow in scene
@@ -245,10 +278,14 @@ void main() {
 
       final updates2 = _extractUpdates(result2);
       // Arrow should NOT be updated since it's no longer bound
-      final arrowUpdate2 =
-          updates2.where((e) => e.id == const ElementId('a1')).firstOrNull;
-      expect(arrowUpdate2, isNull,
-          reason: 'Unbound arrow should not be affected by rect move');
+      final arrowUpdate2 = updates2
+          .where((e) => e.id == const ElementId('a1'))
+          .firstOrNull;
+      expect(
+        arrowUpdate2,
+        isNull,
+        reason: 'Unbound arrow should not be affected by rect move',
+      );
     });
 
     test('overlay shows bindTargetBounds during point drag near shape', () {

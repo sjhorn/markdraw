@@ -20,9 +20,7 @@ MarkdrawController _controllerWithSelectedRect() {
   );
   controller.loadScene(scene);
   // Select the element by applying a selection result.
-  controller.applyResult(
-    SetSelectionResult({const ElementId('r1')}),
-  );
+  controller.applyResult(SetSelectionResult({const ElementId('r1')}));
   return controller;
 }
 
@@ -30,20 +28,24 @@ MarkdrawController _controllerWithSelectedRect() {
 MarkdrawController _controllerWithTwoSelected() {
   final controller = MarkdrawController();
   final scene = Scene()
-      .addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 10,
-        width: 100,
-        height: 60,
-      ))
-      .addElement(RectangleElement(
-        id: const ElementId('r2'),
-        x: 200,
-        y: 10,
-        width: 80,
-        height: 40,
-      ));
+      .addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 10,
+          width: 100,
+          height: 60,
+        ),
+      )
+      .addElement(
+        RectangleElement(
+          id: const ElementId('r2'),
+          x: 200,
+          y: 10,
+          width: 80,
+          height: 40,
+        ),
+      );
   controller.loadScene(scene);
   controller.applyResult(
     SetSelectionResult({const ElementId('r1'), const ElementId('r2')}),
@@ -55,27 +57,33 @@ MarkdrawController _controllerWithTwoSelected() {
 MarkdrawController _controllerWithThreeSelected() {
   final controller = MarkdrawController();
   final scene = Scene()
-      .addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 10,
-        width: 100,
-        height: 60,
-      ))
-      .addElement(RectangleElement(
-        id: const ElementId('r2'),
-        x: 200,
-        y: 10,
-        width: 80,
-        height: 40,
-      ))
-      .addElement(RectangleElement(
-        id: const ElementId('r3'),
-        x: 400,
-        y: 10,
-        width: 60,
-        height: 30,
-      ));
+      .addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 10,
+          width: 100,
+          height: 60,
+        ),
+      )
+      .addElement(
+        RectangleElement(
+          id: const ElementId('r2'),
+          x: 200,
+          y: 10,
+          width: 80,
+          height: 40,
+        ),
+      )
+      .addElement(
+        RectangleElement(
+          id: const ElementId('r3'),
+          x: 400,
+          y: 10,
+          width: 60,
+          height: 30,
+        ),
+      );
   controller.loadScene(scene);
   controller.applyResult(
     SetSelectionResult({
@@ -102,9 +110,7 @@ MarkdrawController _controllerWithArrowSelected() {
     ),
   );
   controller.loadScene(scene);
-  controller.applyResult(
-    SetSelectionResult({const ElementId('a1')}),
-  );
+  controller.applyResult(SetSelectionResult({const ElementId('a1')}));
   return controller;
 }
 
@@ -123,9 +129,7 @@ MarkdrawController _controllerWithTextSelected() {
     ),
   );
   controller.loadScene(scene);
-  controller.applyResult(
-    SetSelectionResult({const ElementId('t1')}),
-  );
+  controller.applyResult(SetSelectionResult({const ElementId('t1')}));
   return controller;
 }
 
@@ -138,7 +142,9 @@ void main() {
   // PropertyPanelContent
   // =========================================================================
   group('PropertyPanelContent', () {
-    testWidgets('renders with empty elements and default style', (tester) async {
+    testWidgets('renders with empty elements and default style', (
+      tester,
+    ) async {
       final controller = MarkdrawController();
       addTearDown(controller.dispose);
       await tester.pumpWidget(
@@ -223,7 +229,9 @@ void main() {
       expect(allWidgets.any((w) => w.ignoring), isTrue);
     });
 
-    testWidgets('renders with text element (showFullTextProps)', (tester) async {
+    testWidgets('renders with text element (showFullTextProps)', (
+      tester,
+    ) async {
       final controller = _controllerWithTextSelected();
       addTearDown(controller.dispose);
       final elements = controller.selectedElements;
@@ -393,9 +401,7 @@ void main() {
       addTearDown(controller.dispose);
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: HamburgerMenu(controller: controller),
-          ),
+          home: Scaffold(body: HamburgerMenu(controller: controller)),
         ),
       );
       expect(find.byType(HamburgerMenu), findsOneWidget);
@@ -563,9 +569,7 @@ void main() {
         ),
       );
       controller.loadScene(scene);
-      controller.applyResult(
-        SetSelectionResult({const ElementId('r1')}),
-      );
+      controller.applyResult(SetSelectionResult({const ElementId('r1')}));
       // Show link info (info mode, not editing)
       controller.showLinkInfo();
 
@@ -596,9 +600,7 @@ void main() {
         ),
       );
       controller.loadScene(scene);
-      controller.applyResult(
-        SetSelectionResult({const ElementId('r1')}),
-      );
+      controller.applyResult(SetSelectionResult({const ElementId('r1')}));
       controller.openLinkEditor();
 
       await tester.pumpWidget(
@@ -623,14 +625,14 @@ void main() {
   // PropertyPanel (desktop)
   // =========================================================================
   group('PropertyPanel', () {
-    testWidgets('renders SizedBox.shrink when nothing selected', (tester) async {
+    testWidgets('renders SizedBox.shrink when nothing selected', (
+      tester,
+    ) async {
       final controller = MarkdrawController();
       addTearDown(controller.dispose);
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: PropertyPanel(controller: controller),
-          ),
+          home: Scaffold(body: PropertyPanel(controller: controller)),
         ),
       );
       // Should render SizedBox.shrink (returns early when no selection and not creation tool)
@@ -642,9 +644,7 @@ void main() {
       addTearDown(controller.dispose);
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: PropertyPanel(controller: controller),
-          ),
+          home: Scaffold(body: PropertyPanel(controller: controller)),
         ),
       );
       expect(find.byType(PropertyPanel), findsOneWidget);
@@ -658,9 +658,7 @@ void main() {
       controller.switchTool(ToolType.text);
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: PropertyPanel(controller: controller),
-          ),
+          home: Scaffold(body: PropertyPanel(controller: controller)),
         ),
       );
       expect(find.byType(PropertyPanelContent), findsOneWidget);
@@ -672,9 +670,7 @@ void main() {
       controller.switchTool(ToolType.arrow);
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: PropertyPanel(controller: controller),
-          ),
+          home: Scaffold(body: PropertyPanel(controller: controller)),
         ),
       );
       expect(find.byType(PropertyPanelContent), findsOneWidget);
@@ -690,9 +686,7 @@ void main() {
       addTearDown(controller.dispose);
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: CompactMenuButton(controller: controller),
-          ),
+          home: Scaffold(body: CompactMenuButton(controller: controller)),
         ),
       );
       expect(find.byType(CompactMenuButton), findsOneWidget);
@@ -731,9 +725,7 @@ void main() {
       addTearDown(controller.dispose);
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: CompactMenuButton(controller: controller),
-          ),
+          home: Scaffold(body: CompactMenuButton(controller: controller)),
         ),
       );
       await tester.tap(find.byIcon(Icons.menu));
@@ -755,15 +747,17 @@ void main() {
       addTearDown(controller.dispose);
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: LibraryPanel(controller: controller),
-          ),
+          home: Scaffold(body: LibraryPanel(controller: controller)),
         ),
       );
       expect(find.byType(LibraryPanel), findsOneWidget);
       expect(find.text('Library'), findsOneWidget);
-      expect(find.text('No library items.\nSelect elements and click "Add to Library".'),
-          findsOneWidget);
+      expect(
+        find.text(
+          'No library items.\nSelect elements and click "Add to Library".',
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('renders with import/export buttons', (tester) async {
@@ -788,15 +782,14 @@ void main() {
       expect(find.byIcon(Icons.close), findsOneWidget);
     });
 
-    testWidgets('shows Add to Library button when elements selected',
-        (tester) async {
+    testWidgets('shows Add to Library button when elements selected', (
+      tester,
+    ) async {
       final controller = _controllerWithSelectedRect();
       addTearDown(controller.dispose);
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: LibraryPanel(controller: controller),
-          ),
+          home: Scaffold(body: LibraryPanel(controller: controller)),
         ),
       );
       expect(find.text('Add to Library'), findsOneWidget);
@@ -860,8 +853,9 @@ void main() {
       expect(find.text('Nunito'), findsOneWidget);
     });
 
-    testWidgets('shows dynamic Google Font item for unknown query',
-        (tester) async {
+    testWidgets('shows dynamic Google Font item for unknown query', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -964,8 +958,9 @@ void main() {
   // TextEditingOverlay
   // =========================================================================
   group('TextEditingOverlay', () {
-    testWidgets('renders editable text for standalone text element',
-        (tester) async {
+    testWidgets('renders editable text for standalone text element', (
+      tester,
+    ) async {
       final controller = MarkdrawController();
       addTearDown(controller.dispose);
       final textElem = TextElement(
@@ -985,11 +980,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: Stack(
-              children: [
-                TextEditingOverlay(controller: controller),
-              ],
-            ),
+            body: Stack(children: [TextEditingOverlay(controller: controller)]),
           ),
         ),
       );
@@ -1011,8 +1002,7 @@ void main() {
           home: Scaffold(
             body: Builder(
               builder: (context) => ElevatedButton(
-                onPressed: () =>
-                    showCompactPropertyPanel(context, controller),
+                onPressed: () => showCompactPropertyPanel(context, controller),
                 child: const Text('Props'),
               ),
             ),

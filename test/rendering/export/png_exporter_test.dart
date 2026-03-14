@@ -16,14 +16,16 @@ void main() {
     });
 
     test('exports single rectangle to non-empty PNG bytes', () async {
-      final scene = Scene().addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 10,
-        width: 100,
-        height: 80,
-        seed: 42,
-      ));
+      final scene = Scene().addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 10,
+          width: 100,
+          height: 80,
+          seed: 42,
+        ),
+      );
       final bytes = await PngExporter.export(scene, adapter);
       expect(bytes, isNotNull);
       expect(bytes!.length, greaterThan(0));
@@ -35,14 +37,16 @@ void main() {
     });
 
     test('scale=2 produces larger bytes', () async {
-      final scene = Scene().addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 10,
-        width: 100,
-        height: 80,
-        seed: 42,
-      ));
+      final scene = Scene().addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 10,
+          width: 100,
+          height: 80,
+          seed: 42,
+        ),
+      );
       final bytes1x = await PngExporter.export(scene, adapter, scale: 1);
       final bytes2x = await PngExporter.export(scene, adapter, scale: 2);
       expect(bytes1x, isNotNull);
@@ -52,14 +56,16 @@ void main() {
     });
 
     test('background color produces non-transparent image', () async {
-      final scene = Scene().addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 10,
-        width: 50,
-        height: 50,
-        seed: 42,
-      ));
+      final scene = Scene().addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 10,
+          width: 50,
+          height: 50,
+          seed: 42,
+        ),
+      );
       final withBg = await PngExporter.export(
         scene,
         adapter,
@@ -74,22 +80,26 @@ void main() {
 
     test('selection-only exports subset', () async {
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0,
-        y: 0,
-        width: 50,
-        height: 50,
-        seed: 42,
-      ));
-      scene = scene.addElement(EllipseElement(
-        id: const ElementId('e1'),
-        x: 500,
-        y: 500,
-        width: 200,
-        height: 200,
-        seed: 43,
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 0,
+          y: 0,
+          width: 50,
+          height: 50,
+          seed: 42,
+        ),
+      );
+      scene = scene.addElement(
+        EllipseElement(
+          id: const ElementId('e1'),
+          x: 500,
+          y: 500,
+          width: 200,
+          height: 200,
+          seed: 43,
+        ),
+      );
       // Export only r1 — should be a smaller image than full scene
       final selectedBytes = await PngExporter.export(
         scene,
@@ -103,23 +113,27 @@ void main() {
 
     test('includes bound text in export', () async {
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 10,
-        width: 100,
-        height: 80,
-        seed: 42,
-      ));
-      scene = scene.addElement(TextElement(
-        id: const ElementId('t1'),
-        x: 20,
-        y: 20,
-        width: 80,
-        height: 20,
-        text: 'Hello',
-        containerId: 'r1',
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 10,
+          width: 100,
+          height: 80,
+          seed: 42,
+        ),
+      );
+      scene = scene.addElement(
+        TextElement(
+          id: const ElementId('t1'),
+          x: 20,
+          y: 20,
+          width: 80,
+          height: 20,
+          text: 'Hello',
+          containerId: 'r1',
+        ),
+      );
       // Should not crash, should produce valid PNG
       final bytes = await PngExporter.export(scene, adapter);
       expect(bytes, isNotNull);
@@ -128,23 +142,27 @@ void main() {
 
     test('excludes deleted elements', () async {
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 10,
-        width: 100,
-        height: 80,
-        seed: 42,
-      ));
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r2'),
-        x: 500,
-        y: 500,
-        width: 100,
-        height: 80,
-        seed: 43,
-        isDeleted: true,
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 10,
+          width: 100,
+          height: 80,
+          seed: 42,
+        ),
+      );
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r2'),
+          x: 500,
+          y: 500,
+          width: 100,
+          height: 80,
+          seed: 43,
+          isDeleted: true,
+        ),
+      );
       // Deleted element shouldn't affect bounds
       final bytes = await PngExporter.export(scene, adapter);
       expect(bytes, isNotNull);
@@ -152,59 +170,69 @@ void main() {
 
     test('handles multiple element types', () async {
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 10,
-        width: 100,
-        height: 80,
-        seed: 42,
-      ));
-      scene = scene.addElement(DiamondElement(
-        id: const ElementId('d1'),
-        x: 120,
-        y: 10,
-        width: 80,
-        height: 80,
-        seed: 43,
-      ));
-      scene = scene.addElement(LineElement(
-        id: const ElementId('l1'),
-        x: 0,
-        y: 100,
-        width: 200,
-        height: 0,
-        points: [const Point(0, 0), const Point(200, 0)],
-        seed: 44,
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 10,
+          width: 100,
+          height: 80,
+          seed: 42,
+        ),
+      );
+      scene = scene.addElement(
+        DiamondElement(
+          id: const ElementId('d1'),
+          x: 120,
+          y: 10,
+          width: 80,
+          height: 80,
+          seed: 43,
+        ),
+      );
+      scene = scene.addElement(
+        LineElement(
+          id: const ElementId('l1'),
+          x: 0,
+          y: 100,
+          width: 200,
+          height: 0,
+          points: [const Point(0, 0), const Point(200, 0)],
+          seed: 44,
+        ),
+      );
       final bytes = await PngExporter.export(scene, adapter);
       expect(bytes, isNotNull);
       expect(bytes!.length, greaterThan(0));
     });
 
     test('handles rotated elements', () async {
-      final scene = Scene().addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 50,
-        y: 50,
-        width: 100,
-        height: 60,
-        angle: 0.5,
-        seed: 42,
-      ));
+      final scene = Scene().addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 50,
+          y: 50,
+          width: 100,
+          height: 60,
+          angle: 0.5,
+          seed: 42,
+        ),
+      );
       final bytes = await PngExporter.export(scene, adapter);
       expect(bytes, isNotNull);
       expect(bytes!.length, greaterThan(0));
     });
 
     test('returns null when selection has no matching elements', () async {
-      final scene = Scene().addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 10,
-        width: 100,
-        height: 80,
-      ));
+      final scene = Scene().addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 10,
+          width: 100,
+          height: 80,
+        ),
+      );
       final bytes = await PngExporter.export(
         scene,
         adapter,

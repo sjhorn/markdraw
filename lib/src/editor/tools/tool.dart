@@ -20,8 +20,11 @@ abstract class Tool {
   /// Called when a pointer/touch moves.
   /// [point] is in scene coordinates.
   /// [screenDelta] is the raw screen-space movement (used by HandTool).
-  ToolResult? onPointerMove(Point point, ToolContext context,
-      {Offset? screenDelta});
+  ToolResult? onPointerMove(
+    Point point,
+    ToolContext context, {
+    Offset? screenDelta,
+  });
 
   /// Called when a pointer/touch ends.
   /// [point] is in scene coordinates.
@@ -29,8 +32,12 @@ abstract class Tool {
 
   /// Called on key events.
   /// [context] is provided for tools that need scene/selection info (e.g., SelectTool).
-  ToolResult? onKeyEvent(String key,
-      {bool shift = false, bool ctrl = false, ToolContext? context});
+  ToolResult? onKeyEvent(
+    String key, {
+    bool shift = false,
+    bool ctrl = false,
+    ToolContext? context,
+  });
 
   /// Transient overlay data for the UI layer (e.g., creation preview).
   ToolOverlay? get overlay;

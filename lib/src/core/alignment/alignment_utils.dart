@@ -18,7 +18,9 @@ class AlignmentUtils {
     final union = _unionOf(infos);
     return [
       for (final info in infos)
-        info.element.copyWith(x: info.element.x + (union.left - info.aabb.left)),
+        info.element.copyWith(
+          x: info.element.x + (union.left - info.aabb.left),
+        ),
     ];
   }
 
@@ -101,8 +103,10 @@ class AlignmentUtils {
     final first = infos.first;
     final last = infos.last;
     final totalWidth = last.aabb.right - first.aabb.left;
-    final elemWidths =
-        infos.fold<double>(0, (sum, info) => sum + info.aabb.size.width);
+    final elemWidths = infos.fold<double>(
+      0,
+      (sum, info) => sum + info.aabb.size.width,
+    );
     final gap = (totalWidth - elemWidths) / (infos.length - 1);
 
     var currentLeft = first.aabb.left;
@@ -127,8 +131,10 @@ class AlignmentUtils {
     final first = infos.first;
     final last = infos.last;
     final totalHeight = last.aabb.bottom - first.aabb.top;
-    final elemHeights =
-        infos.fold<double>(0, (sum, info) => sum + info.aabb.size.height);
+    final elemHeights = infos.fold<double>(
+      0,
+      (sum, info) => sum + info.aabb.size.height,
+    );
     final gap = (totalHeight - elemHeights) / (infos.length - 1);
 
     var currentTop = first.aabb.top;
@@ -201,7 +207,13 @@ class _ElementInfo {
   }
 
   static ({double x, double y}) _rotate(
-      double px, double py, double cx, double cy, double cosA, double sinA) {
+    double px,
+    double py,
+    double cx,
+    double cy,
+    double cosA,
+    double sinA,
+  ) {
     final dx = px - cx;
     final dy = py - cy;
     return (x: cx + dx * cosA - dy * sinA, y: cy + dx * sinA + dy * cosA);

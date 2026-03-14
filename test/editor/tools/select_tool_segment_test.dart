@@ -77,8 +77,11 @@ void main() {
       final b = points[i + 1];
       final isHorizontal = (a.y - b.y).abs() < 0.5;
       final isVertical = (a.x - b.x).abs() < 0.5;
-      expect(isHorizontal || isVertical, isTrue,
-          reason: 'Segment $i ($a → $b) is neither horizontal nor vertical');
+      expect(
+        isHorizontal || isVertical,
+        isTrue,
+        reason: 'Segment $i ($a → $b) is neither horizontal nor vertical',
+      );
     }
   }
 
@@ -95,8 +98,7 @@ void main() {
       final result = tool.onPointerMove(const Point(135, 170), ctx);
       expect(result, isA<UpdateElementResult>());
 
-      final updated =
-          (result! as UpdateElementResult).element as ArrowElement;
+      final updated = (result! as UpdateElementResult).element as ArrowElement;
       final abs = absolutePoints(updated);
 
       assertOrthogonal(abs);
@@ -132,8 +134,7 @@ void main() {
       final result = tool.onPointerMove(const Point(165, 165), ctx);
       expect(result, isA<UpdateElementResult>());
 
-      final updated =
-          (result! as UpdateElementResult).element as ArrowElement;
+      final updated = (result! as UpdateElementResult).element as ArrowElement;
       final abs = absolutePoints(updated);
 
       assertOrthogonal(abs);
@@ -171,8 +172,7 @@ void main() {
       final result = tool.onPointerMove(const Point(60, 105), ctx);
       expect(result, isA<UpdateElementResult>());
 
-      final updated =
-          (result! as UpdateElementResult).element as ArrowElement;
+      final updated = (result! as UpdateElementResult).element as ArrowElement;
       final abs = absolutePoints(updated);
 
       assertOrthogonal(abs);
@@ -200,8 +200,7 @@ void main() {
       final result = tool.onPointerMove(const Point(95, 165), ctx);
       expect(result, isA<UpdateElementResult>());
 
-      final updated =
-          (result! as UpdateElementResult).element as ArrowElement;
+      final updated = (result! as UpdateElementResult).element as ArrowElement;
       final abs = absolutePoints(updated);
 
       assertOrthogonal(abs);
@@ -230,8 +229,7 @@ void main() {
       final result = tool.onPointerMove(const Point(100, 170), ctx);
       expect(result, isA<UpdateElementResult>());
 
-      final updated =
-          (result! as UpdateElementResult).element as ArrowElement;
+      final updated = (result! as UpdateElementResult).element as ArrowElement;
       final abs = absolutePoints(updated);
 
       assertOrthogonal(abs);
@@ -254,8 +252,7 @@ void main() {
       final result = tool.onPointerMove(const Point(30, 100), ctx);
       expect(result, isA<UpdateElementResult>());
 
-      final updated =
-          (result! as UpdateElementResult).element as ArrowElement;
+      final updated = (result! as UpdateElementResult).element as ArrowElement;
       final abs = absolutePoints(updated);
 
       assertOrthogonal(abs);
@@ -281,8 +278,7 @@ void main() {
       final result = tool.onPointerMove(const Point(30, 40), ctx);
       expect(result, isA<UpdateElementResult>());
 
-      final updated =
-          (result! as UpdateElementResult).element as ArrowElement;
+      final updated = (result! as UpdateElementResult).element as ArrowElement;
       final abs = absolutePoints(updated);
 
       // If it were segment drag, both P[0] and P[1] would move.
@@ -306,8 +302,7 @@ void main() {
       final result = tool.onPointerMove(const Point(170, 160), ctx);
       expect(result, isA<UpdateElementResult>());
 
-      final updated =
-          (result! as UpdateElementResult).element as ArrowElement;
+      final updated = (result! as UpdateElementResult).element as ArrowElement;
       final abs = absolutePoints(updated);
 
       // P[2] moved, P[1] stays at (50, 150)
@@ -330,8 +325,7 @@ void main() {
       final result = tool.onPointerMove(const Point(70, 100), ctx);
       expect(result, isA<UpdateElementResult>());
 
-      final updated =
-          (result! as UpdateElementResult).element as ArrowElement;
+      final updated = (result! as UpdateElementResult).element as ArrowElement;
       final abs = absolutePoints(updated);
 
       // Both P[0] and P[1] moved in X (segment drag behavior)
@@ -374,10 +368,12 @@ void main() {
       final result = tool.onPointerUp(const Point(40, 50), ctx);
       expect(result, isA<UpdateElementResult>());
 
-      final updated =
-          (result! as UpdateElementResult).element as ArrowElement;
-      expect(updated.startBinding, isNotNull,
-          reason: 'Start binding should be set after dragging near shape');
+      final updated = (result! as UpdateElementResult).element as ArrowElement;
+      expect(
+        updated.startBinding,
+        isNotNull,
+        reason: 'Start binding should be set after dragging near shape',
+      );
       expect(updated.startBinding!.elementId, 'r1');
     });
 
@@ -414,10 +410,12 @@ void main() {
       final result = tool.onPointerUp(const Point(250, 110), ctx);
       expect(result, isA<UpdateElementResult>());
 
-      final updated =
-          (result! as UpdateElementResult).element as ArrowElement;
-      expect(updated.endBinding, isNotNull,
-          reason: 'End binding should be set after dragging near shape');
+      final updated = (result! as UpdateElementResult).element as ArrowElement;
+      expect(
+        updated.endBinding,
+        isNotNull,
+        reason: 'End binding should be set after dragging near shape',
+      );
       expect(updated.endBinding!.elementId, 'r2');
     });
   });
@@ -455,10 +453,12 @@ void main() {
       final result = tool.onPointerUp(const Point(40, 50), ctx);
       expect(result, isA<UpdateElementResult>());
 
-      final updated =
-          (result! as UpdateElementResult).element as ArrowElement;
-      expect(updated.startBinding, isNotNull,
-          reason: 'Start binding should be set after dragging near shape');
+      final updated = (result! as UpdateElementResult).element as ArrowElement;
+      expect(
+        updated.startBinding,
+        isNotNull,
+        reason: 'Start binding should be set after dragging near shape',
+      );
       expect(updated.startBinding!.elementId, 'r1');
     });
   });

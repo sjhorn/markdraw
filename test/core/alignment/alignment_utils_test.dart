@@ -4,16 +4,29 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:markdraw/markdraw.dart';
 
 void main() {
-  RectangleElement makeRect(String id, double x, double y,
-          {double w = 50, double h = 50, double angle = 0}) =>
-      RectangleElement(
-        id: ElementId(id),
-        x: x, y: y, width: w, height: h, angle: angle,
-      );
+  RectangleElement makeRect(
+    String id,
+    double x,
+    double y, {
+    double w = 50,
+    double h = 50,
+    double angle = 0,
+  }) => RectangleElement(
+    id: ElementId(id),
+    x: x,
+    y: y,
+    width: w,
+    height: h,
+    angle: angle,
+  );
 
   group('AlignmentUtils align (unrotated)', () {
     test('alignLeft aligns to leftmost x', () {
-      final elements = [makeRect('a', 10, 0), makeRect('b', 50, 0), makeRect('c', 100, 0)];
+      final elements = [
+        makeRect('a', 10, 0),
+        makeRect('b', 50, 0),
+        makeRect('c', 100, 0),
+      ];
       final result = AlignmentUtils.alignLeft(elements);
       expect(result, hasLength(3));
       for (final e in result) {
@@ -22,7 +35,10 @@ void main() {
     });
 
     test('alignRight aligns right edges', () {
-      final elements = [makeRect('a', 0, 0, w: 30), makeRect('b', 50, 0, w: 100)];
+      final elements = [
+        makeRect('a', 0, 0, w: 30),
+        makeRect('b', 50, 0, w: 100),
+      ];
       final result = AlignmentUtils.alignRight(elements);
       // Union right = 50 + 100 = 150
       expect(result[0].x, 150 - 30);
@@ -30,7 +46,10 @@ void main() {
     });
 
     test('alignCenterH aligns horizontal centers', () {
-      final elements = [makeRect('a', 0, 0, w: 20), makeRect('b', 80, 0, w: 20)];
+      final elements = [
+        makeRect('a', 0, 0, w: 20),
+        makeRect('b', 80, 0, w: 20),
+      ];
       final result = AlignmentUtils.alignCenterH(elements);
       // Union left=0, right=100, center=50
       expect(result[0].x, 50 - 10); // 40
@@ -46,7 +65,10 @@ void main() {
     });
 
     test('alignBottom aligns bottom edges', () {
-      final elements = [makeRect('a', 0, 0, h: 30), makeRect('b', 0, 50, h: 100)];
+      final elements = [
+        makeRect('a', 0, 0, h: 30),
+        makeRect('b', 0, 50, h: 100),
+      ];
       final result = AlignmentUtils.alignBottom(elements);
       // Union bottom = 50 + 100 = 150
       expect(result[0].y, 150 - 30);
@@ -54,7 +76,10 @@ void main() {
     });
 
     test('alignCenterV aligns vertical centers', () {
-      final elements = [makeRect('a', 0, 0, h: 20), makeRect('b', 0, 80, h: 20)];
+      final elements = [
+        makeRect('a', 0, 0, h: 20),
+        makeRect('b', 0, 80, h: 20),
+      ];
       final result = AlignmentUtils.alignCenterV(elements);
       // Union top=0, bottom=100, center=50
       expect(result[0].y, 50 - 10); // 40
@@ -186,7 +211,14 @@ void main() {
       // Three elements, middle one is rotated
       final elements = [
         makeRect('a', 0, 0, w: 20, h: 20),
-        makeRect('b', 40, 40, w: 100, h: 20, angle: halfPi), // visual width ≈ 20
+        makeRect(
+          'b',
+          40,
+          40,
+          w: 100,
+          h: 20,
+          angle: halfPi,
+        ), // visual width ≈ 20
         makeRect('c', 200, 0, w: 20, h: 20),
       ];
       final result = AlignmentUtils.distributeH(elements);

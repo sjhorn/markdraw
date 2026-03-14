@@ -12,14 +12,16 @@ void main() {
     });
 
     test('single element produces valid SVG with viewBox', () {
-      final scene = Scene().addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 20,
-        width: 100,
-        height: 80,
-        seed: 42,
-      ));
+      final scene = Scene().addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 20,
+          width: 100,
+          height: 80,
+          seed: 42,
+        ),
+      );
       final svg = SvgExporter.export(scene);
       expect(svg, contains('<svg'));
       expect(svg, contains('xmlns="http://www.w3.org/2000/svg"'));
@@ -28,14 +30,16 @@ void main() {
     });
 
     test('viewBox matches export bounds', () {
-      final scene = Scene().addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 100,
-        y: 200,
-        width: 50,
-        height: 30,
-        seed: 42,
-      ));
+      final scene = Scene().addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 100,
+          y: 200,
+          width: 50,
+          height: 30,
+          seed: 42,
+        ),
+      );
       final svg = SvgExporter.export(scene);
       // ExportBounds default padding = 20
       // Bounds: 80,180 → 170,250 → size 90x70
@@ -45,31 +49,32 @@ void main() {
     });
 
     test('background color adds rect element', () {
-      final scene = Scene().addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 10,
-        width: 50,
-        height: 50,
-        seed: 42,
-      ));
-      final svg = SvgExporter.export(
-        scene,
-        backgroundColor: '#ffffff',
+      final scene = Scene().addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 10,
+          width: 50,
+          height: 50,
+          seed: 42,
+        ),
       );
+      final svg = SvgExporter.export(scene, backgroundColor: '#ffffff');
       expect(svg, contains('<rect'));
       expect(svg, contains('fill="#ffffff"'));
     });
 
     test('no background color skips background rect', () {
-      final scene = Scene().addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 10,
-        width: 50,
-        height: 50,
-        seed: 42,
-      ));
+      final scene = Scene().addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 10,
+          width: 50,
+          height: 50,
+          seed: 42,
+        ),
+      );
       final svg = SvgExporter.export(scene);
       // Should not have a full-size background rect
       // (there will be path elements from the drawn rectangle, not a rect element)
@@ -78,24 +83,28 @@ void main() {
 
     test('elements rendered in order', () {
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 10,
-        width: 50,
-        height: 50,
-        index: 'a',
-        seed: 42,
-      ));
-      scene = scene.addElement(EllipseElement(
-        id: const ElementId('e1'),
-        x: 80,
-        y: 10,
-        width: 50,
-        height: 50,
-        index: 'b',
-        seed: 43,
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 10,
+          width: 50,
+          height: 50,
+          index: 'a',
+          seed: 42,
+        ),
+      );
+      scene = scene.addElement(
+        EllipseElement(
+          id: const ElementId('e1'),
+          x: 80,
+          y: 10,
+          width: 50,
+          height: 50,
+          index: 'b',
+          seed: 43,
+        ),
+      );
       final svg = SvgExporter.export(scene);
       // Both should be rendered
       expect(svg, contains('<path'));
@@ -104,22 +113,26 @@ void main() {
 
     test('selection-only export', () {
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0,
-        y: 0,
-        width: 50,
-        height: 50,
-        seed: 42,
-      ));
-      scene = scene.addElement(EllipseElement(
-        id: const ElementId('e1'),
-        x: 500,
-        y: 500,
-        width: 50,
-        height: 50,
-        seed: 43,
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 0,
+          y: 0,
+          width: 50,
+          height: 50,
+          seed: 42,
+        ),
+      );
+      scene = scene.addElement(
+        EllipseElement(
+          id: const ElementId('e1'),
+          x: 500,
+          y: 500,
+          width: 50,
+          height: 50,
+          seed: 43,
+        ),
+      );
       final svgAll = SvgExporter.export(scene);
       final svgSel = SvgExporter.export(
         scene,
@@ -131,24 +144,28 @@ void main() {
 
     test('bound text in shapes is rendered', () {
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 10,
-        width: 200,
-        height: 100,
-        seed: 42,
-        boundElements: [const BoundElement(id: 't1', type: 'text')],
-      ));
-      scene = scene.addElement(TextElement(
-        id: const ElementId('t1'),
-        x: 50,
-        y: 50,
-        width: 100,
-        height: 20,
-        text: 'Shape Label',
-        containerId: 'r1',
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 10,
+          width: 200,
+          height: 100,
+          seed: 42,
+          boundElements: [const BoundElement(id: 't1', type: 'text')],
+        ),
+      );
+      scene = scene.addElement(
+        TextElement(
+          id: const ElementId('t1'),
+          x: 50,
+          y: 50,
+          width: 100,
+          height: 20,
+          text: 'Shape Label',
+          containerId: 'r1',
+        ),
+      );
       final svg = SvgExporter.export(scene);
       expect(svg, contains('Shape Label'));
       expect(svg, contains('<text'));
@@ -156,40 +173,46 @@ void main() {
 
     test('arrow label at midpoint', () {
       var scene = Scene();
-      scene = scene.addElement(ArrowElement(
-        id: const ElementId('a1'),
-        x: 0,
-        y: 0,
-        width: 200,
-        height: 0,
-        points: [const Point(0, 0), const Point(200, 0)],
-        endArrowhead: Arrowhead.arrow,
-        seed: 42,
-        boundElements: [const BoundElement(id: 't1', type: 'text')],
-      ));
-      scene = scene.addElement(TextElement(
-        id: const ElementId('t1'),
-        x: 90,
-        y: -10,
-        width: 50,
-        height: 20,
-        text: 'Arrow Label',
-        containerId: 'a1',
-      ));
+      scene = scene.addElement(
+        ArrowElement(
+          id: const ElementId('a1'),
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 0,
+          points: [const Point(0, 0), const Point(200, 0)],
+          endArrowhead: Arrowhead.arrow,
+          seed: 42,
+          boundElements: [const BoundElement(id: 't1', type: 'text')],
+        ),
+      );
+      scene = scene.addElement(
+        TextElement(
+          id: const ElementId('t1'),
+          x: 90,
+          y: -10,
+          width: 50,
+          height: 20,
+          text: 'Arrow Label',
+          containerId: 'a1',
+        ),
+      );
       final svg = SvgExporter.export(scene);
       expect(svg, contains('Arrow Label'));
     });
 
     test('embedded markdraw round-trips', () {
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 20,
-        width: 100,
-        height: 80,
-        seed: 42,
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 20,
+          width: 100,
+          height: 80,
+          seed: 42,
+        ),
+      );
       final svg = SvgExporter.export(scene, embedMarkdraw: true);
       expect(svg, contains('<!-- markdraw:base64:'));
 
@@ -204,79 +227,91 @@ void main() {
     });
 
     test('embedMarkdraw=false skips comment', () {
-      final scene = Scene().addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 20,
-        width: 100,
-        height: 80,
-        seed: 42,
-      ));
+      final scene = Scene().addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 20,
+          width: 100,
+          height: 80,
+          seed: 42,
+        ),
+      );
       final svg = SvgExporter.export(scene, embedMarkdraw: false);
       expect(svg, isNot(contains('markdraw:base64:')));
     });
 
     test('deleted elements excluded', () {
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 10,
-        width: 50,
-        height: 50,
-        seed: 42,
-      ));
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r2'),
-        x: 200,
-        y: 200,
-        width: 50,
-        height: 50,
-        isDeleted: true,
-        seed: 43,
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 10,
+          width: 50,
+          height: 50,
+          seed: 42,
+        ),
+      );
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r2'),
+          x: 200,
+          y: 200,
+          width: 50,
+          height: 50,
+          isDeleted: true,
+          seed: 43,
+        ),
+      );
       final svg = SvgExporter.export(scene);
       // viewBox should only be based on r1, not r2
       expect(svg, contains('viewBox="-10 -10 90 90"'));
     });
 
     test('rotated elements get transform', () {
-      final scene = Scene().addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 10,
-        width: 100,
-        height: 80,
-        angle: 0.785,
-        seed: 42,
-      ));
+      final scene = Scene().addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 10,
+          width: 100,
+          height: 80,
+          angle: 0.785,
+          seed: 42,
+        ),
+      );
       final svg = SvgExporter.export(scene);
       expect(svg, contains('transform="rotate('));
     });
 
     test('opacity in SVG output', () {
-      final scene = Scene().addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 10,
-        width: 100,
-        height: 80,
-        opacity: 0.5,
-        seed: 42,
-      ));
+      final scene = Scene().addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 10,
+          width: 100,
+          height: 80,
+          opacity: 0.5,
+          seed: 42,
+        ),
+      );
       final svg = SvgExporter.export(scene);
       expect(svg, contains('opacity="0.5"'));
     });
 
     test('well-formed XML structure', () {
-      final scene = Scene().addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 10,
-        width: 100,
-        height: 80,
-        seed: 42,
-      ));
+      final scene = Scene().addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 10,
+          width: 100,
+          height: 80,
+          seed: 42,
+        ),
+      );
       final svg = SvgExporter.export(scene);
       expect(svg, startsWith('<svg'));
       expect(svg, endsWith('</svg>'));

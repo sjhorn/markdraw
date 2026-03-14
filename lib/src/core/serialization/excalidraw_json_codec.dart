@@ -92,10 +92,7 @@ class ExcalidrawJsonCodec {
   static Map<String, dynamic> elementToJson(Element el) {
     final base = baseToJson(el);
     if (el is FrameElement) {
-      return {
-        ...base,
-        'name': el.label,
-      };
+      return {...base, 'name': el.label};
     } else if (el is ImageElement) {
       return {
         ...base,
@@ -176,8 +173,9 @@ class ExcalidrawJsonCodec {
       'isDeleted': el.isDeleted,
       'groupIds': el.groupIds,
       'frameId': el.frameId,
-      'boundElements':
-          el.boundElements.isEmpty ? null : _boundElementsToJson(el),
+      'boundElements': el.boundElements.isEmpty
+          ? null
+          : _boundElementsToJson(el),
       'updated': el.updated,
       'link': el.link,
       'locked': el.locked,
@@ -194,9 +192,7 @@ class ExcalidrawJsonCodec {
   }
 
   static List<Map<String, dynamic>> _boundElementsToJson(Element el) {
-    return el.boundElements
-        .map((b) => {'id': b.id, 'type': b.type})
-        .toList();
+    return el.boundElements.map((b) => {'id': b.id, 'type': b.type}).toList();
   }
 
   static Map<String, dynamic>? _bindingToJson(PointBinding? binding) {
@@ -220,9 +216,7 @@ class ExcalidrawJsonCodec {
     try {
       decoded = jsonDecode(json);
     } catch (e) {
-      warnings.add(
-        ParseWarning(line: 0, message: 'Invalid JSON: $e'),
-      );
+      warnings.add(ParseWarning(line: 0, message: 'Invalid JSON: $e'));
       return ParseResult(
         value: MarkdrawDocument(sections: [SketchSection(const [])]),
         warnings: warnings,
@@ -242,7 +236,10 @@ class ExcalidrawJsonCodec {
     final elementsJson = decoded['elements'];
     if (elementsJson is! List) {
       warnings.add(
-        const ParseWarning(line: 0, message: 'Missing or invalid "elements" array'),
+        const ParseWarning(
+          line: 0,
+          message: 'Missing or invalid "elements" array',
+        ),
       );
       return ParseResult(
         value: MarkdrawDocument(sections: [SketchSection(const [])]),
@@ -262,9 +259,7 @@ class ExcalidrawJsonCodec {
 
       final type = raw['type'] as String?;
       if (type == null) {
-        warnings.add(
-          ParseWarning(line: i, message: 'Element $i has no type'),
-        );
+        warnings.add(ParseWarning(line: i, message: 'Element $i has no type'));
         continue;
       }
 
@@ -330,10 +325,12 @@ class ExcalidrawJsonCodec {
                 );
               }
             } catch (_) {
-              warnings.add(ParseWarning(
-                line: 0,
-                message: 'Failed to decode file data for "${entry.key}"',
-              ));
+              warnings.add(
+                ParseWarning(
+                  line: 0,
+                  message: 'Failed to decode file data for "${entry.key}"',
+                ),
+              );
             }
           }
         }
@@ -402,9 +399,11 @@ class ExcalidrawJsonCodec {
   static ElementId _id(Map<String, dynamic> raw) =>
       ElementId(raw['id'] as String);
 
-  static double _double(Map<String, dynamic> raw, String key,
-          [double fallback = 0.0]) =>
-      (raw[key] as num?)?.toDouble() ?? fallback;
+  static double _double(
+    Map<String, dynamic> raw,
+    String key, [
+    double fallback = 0.0,
+  ]) => (raw[key] as num?)?.toDouble() ?? fallback;
 
   static int _int(Map<String, dynamic> raw, String key, [int fallback = 0]) =>
       (raw[key] as num?)?.toInt() ?? fallback;
@@ -442,10 +441,7 @@ class ExcalidrawJsonCodec {
     return list
         .whereType<Map<String, dynamic>>()
         .map(
-          (m) => BoundElement(
-            id: m['id'] as String,
-            type: m['type'] as String,
-          ),
+          (m) => BoundElement(id: m['id'] as String, type: m['type'] as String),
         )
         .toList();
   }
@@ -461,10 +457,7 @@ class ExcalidrawJsonCodec {
     if (list == null || list is! List) return const [];
     return list
         .whereType<List<dynamic>>()
-        .map((p) => Point(
-              (p[0] as num).toDouble(),
-              (p[1] as num).toDouble(),
-            ))
+        .map((p) => Point((p[0] as num).toDouble(), (p[1] as num).toDouble()))
         .toList();
   }
 
@@ -508,8 +501,7 @@ class ExcalidrawJsonCodec {
     warnings.add(
       ParseWarning(
         line: index,
-        message:
-            'Unknown font family ${familyNum.toInt()}, using Excalifont',
+        message: 'Unknown font family ${familyNum.toInt()}, using Excalifont',
       ),
     );
     return 'Excalifont';
@@ -567,10 +559,12 @@ class ExcalidrawJsonCodec {
       case 'crowfoot_one_or_many':
         return Arrowhead.crowfootOneOrMany;
       default:
-        warnings.add(ParseWarning(
-          line: index,
-          message: 'Unknown arrowhead "$value", using "arrow"',
-        ));
+        warnings.add(
+          ParseWarning(
+            line: index,
+            message: 'Unknown arrowhead "$value", using "arrow"',
+          ),
+        );
         return Arrowhead.arrow;
     }
   }
@@ -815,10 +809,12 @@ class ExcalidrawJsonCodec {
       width: _double(raw, 'width'),
       height: _double(raw, 'height'),
       points: _points(raw),
-      startArrowhead:
-          _arrowhead(raw['startArrowhead'] as String?, index, warnings),
-      endArrowhead:
-          _arrowhead(raw['endArrowhead'] as String?, index, warnings),
+      startArrowhead: _arrowhead(
+        raw['startArrowhead'] as String?,
+        index,
+        warnings,
+      ),
+      endArrowhead: _arrowhead(raw['endArrowhead'] as String?, index, warnings),
       closed: raw['polygon'] as bool? ?? false,
       angle: _double(raw, 'angle'),
       strokeColor: raw['strokeColor'] as String? ?? '#000000',
@@ -869,10 +865,12 @@ class ExcalidrawJsonCodec {
       width: _double(raw, 'width'),
       height: _double(raw, 'height'),
       points: _points(raw),
-      startArrowhead:
-          _arrowhead(raw['startArrowhead'] as String?, index, warnings),
-      endArrowhead:
-          _arrowhead(raw['endArrowhead'] as String?, index, warnings),
+      startArrowhead: _arrowhead(
+        raw['startArrowhead'] as String?,
+        index,
+        warnings,
+      ),
+      endArrowhead: _arrowhead(raw['endArrowhead'] as String?, index, warnings),
       startBinding: _binding(raw, 'startBinding'),
       endBinding: _binding(raw, 'endBinding'),
       arrowType: arrowType,

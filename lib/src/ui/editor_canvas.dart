@@ -4,7 +4,6 @@ import 'package:flutter/material.dart' hide Element, SelectionOverlay;
 
 import 'package:markdraw/markdraw.dart' hide TextAlign;
 
-
 /// The main canvas area with pointer/gesture handling.
 class EditorCanvas extends StatefulWidget {
   final MarkdrawController controller;
@@ -25,12 +24,14 @@ class _EditorCanvasState extends State<EditorCanvas> {
       if (element.link == null || element.link!.isEmpty) continue;
       // Skip selected elements — they show the overlay instead
       if (selectedIds.contains(element.id)) continue;
-      icons.add(LinkIconInfo(
-        x: element.x,
-        y: element.y,
-        width: element.width,
-        height: element.height,
-      ));
+      icons.add(
+        LinkIconInfo(
+          x: element.x,
+          y: element.y,
+          width: element.width,
+          height: element.height,
+        ),
+      );
     }
     return icons.isEmpty ? null : icons;
   }
@@ -43,8 +44,7 @@ class _EditorCanvasState extends State<EditorCanvas> {
     Rect? marqueeRect;
     if (toolOverlay?.marqueeRect != null) {
       final b = toolOverlay!.marqueeRect!;
-      marqueeRect =
-          Rect.fromLTWH(b.left, b.top, b.size.width, b.size.height);
+      marqueeRect = Rect.fromLTWH(b.left, b.top, b.size.width, b.size.height);
     }
 
     return ColoredBox(
@@ -65,8 +65,7 @@ class _EditorCanvasState extends State<EditorCanvas> {
                   controller.onPointerDown(event.localPosition);
                 },
                 onPointerMove: (event) {
-                  controller.onPointerMove(
-                      event.localPosition, event.delta);
+                  controller.onPointerMove(event.localPosition, event.delta);
                 },
                 onPointerUp: (event) {
                   controller.onPointerUp(event.localPosition);
@@ -107,7 +106,7 @@ class _EditorCanvasState extends State<EditorCanvas> {
                     creationPoints: toolOverlay?.creationPoints,
                     creationBounds: toolOverlay?.creationBounds,
                     laserTrail: controller.activeTool is LaserTool
-                        ? (controller.activeTool as LaserTool) .activeTrail
+                        ? (controller.activeTool as LaserTool).activeTrail
                         : null,
                     linkIcons: _buildLinkIcons(),
                   ),
@@ -132,8 +131,7 @@ class _EditorCanvasState extends State<EditorCanvas> {
             if (controller.editingFrameLabelId != null)
               _FrameLabelEditingOverlay(controller: controller),
             // Compact property panel trigger
-            if (controller.isCompact &&
-                controller.selectedElements.isNotEmpty)
+            if (controller.isCompact && controller.selectedElements.isNotEmpty)
               Positioned(
                 bottom: 72,
                 right: 12,
@@ -162,8 +160,7 @@ class _FrameLabelEditingOverlay extends StatefulWidget {
       _FrameLabelEditingOverlayState();
 }
 
-class _FrameLabelEditingOverlayState
-    extends State<_FrameLabelEditingOverlay> {
+class _FrameLabelEditingOverlayState extends State<_FrameLabelEditingOverlay> {
   late TextEditingController _textController;
   final _focusNode = FocusNode();
   bool _committed = false;
@@ -224,9 +221,7 @@ class _FrameLabelEditingOverlayState
     final zoom = viewport.zoom;
 
     // Position the text field at the frame label location (above top-left)
-    final screenPos = viewport.sceneToScreen(
-      Offset(frame.x, frame.y - 4),
-    );
+    final screenPos = viewport.sceneToScreen(Offset(frame.x, frame.y - 4));
 
     // Match the rendered label style
     const fontSize = 14.0;
@@ -284,10 +279,8 @@ class _CompactPropertyButton extends StatelessWidget {
         color: cs.surface,
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.17), blurRadius: 1),
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08), blurRadius: 3),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.17), blurRadius: 1),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 3),
         ],
       ),
       child: IconButton(

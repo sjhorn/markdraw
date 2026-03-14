@@ -14,10 +14,10 @@ class MarkdrawDocument {
     List<DocumentSection> sections = const [],
     Map<String, String> aliases = const {},
     Map<String, ImageFile> files = const {},
-  })  : settings = settings ?? const CanvasSettings(),
-        sections = List.unmodifiable(sections),
-        aliases = Map.unmodifiable(aliases),
-        files = Map.unmodifiable(files);
+  }) : settings = settings ?? const CanvasSettings(),
+       sections = List.unmodifiable(sections),
+       aliases = Map.unmodifiable(aliases),
+       files = Map.unmodifiable(files);
 
   /// All elements across all sketch sections, in document order.
   List<Element> get allElements {

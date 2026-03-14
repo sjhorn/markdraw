@@ -27,12 +27,8 @@ class LaserRenderer {
       final opacity = (1.0 - age / LaserTool.decayMs).clamp(0.0, 1.0);
       if (opacity <= 0) continue;
 
-      final p1 = viewport.sceneToScreen(
-        ui.Offset(prev.point.x, prev.point.y),
-      );
-      final p2 = viewport.sceneToScreen(
-        ui.Offset(curr.point.x, curr.point.y),
-      );
+      final p1 = viewport.sceneToScreen(ui.Offset(prev.point.x, prev.point.y));
+      final p2 = viewport.sceneToScreen(ui.Offset(curr.point.x, curr.point.y));
 
       final paint = ui.Paint()
         ..color = ui.Color.fromRGBO(255, 0, 0, opacity)

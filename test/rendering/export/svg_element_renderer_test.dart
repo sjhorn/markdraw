@@ -81,11 +81,7 @@ void main() {
         y: 0,
         width: 100,
         height: 50,
-        points: [
-          const Point(0, 0),
-          const Point(50, 50),
-          const Point(100, 0),
-        ],
+        points: [const Point(0, 0), const Point(50, 50), const Point(100, 0)],
         endArrowhead: Arrowhead.arrow,
         roundness: const Roundness.proportional(value: 32),
         seed: 42,
@@ -103,11 +99,7 @@ void main() {
         y: 0,
         width: 100,
         height: 50,
-        points: [
-          const Point(0, 0),
-          const Point(50, 50),
-          const Point(100, 0),
-        ],
+        points: [const Point(0, 0), const Point(50, 50), const Point(100, 0)],
         roundness: const Roundness.proportional(value: 32),
         seed: 42,
       );

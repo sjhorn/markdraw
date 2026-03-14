@@ -91,10 +91,7 @@ class ElementStyle {
     this.locked,
   });
 
-  ElementStyle copyWith({
-    String? strokeColor,
-    bool clearStrokeColor = false,
-  }) {
+  ElementStyle copyWith({String? strokeColor, bool clearStrokeColor = false}) {
     return ElementStyle(
       strokeColor: clearStrokeColor ? null : (strokeColor ?? this.strokeColor),
       backgroundColor: backgroundColor,
@@ -151,7 +148,8 @@ class PropertyPanelState {
     double? roughness = first.roughness;
     double? opacity = first.opacity;
 
-    bool hasRoundness = first is RectangleElement ||
+    bool hasRoundness =
+        first is RectangleElement ||
         first is DiamondElement ||
         (first is LineElement && first is! ArrowElement);
     Roundness? roundness = first.roundness;
@@ -232,17 +230,14 @@ class PropertyPanelState {
     }
 
     // Text properties — from directly selected TextElements and bound text.
-    final directTextElements =
-        elements.whereType<TextElement>().toList();
+    final directTextElements = elements.whereType<TextElement>().toList();
 
     // Classify bound text by container type
     final shapeBoundText = <TextElement>[];
     final arrowBoundText = <TextElement>[];
     for (final bt in boundTextElements) {
       if (bt.containerId == null) continue;
-      final container = elements.where(
-        (e) => e.id.value == bt.containerId,
-      );
+      final container = elements.where((e) => e.id.value == bt.containerId);
       if (container.isEmpty) continue;
       if (container.first is ArrowElement) {
         arrowBoundText.add(bt);
@@ -277,8 +272,7 @@ class PropertyPanelState {
       // fontSize: merge from all (direct + shape-bound + arrow-bound)
       fontSize = allTextForFontSize.first.fontSize;
       for (var i = 1; i < allTextForFontSize.length; i++) {
-        if (fontSize != null &&
-            allTextForFontSize[i].fontSize != fontSize) {
+        if (fontSize != null && allTextForFontSize[i].fontSize != fontSize) {
           fontSize = null;
         }
       }
@@ -310,7 +304,8 @@ class PropertyPanelState {
         .whereType<LineElement>()
         .where((l) => l is! ArrowElement)
         .toList();
-    final canBreakPolygon = pureLines.isNotEmpty &&
+    final canBreakPolygon =
+        pureLines.isNotEmpty &&
         pureLines.length == elements.length &&
         pureLines.every((l) => l.closed && l.points.length >= 3);
 
@@ -357,10 +352,7 @@ class PropertyPanelState {
   /// Only non-null properties in [style] are applied. Returns a single
   /// [UpdateElementResult] for one element, or a [CompoundResult] for
   /// multiple elements.
-  static ToolResult applyStyle(
-    List<Element> elements,
-    ElementStyle style,
-  ) {
+  static ToolResult applyStyle(List<Element> elements, ElementStyle style) {
     final results = <ToolResult>[];
 
     for (final element in elements) {
@@ -389,10 +381,14 @@ class PropertyPanelState {
 
         if (newType.isElbow && !oldType.isElbow) {
           // Non-elbow → elbow: route points between first and last point
-          final absFirst = Point(arrow.x + arrow.points.first.x,
-              arrow.y + arrow.points.first.y);
+          final absFirst = Point(
+            arrow.x + arrow.points.first.x,
+            arrow.y + arrow.points.first.y,
+          );
           final absLast = Point(
-              arrow.x + arrow.points.last.x, arrow.y + arrow.points.last.y);
+            arrow.x + arrow.points.last.x,
+            arrow.y + arrow.points.last.y,
+          );
           final routed = ElbowRouting.route(start: absFirst, end: absLast);
           // Compute proper bounding box from absolute routed points
           var minX = routed.first.x;
@@ -405,13 +401,19 @@ class PropertyPanelState {
             if (p.x > maxX) maxX = p.x;
             if (p.y > maxY) maxY = p.y;
           }
-          final relPoints =
-              routed.map((p) => Point(p.x - minX, p.y - minY)).toList();
+          final relPoints = routed
+              .map((p) => Point(p.x - minX, p.y - minY))
+              .toList();
           updated = arrow
               .copyWithArrow(arrowType: newType)
               .copyWithLine(points: relPoints)
-              .copyWith(x: minX, y: minY, width: maxX - minX,
-                  height: maxY - minY, angle: 0);
+              .copyWith(
+                x: minX,
+                y: minY,
+                width: maxX - minX,
+                height: maxY - minY,
+                angle: 0,
+              );
         } else if (!newType.isElbow && oldType.isElbow) {
           // Elbow → non-elbow: simplify to just first and last point
           final simplifiedPoints = [arrow.points.first, arrow.points.last];
@@ -437,9 +439,9 @@ class PropertyPanelState {
       // Apply arrowhead changes for line elements
       if (element is LineElement &&
           (style.startArrowhead != null ||
-           style.startArrowheadNone ||
-           style.endArrowhead != null ||
-           style.endArrowheadNone)) {
+              style.startArrowheadNone ||
+              style.endArrowhead != null ||
+              style.endArrowheadNone)) {
         updated = (updated as LineElement).copyWithLine(
           startArrowhead: style.startArrowhead,
           clearStartArrowhead: style.startArrowheadNone,

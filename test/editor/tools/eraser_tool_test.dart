@@ -66,12 +66,14 @@ void main() {
       final result = tool.onPointerUp(const Point(50, 30), ctx);
       expect(result, isA<CompoundResult>());
       final compound = result! as CompoundResult;
-      final removeResults =
-          compound.results.whereType<RemoveElementResult>().toList();
+      final removeResults = compound.results
+          .whereType<RemoveElementResult>()
+          .toList();
       expect(removeResults.any((r) => r.id == rect1.id), isTrue);
       // Should also clear selection
-      final selResults =
-          compound.results.whereType<SetSelectionResult>().toList();
+      final selResults = compound.results
+          .whereType<SetSelectionResult>()
+          .toList();
       expect(selResults, isNotEmpty);
       expect(selResults.last.selectedIds, isEmpty);
     });
@@ -92,8 +94,9 @@ void main() {
       final result = tool.onPointerUp(const Point(250, 220), ctx);
       expect(result, isA<CompoundResult>());
       final compound = result! as CompoundResult;
-      final removeResults =
-          compound.results.whereType<RemoveElementResult>().toList();
+      final removeResults = compound.results
+          .whereType<RemoveElementResult>()
+          .toList();
       expect(removeResults.any((r) => r.id == rect1.id), isTrue);
       expect(removeResults.any((r) => r.id == rect2.id), isTrue);
     });
@@ -114,8 +117,9 @@ void main() {
       final result = tool.onPointerUp(const Point(250, 220), ctx);
       expect(result, isA<CompoundResult>());
       final compound = result! as CompoundResult;
-      final removeResults =
-          compound.results.whereType<RemoveElementResult>().toList();
+      final removeResults = compound.results
+          .whereType<RemoveElementResult>()
+          .toList();
       // Only unlocked element removed
       expect(removeResults.any((r) => r.id == unlocked.id), isTrue);
       expect(removeResults.any((r) => r.id == lockedRect.id), isFalse);
@@ -145,8 +149,9 @@ void main() {
         final result = tool.onPointerUp(const Point(30, 30), ctx);
         expect(result, isA<CompoundResult>());
         final compound = result! as CompoundResult;
-        final removeResults =
-            compound.results.whereType<RemoveElementResult>().toList();
+        final removeResults = compound.results
+            .whereType<RemoveElementResult>()
+            .toList();
         // Both group members should be removed
         expect(removeResults.any((r) => r.id == g1.id), isTrue);
         expect(removeResults.any((r) => r.id == g2.id), isTrue);
@@ -177,8 +182,9 @@ void main() {
         final result = tool.onPointerUp(const Point(50, 30), ctx);
         expect(result, isA<CompoundResult>());
         final compound = result! as CompoundResult;
-        final removeResults =
-            compound.results.whereType<RemoveElementResult>().toList();
+        final removeResults = compound.results
+            .whereType<RemoveElementResult>()
+            .toList();
         expect(removeResults.any((r) => r.id == container.id), isTrue);
         expect(removeResults.any((r) => r.id == boundText.id), isTrue);
       });
@@ -206,14 +212,17 @@ void main() {
         expect(result, isA<CompoundResult>());
         final compound = result! as CompoundResult;
         // Frame removed
-        final removeResults =
-            compound.results.whereType<RemoveElementResult>().toList();
+        final removeResults = compound.results
+            .whereType<RemoveElementResult>()
+            .toList();
         expect(removeResults.any((r) => r.id == frame.id), isTrue);
         // Child released (frameId cleared)
-        final updateResults =
-            compound.results.whereType<UpdateElementResult>().toList();
-        final releasedChild =
-            updateResults.where((r) => r.element.id == child.id).toList();
+        final updateResults = compound.results
+            .whereType<UpdateElementResult>()
+            .toList();
+        final releasedChild = updateResults
+            .where((r) => r.element.id == child.id)
+            .toList();
         expect(releasedChild, isNotEmpty);
         expect(releasedChild.first.element.frameId, isNull);
       });
@@ -247,18 +256,22 @@ void main() {
         expect(result, isA<CompoundResult>());
         final compound = result! as CompoundResult;
         // Target removed
-        final removeResults =
-            compound.results.whereType<RemoveElementResult>().toList();
+        final removeResults = compound.results
+            .whereType<RemoveElementResult>()
+            .toList();
         expect(removeResults.any((r) => r.id == target.id), isTrue);
         // Arrow binding cleared
-        final updateResults =
-            compound.results.whereType<UpdateElementResult>().toList();
+        final updateResults = compound.results
+            .whereType<UpdateElementResult>()
+            .toList();
         final updatedArrow = updateResults
             .where((r) => r.element.id == arrow.id)
             .toList();
         expect(updatedArrow, isNotEmpty);
         expect(
-            (updatedArrow.first.element as ArrowElement).startBinding, isNull);
+          (updatedArrow.first.element as ArrowElement).startBinding,
+          isNull,
+        );
       });
     });
 

@@ -19,9 +19,11 @@ class SvgPathConverter {
         case OpType.lineTo:
           buf.write('L${_n(op.data[0].x)} ${_n(op.data[0].y)}');
         case OpType.curveTo:
-          buf.write('C${_n(op.data[0].x)} ${_n(op.data[0].y)} '
-              '${_n(op.data[1].x)} ${_n(op.data[1].y)} '
-              '${_n(op.data[2].x)} ${_n(op.data[2].y)}');
+          buf.write(
+            'C${_n(op.data[0].x)} ${_n(op.data[0].y)} '
+            '${_n(op.data[1].x)} ${_n(op.data[1].y)} '
+            '${_n(op.data[2].x)} ${_n(op.data[2].y)}',
+          );
       }
     }
     return buf.toString();
@@ -86,9 +88,11 @@ class SvgPathConverter {
       final cp2x = p2.x - (p3.x - p1.x) / 6;
       final cp2y = p2.y - (p3.y - p1.y) / 6;
 
-      buf.write('C${_n(cp1x)} ${_n(cp1y)} '
-          '${_n(cp2x)} ${_n(cp2y)} '
-          '${_n(p2.x)} ${_n(p2.y)}');
+      buf.write(
+        'C${_n(cp1x)} ${_n(cp1y)} '
+        '${_n(cp2x)} ${_n(cp2y)} '
+        '${_n(p2.x)} ${_n(p2.y)}',
+      );
     }
     return buf.toString();
   }
@@ -108,8 +112,7 @@ class SvgPathConverter {
       Arrowhead.diamond || Arrowhead.diamondOutline => 12.0,
       Arrowhead.crowfootOne ||
       Arrowhead.crowfootMany ||
-      Arrowhead.crowfootOneOrMany =>
-        20.0,
+      Arrowhead.crowfootOneOrMany => 20.0,
       _ => 15.0,
     };
   }
@@ -214,14 +217,24 @@ class SvgPathConverter {
 
   /// Rotates point (px, py) around center (cx, cy) by [radians].
   static double _rotateX(
-      double px, double py, double cx, double cy, double radians) {
+    double px,
+    double py,
+    double cx,
+    double cy,
+    double radians,
+  ) {
     final cos = math.cos(radians);
     final sin = math.sin(radians);
     return cx + (px - cx) * cos - (py - cy) * sin;
   }
 
   static double _rotateY(
-      double px, double py, double cx, double cy, double radians) {
+    double px,
+    double py,
+    double cx,
+    double cy,
+    double radians,
+  ) {
     final cos = math.cos(radians);
     final sin = math.sin(radians);
     return cy + (px - cx) * sin + (py - cy) * cos;

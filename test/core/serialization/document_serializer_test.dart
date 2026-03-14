@@ -10,9 +10,7 @@ void main() {
     });
 
     test('document with only frontmatter', () {
-      final doc = MarkdrawDocument(
-        settings: const CanvasSettings(grid: 20),
-      );
+      final doc = MarkdrawDocument(settings: const CanvasSettings(grid: 20));
       final output = DocumentSerializer.serialize(doc);
       expect(output, contains('---'));
       expect(output, contains('markdraw: 1'));
@@ -40,7 +38,9 @@ void main() {
         updated: 0,
       );
       final doc = MarkdrawDocument(
-        sections: [SketchSection([rect])],
+        sections: [
+          SketchSection([rect]),
+        ],
         aliases: {'auth': 'r1'},
       );
       final output = DocumentSerializer.serialize(doc);
@@ -120,7 +120,9 @@ void main() {
         updated: 0,
       );
       final doc = MarkdrawDocument(
-        sections: [SketchSection([rect, label])],
+        sections: [
+          SketchSection([rect, label]),
+        ],
         aliases: {'auth': 'r1'},
       );
       final output = DocumentSerializer.serialize(doc);
@@ -128,10 +130,7 @@ void main() {
       expect(output, contains('rect id=auth "Auth Service"'));
       // The bound text element should NOT appear as a separate line
       final sketchLines = _extractSketchLines(output);
-      expect(
-        sketchLines.where((l) => l.startsWith('text ')),
-        isEmpty,
-      );
+      expect(sketchLines.where((l) => l.startsWith('text ')), isEmpty);
     });
 
     test('unbound text appears as separate text line', () {
@@ -147,7 +146,9 @@ void main() {
         updated: 0,
       );
       final doc = MarkdrawDocument(
-        sections: [SketchSection([text])],
+        sections: [
+          SketchSection([text]),
+        ],
       );
       final output = DocumentSerializer.serialize(doc);
       expect(output, contains('text "Standalone text"'));
@@ -194,7 +195,9 @@ void main() {
         updated: 0,
       );
       final doc = MarkdrawDocument(
-        sections: [SketchSection([rect1, rect2, arrow])],
+        sections: [
+          SketchSection([rect1, rect2, arrow]),
+        ],
         aliases: {'auth': 'r1', 'gateway': 'r2'},
       );
       final output = DocumentSerializer.serialize(doc);

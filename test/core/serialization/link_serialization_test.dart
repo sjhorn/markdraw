@@ -151,21 +151,25 @@ void main() {
 
     test('full document round-trip preserves links', () {
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 10,
-        y: 20,
-        width: 100,
-        height: 50,
-        link: 'https://example.com',
-      ));
-      scene = scene.addElement(EllipseElement(
-        id: const ElementId('e1'),
-        x: 200,
-        y: 200,
-        width: 80,
-        height: 80,
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 10,
+          y: 20,
+          width: 100,
+          height: 50,
+          link: 'https://example.com',
+        ),
+      );
+      scene = scene.addElement(
+        EllipseElement(
+          id: const ElementId('e1'),
+          x: 200,
+          y: 200,
+          width: 80,
+          height: 80,
+        ),
+      );
 
       final doc = SceneDocumentConverter.sceneToDocument(scene);
       final serialized = DocumentSerializer.serialize(doc);
@@ -175,17 +179,18 @@ void main() {
 
       final parsed = DocumentParser.parse(serialized);
 
-      final roundTripped =
-          SceneDocumentConverter.documentToScene(parsed.value);
+      final roundTripped = SceneDocumentConverter.documentToScene(parsed.value);
 
       // Find the rectangle by type
-      final rect = roundTripped.activeElements
-          .firstWhere((e) => e is RectangleElement);
+      final rect = roundTripped.activeElements.firstWhere(
+        (e) => e is RectangleElement,
+      );
       expect(rect.link, 'https://example.com');
 
       // The ellipse should have no link
-      final ellipse = roundTripped.activeElements
-          .firstWhere((e) => e is EllipseElement);
+      final ellipse = roundTripped.activeElements.firstWhere(
+        (e) => e is EllipseElement,
+      );
       expect(ellipse.link, isNull);
     });
   });

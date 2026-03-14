@@ -8,24 +8,20 @@ ArrowElement _elbowArrow({
   List<Point>? points,
   PointBinding? startBinding,
   PointBinding? endBinding,
-}) =>
-    ArrowElement(
-      id: ElementId(id),
-      x: 0,
-      y: 0,
-      width: 100,
-      height: 50,
-      points: points ?? const [Point(0, 0), Point(0, 50), Point(100, 50)],
-      endArrowhead: Arrowhead.arrow,
-      startBinding: startBinding,
-      endBinding: endBinding,
-      arrowType: ArrowType.sharpElbow,
-    );
+}) => ArrowElement(
+  id: ElementId(id),
+  x: 0,
+  y: 0,
+  width: 100,
+  height: 50,
+  points: points ?? const [Point(0, 0), Point(0, 50), Point(100, 50)],
+  endArrowhead: Arrowhead.arrow,
+  startBinding: startBinding,
+  endBinding: endBinding,
+  arrowType: ArrowType.sharpElbow,
+);
 
-ArrowElement _regularArrow({
-  String id = 'a2',
-  List<Point>? points,
-}) =>
+ArrowElement _regularArrow({String id = 'a2', List<Point>? points}) =>
     ArrowElement(
       id: ElementId(id),
       x: 0,
@@ -72,8 +68,7 @@ void main() {
 
     test('parse legacy elbowed flag', () {
       final parser = SketchLineParser();
-      const line =
-          'arrow id=a1 points=[[0,0],[0,50],[100,50]] elbowed';
+      const line = 'arrow id=a1 points=[[0,0],[0,50],[100,50]] elbowed';
       final result = parser.parseLine(line, 1);
 
       expect(result.value, isA<ArrowElement>());

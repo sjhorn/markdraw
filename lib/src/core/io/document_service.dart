@@ -56,9 +56,7 @@ class DocumentService {
         return ExcalidrawJsonCodec.parse(content);
       case DocumentFormat.markdrawLibrary:
       case DocumentFormat.excalidrawLibrary:
-        throw ArgumentError(
-          'Use loadLibrary() for library files (.$format)',
-        );
+        throw ArgumentError('Use loadLibrary() for library files (.$format)');
     }
   }
 
@@ -79,9 +77,7 @@ class DocumentService {
         content = ExcalidrawJsonCodec.serialize(doc);
       case DocumentFormat.markdrawLibrary:
       case DocumentFormat.excalidrawLibrary:
-        throw ArgumentError(
-          'Use saveLibrary() for library files (.$fmt)',
-        );
+        throw ArgumentError('Use saveLibrary() for library files (.$fmt)');
     }
     await writeFile(path, content);
   }
@@ -113,9 +109,7 @@ class DocumentService {
         return ExcalidrawLibCodec.parse(content);
       case DocumentFormat.markdraw:
       case DocumentFormat.excalidraw:
-        throw ArgumentError(
-          'Use load() for document files (.$format)',
-        );
+        throw ArgumentError('Use load() for document files (.$format)');
     }
   }
 
@@ -136,9 +130,7 @@ class DocumentService {
         content = ExcalidrawLibCodec.serialize(doc);
       case DocumentFormat.markdraw:
       case DocumentFormat.excalidraw:
-        throw ArgumentError(
-          'Use save() for document files (.$fmt)',
-        );
+        throw ArgumentError('Use save() for document files (.$fmt)');
     }
     await writeFile(path, content);
   }

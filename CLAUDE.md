@@ -111,8 +111,14 @@ and grep the /tmp/test.txt file
 
 Follow these steps in order. Fix any issues before proceeding to the next step.
 
-### 1. Static Analysis
+### 1. Formatting & Static Analysis
 ```bash
+# Check formatting — must pass with no changes needed
+dart format --output=none --set-exit-if-changed .
+
+# If formatting issues, fix them:
+dart format .
+
 # Run the analyzer — must have zero issues
 flutter analyze
 
@@ -164,7 +170,14 @@ git tag vX.Y.Z
 git push && git push --tags
 ```
 
-### 7. Publish to pub.dev
+### 7. Pana Analysis
+```bash
+# Run pana to check pub.dev scoring — aim for 120+ out of 160
+dart pub global activate pana
+dart pub global run pana --no-warning .
+```
+
+### 8. Publish to pub.dev
 ```bash
 # Dry run first — fix any issues it reports
 flutter pub publish --dry-run
@@ -174,6 +187,7 @@ flutter pub publish
 ```
 
 ### Quick Reference Checklist
+- [ ] `dart format --output=none --set-exit-if-changed .` — no formatting issues
 - [ ] `flutter analyze` — zero issues
 - [ ] `flutter test` — all pass
 - [ ] `flutter test --coverage` — meets 80% minimum
@@ -182,5 +196,6 @@ flutter pub publish
 - [ ] `CHANGELOG.md` updated
 - [ ] Committed and tagged `vX.Y.Z`
 - [ ] Pushed with tags
+- [ ] `pana --no-warning .` — score 120+/160
 - [ ] `flutter pub publish --dry-run` — no issues
 - [ ] `flutter pub publish` — published

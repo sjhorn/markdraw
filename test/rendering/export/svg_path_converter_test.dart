@@ -7,9 +7,7 @@ import 'package:rough_flutter/rough_flutter.dart';
 void main() {
   group('SvgPathConverter.opSetToPathData', () {
     test('move op produces M command', () {
-      final opSet = OpSet(type: OpSetType.path, ops: [
-        Op.move(PointD(10, 20)),
-      ]);
+      final opSet = OpSet(type: OpSetType.path, ops: [Op.move(PointD(10, 20))]);
       final d = SvgPathConverter.opSetToPathData(opSet);
       expect(d, contains('M'));
       expect(d, contains('10'));
@@ -17,10 +15,10 @@ void main() {
     });
 
     test('lineTo op produces L command', () {
-      final opSet = OpSet(type: OpSetType.path, ops: [
-        Op.move(PointD(0, 0)),
-        Op.lineTo(PointD(100, 50)),
-      ]);
+      final opSet = OpSet(
+        type: OpSetType.path,
+        ops: [Op.move(PointD(0, 0)), Op.lineTo(PointD(100, 50))],
+      );
       final d = SvgPathConverter.opSetToPathData(opSet);
       expect(d, contains('M'));
       expect(d, contains('L'));
@@ -29,10 +27,13 @@ void main() {
     });
 
     test('curveTo op produces C command', () {
-      final opSet = OpSet(type: OpSetType.path, ops: [
-        Op.move(PointD(0, 0)),
-        Op.curveTo(PointD(10, 20), PointD(30, 40), PointD(50, 60)),
-      ]);
+      final opSet = OpSet(
+        type: OpSetType.path,
+        ops: [
+          Op.move(PointD(0, 0)),
+          Op.curveTo(PointD(10, 20), PointD(30, 40), PointD(50, 60)),
+        ],
+      );
       final d = SvgPathConverter.opSetToPathData(opSet);
       expect(d, contains('C'));
       expect(d, contains('50'));
@@ -40,12 +41,15 @@ void main() {
     });
 
     test('chained ops produce correct sequence', () {
-      final opSet = OpSet(type: OpSetType.path, ops: [
-        Op.move(PointD(0, 0)),
-        Op.lineTo(PointD(10, 10)),
-        Op.lineTo(PointD(20, 20)),
-        Op.lineTo(PointD(30, 30)),
-      ]);
+      final opSet = OpSet(
+        type: OpSetType.path,
+        ops: [
+          Op.move(PointD(0, 0)),
+          Op.lineTo(PointD(10, 10)),
+          Op.lineTo(PointD(20, 20)),
+          Op.lineTo(PointD(30, 30)),
+        ],
+      );
       final d = SvgPathConverter.opSetToPathData(opSet);
       // Should have M then 3 L commands
       expect('M'.allMatches(d).length, 1);
@@ -113,34 +117,28 @@ void main() {
     });
 
     test('single point produces circle', () {
-      final d = SvgPathConverter.freedrawToPathData(
-        [const Point(10, 20)],
-        4.0,
-      );
+      final d = SvgPathConverter.freedrawToPathData([const Point(10, 20)], 4.0);
       // Should produce an arc/circle at the point
       expect(d, isNotEmpty);
       expect(d, contains('M'));
     });
 
     test('two points produces line', () {
-      final d = SvgPathConverter.freedrawToPathData(
-        [const Point(0, 0), const Point(100, 50)],
-        2.0,
-      );
+      final d = SvgPathConverter.freedrawToPathData([
+        const Point(0, 0),
+        const Point(100, 50),
+      ], 2.0);
       expect(d, contains('M'));
       expect(d, contains('L'));
     });
 
     test('three+ points produces cubic curves', () {
-      final d = SvgPathConverter.freedrawToPathData(
-        [
-          const Point(0, 0),
-          const Point(50, 30),
-          const Point(100, 10),
-          const Point(150, 40),
-        ],
-        2.0,
-      );
+      final d = SvgPathConverter.freedrawToPathData([
+        const Point(0, 0),
+        const Point(50, 30),
+        const Point(100, 10),
+        const Point(150, 40),
+      ], 2.0);
       expect(d, contains('M'));
       expect(d, contains('C'));
     });
@@ -148,9 +146,10 @@ void main() {
 
   group('coordinate precision', () {
     test('coordinates are reasonably precise', () {
-      final opSet = OpSet(type: OpSetType.path, ops: [
-        Op.move(PointD(1.123456789, 2.987654321)),
-      ]);
+      final opSet = OpSet(
+        type: OpSetType.path,
+        ops: [Op.move(PointD(1.123456789, 2.987654321))],
+      );
       final d = SvgPathConverter.opSetToPathData(opSet);
       // Should not have excessive decimal places
       expect(d, isNotEmpty);

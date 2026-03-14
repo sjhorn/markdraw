@@ -45,8 +45,7 @@ void main() {
       expect(saveCalled, isTrue);
 
       // Invoke the ctrl save variant
-      const ctrlS =
-          SingleActivator(LogicalKeyboardKey.keyS, control: true);
+      const ctrlS = SingleActivator(LogicalKeyboardKey.keyS, control: true);
       saveCalled = false;
       bindings[ctrlS]!();
       expect(saveCalled, isTrue);
@@ -95,20 +94,17 @@ void main() {
       expect(exportPngCalled, isTrue);
 
       // zoom in (meta +=)
-      const metaEqual =
-          SingleActivator(LogicalKeyboardKey.equal, meta: true);
+      const metaEqual = SingleActivator(LogicalKeyboardKey.equal, meta: true);
       bindings[metaEqual]!();
       expect(zoomInCalled, isTrue);
 
       // zoom out (meta -)
-      const metaMinus =
-          SingleActivator(LogicalKeyboardKey.minus, meta: true);
+      const metaMinus = SingleActivator(LogicalKeyboardKey.minus, meta: true);
       bindings[metaMinus]!();
       expect(zoomOutCalled, isTrue);
 
       // reset zoom (meta 0)
-      const metaDigit0 =
-          SingleActivator(LogicalKeyboardKey.digit0, meta: true);
+      const metaDigit0 = SingleActivator(LogicalKeyboardKey.digit0, meta: true);
       bindings[metaDigit0]!();
       expect(resetZoomCalled, isTrue);
 
@@ -142,42 +138,64 @@ void main() {
       );
 
       bindings[const SingleActivator(
-          LogicalKeyboardKey.keyO, control: true)]!();
+        LogicalKeyboardKey.keyO,
+        control: true,
+      )]!();
       expect(openCalled, isTrue);
 
       bindings[const SingleActivator(
-          LogicalKeyboardKey.keyE, control: true, shift: true)]!();
+        LogicalKeyboardKey.keyE,
+        control: true,
+        shift: true,
+      )]!();
       expect(exportPngCalled, isTrue);
 
       bindings[const SingleActivator(
-          LogicalKeyboardKey.keyZ, control: true)]!();
+        LogicalKeyboardKey.keyZ,
+        control: true,
+      )]!();
       expect(undoCalled, isTrue);
 
       bindings[const SingleActivator(
-          LogicalKeyboardKey.keyZ, control: true, shift: true)]!();
+        LogicalKeyboardKey.keyZ,
+        control: true,
+        shift: true,
+      )]!();
       expect(redoCalled, isTrue);
 
       bindings[const SingleActivator(
-          LogicalKeyboardKey.keyY, control: true)]!();
+        LogicalKeyboardKey.keyY,
+        control: true,
+      )]!();
       redoCalled = false;
       bindings[const SingleActivator(
-          LogicalKeyboardKey.keyY, control: true)]!();
+        LogicalKeyboardKey.keyY,
+        control: true,
+      )]!();
       expect(redoCalled, isTrue);
 
       bindings[const SingleActivator(
-          LogicalKeyboardKey.equal, control: true)]!();
+        LogicalKeyboardKey.equal,
+        control: true,
+      )]!();
       expect(zoomInCalled, isTrue);
 
       bindings[const SingleActivator(
-          LogicalKeyboardKey.minus, control: true)]!();
+        LogicalKeyboardKey.minus,
+        control: true,
+      )]!();
       expect(zoomOutCalled, isTrue);
 
       bindings[const SingleActivator(
-          LogicalKeyboardKey.digit0, control: true)]!();
+        LogicalKeyboardKey.digit0,
+        control: true,
+      )]!();
       expect(resetZoomCalled, isTrue);
 
       bindings[const SingleActivator(
-          LogicalKeyboardKey.keyF, control: true)]!();
+        LogicalKeyboardKey.keyF,
+        control: true,
+      )]!();
       expect(findCalled, isTrue);
     });
   });
@@ -381,8 +399,7 @@ void main() {
       );
       final result = callHandleKeyEvent(event, context: context);
       expect(result, isTrue);
-      expect(
-          controller.editorState.activeToolType, ToolType.rectangle);
+      expect(controller.editorState.activeToolType, ToolType.rectangle);
     });
 
     testWidgets('tool shortcut h switches to hand', (tester) async {
@@ -423,13 +440,17 @@ void main() {
       final context = tester.element(find.byType(Container));
 
       // Add an element so the scene is non-empty
-      controller.applyResult(AddElementResult(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 50,
-      )));
+      controller.applyResult(
+        AddElementResult(
+          RectangleElement(
+            id: const ElementId('r1'),
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 50,
+          ),
+        ),
+      );
       expect(controller.editorState.scene.activeElements, isNotEmpty);
 
       await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
@@ -459,8 +480,10 @@ void main() {
       );
       final result = callHandleKeyEvent(event, context: context);
       expect(result, isTrue);
-      expect(controller.editorState.viewport.offset.dy,
-          greaterThan(initialOffset.dy));
+      expect(
+        controller.editorState.viewport.offset.dy,
+        greaterThan(initialOffset.dy),
+      );
     });
 
     testWidgets('Ctrl+S calls onSave callback', (tester) async {
@@ -604,8 +627,7 @@ void main() {
       await tester.pump();
 
       // Hover over the canvas
-      final gesture =
-          await tester.createGesture(kind: PointerDeviceKind.mouse);
+      final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
       await gesture.addPointer(location: const Offset(400, 300));
       await tester.pump();
       await gesture.moveTo(const Offset(450, 350));
@@ -625,11 +647,7 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: SizedBox(
-              width: 800,
-              height: 600,
-              child: MarkdrawEditor(),
-            ),
+            body: SizedBox(width: 800, height: 600, child: MarkdrawEditor()),
           ),
         ),
       );
@@ -774,13 +792,17 @@ void main() {
       await tester.pump();
 
       // Add an element to trigger scene change
-      controller.applyResult(AddElementResult(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 50,
-      )));
+      controller.applyResult(
+        AddElementResult(
+          RectangleElement(
+            id: const ElementId('r1'),
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 50,
+          ),
+        ),
+      );
       controller.historyManager.push(controller.editorState.scene);
 
       expect(changedScene, isNotNull);
@@ -923,8 +945,7 @@ void main() {
     });
 
     test('nextElementId with arrow keyword', () {
-      expect(nextElementId('arrow', 'arrow id=arrow1 from r1 to r2'),
-          'arrow2');
+      expect(nextElementId('arrow', 'arrow id=arrow1 from r1 to r2'), 'arrow2');
     });
 
     test('nextElementId with image keyword', () {
@@ -933,8 +954,10 @@ void main() {
 
     test('nextElementId does not match partial keyword in id', () {
       // id=rrect1 should not match rect pattern
-      expect(nextElementId('rect', 'rrect id=rrect1 at 0,0 size 100x50'),
-          'rect1');
+      expect(
+        nextElementId('rect', 'rrect id=rrect1 at 0,0 size 100x50'),
+        'rect1',
+      );
     });
   });
 
@@ -1131,8 +1154,9 @@ void main() {
       expect(find.text('Hex color'), findsOneWidget);
     });
 
-    testWidgets('hides eyedropper button when callbacks not provided',
-        (tester) async {
+    testWidgets('hides eyedropper button when callbacks not provided', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(

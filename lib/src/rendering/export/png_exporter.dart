@@ -7,6 +7,7 @@ import '../rough/rough_adapter.dart';
 import '../static_canvas_painter.dart';
 import '../viewport_state.dart';
 import 'export_bounds.dart';
+import 'png_metadata.dart';
 
 /// Renders a scene to PNG bytes via [PictureRecorder] and [StaticCanvasPainter].
 class PngExporter {
@@ -16,12 +17,14 @@ class PngExporter {
   ///
   /// [scale] multiplies the pixel dimensions (e.g., 2 for retina).
   /// [backgroundColor] fills behind the scene; null for transparent.
+  /// [embedMarkdraw] embeds the serialized .markdraw data in a PNG tEXt chunk.
   static Future<Uint8List?> export(
     Scene scene,
     RoughAdapter adapter, {
     int scale = 1,
     Color? backgroundColor,
     Set<ElementId>? selectedIds,
+    bool embedMarkdraw = true,
   }) async {
     final bounds = ExportBounds.compute(scene, selectedIds: selectedIds);
     if (bounds == null) return null;
@@ -61,6 +64,13 @@ class PngExporter {
     picture.dispose();
 
     if (byteData == null) return null;
-    return byteData.buffer.asUint8List();
+    var pngBytes = byteData.buffer.asUint8List();
+
+    // Embed .markdraw data in PNG tEXt chunk
+    if (embedMarkdraw) {
+      pngBytes = PngMetadata.embedMarkdrawData(pngBytes, scene) ?? pngBytes;
+    }
+
+    return pngBytes;
   }
 }

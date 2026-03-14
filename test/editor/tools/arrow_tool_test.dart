@@ -23,8 +23,11 @@ void main() {
       tool.onPointerDown(const Point(0, 0), context);
       tool.onPointerUp(const Point(0, 0), context);
       tool.onPointerDown(const Point(100, 100), context);
-      final result =
-          tool.onPointerUp(const Point(100, 100), context, isDoubleClick: true);
+      final result = tool.onPointerUp(
+        const Point(100, 100),
+        context,
+        isDoubleClick: true,
+      );
       final compound = result! as CompoundResult;
       final element = (compound.results[0] as AddElementResult).element;
       expect(element, isA<ArrowElement>());
@@ -34,11 +37,14 @@ void main() {
       tool.onPointerDown(const Point(0, 0), context);
       tool.onPointerUp(const Point(0, 0), context);
       tool.onPointerDown(const Point(100, 100), context);
-      final result =
-          tool.onPointerUp(const Point(100, 100), context, isDoubleClick: true);
+      final result = tool.onPointerUp(
+        const Point(100, 100),
+        context,
+        isDoubleClick: true,
+      );
       final compound = result! as CompoundResult;
-      final arrow = (compound.results[0] as AddElementResult).element
-          as ArrowElement;
+      final arrow =
+          (compound.results[0] as AddElementResult).element as ArrowElement;
       expect(arrow.endArrowhead, Arrowhead.arrow);
     });
 
@@ -56,8 +62,8 @@ void main() {
       tool.onPointerUp(const Point(50, 50), context);
       final result = tool.onKeyEvent('Enter');
       expect(result, isA<CompoundResult>());
-      final element = ((result! as CompoundResult).results[0]
-          as AddElementResult).element;
+      final element =
+          ((result! as CompoundResult).results[0] as AddElementResult).element;
       expect(element, isA<ArrowElement>());
     });
 
@@ -72,11 +78,14 @@ void main() {
       tool.onPointerDown(const Point(50, 100), context);
       tool.onPointerUp(const Point(50, 100), context);
       tool.onPointerDown(const Point(150, 200), context);
-      final result =
-          tool.onPointerUp(const Point(150, 200), context, isDoubleClick: true);
+      final result = tool.onPointerUp(
+        const Point(150, 200),
+        context,
+        isDoubleClick: true,
+      );
       final compound = result! as CompoundResult;
-      final arrow = (compound.results[0] as AddElementResult).element
-          as ArrowElement;
+      final arrow =
+          (compound.results[0] as AddElementResult).element as ArrowElement;
       expect(arrow.points[0], const Point(0, 0));
       expect(arrow.points[1], const Point(100, 100));
       expect(arrow.x, 50);
@@ -87,11 +96,16 @@ void main() {
       tool.onPointerDown(const Point(0, 0), context);
       tool.onPointerUp(const Point(0, 0), context);
       tool.onPointerDown(const Point(100, 100), context);
-      final result =
-          tool.onPointerUp(const Point(100, 100), context, isDoubleClick: true);
+      final result = tool.onPointerUp(
+        const Point(100, 100),
+        context,
+        isDoubleClick: true,
+      );
       final compound = result! as CompoundResult;
-      expect((compound.results[2] as SwitchToolResult).toolType,
-          ToolType.select);
+      expect(
+        (compound.results[2] as SwitchToolResult).toolType,
+        ToolType.select,
+      );
     });
 
     group('drag-to-draw', () {
@@ -112,8 +126,10 @@ void main() {
         expect(arrow.y, 20);
         expect(arrow.endArrowhead, Arrowhead.arrow);
         expect(compound.results[1], isA<SetSelectionResult>());
-        expect((compound.results[2] as SwitchToolResult).toolType,
-            ToolType.select);
+        expect(
+          (compound.results[2] as SwitchToolResult).toolType,
+          ToolType.select,
+        );
       });
 
       test('short drag stays in multi-click mode', () {

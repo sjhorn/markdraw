@@ -5,8 +5,7 @@ import 'package:flutter/material.dart';
 
 /// Shows the keyboard shortcuts help dialog.
 void showHelpDialog(BuildContext context) {
-  final isMac =
-      Theme.of(context).platform == TargetPlatform.macOS || kIsWeb;
+  final isMac = Theme.of(context).platform == TargetPlatform.macOS || kIsWeb;
   final mod = isMac ? 'Cmd' : 'Ctrl';
   showDialog<void>(
     context: context,
@@ -21,9 +20,13 @@ void showHelpDialog(BuildContext context) {
               child: Row(
                 children: [
                   const Expanded(
-                    child: Text('Keyboard shortcuts',
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold)),
+                    child: Text(
+                      'Keyboard shortcuts',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close),
@@ -63,7 +66,11 @@ void showHelpDialog(BuildContext context) {
                       _shortcutRow(context, 'Zoom to fit', 'Shift + 1'),
                       _shortcutRow(context, 'Zoom to selection', 'Shift + 2'),
                       _shortcutRow(context, 'Page down / up', 'PgDn / PgUp'),
-                      _shortcutRow(context, 'Page left / right', 'Shift + PgDn / PgUp'),
+                      _shortcutRow(
+                        context,
+                        'Page left / right',
+                        'Shift + PgDn / PgUp',
+                      ),
                       _shortcutRow(context, 'Toggle grid', "$mod + '"),
                       _shortcutRow(context, 'Zen mode', 'Alt + Z'),
                       _shortcutRow(context, 'View mode', 'Alt + R'),
@@ -72,7 +79,11 @@ void showHelpDialog(BuildContext context) {
                     const SizedBox(height: 16),
                     _helpSection(context, 'Editor', [
                       _shortcutRow(context, 'Undo', '$mod + Z'),
-                      _shortcutRow(context, 'Redo', '$mod + Shift + Z / $mod + Y'),
+                      _shortcutRow(
+                        context,
+                        'Redo',
+                        '$mod + Shift + Z / $mod + Y',
+                      ),
                       _shortcutRow(context, 'Copy', '$mod + C'),
                       _shortcutRow(context, 'Paste', '$mod + V'),
                       _shortcutRow(context, 'Cut', '$mod + X'),
@@ -81,17 +92,41 @@ void showHelpDialog(BuildContext context) {
                       _shortcutRow(context, 'Delete', 'Del / Backspace'),
                       _shortcutRow(context, 'Group', '$mod + G'),
                       _shortcutRow(context, 'Ungroup', '$mod + Shift + G'),
-                      _shortcutRow(context, 'Lock / Unlock', '$mod + Shift + L'),
+                      _shortcutRow(
+                        context,
+                        'Lock / Unlock',
+                        '$mod + Shift + L',
+                      ),
                       _shortcutRow(context, 'Bring forward', '$mod + ]'),
-                      _shortcutRow(context, 'Bring to front', '$mod + Shift + ]'),
+                      _shortcutRow(
+                        context,
+                        'Bring to front',
+                        '$mod + Shift + ]',
+                      ),
                       _shortcutRow(context, 'Send backward', '$mod + ['),
                       _shortcutRow(context, 'Send to back', '$mod + Shift + ['),
                       _shortcutRow(context, 'Nudge', 'Arrows'),
                       _shortcutRow(context, 'Nudge 10px', 'Shift + Arrows'),
-                      _shortcutRow(context, 'Align left / right', '$mod + Shift + \u2190 / \u2192'),
-                      _shortcutRow(context, 'Align top / bottom', '$mod + Shift + \u2191 / \u2193'),
-                      _shortcutRow(context, 'Increase font size', '$mod + Shift + >'),
-                      _shortcutRow(context, 'Decrease font size', '$mod + Shift + <'),
+                      _shortcutRow(
+                        context,
+                        'Align left / right',
+                        '$mod + Shift + \u2190 / \u2192',
+                      ),
+                      _shortcutRow(
+                        context,
+                        'Align top / bottom',
+                        '$mod + Shift + \u2191 / \u2193',
+                      ),
+                      _shortcutRow(
+                        context,
+                        'Increase font size',
+                        '$mod + Shift + >',
+                      ),
+                      _shortcutRow(
+                        context,
+                        'Decrease font size',
+                        '$mod + Shift + <',
+                      ),
                       _shortcutRow(context, 'Stroke color', 'S'),
                       _shortcutRow(context, 'Background color', 'G'),
                       _shortcutRow(context, 'Font picker', 'Shift + F'),
@@ -101,12 +136,20 @@ void showHelpDialog(BuildContext context) {
                       _shortcutRow(context, 'Copy as PNG', 'Shift + Alt + C'),
                       _shortcutRow(context, 'Copy style', '$mod + Alt + C'),
                       _shortcutRow(context, 'Paste style', '$mod + Alt + V'),
-                      _shortcutRow(context, 'Paste as text', '$mod + Shift + V'),
+                      _shortcutRow(
+                        context,
+                        'Paste as text',
+                        '$mod + Shift + V',
+                      ),
                       _shortcutRow(context, 'Reset canvas', '$mod + Del'),
                       _shortcutRow(context, 'Edit link', '$mod + K'),
                       _shortcutRow(context, 'Finalize line', 'Enter'),
                       _shortcutRow(context, 'Create flowchart', '$mod + Arrow'),
-                      _shortcutRow(context, 'Navigate flowchart', 'Alt + Arrow'),
+                      _shortcutRow(
+                        context,
+                        'Navigate flowchart',
+                        'Alt + Arrow',
+                      ),
                       _shortcutRow(context, 'Find on canvas', '$mod + F'),
                       _shortcutRow(context, 'Deselect', 'Escape'),
                     ]),
@@ -132,8 +175,10 @@ Widget _helpSection(BuildContext context, String title, List<Widget> rows) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(title,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+      Text(
+        title,
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+      ),
       const SizedBox(height: 8),
       ...rows,
     ],
@@ -154,9 +199,10 @@ Widget _shortcutRow(BuildContext context, String description, String shortcut) {
             color: Theme.of(context).colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(4),
           ),
-          child: Text(shortcut,
-              style:
-                  const TextStyle(fontSize: 12, fontFamily: 'monospace')),
+          child: Text(
+            shortcut,
+            style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
+          ),
         ),
       ],
     ),

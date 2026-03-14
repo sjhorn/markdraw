@@ -1,4 +1,3 @@
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 
@@ -93,8 +92,10 @@ class InteractiveCanvasPainter extends CustomPainter {
       // Multi-select: draw individual per-element outlines first
       if (isMultiSelect) {
         SelectionRenderer.drawElementOutlines(
-            canvas, selection!.elementBounds,
-            mode: interactionMode);
+          canvas,
+          selection!.elementBounds,
+          mode: interactionMode,
+        );
       }
 
       if (hasAngle) {
@@ -107,18 +108,27 @@ class InteractiveCanvasPainter extends CustomPainter {
 
       if (selection!.showBoundingBox) {
         if (isMultiSelect) {
-          SelectionRenderer.drawDashedSelectionBox(canvas, selection!.bounds,
-              mode: interactionMode);
+          SelectionRenderer.drawDashedSelectionBox(
+            canvas,
+            selection!.bounds,
+            mode: interactionMode,
+          );
         } else {
-          SelectionRenderer.drawSelectionBox(canvas, selection!.bounds,
-              mode: interactionMode);
+          SelectionRenderer.drawSelectionBox(
+            canvas,
+            selection!.bounds,
+            mode: interactionMode,
+          );
         }
       }
 
       if (!selection!.isLocked) {
         if (selection!.showBoundingBox) {
-          SelectionRenderer.drawHandles(canvas, selection!.handles,
-              mode: interactionMode);
+          SelectionRenderer.drawHandles(
+            canvas,
+            selection!.handles,
+            mode: interactionMode,
+          );
 
           // Draw rotation handle
           final rotationHandle = selection!.handles
@@ -140,21 +150,29 @@ class InteractiveCanvasPainter extends CustomPainter {
         // Point handles (for line/arrow vertex editing) — drawn in the
         // same rotated canvas space so they follow the element's rotation.
         if (pointHandles != null && pointHandles!.isNotEmpty) {
-          SelectionRenderer.drawPointHandles(canvas, pointHandles!,
-              mode: interactionMode);
+          SelectionRenderer.drawPointHandles(
+            canvas,
+            pointHandles!,
+            mode: interactionMode,
+          );
         }
 
         // Midpoint handles (for inserting new points between vertices)
         if (midpointHandles != null && midpointHandles!.isNotEmpty) {
-          SelectionRenderer.drawMidpointHandles(canvas, midpointHandles!,
-              mode: interactionMode);
+          SelectionRenderer.drawMidpointHandles(
+            canvas,
+            midpointHandles!,
+            mode: interactionMode,
+          );
         }
 
         // Segment midpoint handles (for dragging elbow arrow segments)
         if (segmentMidpoints != null && segmentMidpoints!.isNotEmpty) {
           SelectionRenderer.drawSegmentMidpointHandles(
-              canvas, segmentMidpoints!,
-              mode: interactionMode);
+            canvas,
+            segmentMidpoints!,
+            mode: interactionMode,
+          );
         }
       }
 
@@ -186,7 +204,10 @@ class InteractiveCanvasPainter extends CustomPainter {
     // Binding indicator
     if (bindTargetBounds != null) {
       SelectionRenderer.drawBindingIndicator(
-          canvas, bindTargetBounds!, bindTargetAngle);
+        canvas,
+        bindTargetBounds!,
+        bindTargetAngle,
+      );
     }
 
     // Snap-to-close indicator
@@ -247,8 +268,11 @@ class InteractiveCanvasPainter extends CustomPainter {
     canvas.drawPath(boxPath, iconPaint);
 
     // Arrow from center to top-right
-    canvas.drawLine(Offset(cx - s * 0.1, cy + s * 0.1),
-        Offset(cx + s, cy - s), iconPaint);
+    canvas.drawLine(
+      Offset(cx - s * 0.1, cy + s * 0.1),
+      Offset(cx + s, cy - s),
+      iconPaint,
+    );
 
     // Arrowhead
     final arrowPath = Path()

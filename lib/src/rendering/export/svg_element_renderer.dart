@@ -46,7 +46,10 @@ class SvgElementRenderer {
   }
 
   static void _dispatch(
-      StringBuffer buf, Element element, Map<String, ImageFile>? files) {
+    StringBuffer buf,
+    Element element,
+    Map<String, ImageFile>? files,
+  ) {
     switch (element.type) {
       case 'rectangle':
         _renderShape(buf, element, _ShapeType.rectangle);
@@ -70,7 +73,10 @@ class SvgElementRenderer {
   }
 
   static void _renderShape(
-      StringBuffer buf, Element element, _ShapeType shapeType) {
+    StringBuffer buf,
+    Element element,
+    _ShapeType shapeType,
+  ) {
     final style = DrawStyle.fromElement(element);
     final generator = style.toGenerator();
     final bounds = Bounds.fromLTWH(
@@ -85,7 +91,8 @@ class SvgElementRenderer {
       case _ShapeType.rectangle:
         if (element.roundness != null) {
           drawable = generator.polygon(
-              _roundedRectPoints(bounds, element.roundness!));
+            _roundedRectPoints(bounds, element.roundness!),
+          );
         } else {
           drawable = generator.rectangle(
             bounds.left,
@@ -104,7 +111,8 @@ class SvgElementRenderer {
       case _ShapeType.diamond:
         if (element.roundness != null) {
           drawable = generator.polygon(
-              _roundedDiamondPoints(bounds, element.roundness!));
+            _roundedDiamondPoints(bounds, element.roundness!),
+          );
         } else {
           final top = PointD(bounds.center.x, bounds.top);
           final right = PointD(bounds.right, bounds.center.y);
@@ -179,7 +187,10 @@ class SvgElementRenderer {
   }
 
   static void _renderRoughArrow(
-      StringBuffer buf, ArrowElement element, List<Point> absPoints) {
+    StringBuffer buf,
+    ArrowElement element,
+    List<Point> absPoints,
+  ) {
     final style = DrawStyle.fromElement(element);
     final generator = style.toGenerator();
 
@@ -198,7 +209,10 @@ class SvgElementRenderer {
   }
 
   static void _renderCurvedArrow(
-      StringBuffer buf, ArrowElement element, List<Point> absPoints) {
+    StringBuffer buf,
+    ArrowElement element,
+    List<Point> absPoints,
+  ) {
     final style = DrawStyle.fromElement(element);
     final generator = style.toGenerator();
 
@@ -215,7 +229,10 @@ class SvgElementRenderer {
   }
 
   static void _renderElbowArrow(
-      StringBuffer buf, ArrowElement element, List<Point> absPoints) {
+    StringBuffer buf,
+    ArrowElement element,
+    List<Point> absPoints,
+  ) {
     // Build clean polyline path (M...L...L...)
     final d = StringBuffer();
     d.write('M${_n(absPoints.first.x)},${_n(absPoints.first.y)}');
@@ -237,7 +254,10 @@ class SvgElementRenderer {
   }
 
   static void _renderRoundElbowArrow(
-      StringBuffer buf, ArrowElement element, List<Point> absPoints) {
+    StringBuffer buf,
+    ArrowElement element,
+    List<Point> absPoints,
+  ) {
     // Build polyline path with Q (quadratic bezier) at corners
     final d = StringBuffer();
     d.write('M${_n(absPoints.first.x)},${_n(absPoints.first.y)}');
@@ -292,7 +312,10 @@ class SvgElementRenderer {
   }
 
   static void _renderArrowheads(
-      StringBuffer buf, ArrowElement element, List<Point> absPoints) {
+    StringBuffer buf,
+    ArrowElement element,
+    List<Point> absPoints,
+  ) {
     // Draw start arrowhead
     if (element.startArrowhead != null) {
       final angle = ArrowheadRenderer.directionAngle(absPoints, isStart: true);
@@ -407,8 +430,7 @@ class SvgElementRenderer {
       return;
     }
 
-    final dataUrl =
-        'data:${file.mimeType};base64,${base64Encode(file.bytes)}';
+    final dataUrl = 'data:${file.mimeType};base64,${base64Encode(file.bytes)}';
     buf.write('<image ');
     buf.write('x="${_n(element.x)}" ');
     buf.write('y="${_n(element.y)}" ');
@@ -501,11 +523,7 @@ class SvgElementRenderer {
     return (a.x - b.x).abs() < eps && (a.y - b.y).abs() < eps;
   }
 
-  static List<Point> _absolutePoints(
-    List<Point> points,
-    double x,
-    double y,
-  ) {
+  static List<Point> _absolutePoints(List<Point> points, double x, double y) {
     return points.map((p) => Point(p.x + x, p.y + y)).toList();
   }
 
@@ -530,6 +548,7 @@ class SvgElementRenderer {
     }
     return s;
   }
+
   static const _cornerSegments = 10;
 
   /// Discretizes a closed polygon into smooth Catmull-Rom curve points.
@@ -545,16 +564,20 @@ class SvgElementRenderer {
         final t = j / _cornerSegments;
         final tt = t * t;
         final ttt = tt * t;
-        result.add(PointD(
-          0.5 * ((-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * ttt +
-              (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * tt +
-              (-p0.x + p2.x) * t +
-              2 * p1.x),
-          0.5 * ((-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * ttt +
-              (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * tt +
-              (-p0.y + p2.y) * t +
-              2 * p1.y),
-        ));
+        result.add(
+          PointD(
+            0.5 *
+                ((-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * ttt +
+                    (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * tt +
+                    (-p0.x + p2.x) * t +
+                    2 * p1.x),
+            0.5 *
+                ((-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * ttt +
+                    (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * tt +
+                    (-p0.y + p2.y) * t +
+                    2 * p1.y),
+          ),
+        );
       }
     }
     return result;
@@ -582,7 +605,9 @@ class SvgElementRenderer {
 
   /// Generates polygon points for a rounded diamond (cubic Bezier corners).
   static List<PointD> _roundedDiamondPoints(
-      Bounds bounds, Roundness roundness) {
+    Bounds bounds,
+    Roundness roundness,
+  ) {
     final topX = bounds.center.x;
     final topY = bounds.top;
     final rightX = bounds.right;
@@ -597,50 +622,100 @@ class SvgElementRenderer {
     return [
       PointD(topX + vr, topY + hr),
       PointD(rightX - vr, rightY - hr),
-      ..._cubicBezier(rightX - vr, rightY - hr, rightX, rightY, rightX, rightY,
-          rightX - vr, rightY + hr),
+      ..._cubicBezier(
+        rightX - vr,
+        rightY - hr,
+        rightX,
+        rightY,
+        rightX,
+        rightY,
+        rightX - vr,
+        rightY + hr,
+      ),
       PointD(bottomX + vr, bottomY - hr),
-      ..._cubicBezier(bottomX + vr, bottomY - hr, bottomX, bottomY, bottomX,
-          bottomY, bottomX - vr, bottomY - hr),
+      ..._cubicBezier(
+        bottomX + vr,
+        bottomY - hr,
+        bottomX,
+        bottomY,
+        bottomX,
+        bottomY,
+        bottomX - vr,
+        bottomY - hr,
+      ),
       PointD(leftX + vr, leftY + hr),
-      ..._cubicBezier(leftX + vr, leftY + hr, leftX, leftY, leftX, leftY,
-          leftX + vr, leftY - hr),
+      ..._cubicBezier(
+        leftX + vr,
+        leftY + hr,
+        leftX,
+        leftY,
+        leftX,
+        leftY,
+        leftX + vr,
+        leftY - hr,
+      ),
       PointD(topX - vr, topY + hr),
-      ..._cubicBezier(topX - vr, topY + hr, topX, topY, topX, topY, topX + vr,
-          topY + hr),
+      ..._cubicBezier(
+        topX - vr,
+        topY + hr,
+        topX,
+        topY,
+        topX,
+        topY,
+        topX + vr,
+        topY + hr,
+      ),
     ];
   }
 
   static List<PointD> _quadBezier(
-      double x0, double y0, double cx, double cy, double x1, double y1) {
+    double x0,
+    double y0,
+    double cx,
+    double cy,
+    double x1,
+    double y1,
+  ) {
     final pts = <PointD>[];
     for (var i = 1; i <= _cornerSegments; i++) {
       final t = i / _cornerSegments;
       final mt = 1 - t;
-      pts.add(PointD(
-        mt * mt * x0 + 2 * mt * t * cx + t * t * x1,
-        mt * mt * y0 + 2 * mt * t * cy + t * t * y1,
-      ));
+      pts.add(
+        PointD(
+          mt * mt * x0 + 2 * mt * t * cx + t * t * x1,
+          mt * mt * y0 + 2 * mt * t * cy + t * t * y1,
+        ),
+      );
     }
     return pts;
   }
 
-  static List<PointD> _cubicBezier(double x0, double y0, double cx1,
-      double cy1, double cx2, double cy2, double x1, double y1) {
+  static List<PointD> _cubicBezier(
+    double x0,
+    double y0,
+    double cx1,
+    double cy1,
+    double cx2,
+    double cy2,
+    double x1,
+    double y1,
+  ) {
     final pts = <PointD>[];
     for (var i = 1; i <= _cornerSegments; i++) {
       final t = i / _cornerSegments;
       final mt = 1 - t;
-      pts.add(PointD(
-        mt * mt * mt * x0 +
-            3 * mt * mt * t * cx1 +
-            3 * mt * t * t * cx2 +
-            t * t * t * x1,
-        mt * mt * mt * y0 +
-            3 * mt * mt * t * cy1 +
-            3 * mt * t * t * cy2 +
-            t * t * t * y1,
-      ));
+      pts.add(
+        PointD(
+          mt * mt * mt * x0 +
+              3 * mt * mt * t * cx1 +
+              3 * mt * t * t * cx2 +
+              t * t * t * x1,
+          mt * mt * mt * y0 +
+              3 * mt * mt * t * cy1 +
+              3 * mt * t * t * cy2 +
+              t * t * t * y1,
+        ),
+      );
     }
     return pts;
   }

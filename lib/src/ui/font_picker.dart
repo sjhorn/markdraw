@@ -64,8 +64,7 @@ class _FontPickerOverlayState extends State<FontPickerOverlay> {
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(8),
-                  border:
-                      Border.all(color: Theme.of(context).dividerColor),
+                  border: Border.all(color: Theme.of(context).dividerColor),
                 ),
                 child: FontListContent(
                   currentFont: widget.currentFont,
@@ -124,8 +123,8 @@ class _FontListContentState extends State<FontListContent> {
         .where((f) => query.isEmpty || f.toLowerCase().contains(query))
         .toList();
 
-    final isDynamicSearch = query.isNotEmpty &&
-        !allUiFonts.any((f) => f.toLowerCase() == query);
+    final isDynamicSearch =
+        query.isNotEmpty && !allUiFonts.any((f) => f.toLowerCase() == query);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -151,8 +150,7 @@ class _FontListContentState extends State<FontListContent> {
               isDense: true,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide:
-                    BorderSide(color: Theme.of(context).dividerColor),
+                borderSide: BorderSide(color: Theme.of(context).dividerColor),
               ),
             ),
             onChanged: (v) => setState(() => _searchQuery = v),
@@ -212,8 +210,7 @@ class _FontListContentState extends State<FontListContent> {
               width: 20,
               child: Text(
                 _categoryIcon(category),
-                style:
-                    TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
+                style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
               ),
             ),
             Expanded(
@@ -223,16 +220,13 @@ class _FontListContentState extends State<FontListContent> {
                   font,
                   baseStyle: TextStyle(
                     fontSize: 13,
-                    color: isSelected
-                        ? cs.onPrimaryContainer
-                        : cs.onSurface,
+                    color: isSelected ? cs.onPrimaryContainer : cs.onSurface,
                   ),
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            if (isSelected)
-              Icon(Icons.check, size: 16, color: cs.primary),
+            if (isSelected) Icon(Icons.check, size: 16, color: cs.primary),
           ],
         ),
       ),
@@ -242,8 +236,7 @@ class _FontListContentState extends State<FontListContent> {
   Widget _buildDynamicFontItem(String searchText) {
     final displayName = searchText
         .split(' ')
-        .map(
-            (w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
+        .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
         .join(' ');
     return InkWell(
       onTap: () => widget.onSelect(displayName),
@@ -251,17 +244,19 @@ class _FontListContentState extends State<FontListContent> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         child: Row(
           children: [
-            Icon(Icons.cloud_download,
-                size: 14,
-                color: Theme.of(context).colorScheme.onSurfaceVariant),
+            Icon(
+              Icons.cloud_download,
+              size: 14,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(width: 6),
             Expanded(
               child: Text(
                 'Google Font: $displayName',
                 style: TextStyle(
-                    fontSize: 13,
-                    color:
-                        Theme.of(context).colorScheme.onSurfaceVariant),
+                  fontSize: 13,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),

@@ -7,7 +7,10 @@ void main() {
       test('returns true for rectangle', () {
         final rect = RectangleElement(
           id: const ElementId('r1'),
-          x: 0, y: 0, width: 100, height: 50,
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 50,
         );
         expect(FlowchartUtils.isFlowchartNode(rect), isTrue);
       });
@@ -15,7 +18,10 @@ void main() {
       test('returns true for ellipse', () {
         final ellipse = EllipseElement(
           id: const ElementId('e1'),
-          x: 0, y: 0, width: 100, height: 50,
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 50,
         );
         expect(FlowchartUtils.isFlowchartNode(ellipse), isTrue);
       });
@@ -23,7 +29,10 @@ void main() {
       test('returns true for diamond', () {
         final diamond = DiamondElement(
           id: const ElementId('d1'),
-          x: 0, y: 0, width: 100, height: 50,
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 50,
         );
         expect(FlowchartUtils.isFlowchartNode(diamond), isTrue);
       });
@@ -31,7 +40,10 @@ void main() {
       test('returns false for line', () {
         final line = LineElement(
           id: const ElementId('l1'),
-          x: 0, y: 0, width: 100, height: 0,
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 0,
           points: [const Point(0, 0), const Point(100, 0)],
         );
         expect(FlowchartUtils.isFlowchartNode(line), isFalse);
@@ -40,7 +52,10 @@ void main() {
       test('returns false for arrow', () {
         final arrow = ArrowElement(
           id: const ElementId('a1'),
-          x: 0, y: 0, width: 100, height: 0,
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 0,
           points: [const Point(0, 0), const Point(100, 0)],
         );
         expect(FlowchartUtils.isFlowchartNode(arrow), isFalse);
@@ -49,7 +64,10 @@ void main() {
       test('returns false for text', () {
         final text = TextElement(
           id: const ElementId('t1'),
-          x: 0, y: 0, width: 100, height: 50,
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 50,
           text: 'hello',
         );
         expect(FlowchartUtils.isFlowchartNode(text), isFalse);
@@ -58,7 +76,10 @@ void main() {
       test('returns false for freedraw', () {
         final fd = FreedrawElement(
           id: const ElementId('fd1'),
-          x: 0, y: 0, width: 100, height: 50,
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 50,
           points: [const Point(0, 0), const Point(100, 50)],
         );
         expect(FlowchartUtils.isFlowchartNode(fd), isFalse);
@@ -72,7 +93,10 @@ void main() {
       setUp(() {
         startNode = RectangleElement(
           id: const ElementId('start'),
-          x: 100, y: 100, width: 200, height: 100,
+          x: 100,
+          y: 100,
+          width: 200,
+          height: 100,
           strokeColor: '#ff0000',
           backgroundColor: '#00ff00',
         );
@@ -81,7 +105,9 @@ void main() {
 
       test('creates node to the right', () {
         final elements = FlowchartUtils.createNodeAndArrow(
-          startNode, LinkDirection.right, scene,
+          startNode,
+          LinkDirection.right,
+          scene,
         );
         expect(elements, hasLength(2));
         final node = elements[0];
@@ -108,7 +134,9 @@ void main() {
 
       test('creates node to the left', () {
         final elements = FlowchartUtils.createNodeAndArrow(
-          startNode, LinkDirection.left, scene,
+          startNode,
+          LinkDirection.left,
+          scene,
         );
         final node = elements[0];
         expect(node.x, equals(startNode.x - startNode.width - 100));
@@ -117,7 +145,9 @@ void main() {
 
       test('creates node downward', () {
         final elements = FlowchartUtils.createNodeAndArrow(
-          startNode, LinkDirection.down, scene,
+          startNode,
+          LinkDirection.down,
+          scene,
         );
         final node = elements[0];
         expect(node.x, equals(startNode.x));
@@ -126,7 +156,9 @@ void main() {
 
       test('creates node upward', () {
         final elements = FlowchartUtils.createNodeAndArrow(
-          startNode, LinkDirection.up, scene,
+          startNode,
+          LinkDirection.up,
+          scene,
         );
         final node = elements[0];
         expect(node.x, equals(startNode.x));
@@ -135,7 +167,9 @@ void main() {
 
       test('creates node with fresh ID', () {
         final elements = FlowchartUtils.createNodeAndArrow(
-          startNode, LinkDirection.right, scene,
+          startNode,
+          LinkDirection.right,
+          scene,
         );
         expect(elements[0].id, isNot(equals(startNode.id)));
         expect(elements[1].id, isNot(equals(startNode.id)));
@@ -147,14 +181,22 @@ void main() {
       test('creates arrow with correct bindings for right direction', () {
         final start = RectangleElement(
           id: const ElementId('s'),
-          x: 0, y: 0, width: 100, height: 50,
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 50,
         );
         final end = RectangleElement(
           id: const ElementId('e'),
-          x: 200, y: 0, width: 100, height: 50,
+          x: 200,
+          y: 0,
+          width: 100,
+          height: 50,
         );
         final arrow = FlowchartUtils.createBindingArrow(
-          start, end, LinkDirection.right,
+          start,
+          end,
+          LinkDirection.right,
         );
 
         expect(arrow.startBinding!.fixedPoint, equals(const Point(1.0, 0.5)));
@@ -166,14 +208,22 @@ void main() {
       test('creates arrow with correct bindings for down direction', () {
         final start = RectangleElement(
           id: const ElementId('s'),
-          x: 0, y: 0, width: 100, height: 50,
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 50,
         );
         final end = RectangleElement(
           id: const ElementId('e'),
-          x: 0, y: 150, width: 100, height: 50,
+          x: 0,
+          y: 150,
+          width: 100,
+          height: 50,
         );
         final arrow = FlowchartUtils.createBindingArrow(
-          start, end, LinkDirection.down,
+          start,
+          end,
+          LinkDirection.down,
         );
 
         expect(arrow.startBinding!.fixedPoint, equals(const Point(0.5, 1.0)));
@@ -188,14 +238,20 @@ void main() {
       setUp(() {
         startNode = RectangleElement(
           id: const ElementId('start'),
-          x: 100, y: 100, width: 200, height: 100,
+          x: 100,
+          y: 100,
+          width: 200,
+          height: 100,
         );
         scene = Scene().addElement(startNode);
       });
 
       test('creates 2 fanned nodes to the right', () {
         final elements = FlowchartUtils.createFannedNodes(
-          startNode, LinkDirection.right, scene, 2,
+          startNode,
+          LinkDirection.right,
+          scene,
+          2,
         );
         // 2 nodes + 2 arrows
         expect(elements, hasLength(4));
@@ -213,7 +269,10 @@ void main() {
 
       test('creates 3 fanned nodes downward', () {
         final elements = FlowchartUtils.createFannedNodes(
-          startNode, LinkDirection.down, scene, 3,
+          startNode,
+          LinkDirection.down,
+          scene,
+          3,
         );
         expect(elements, hasLength(6));
 
@@ -232,7 +291,10 @@ void main() {
 
       test('single fanned node is centered', () {
         final elements = FlowchartUtils.createFannedNodes(
-          startNode, LinkDirection.right, scene, 1,
+          startNode,
+          LinkDirection.right,
+          scene,
+          1,
         );
         expect(elements, hasLength(2));
         final node = elements[0];
@@ -244,14 +306,22 @@ void main() {
       test('finds successor via elbow arrow to the right', () {
         final start = RectangleElement(
           id: const ElementId('start'),
-          x: 0, y: 0, width: 100, height: 50,
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 50,
         );
         final end = RectangleElement(
           id: const ElementId('end'),
-          x: 200, y: 0, width: 100, height: 50,
+          x: 200,
+          y: 0,
+          width: 100,
+          height: 50,
         );
         final arrow = FlowchartUtils.createBindingArrow(
-          start, end, LinkDirection.right,
+          start,
+          end,
+          LinkDirection.right,
         );
 
         final scene = Scene()
@@ -260,7 +330,9 @@ void main() {
             .addElement(arrow);
 
         final linked = FlowchartUtils.getLinkedNodesInDirection(
-          scene, start, LinkDirection.right,
+          scene,
+          start,
+          LinkDirection.right,
         );
         expect(linked, hasLength(1));
         expect(linked.first.id, equals(end.id));
@@ -269,14 +341,22 @@ void main() {
       test('finds predecessor via arrow coming from the left', () {
         final start = RectangleElement(
           id: const ElementId('start'),
-          x: 0, y: 0, width: 100, height: 50,
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 50,
         );
         final end = RectangleElement(
           id: const ElementId('end'),
-          x: 200, y: 0, width: 100, height: 50,
+          x: 200,
+          y: 0,
+          width: 100,
+          height: 50,
         );
         final arrow = FlowchartUtils.createBindingArrow(
-          start, end, LinkDirection.right,
+          start,
+          end,
+          LinkDirection.right,
         );
 
         final scene = Scene()
@@ -286,7 +366,9 @@ void main() {
 
         // From end, looking left should find start
         final linked = FlowchartUtils.getLinkedNodesInDirection(
-          scene, end, LinkDirection.left,
+          scene,
+          end,
+          LinkDirection.left,
         );
         expect(linked, hasLength(1));
         expect(linked.first.id, equals(start.id));
@@ -295,14 +377,22 @@ void main() {
       test('returns empty for unconnected direction', () {
         final start = RectangleElement(
           id: const ElementId('start'),
-          x: 0, y: 0, width: 100, height: 50,
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 50,
         );
         final end = RectangleElement(
           id: const ElementId('end'),
-          x: 200, y: 0, width: 100, height: 50,
+          x: 200,
+          y: 0,
+          width: 100,
+          height: 50,
         );
         final arrow = FlowchartUtils.createBindingArrow(
-          start, end, LinkDirection.right,
+          start,
+          end,
+          LinkDirection.right,
         );
 
         final scene = Scene()
@@ -311,7 +401,9 @@ void main() {
             .addElement(arrow);
 
         final linked = FlowchartUtils.getLinkedNodesInDirection(
-          scene, start, LinkDirection.up,
+          scene,
+          start,
+          LinkDirection.up,
         );
         expect(linked, isEmpty);
       });
@@ -321,18 +413,22 @@ void main() {
       test('staggers when direct position is occupied', () {
         final startNode = RectangleElement(
           id: const ElementId('start'),
-          x: 100, y: 100, width: 200, height: 100,
+          x: 100,
+          y: 100,
+          width: 200,
+          height: 100,
         );
         // Place an existing node at the direct position
         final blocking = RectangleElement(
           id: const ElementId('blocking'),
-          x: 400, y: 100, width: 200, height: 100,
+          x: 400,
+          y: 100,
+          width: 200,
+          height: 100,
         );
-        final offset = FlowchartUtils.getOffset(
-          startNode,
-          [blocking],
-          LinkDirection.right,
-        );
+        final offset = FlowchartUtils.getOffset(startNode, [
+          blocking,
+        ], LinkDirection.right);
         // Should not overlap with the blocking node
         expect(offset.dy, isNot(equals(100.0)));
       });

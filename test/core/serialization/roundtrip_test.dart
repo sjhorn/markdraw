@@ -375,10 +375,7 @@ rect id=r at 10,20 50x60 fill=lime color=red stroke=dotted fill-style=hachure st
     });
 
     test('named color input parses and re-serializes as same name', () {
-      final result = parser.parseLine(
-        'rect id=r at 0,0 100x100 color=red',
-        1,
-      );
+      final result = parser.parseLine('rect id=r at 0,0 100x100 color=red', 1);
       final parsed = result.value!;
       expect(parsed.strokeColor, '#ff0000');
       final line = serializer.serialize(parsed, alias: 'r');
@@ -389,10 +386,7 @@ rect id=r at 10,20 50x60 fill=lime color=red stroke=dotted fill-style=hachure st
   group('Document-level round-trips', () {
     test('frontmatter settings round-trip', () {
       final doc = MarkdrawDocument(
-        settings: const CanvasSettings(
-          background: '#e0e0e0',
-          grid: 20,
-        ),
+        settings: const CanvasSettings(background: '#e0e0e0', grid: 20),
       );
       final output = DocumentSerializer.serialize(doc);
       final parsed = DocumentParser.parse(output);
@@ -488,7 +482,9 @@ rect id=r at 10,20 50x60 fill=lime color=red stroke=dotted fill-style=hachure st
       );
 
       final doc = MarkdrawDocument(
-        sections: [SketchSection([rect1, rect2, arrow])],
+        sections: [
+          SketchSection([rect1, rect2, arrow]),
+        ],
         aliases: {'auth': 'r1', 'gw': 'r2'},
       );
       final output = DocumentSerializer.serialize(doc);
@@ -499,8 +495,7 @@ rect id=r at 10,20 50x60 fill=lime color=red stroke=dotted fill-style=hachure st
 
       final parsed = DocumentParser.parse(output);
       final sketch = parsed.value.sections.first as SketchSection;
-      final parsedArrow =
-          sketch.elements.whereType<ArrowElement>().first;
+      final parsedArrow = sketch.elements.whereType<ArrowElement>().first;
       expect(parsedArrow.startBinding, isNotNull);
       expect(parsedArrow.startBinding!.fixedPoint.x, 1.0);
       expect(parsedArrow.startBinding!.fixedPoint.y, 0.5);
@@ -509,141 +504,154 @@ rect id=r at 10,20 50x60 fill=lime color=red stroke=dotted fill-style=hachure st
       expect(parsedArrow.endBinding!.fixedPoint.y, 0.5);
     });
 
-    test('arrow bindings round-trip with non-default fixedPoints as pixels', () {
-      final rect1 = RectangleElement(
-        id: const ElementId('r1'),
-        x: 100,
-        y: 200,
-        width: 160,
-        height: 80,
-        seed: 1,
-        versionNonce: 1,
-        updated: 0,
-      );
-      final rect2 = RectangleElement(
-        id: const ElementId('r2'),
-        x: 350,
-        y: 200,
-        width: 160,
-        height: 80,
-        seed: 2,
-        versionNonce: 1,
-        updated: 0,
-      );
-      final arrow = ArrowElement(
-        id: const ElementId('a1'),
-        x: 260,
-        y: 240,
-        width: 90,
-        height: 0,
-        points: [const Point(0, 0), const Point(90, 0)],
-        startBinding: const PointBinding(
-          elementId: 'r1',
-          fixedPoint: Point(0.25, 0.75), // 40px, 60px on 160x80
-        ),
-        endBinding: const PointBinding(
-          elementId: 'r2',
-          fixedPoint: Point(0.5, 0), // 80px, 0px on 160x80
-        ),
-        seed: 3,
-        versionNonce: 1,
-        updated: 0,
-      );
+    test(
+      'arrow bindings round-trip with non-default fixedPoints as pixels',
+      () {
+        final rect1 = RectangleElement(
+          id: const ElementId('r1'),
+          x: 100,
+          y: 200,
+          width: 160,
+          height: 80,
+          seed: 1,
+          versionNonce: 1,
+          updated: 0,
+        );
+        final rect2 = RectangleElement(
+          id: const ElementId('r2'),
+          x: 350,
+          y: 200,
+          width: 160,
+          height: 80,
+          seed: 2,
+          versionNonce: 1,
+          updated: 0,
+        );
+        final arrow = ArrowElement(
+          id: const ElementId('a1'),
+          x: 260,
+          y: 240,
+          width: 90,
+          height: 0,
+          points: [const Point(0, 0), const Point(90, 0)],
+          startBinding: const PointBinding(
+            elementId: 'r1',
+            fixedPoint: Point(0.25, 0.75), // 40px, 60px on 160x80
+          ),
+          endBinding: const PointBinding(
+            elementId: 'r2',
+            fixedPoint: Point(0.5, 0), // 80px, 0px on 160x80
+          ),
+          seed: 3,
+          versionNonce: 1,
+          updated: 0,
+        );
 
-      final doc = MarkdrawDocument(
-        sections: [SketchSection([rect1, rect2, arrow])],
-        aliases: {'auth': 'r1', 'gw': 'r2'},
-      );
-      final output = DocumentSerializer.serialize(doc);
+        final doc = MarkdrawDocument(
+          sections: [
+            SketchSection([rect1, rect2, arrow]),
+          ],
+          aliases: {'auth': 'r1', 'gw': 'r2'},
+        );
+        final output = DocumentSerializer.serialize(doc);
 
-      // Non-default fixedPoints should emit pixel @x,y suffix
-      expect(output, contains('from auth@40,60'));
-      expect(output, contains('to gw@80,0'));
+        // Non-default fixedPoints should emit pixel @x,y suffix
+        expect(output, contains('from auth@40,60'));
+        expect(output, contains('to gw@80,0'));
 
-      final parsed = DocumentParser.parse(output);
-      final sketch = parsed.value.sections.first as SketchSection;
-      final parsedArrow =
-          sketch.elements.whereType<ArrowElement>().first;
-      expect(parsedArrow.startBinding, isNotNull);
-      expect(parsedArrow.startBinding!.fixedPoint.x, 0.25);
-      expect(parsedArrow.startBinding!.fixedPoint.y, 0.75);
-      expect(parsedArrow.endBinding, isNotNull);
-      expect(parsedArrow.endBinding!.fixedPoint.x, 0.5);
-      expect(parsedArrow.endBinding!.fixedPoint.y, 0.0);
-    });
+        final parsed = DocumentParser.parse(output);
+        final sketch = parsed.value.sections.first as SketchSection;
+        final parsedArrow = sketch.elements.whereType<ArrowElement>().first;
+        expect(parsedArrow.startBinding, isNotNull);
+        expect(parsedArrow.startBinding!.fixedPoint.x, 0.25);
+        expect(parsedArrow.startBinding!.fixedPoint.y, 0.75);
+        expect(parsedArrow.endBinding, isNotNull);
+        expect(parsedArrow.endBinding!.fixedPoint.x, 0.5);
+        expect(parsedArrow.endBinding!.fixedPoint.y, 0.0);
+      },
+    );
 
-    test('arrow bindings round-trip via SceneDocumentConverter auto-aliases', () {
-      // Simulates the split-pane live sync scenario: canvas elements have
-      // UUID IDs and no manual aliases. SceneDocumentConverter auto-generates
-      // aliases like rect1, rect2, arrow1.
-      final rect1 = RectangleElement(
-        id: const ElementId('uuid-rect-1'),
-        x: 100,
-        y: 200,
-        width: 160,
-        height: 80,
-        seed: 1,
-        versionNonce: 1,
-        updated: 0,
-      );
-      final rect2 = RectangleElement(
-        id: const ElementId('uuid-rect-2'),
-        x: 350,
-        y: 200,
-        width: 160,
-        height: 80,
-        seed: 2,
-        versionNonce: 1,
-        updated: 0,
-      );
-      final arrow = ArrowElement(
-        id: const ElementId('uuid-arrow-1'),
-        x: 260,
-        y: 240,
-        width: 90,
-        height: 0,
-        points: [const Point(0, 0), const Point(90, 0)],
-        startBinding: const PointBinding(
-          elementId: 'uuid-rect-1',
-          fixedPoint: Point(1, 0.5),
-        ),
-        endBinding: const PointBinding(
-          elementId: 'uuid-rect-2',
-          fixedPoint: Point(0, 0.5),
-        ),
-        seed: 3,
-        versionNonce: 1,
-        updated: 0,
-      );
+    test(
+      'arrow bindings round-trip via SceneDocumentConverter auto-aliases',
+      () {
+        // Simulates the split-pane live sync scenario: canvas elements have
+        // UUID IDs and no manual aliases. SceneDocumentConverter auto-generates
+        // aliases like rect1, rect2, arrow1.
+        final rect1 = RectangleElement(
+          id: const ElementId('uuid-rect-1'),
+          x: 100,
+          y: 200,
+          width: 160,
+          height: 80,
+          seed: 1,
+          versionNonce: 1,
+          updated: 0,
+        );
+        final rect2 = RectangleElement(
+          id: const ElementId('uuid-rect-2'),
+          x: 350,
+          y: 200,
+          width: 160,
+          height: 80,
+          seed: 2,
+          versionNonce: 1,
+          updated: 0,
+        );
+        final arrow = ArrowElement(
+          id: const ElementId('uuid-arrow-1'),
+          x: 260,
+          y: 240,
+          width: 90,
+          height: 0,
+          points: [const Point(0, 0), const Point(90, 0)],
+          startBinding: const PointBinding(
+            elementId: 'uuid-rect-1',
+            fixedPoint: Point(1, 0.5),
+          ),
+          endBinding: const PointBinding(
+            elementId: 'uuid-rect-2',
+            fixedPoint: Point(0, 0.5),
+          ),
+          seed: 3,
+          versionNonce: 1,
+          updated: 0,
+        );
 
-      // Use SceneDocumentConverter to auto-generate aliases
-      final scene = Scene()
-          .addElement(rect1)
-          .addElement(rect2)
-          .addElement(arrow);
-      final doc = SceneDocumentConverter.sceneToDocument(scene);
-      final output = DocumentSerializer.serialize(doc);
+        // Use SceneDocumentConverter to auto-generate aliases
+        final scene = Scene()
+            .addElement(rect1)
+            .addElement(rect2)
+            .addElement(arrow);
+        final doc = SceneDocumentConverter.sceneToDocument(scene);
+        final output = DocumentSerializer.serialize(doc);
 
-      // Verify human-friendly aliases are used
-      expect(output, contains('id=rect1'));
-      expect(output, contains('id=rect2'));
-      expect(output, contains('id=arrow1'));
-      expect(output, contains('from rect1'));
-      expect(output, contains('to rect2'));
-      expect(output, isNot(contains('eid=')));
-      expect(output, isNot(contains('uuid-')));
+        // Verify human-friendly aliases are used
+        expect(output, contains('id=rect1'));
+        expect(output, contains('id=rect2'));
+        expect(output, contains('id=arrow1'));
+        expect(output, contains('from rect1'));
+        expect(output, contains('to rect2'));
+        expect(output, isNot(contains('eid=')));
+        expect(output, isNot(contains('uuid-')));
 
-      // Parse it back — bindings must resolve
-      final parsed = DocumentParser.parse(output);
-      final sketch = parsed.value.sections.first as SketchSection;
-      final parsedArrows = sketch.elements.whereType<ArrowElement>().toList();
-      expect(parsedArrows, hasLength(1));
-      final parsedArrow = parsedArrows.first;
-      expect(parsedArrow.startBinding, isNotNull,
-          reason: 'startBinding should resolve via auto-alias');
-      expect(parsedArrow.endBinding, isNotNull,
-          reason: 'endBinding should resolve via auto-alias');
-    });
+        // Parse it back — bindings must resolve
+        final parsed = DocumentParser.parse(output);
+        final sketch = parsed.value.sections.first as SketchSection;
+        final parsedArrows = sketch.elements.whereType<ArrowElement>().toList();
+        expect(parsedArrows, hasLength(1));
+        final parsedArrow = parsedArrows.first;
+        expect(
+          parsedArrow.startBinding,
+          isNotNull,
+          reason: 'startBinding should resolve via auto-alias',
+        );
+        expect(
+          parsedArrow.endBinding,
+          isNotNull,
+          reason: 'endBinding should resolve via auto-alias',
+        );
+      },
+    );
 
     test('bound text properties round-trip', () {
       final rect = RectangleElement(
@@ -675,7 +683,9 @@ rect id=r at 10,20 50x60 fill=lime color=red stroke=dotted fill-style=hachure st
       );
 
       final doc = MarkdrawDocument(
-        sections: [SketchSection([rect, label])],
+        sections: [
+          SketchSection([rect, label]),
+        ],
         aliases: {'auth': 'r1'},
       );
       final output = DocumentSerializer.serialize(doc);
@@ -726,7 +736,9 @@ rect id=r at 10,20 50x60 fill=lime color=red stroke=dotted fill-style=hachure st
       );
 
       final doc = MarkdrawDocument(
-        sections: [SketchSection([rect, label])],
+        sections: [
+          SketchSection([rect, label]),
+        ],
         aliases: {'auth': 'r1'},
       );
       final output = DocumentSerializer.serialize(doc);
@@ -841,36 +853,19 @@ rect id=r at 10,20 50x60 fill=lime color=red stroke=dotted fill-style=hachure st
       final parsed = DocumentParser.parse(output);
       final sketch = parsed.value.sections.first as SketchSection;
 
+      expect(sketch.elements.whereType<RectangleElement>().length, 1);
+      expect(sketch.elements.whereType<EllipseElement>().length, 1);
+      expect(sketch.elements.whereType<DiamondElement>().length, 1);
+      expect(sketch.elements.whereType<TextElement>().length, 1);
       expect(
-        sketch.elements.whereType<RectangleElement>().length,
-        1,
-      );
-      expect(
-        sketch.elements.whereType<EllipseElement>().length,
-        1,
-      );
-      expect(
-        sketch.elements.whereType<DiamondElement>().length,
-        1,
-      );
-      expect(
-        sketch.elements.whereType<TextElement>().length,
-        1,
-      );
-      expect(
-        sketch.elements.whereType<LineElement>()
+        sketch.elements
+            .whereType<LineElement>()
             .where((e) => e is! ArrowElement)
             .length,
         1,
       );
-      expect(
-        sketch.elements.whereType<ArrowElement>().length,
-        1,
-      );
-      expect(
-        sketch.elements.whereType<FreedrawElement>().length,
-        1,
-      );
+      expect(sketch.elements.whereType<ArrowElement>().length, 1);
+      expect(sketch.elements.whereType<FreedrawElement>().length, 1);
     });
 
     test('arrow with label round-trips', () {
@@ -931,7 +926,9 @@ rect id=r at 10,20 50x60 fill=lime color=red stroke=dotted fill-style=hachure st
       );
 
       final doc = MarkdrawDocument(
-        sections: [SketchSection([rect1, rect2, arrow, label])],
+        sections: [
+          SketchSection([rect1, rect2, arrow, label]),
+        ],
         aliases: {'auth': 'r1', 'gw': 'r2', 'conn': 'a1'},
       );
       final output = DocumentSerializer.serialize(doc);
@@ -993,7 +990,9 @@ rect id=r at 10,20 50x60 fill=lime color=red stroke=dotted fill-style=hachure st
       );
 
       final doc = MarkdrawDocument(
-        sections: [SketchSection([rect, arrow])],
+        sections: [
+          SketchSection([rect, arrow]),
+        ],
         aliases: {'auth': 'r1', 'conn': 'a1'},
       );
       final output = DocumentSerializer.serialize(doc);
@@ -1046,7 +1045,9 @@ rect id=r at 10,20 50x60 fill=lime color=red stroke=dotted fill-style=hachure st
       );
 
       final doc = MarkdrawDocument(
-        sections: [SketchSection([rect, arrow])],
+        sections: [
+          SketchSection([rect, arrow]),
+        ],
         aliases: {'dest': 'r1', 'conn': 'a1'},
       );
       final output = DocumentSerializer.serialize(doc);
@@ -1072,17 +1073,26 @@ rect id=r at 10,20 50x60 fill=lime color=red stroke=dotted fill-style=hachure st
       // Create a scene with elements in a specific visual order
       final rect1 = RectangleElement(
         id: const ElementId('r1'),
-        x: 0, y: 0, width: 100, height: 50,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 50,
         index: 'A',
       );
       final ellipse = EllipseElement(
         id: const ElementId('e1'),
-        x: 50, y: 50, width: 80, height: 80,
+        x: 50,
+        y: 50,
+        width: 80,
+        height: 80,
         index: 'B',
       );
       final rect2 = RectangleElement(
         id: const ElementId('r2'),
-        x: 100, y: 0, width: 100, height: 50,
+        x: 100,
+        y: 0,
+        width: 100,
+        height: 50,
         index: 'C',
       );
 
@@ -1097,12 +1107,14 @@ rect id=r at 10,20 50x60 fill=lime color=red stroke=dotted fill-style=hachure st
 
       // Parse back and convert to scene
       final parsed = DocumentParser.parse(text);
-      final restoredScene =
-          SceneDocumentConverter.documentToScene(parsed.value);
+      final restoredScene = SceneDocumentConverter.documentToScene(
+        parsed.value,
+      );
 
       // Verify z-order is preserved: r1 < e1 < r2
-      final ordered =
-          restoredScene.orderedElements.where((e) => !e.isDeleted).toList();
+      final ordered = restoredScene.orderedElements
+          .where((e) => !e.isDeleted)
+          .toList();
       expect(ordered, hasLength(3));
       // First in text = bottom of stack (smallest index)
       expect(ordered[0], isA<RectangleElement>());
@@ -1128,8 +1140,7 @@ rect id=top at 100,0 100x50
       final parsed = DocumentParser.parse(input);
       final scene = SceneDocumentConverter.documentToScene(parsed.value);
 
-      final ordered =
-          scene.orderedElements.where((e) => !e.isDeleted).toList();
+      final ordered = scene.orderedElements.where((e) => !e.isDeleted).toList();
       expect(ordered, hasLength(3));
       // All should have indices in document order
       expect(ordered[0].id.value, 'bottom');
@@ -1236,24 +1247,21 @@ communication uses mTLS.''';
       expect(parsed.fontFamily, 'Lilita One');
     });
 
-    test('font=hand-drawn parses then serializes without font= (default Excalifont)', () {
-      final result = parser.parseLine(
-        'text "Hi" at 0,0 font=hand-drawn',
-        1,
-      );
-      final parsed = result.value! as TextElement;
-      expect(parsed.fontFamily, 'Excalifont');
+    test(
+      'font=hand-drawn parses then serializes without font= (default Excalifont)',
+      () {
+        final result = parser.parseLine('text "Hi" at 0,0 font=hand-drawn', 1);
+        final parsed = result.value! as TextElement;
+        expect(parsed.fontFamily, 'Excalifont');
 
-      // Excalifont is the default, so serializer omits font=
-      final line = serializer.serialize(parsed);
-      expect(line, isNot(contains('font=')));
-    });
+        // Excalifont is the default, so serializer omits font=
+        final line = serializer.serialize(parsed);
+        expect(line, isNot(contains('font=')));
+      },
+    );
 
     test('font=code round-trips via alias', () {
-      final result = parser.parseLine(
-        'text "Hi" at 0,0 font=code',
-        1,
-      );
+      final result = parser.parseLine('text "Hi" at 0,0 font=code', 1);
       final parsed = result.value! as TextElement;
       expect(parsed.fontFamily, 'Source Code Pro');
 
@@ -1268,10 +1276,7 @@ communication uses mTLS.''';
     });
 
     test('font=normal round-trips via alias', () {
-      final result = parser.parseLine(
-        'text "Hi" at 0,0 font=normal',
-        1,
-      );
+      final result = parser.parseLine('text "Hi" at 0,0 font=normal', 1);
       final parsed = result.value! as TextElement;
       expect(parsed.fontFamily, 'Nunito');
 
@@ -1297,26 +1302,28 @@ communication uses mTLS.''';
       final font = FontResolver.defaultForCategory[FontCategory.handDrawn]!;
 
       // Alias resolves to same font as toolbar default
-      final result = parser.parseLine(
-        'text "Hello" at 0,0 font=hand-drawn', 1,
-      );
+      final result = parser.parseLine('text "Hello" at 0,0 font=hand-drawn', 1);
       expect((result.value! as TextElement).fontFamily, font);
     });
 
     test('normal category font matches alias', () {
       final font = FontResolver.defaultForCategory[FontCategory.normal]!;
 
-      final result = parser.parseLine(
-        'text "Hello" at 0,0 font=normal', 1,
-      );
+      final result = parser.parseLine('text "Hello" at 0,0 font=normal', 1);
       expect((result.value! as TextElement).fontFamily, font);
 
       // Toolbar-created text round-trips
       final text = TextElement(
         id: const ElementId('t1'),
-        x: 0, y: 0, width: 100, height: 30,
-        text: 'Hello', fontFamily: font,
-        seed: 1, versionNonce: 1, updated: 0,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 30,
+        text: 'Hello',
+        fontFamily: font,
+        seed: 1,
+        versionNonce: 1,
+        updated: 0,
       );
       final line = serializer.serialize(text);
       final reparsed = parser.parseLine(line, 1);
@@ -1326,16 +1333,20 @@ communication uses mTLS.''';
     test('code category font matches alias', () {
       final font = FontResolver.defaultForCategory[FontCategory.code]!;
 
-      final result = parser.parseLine(
-        'text "Hello" at 0,0 font=code', 1,
-      );
+      final result = parser.parseLine('text "Hello" at 0,0 font=code', 1);
       expect((result.value! as TextElement).fontFamily, font);
 
       final text = TextElement(
         id: const ElementId('t1'),
-        x: 0, y: 0, width: 100, height: 30,
-        text: 'Hello', fontFamily: font,
-        seed: 1, versionNonce: 1, updated: 0,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 30,
+        text: 'Hello',
+        fontFamily: font,
+        seed: 1,
+        versionNonce: 1,
+        updated: 0,
       );
       final line = serializer.serialize(text);
       final reparsed = parser.parseLine(line, 1);
@@ -1347,7 +1358,8 @@ communication uses mTLS.''';
     test('hand-drawn alias on bound text matches toolbar default', () {
       final font = FontResolver.defaultForCategory[FontCategory.handDrawn]!;
 
-      const input = '```markdraw\n'
+      const input =
+          '```markdraw\n'
           'rect "Label" at 0,0 100x50 text-font=hand-drawn\n'
           '```';
       final result = DocumentParser.parse(input);
@@ -1359,7 +1371,8 @@ communication uses mTLS.''';
     test('normal alias on bound text matches toolbar default', () {
       final font = FontResolver.defaultForCategory[FontCategory.normal]!;
 
-      const input = '```markdraw\n'
+      const input =
+          '```markdraw\n'
           'rect "Label" at 0,0 100x50 text-font=normal\n'
           '```';
       final result = DocumentParser.parse(input);
@@ -1370,18 +1383,22 @@ communication uses mTLS.''';
       // Re-serialize and re-parse
       final serializer = SketchLineSerializer();
       final line = serializer.serializeWithLabel(
-        sketch.elements[0], text, alias: 'r',
+        sketch.elements[0],
+        text,
+        alias: 'r',
       );
       final reparsed = DocumentParser.parse('```markdraw\n$line\n```');
-      final retext = (reparsed.value.sections.first as SketchSection)
-          .elements[1] as TextElement;
+      final retext =
+          (reparsed.value.sections.first as SketchSection).elements[1]
+              as TextElement;
       expect(retext.fontFamily, font);
     });
 
     test('code alias on bound text matches toolbar default', () {
       final font = FontResolver.defaultForCategory[FontCategory.code]!;
 
-      const input = '```markdraw\n'
+      const input =
+          '```markdraw\n'
           'rect "Label" at 0,0 100x50 text-font=code\n'
           '```';
       final result = DocumentParser.parse(input);
@@ -1391,27 +1408,39 @@ communication uses mTLS.''';
 
       final serializer = SketchLineSerializer();
       final line = serializer.serializeWithLabel(
-        sketch.elements[0], text, alias: 'r',
+        sketch.elements[0],
+        text,
+        alias: 'r',
       );
       expect(line, contains('text-font=code'));
 
       final reparsed = DocumentParser.parse('```markdraw\n$line\n```');
-      final retext = (reparsed.value.sections.first as SketchSection)
-          .elements[1] as TextElement;
+      final retext =
+          (reparsed.value.sections.first as SketchSection).elements[1]
+              as TextElement;
       expect(retext.fontFamily, font);
     });
 
     test('named font sizes match toolbar presets for bound text', () {
-      final sizeMap = {'small': 16.0, 'medium': 20.0, 'large': 28.0, 'extra-large': 36.0};
+      final sizeMap = {
+        'small': 16.0,
+        'medium': 20.0,
+        'large': 28.0,
+        'extra-large': 36.0,
+      };
       for (final entry in sizeMap.entries) {
-        final input = '```markdraw\n'
+        final input =
+            '```markdraw\n'
             'rect "Label" at 0,0 100x50 text-size=${entry.key}\n'
             '```';
         final result = DocumentParser.parse(input);
         final sketch = result.value.sections.first as SketchSection;
         final text = sketch.elements[1] as TextElement;
-        expect(text.fontSize, entry.value,
-            reason: 'text-size=${entry.key} should be ${entry.value}');
+        expect(
+          text.fontSize,
+          entry.value,
+          reason: 'text-size=${entry.key} should be ${entry.value}',
+        );
       }
     });
   });

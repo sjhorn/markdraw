@@ -92,10 +92,10 @@ class FractionalIndex {
       final key = current != null && before != null
           ? generateBetween(current, before)
           : current != null
-              ? generateAfter(current)
-              : before != null
-                  ? generateBefore(before)
-                  : _mid;
+          ? generateAfter(current)
+          : before != null
+          ? generateBefore(before)
+          : _mid;
       keys.add(key);
       current = key;
     }

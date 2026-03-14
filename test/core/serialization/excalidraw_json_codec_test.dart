@@ -126,10 +126,7 @@ void main() {
         // rectangle and frame are supported; magicframe is skipped
         expect(result.value.allElements, hasLength(2));
         expect(result.warnings, hasLength(1));
-        expect(
-          result.warnings[0].message,
-          contains('magicframe'),
-        );
+        expect(result.warnings[0].message, contains('magicframe'));
       });
     });
 
@@ -208,11 +205,7 @@ void main() {
 
       test('roundness type 1 maps to adaptive', () {
         final json = _wrapElements([
-          _baseElement(
-            id: 'r1',
-            type: 'rectangle',
-            roundness: {'type': 1},
-          ),
+          _baseElement(id: 'r1', type: 'rectangle', roundness: {'type': 1}),
         ]);
         final el = ExcalidrawJsonCodec.parse(json).value.allElements.first;
         expect(el.roundness!.type, RoundnessType.adaptive);
@@ -220,11 +213,7 @@ void main() {
 
       test('roundness type 2 maps to proportional', () {
         final json = _wrapElements([
-          _baseElement(
-            id: 'r1',
-            type: 'rectangle',
-            roundness: {'type': 2},
-          ),
+          _baseElement(id: 'r1', type: 'rectangle', roundness: {'type': 2}),
         ]);
         final el = ExcalidrawJsonCodec.parse(json).value.allElements.first;
         expect(el.roundness!.type, RoundnessType.proportional);
@@ -244,9 +233,7 @@ void main() {
       });
 
       test('null roundness stays null', () {
-        final json = _wrapElements([
-          _baseElement(id: 'r1', type: 'rectangle'),
-        ]);
+        final json = _wrapElements([_baseElement(id: 'r1', type: 'rectangle')]);
         final el = ExcalidrawJsonCodec.parse(json).value.allElements.first;
         expect(el.roundness, isNull);
       });
@@ -276,9 +263,7 @@ void main() {
       });
 
       test('boundElements null converts to empty list', () {
-        final json = _wrapElements([
-          _baseElement(id: 'r1', type: 'rectangle'),
-        ]);
+        final json = _wrapElements([_baseElement(id: 'r1', type: 'rectangle')]);
         final el = ExcalidrawJsonCodec.parse(json).value.allElements.first;
         expect(el.boundElements, isEmpty);
       });
@@ -427,10 +412,7 @@ void main() {
 
       test('defaults verticalAlign to middle when missing', () {
         final json = _wrapElements([
-          {
-            ..._baseElement(id: 'txt4', type: 'text'),
-            'text': 'Hi',
-          },
+          {..._baseElement(id: 'txt4', type: 'text'), 'text': 'Hi'},
         ]);
         final result = ExcalidrawJsonCodec.parse(json);
         final text = result.value.allElements.first as TextElement;
@@ -482,10 +464,7 @@ void main() {
 
       test('textAlign left is default', () {
         final json = _wrapElements([
-          {
-            ..._baseElement(id: 'txt1', type: 'text'),
-            'text': 'Hi',
-          },
+          {..._baseElement(id: 'txt1', type: 'text'), 'text': 'Hi'},
         ]);
         final el =
             ExcalidrawJsonCodec.parse(json).value.allElements.first
@@ -585,10 +564,7 @@ void main() {
 
       test('empty points list handled', () {
         final json = _wrapElements([
-          {
-            ..._baseElement(id: 'line1', type: 'line'),
-            'points': <List<num>>[],
-          },
+          {..._baseElement(id: 'line1', type: 'line'), 'points': <List<num>>[]},
         ]);
         final el =
             ExcalidrawJsonCodec.parse(json).value.allElements.first
@@ -913,7 +889,9 @@ void main() {
             updated: 0,
           );
           final doc = MarkdrawDocument(
-            sections: [SketchSection([arrow])],
+            sections: [
+              SketchSection([arrow]),
+            ],
           );
           final jsonStr = ExcalidrawJsonCodec.serialize(doc);
           expect(
@@ -1092,10 +1070,16 @@ void main() {
           SketchSection([
             TextElement(
               id: const ElementId('txt2'),
-              x: 0, y: 0, width: 100, height: 25,
+              x: 0,
+              y: 0,
+              width: 100,
+              height: 25,
               text: 'Hi',
               verticalAlign: VerticalAlign.top,
-              seed: 1, version: 1, versionNonce: 0, updated: 0,
+              seed: 1,
+              version: 1,
+              versionNonce: 0,
+              updated: 0,
             ),
           ]),
         ],
@@ -1248,9 +1232,7 @@ void main() {
               y: 0,
               width: 100,
               height: 50,
-              boundElements: const [
-                BoundElement(id: 'a1', type: 'arrow'),
-              ],
+              boundElements: const [BoundElement(id: 'a1', type: 'arrow')],
               seed: 1,
               version: 1,
               versionNonce: 2,
@@ -1299,8 +1281,7 @@ void main() {
         ],
       );
       final jsonStr = ExcalidrawJsonCodec.serialize(doc);
-      final elements =
-          (jsonDecode(jsonStr)['elements'] as List);
+      final elements = (jsonDecode(jsonStr)['elements'] as List);
       expect(elements, hasLength(2));
     });
 
@@ -1670,11 +1651,7 @@ void main() {
 
     test('groupIds preserved in round-trip', () {
       final json = _wrapElements([
-        _baseElement(
-          id: 'r1',
-          type: 'rectangle',
-          groupIds: ['g1', 'g2', 'g3'],
-        ),
+        _baseElement(id: 'r1', type: 'rectangle', groupIds: ['g1', 'g2', 'g3']),
       ]);
       final doc1 = ExcalidrawJsonCodec.parse(json).value;
       final exported = ExcalidrawJsonCodec.serialize(doc1);

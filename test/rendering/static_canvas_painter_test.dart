@@ -9,8 +9,12 @@ class MockRoughAdapter implements RoughAdapter {
   final List<String> calls = [];
 
   @override
-  void drawRectangle(Canvas canvas, Bounds bounds, DrawStyle style,
-      {Roundness? roundness}) {
+  void drawRectangle(
+    Canvas canvas,
+    Bounds bounds,
+    DrawStyle style, {
+    Roundness? roundness,
+  }) {
     calls.add('rectangle');
   }
 
@@ -20,8 +24,12 @@ class MockRoughAdapter implements RoughAdapter {
   }
 
   @override
-  void drawDiamond(Canvas canvas, Bounds bounds, DrawStyle style,
-      {Roundness? roundness}) {
+  void drawDiamond(
+    Canvas canvas,
+    Bounds bounds,
+    DrawStyle style, {
+    Roundness? roundness,
+  }) {
     calls.add('diamond');
   }
 
@@ -79,8 +87,13 @@ class MockRoughAdapter implements RoughAdapter {
   }
 
   @override
-  void drawRoundElbowArrow(Canvas canvas, List<Point> points,
-      Arrowhead? startArrowhead, Arrowhead? endArrowhead, DrawStyle style) {}
+  void drawRoundElbowArrow(
+    Canvas canvas,
+    List<Point> points,
+    Arrowhead? startArrowhead,
+    Arrowhead? endArrowhead,
+    DrawStyle style,
+  ) {}
 
   @override
   void drawFreedraw(
@@ -112,22 +125,26 @@ void main() {
       final (recorder, canvas) = _makeCanvas();
 
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 100,
-        index: 'a0',
-      ));
-      scene = scene.addElement(EllipseElement(
-        id: const ElementId('e1'),
-        x: 200,
-        y: 0,
-        width: 100,
-        height: 80,
-        index: 'a1',
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+          index: 'a0',
+        ),
+      );
+      scene = scene.addElement(
+        EllipseElement(
+          id: const ElementId('e1'),
+          x: 200,
+          y: 0,
+          width: 100,
+          height: 80,
+          index: 'a1',
+        ),
+      );
 
       final painter = StaticCanvasPainter(
         scene: scene,
@@ -145,21 +162,25 @@ void main() {
       final (recorder, canvas) = _makeCanvas();
 
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 100,
-      ));
-      scene = scene.addElement(EllipseElement(
-        id: const ElementId('e1'),
-        x: 200,
-        y: 0,
-        width: 100,
-        height: 80,
-        isDeleted: true,
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+        ),
+      );
+      scene = scene.addElement(
+        EllipseElement(
+          id: const ElementId('e1'),
+          x: 200,
+          y: 0,
+          width: 100,
+          height: 80,
+          isDeleted: true,
+        ),
+      );
 
       final painter = StaticCanvasPainter(
         scene: scene,
@@ -177,13 +198,15 @@ void main() {
       final (recorder, canvas) = _makeCanvas();
 
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 100,
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+        ),
+      );
 
       final painter = StaticCanvasPainter(
         scene: scene,
@@ -192,13 +215,10 @@ void main() {
       );
 
       // Should not throw — viewport transform is applied
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
       expect(adapter.calls, ['rectangle']);
     });
 
@@ -206,13 +226,15 @@ void main() {
       final (recorder, canvas) = _makeCanvas();
 
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 100,
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+        ),
+      );
 
       final painter = StaticCanvasPainter(
         scene: scene,
@@ -220,34 +242,35 @@ void main() {
         viewport: const ViewportState(zoom: 2.0),
       );
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
       expect(adapter.calls, ['rectangle']);
     });
 
     test('shouldRepaint returns true when scene changes', () {
       var scene1 = Scene();
-      scene1 = scene1.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 100,
-      ));
+      scene1 = scene1.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+        ),
+      );
 
       var scene2 = Scene();
-      scene2 = scene2.addElement(EllipseElement(
-        id: const ElementId('e1'),
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 100,
-      ));
+      scene2 = scene2.addElement(
+        EllipseElement(
+          id: const ElementId('e1'),
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+        ),
+      );
 
       final painter1 = StaticCanvasPainter(
         scene: scene1,
@@ -314,22 +337,26 @@ void main() {
       final (recorder, canvas) = _makeCanvas();
 
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0,
-        y: 0,
-        width: 200,
-        height: 100,
-      ));
-      scene = scene.addElement(core.TextElement(
-        id: const ElementId('t1'),
-        x: 50,
-        y: 30,
-        width: 100,
-        height: 40,
-        text: 'Bound text',
-        containerId: 'r1',
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 100,
+        ),
+      );
+      scene = scene.addElement(
+        core.TextElement(
+          id: const ElementId('t1'),
+          x: 50,
+          y: 30,
+          width: 100,
+          height: 40,
+          text: 'Bound text',
+          containerId: 'r1',
+        ),
+      );
 
       final painter = StaticCanvasPainter(
         scene: scene,
@@ -348,46 +375,81 @@ void main() {
       final (recorder, canvas) = _makeCanvas();
 
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0, y: 0, width: 100, height: 80,
-        index: 'a0',
-      ));
-      scene = scene.addElement(EllipseElement(
-        id: const ElementId('e1'),
-        x: 120, y: 0, width: 100, height: 80,
-        index: 'a1',
-      ));
-      scene = scene.addElement(DiamondElement(
-        id: const ElementId('d1'),
-        x: 240, y: 0, width: 100, height: 80,
-        index: 'a2',
-      ));
-      scene = scene.addElement(LineElement(
-        id: const ElementId('l1'),
-        x: 0, y: 120, width: 100, height: 0,
-        points: [const Point(0, 0), const Point(100, 0)],
-        index: 'a3',
-      ));
-      scene = scene.addElement(ArrowElement(
-        id: const ElementId('a1'),
-        x: 120, y: 120, width: 100, height: 0,
-        points: [const Point(0, 0), const Point(100, 0)],
-        endArrowhead: Arrowhead.arrow,
-        index: 'a4',
-      ));
-      scene = scene.addElement(FreedrawElement(
-        id: const ElementId('f1'),
-        x: 0, y: 200, width: 100, height: 50,
-        points: [const Point(0, 0), const Point(50, 25), const Point(100, 0)],
-        index: 'a5',
-      ));
-      scene = scene.addElement(core.TextElement(
-        id: const ElementId('t1'),
-        x: 120, y: 200, width: 200, height: 40,
-        text: 'Hello world',
-        index: 'a6',
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 80,
+          index: 'a0',
+        ),
+      );
+      scene = scene.addElement(
+        EllipseElement(
+          id: const ElementId('e1'),
+          x: 120,
+          y: 0,
+          width: 100,
+          height: 80,
+          index: 'a1',
+        ),
+      );
+      scene = scene.addElement(
+        DiamondElement(
+          id: const ElementId('d1'),
+          x: 240,
+          y: 0,
+          width: 100,
+          height: 80,
+          index: 'a2',
+        ),
+      );
+      scene = scene.addElement(
+        LineElement(
+          id: const ElementId('l1'),
+          x: 0,
+          y: 120,
+          width: 100,
+          height: 0,
+          points: [const Point(0, 0), const Point(100, 0)],
+          index: 'a3',
+        ),
+      );
+      scene = scene.addElement(
+        ArrowElement(
+          id: const ElementId('a1'),
+          x: 120,
+          y: 120,
+          width: 100,
+          height: 0,
+          points: [const Point(0, 0), const Point(100, 0)],
+          endArrowhead: Arrowhead.arrow,
+          index: 'a4',
+        ),
+      );
+      scene = scene.addElement(
+        FreedrawElement(
+          id: const ElementId('f1'),
+          x: 0,
+          y: 200,
+          width: 100,
+          height: 50,
+          points: [const Point(0, 0), const Point(50, 25), const Point(100, 0)],
+          index: 'a5',
+        ),
+      );
+      scene = scene.addElement(
+        core.TextElement(
+          id: const ElementId('t1'),
+          x: 120,
+          y: 200,
+          width: 200,
+          height: 40,
+          text: 'Hello world',
+          index: 'a6',
+        ),
+      );
 
       final painter = StaticCanvasPainter(
         scene: scene,
@@ -414,21 +476,36 @@ void main() {
 
       var scene = Scene();
       // Add in reverse index order
-      scene = scene.addElement(EllipseElement(
-        id: const ElementId('e1'),
-        x: 200, y: 0, width: 100, height: 80,
-        index: 'a2',
-      ));
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0, y: 0, width: 100, height: 80,
-        index: 'a0',
-      ));
-      scene = scene.addElement(DiamondElement(
-        id: const ElementId('d1'),
-        x: 100, y: 0, width: 100, height: 80,
-        index: 'a1',
-      ));
+      scene = scene.addElement(
+        EllipseElement(
+          id: const ElementId('e1'),
+          x: 200,
+          y: 0,
+          width: 100,
+          height: 80,
+          index: 'a2',
+        ),
+      );
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 80,
+          index: 'a0',
+        ),
+      );
+      scene = scene.addElement(
+        DiamondElement(
+          id: const ElementId('d1'),
+          x: 100,
+          y: 0,
+          width: 100,
+          height: 80,
+          index: 'a1',
+        ),
+      );
 
       final painter = StaticCanvasPainter(
         scene: scene,
@@ -447,13 +524,15 @@ void main() {
       final (recorder, canvas) = _makeCanvas();
 
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 100,
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+        ),
+      );
 
       final painter = StaticCanvasPainter(
         scene: scene,
@@ -461,13 +540,10 @@ void main() {
         viewport: const ViewportState(offset: Offset(50, 25), zoom: 1.5),
       );
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
       expect(adapter.calls, ['rectangle']);
     });
 
@@ -495,11 +571,17 @@ void main() {
       final scene = Scene();
       final preview1 = RectangleElement(
         id: const ElementId('preview'),
-        x: 0, y: 0, width: 50, height: 50,
+        x: 0,
+        y: 0,
+        width: 50,
+        height: 50,
       );
       final preview2 = RectangleElement(
         id: const ElementId('preview'),
-        x: 10, y: 10, width: 100, height: 100,
+        x: 10,
+        y: 10,
+        width: 100,
+        height: 100,
       );
 
       final painter1 = StaticCanvasPainter(
@@ -524,15 +606,25 @@ void main() {
 
       var scene = Scene();
       // On-screen element
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('visible'),
-        x: 100, y: 100, width: 200, height: 100,
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('visible'),
+          x: 100,
+          y: 100,
+          width: 200,
+          height: 100,
+        ),
+      );
       // Far off-screen element
-      scene = scene.addElement(EllipseElement(
-        id: const ElementId('offscreen'),
-        x: 5000, y: 5000, width: 100, height: 100,
-      ));
+      scene = scene.addElement(
+        EllipseElement(
+          id: const ElementId('offscreen'),
+          x: 5000,
+          y: 5000,
+          width: 100,
+          height: 100,
+        ),
+      );
 
       final painter = StaticCanvasPainter(
         scene: scene,
@@ -551,21 +643,36 @@ void main() {
       final (recorder, canvas) = _makeCanvas();
 
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0, y: 0, width: 100, height: 100,
-        index: 'a0',
-      ));
-      scene = scene.addElement(EllipseElement(
-        id: const ElementId('e1'),
-        x: -2000, y: -2000, width: 50, height: 50,
-        index: 'a1',
-      ));
-      scene = scene.addElement(DiamondElement(
-        id: const ElementId('d1'),
-        x: 300, y: 200, width: 80, height: 80,
-        index: 'a2',
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+          index: 'a0',
+        ),
+      );
+      scene = scene.addElement(
+        EllipseElement(
+          id: const ElementId('e1'),
+          x: -2000,
+          y: -2000,
+          width: 50,
+          height: 50,
+          index: 'a1',
+        ),
+      );
+      scene = scene.addElement(
+        DiamondElement(
+          id: const ElementId('d1'),
+          x: 300,
+          y: 200,
+          width: 80,
+          height: 80,
+          index: 'a2',
+        ),
+      );
 
       final painter = StaticCanvasPainter(
         scene: scene,
@@ -584,14 +691,22 @@ void main() {
       final (recorder, canvas) = _makeCanvas();
 
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0, y: 0, width: 100, height: 100,
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+        ),
+      );
 
       final preview = EllipseElement(
         id: const ElementId('preview'),
-        x: 200, y: 200, width: 150, height: 100,
+        x: 200,
+        y: 200,
+        width: 150,
+        height: 100,
       );
 
       final painter = StaticCanvasPainter(
@@ -612,7 +727,10 @@ void main() {
       final scene = Scene();
       final preview = RectangleElement(
         id: const ElementId('p1'),
-        x: 0, y: 0, width: 50, height: 50,
+        x: 0,
+        y: 0,
+        width: 50,
+        height: 50,
       );
 
       final painter1 = StaticCanvasPainter(
@@ -634,16 +752,26 @@ void main() {
       final (recorder, canvas) = _makeCanvas();
 
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0, y: 0, width: 200, height: 100,
-      ));
-      scene = scene.addElement(core.TextElement(
-        id: const ElementId('t1'),
-        x: 0, y: 0, width: 200, height: 100,
-        text: 'Label',
-        containerId: 'r1',
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 100,
+        ),
+      );
+      scene = scene.addElement(
+        core.TextElement(
+          id: const ElementId('t1'),
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 100,
+          text: 'Label',
+          containerId: 'r1',
+        ),
+      );
 
       final painter = StaticCanvasPainter(
         scene: scene,
@@ -651,13 +779,10 @@ void main() {
         viewport: const ViewportState(),
       );
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
       // Rectangle is rendered via adapter; bound text via TextRenderer
       expect(adapter.calls, ['rectangle']);
     });
@@ -666,16 +791,26 @@ void main() {
       final (recorder, canvas) = _makeCanvas();
 
       var scene = Scene();
-      scene = scene.addElement(EllipseElement(
-        id: const ElementId('e1'),
-        x: 0, y: 0, width: 200, height: 100,
-      ));
-      scene = scene.addElement(core.TextElement(
-        id: const ElementId('t1'),
-        x: 0, y: 0, width: 200, height: 100,
-        text: 'Ellipse Label',
-        containerId: 'e1',
-      ));
+      scene = scene.addElement(
+        EllipseElement(
+          id: const ElementId('e1'),
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 100,
+        ),
+      );
+      scene = scene.addElement(
+        core.TextElement(
+          id: const ElementId('t1'),
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 100,
+          text: 'Ellipse Label',
+          containerId: 'e1',
+        ),
+      );
 
       final painter = StaticCanvasPainter(
         scene: scene,
@@ -683,13 +818,10 @@ void main() {
         viewport: const ViewportState(),
       );
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
       expect(adapter.calls, ['ellipse']);
     });
 
@@ -697,16 +829,26 @@ void main() {
       final (recorder, canvas) = _makeCanvas();
 
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0, y: 0, width: 200, height: 100,
-      ));
-      scene = scene.addElement(core.TextElement(
-        id: const ElementId('t1'),
-        x: 0, y: 0, width: 200, height: 100,
-        text: '',
-        containerId: 'r1',
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 100,
+        ),
+      );
+      scene = scene.addElement(
+        core.TextElement(
+          id: const ElementId('t1'),
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 100,
+          text: '',
+          containerId: 'r1',
+        ),
+      );
 
       final painter = StaticCanvasPainter(
         scene: scene,
@@ -715,30 +857,37 @@ void main() {
       );
 
       // Should paint normally without error
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
     });
 
     test('bound text inherits parent rotation without error', () {
       final (recorder, canvas) = _makeCanvas();
 
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0, y: 0, width: 200, height: 100,
-        angle: 0.5,
-      ));
-      scene = scene.addElement(core.TextElement(
-        id: const ElementId('t1'),
-        x: 0, y: 0, width: 200, height: 100,
-        text: 'Rotated',
-        containerId: 'r1',
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 100,
+          angle: 0.5,
+        ),
+      );
+      scene = scene.addElement(
+        core.TextElement(
+          id: const ElementId('t1'),
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 100,
+          text: 'Rotated',
+          containerId: 'r1',
+        ),
+      );
 
       final painter = StaticCanvasPainter(
         scene: scene,
@@ -746,30 +895,37 @@ void main() {
         viewport: const ViewportState(),
       );
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
     });
 
     test('arrow label rendered at midpoint without error', () {
       final (recorder, canvas) = _makeCanvas();
 
       var scene = Scene();
-      scene = scene.addElement(ArrowElement(
-        id: const ElementId('a1'),
-        x: 0, y: 0, width: 200, height: 0,
-        points: [const Point(0, 0), const Point(200, 0)],
-      ));
-      scene = scene.addElement(core.TextElement(
-        id: const ElementId('t1'),
-        x: 0, y: 0, width: 100, height: 20,
-        text: 'Arrow Label',
-        containerId: 'a1',
-      ));
+      scene = scene.addElement(
+        ArrowElement(
+          id: const ElementId('a1'),
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 0,
+          points: [const Point(0, 0), const Point(200, 0)],
+        ),
+      );
+      scene = scene.addElement(
+        core.TextElement(
+          id: const ElementId('t1'),
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 20,
+          text: 'Arrow Label',
+          containerId: 'a1',
+        ),
+      );
 
       final painter = StaticCanvasPainter(
         scene: scene,
@@ -777,13 +933,10 @@ void main() {
         viewport: const ViewportState(),
       );
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
       expect(adapter.calls, ['arrow']);
     });
 
@@ -791,17 +944,27 @@ void main() {
       final (recorder, canvas) = _makeCanvas();
 
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0, y: 0, width: 200, height: 100,
-      ));
-      scene = scene.addElement(core.TextElement(
-        id: const ElementId('t1'),
-        x: 0, y: 0, width: 200, height: 100,
-        text: 'Top',
-        containerId: 'r1',
-        verticalAlign: VerticalAlign.top,
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 100,
+        ),
+      );
+      scene = scene.addElement(
+        core.TextElement(
+          id: const ElementId('t1'),
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 100,
+          text: 'Top',
+          containerId: 'r1',
+          verticalAlign: VerticalAlign.top,
+        ),
+      );
 
       final painter = StaticCanvasPainter(
         scene: scene,
@@ -809,30 +972,37 @@ void main() {
         viewport: const ViewportState(),
       );
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
     });
 
     test('bound text with verticalAlign bottom renders without error', () {
       final (recorder, canvas) = _makeCanvas();
 
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0, y: 0, width: 200, height: 100,
-      ));
-      scene = scene.addElement(core.TextElement(
-        id: const ElementId('t1'),
-        x: 0, y: 0, width: 200, height: 100,
-        text: 'Bottom',
-        containerId: 'r1',
-        verticalAlign: VerticalAlign.bottom,
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 100,
+        ),
+      );
+      scene = scene.addElement(
+        core.TextElement(
+          id: const ElementId('t1'),
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 100,
+          text: 'Bottom',
+          containerId: 'r1',
+          verticalAlign: VerticalAlign.bottom,
+        ),
+      );
 
       final painter = StaticCanvasPainter(
         scene: scene,
@@ -840,23 +1010,25 @@ void main() {
         viewport: const ViewportState(),
       );
 
-      expect(
-        () {
-          painter.paint(canvas, const Size(800, 600));
-          recorder.endRecording();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        painter.paint(canvas, const Size(800, 600));
+        recorder.endRecording();
+      }, returnsNormally);
     });
 
     test('element with no bound text renders normally', () {
       final (recorder, canvas) = _makeCanvas();
 
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0, y: 0, width: 200, height: 100,
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 100,
+        ),
+      );
 
       final painter = StaticCanvasPainter(
         scene: scene,
@@ -874,14 +1046,24 @@ void main() {
       final (recorder, canvas) = _makeCanvas();
 
       var scene = Scene();
-      scene = scene.addElement(RectangleElement(
-        id: const ElementId('r1'),
-        x: 0, y: 0, width: 100, height: 100,
-      ));
-      scene = scene.addElement(EllipseElement(
-        id: const ElementId('e1'),
-        x: 2000, y: 2000, width: 100, height: 100,
-      ));
+      scene = scene.addElement(
+        RectangleElement(
+          id: const ElementId('r1'),
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+        ),
+      );
+      scene = scene.addElement(
+        EllipseElement(
+          id: const ElementId('e1'),
+          x: 2000,
+          y: 2000,
+          width: 100,
+          height: 100,
+        ),
+      );
 
       // Pan to show the ellipse area, not the rectangle
       final painter = StaticCanvasPainter(
