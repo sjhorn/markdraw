@@ -1,4 +1,7 @@
 excalidraw/
 scripts/
 assets/*.sh
+assets/build/
 test/golden/failures/
+.dart_tool/
+build/
