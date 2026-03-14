@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart' hide SelectionOverlay;
@@ -53,6 +54,9 @@ Widget _buildInteractiveCanvas(
     ),
   );
 }
+
+/// True when running in CI — text goldens are platform-dependent.
+final _isCI = Platform.environment.containsKey('CI');
 
 void main() {
   group('Golden rendering tests', () {
@@ -195,7 +199,9 @@ void main() {
       );
     });
 
-    testWidgets('renders text element', (tester) async {
+    // Text golden tests are skipped on CI — font rendering differs across
+    // platforms (macOS vs Linux), producing pixel mismatches.
+    testWidgets('renders text element', skip: _isCI, (tester) async {
       final scene = Scene().addElement(core.TextElement(
         id: const ElementId('t1'),
         x: 10,
@@ -215,7 +221,7 @@ void main() {
       );
     });
 
-    testWidgets('renders bound text in rectangle', (tester) async {
+    testWidgets('renders bound text in rectangle', skip: _isCI, (tester) async {
       final scene = Scene()
           .addElement(RectangleElement(
             id: const ElementId('r1'),
