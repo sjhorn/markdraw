@@ -1,3 +1,24 @@
+## 0.2.0
+
+### Package Hygiene
+* Dartdoc on all ~80 public members of `MarkdrawController`
+* `labelText` on all TextFields for accessibility
+* `.pubignore` to exclude dev-only files from published package
+* Screenshot placeholder in pubspec.yaml and README
+
+### Performance
+* `RoughPathCache` — LRU cache (max 200) for rough_flutter `Drawable` objects, avoiding re-computation of expensive shapes when elements haven't changed
+* `StaticCanvasPainter.shouldRepaint()` now compares `resolvedImages` and `editingElementId`
+
+### Accessibility
+* `Semantics(label:, button: true)` on all toolbar buttons (desktop, compact, zoom, theme)
+* `FocusTraversalGroup` on desktop and compact toolbars
+* `GestureDetector` replaced with `InkWell` on toggle chips, color swatches, and eyedropper button for keyboard focus and ink splash feedback
+
+### Testing
+* 2,263 tests (16 new: 7 rough path cache + 9 accessibility)
+* Zero analyzer issues
+
 ## 0.1.0
 
 First published release. Full-featured Excalidraw-inspired drawing widget for Flutter.

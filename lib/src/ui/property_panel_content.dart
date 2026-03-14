@@ -804,6 +804,7 @@ class PropertyPanelContent extends StatelessWidget {
           keyboardType: TextInputType.number,
           autofocus: true,
           decoration: const InputDecoration(
+            labelText: 'Font size',
             hintText: '4–200',
             isDense: true,
           ),

@@ -5,6 +5,7 @@ import '../core/elements/elements.dart' hide Element, TextElement;
 import '../core/math/math.dart';
 import 'rough/draw_style.dart';
 import 'rough/rough_adapter.dart';
+import 'rough/rough_canvas_adapter.dart';
 import 'text_renderer.dart';
 
 /// Dispatches element rendering to the appropriate adapter method.
@@ -35,7 +36,15 @@ class ElementRenderer {
       canvas.translate(-cx, -cy);
     }
 
+    if (adapter is RoughCanvasAdapter) {
+      adapter.setCurrentElement(element.id.value, element.hashCode);
+    }
+
     _dispatch(canvas, element, adapter, resolvedImages);
+
+    if (adapter is RoughCanvasAdapter) {
+      adapter.setCurrentElement(null, null);
+    }
 
     if (hasRotation) {
       canvas.restore();

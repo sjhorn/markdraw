@@ -77,15 +77,19 @@ class ZoomControls extends StatelessWidget {
             iconSize: 16,
             padding: EdgeInsets.zero,
           ),
-          InkWell(
-            onTap: () => controller.resetZoom(),
-            borderRadius: BorderRadius.circular(4),
-            child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Text(
-                '$zoomPercent%',
-                style: TextStyle(fontSize: 12, color: cs.onSurface),
+          Semantics(
+            label: 'Zoom $zoomPercent%, tap to reset',
+            button: true,
+            child: InkWell(
+              onTap: () => controller.resetZoom(),
+              borderRadius: BorderRadius.circular(4),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Text(
+                  '$zoomPercent%',
+                  style: TextStyle(fontSize: 12, color: cs.onSurface),
+                ),
               ),
             ),
           ),

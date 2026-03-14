@@ -1,6 +1,6 @@
 name: markdraw
 description: "An Excalidraw-inspired drawing widget with human-readable markdown serialization."
-version: 0.1.0
+version: 0.2.0
 repository: https://github.com/sjhorn/markdraw
 issue_tracker: https://github.com/sjhorn/markdraw/issues
 topics:
@@ -9,6 +9,10 @@ topics:
   - whiteboard
   - excalidraw
   - diagram
+
+screenshots:
+  - description: 'Markdraw editor with drawn elements'
+    path: assets/markdraw.png
 
 environment:
   sdk: ^3.10.7

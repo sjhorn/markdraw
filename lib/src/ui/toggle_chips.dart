@@ -18,8 +18,9 @@ class ToggleChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
@@ -59,8 +60,9 @@ class IconToggleChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    Widget chip = GestureDetector(
+    Widget chip = InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
       child: Container(
         width: 32,
         height: 32,

@@ -27,8 +27,9 @@ class ColorSwatch extends StatelessWidget {
     final parsed = parseColor(color);
     final isTransparent = color == 'transparent';
     final isLight = !isTransparent && (parsed.r + parsed.g + parsed.b) > 1.8;
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
       child: Container(
         width: 24,
         height: 24,
@@ -141,8 +142,9 @@ class _ColorPickerButtonState extends State<ColorPickerButton> {
     final parsed = parseColor(widget.color);
     final isTransparent = widget.color == 'transparent';
     final isLight = !isTransparent && (parsed.r + parsed.g + parsed.b) > 1.8;
-    return GestureDetector(
+    return InkWell(
       onTap: _showPalettePopup,
+      borderRadius: BorderRadius.circular(4),
       child: Container(
         width: 24,
         height: 24,
@@ -391,8 +393,9 @@ class _ColorPaletteOverlayState extends State<ColorPaletteOverlay> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    GestureDetector(
+                    InkWell(
                       onTap: () => widget.onSelect('transparent'),
+                      borderRadius: BorderRadius.circular(4),
                       child: Container(
                         width: swatchSize,
                         height: swatchSize,
@@ -477,6 +480,7 @@ class _ColorPaletteOverlayState extends State<ColorPaletteOverlay> {
             child: TextField(
               controller: _hexController,
               decoration: InputDecoration(
+                labelText: 'Hex color',
                 hintText: '#rrggbb',
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(
@@ -507,7 +511,7 @@ class _ColorPaletteOverlayState extends State<ColorPaletteOverlay> {
 
   Widget _buildEyedropperButton() {
     final cs = Theme.of(context).colorScheme;
-    return GestureDetector(
+    return InkWell(
       onTap: () {
         if (_eyedropperActive) {
           _deactivateEyedropper();
@@ -515,6 +519,7 @@ class _ColorPaletteOverlayState extends State<ColorPaletteOverlay> {
           _activateEyedropper();
         }
       },
+      borderRadius: BorderRadius.circular(4),
       child: Container(
         width: 28,
         height: 28,
@@ -537,8 +542,9 @@ class _ColorPaletteOverlayState extends State<ColorPaletteOverlay> {
     final isLight = (parsed.r + parsed.g + parsed.b) > 1.8;
     final isSelected =
         widget.currentColor.toLowerCase() == hex.toLowerCase();
-    return GestureDetector(
+    return InkWell(
       onTap: () => widget.onSelect(hex),
+      borderRadius: BorderRadius.circular(3),
       child: Container(
         width: size,
         height: size,

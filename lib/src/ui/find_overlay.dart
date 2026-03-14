@@ -120,6 +120,7 @@ class _FindOverlayState extends State<FindOverlay> {
                   focusNode: _focusNode,
                   style: const TextStyle(fontSize: 14),
                   decoration: InputDecoration(
+                    labelText: 'Search',
                     hintText: 'Find on canvas',
                     hintStyle: TextStyle(
                       fontSize: 14,

@@ -137,6 +137,7 @@ class _FontListContentState extends State<FontListContent> {
             autofocus: true,
             style: const TextStyle(fontSize: 13),
             decoration: InputDecoration(
+              labelText: 'Font name',
               hintText: 'Search fonts...',
               hintStyle: TextStyle(
                 fontSize: 13,

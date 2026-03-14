@@ -677,17 +677,18 @@ markdraw/
 - [ ] Drag-and-drop file import from OS — DropRegion API is brittle across platforms *(deferred from Phase 5.4)*
 
 ### Performance (from Phase 7.4)
-- [ ] Element render caching (only re-render changed elements)
-- [ ] Viewport culling optimization (spatial index / R-tree)
-- [ ] Lazy rough path generation (generate on first paint, cache by seed)
+- [x] Rough path cache (LRU, max 200 drawables) *(resolved in Phase 9.2)*
+- [ ] Viewport culling optimization (spatial index / R-tree) — needs profiling data first
 - [ ] Profile and optimize for 1000+ elements
 - [ ] Web: CanvasKit renderer preferred over HTML renderer
 
 ### Accessibility (from Phase 7.5)
-- [ ] Semantic labels for all toolbar buttons
-- [ ] Keyboard-only navigation through elements (Tab to cycle, Enter to edit)
-- [ ] Screen reader announcements for tool changes and element creation
-- [ ] High contrast mode
+- [x] Semantic labels for all toolbar buttons *(resolved in Phase 9.3)*
+- [x] FocusTraversalGroup on toolbars *(resolved in Phase 9.3)*
+- [x] GestureDetector → InkWell for focusable controls *(resolved in Phase 9.3)*
+- [ ] Keyboard-only navigation through elements (Tab to cycle, Enter to edit) — complex UX
+- [ ] Screen reader announcements for tool changes and element creation — needs design pass
+- [ ] High contrast mode — needs design audit
 
 ### Platform Integration (from Phase 7.6)
 - [ ] **Web**: URL sharing, PWA support, browser file API
@@ -696,22 +697,47 @@ markdraw/
 
 ---
 
-## Phase 9 — Collaboration & Advanced (Future)
+## Phase 9 — Package Quality (`v0.2.0`) ✅
+
+> Goal: Improve pub.dev score, rendering performance, and accessibility.
+
+### 9.1 Package Hygiene (pub.dev score) ✅
+- [x] Dartdoc on all ~80 public members of `MarkdrawController`
+- [x] `screenshots/` directory + `pubspec.yaml` `screenshots:` field + README image
+- [x] `labelText` added to 6 TextFields (hex input, document name, URL, search, font search, font size)
+- [x] `.pubignore` excluding `excalidraw/`, `scripts/`, `assets/*.sh`, `test/golden/failures/`
+
+### 9.2 Rough Path Cache (performance) ✅
+- [x] `RoughPathCache` — LRU cache (max 200) keyed by `(elementId, hashCode)`, stores `Drawable` output
+- [x] `RoughCanvasAdapter` — cache check before Generator for rectangle, ellipse, diamond (regular + rounded)
+- [x] `ElementRenderer` — sets current element context on adapter before rendering
+- [x] `StaticCanvasPainter.shouldRepaint()` — now compares `resolvedImages` and `editingElementId`
+
+### 9.3 Toolbar Accessibility ✅
+- [x] `Semantics(label:, button: true)` on `DesktopToolbar`, `CompactToolbar`, `ZoomControls`, `ThemeButtons` buttons
+- [x] `FocusTraversalGroup` on `DesktopToolbar` and `CompactToolbar`
+- [x] `GestureDetector` → `InkWell` in `ToggleChip`, `IconToggleChip`, `ColorSwatch`, `ColorPickerButton`, palette swatches, eyedropper button
+
+> **TDD checkpoint**: All Phase 9 features complete. 2,263 tests total. Zero analyzer issues (except expected screenshot placeholder). ✅
+
+---
+
+## Phase 10 — Collaboration & Advanced (Future)
 
 > Goal: Stretch features for post-launch iteration.
 
-### 9.1 Real-time Collaboration
+### 10.1 Real-time Collaboration
 - [ ] CRDT-based element sync (investigate `y-crdt` Dart port or custom)
 - [ ] Presence awareness (show collaborator cursors)
 - [ ] Conflict resolution for concurrent edits
 - [ ] WebSocket server for session management
 
-### 9.2 AI Integration
+### 10.2 AI Integration
 - [ ] Generate diagrams from text description (LLM → `.markdraw`)
 - [ ] Convert freehand sketches to clean shapes (shape recognition)
 - [ ] Auto-layout suggestions
 
-### 9.3 Plugin System
+### 10.3 Plugin System
 - [ ] Custom element types via plugin API
 - [ ] Custom tools
 - [ ] Custom export formats
@@ -782,3 +808,4 @@ For every feature:
 | **M7: Widget** | 7 | Responsive layout, Google Fonts, MarkdrawEditor widget | 1,795 |
 | **M8: Polish** | 8 | 70+ shortcuts, laser, eyedropper, snap, flowchart, find, links, split-pane | 2,247 |
 | **M9: Publish** | — | First pub.dev release: `v0.1.0` | 2,247 |
+| **M10: Quality** | 9 | Dartdoc, rough cache, accessibility, `v0.2.0` | 2,263 |

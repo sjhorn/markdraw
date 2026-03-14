@@ -90,16 +90,23 @@ class MarkdrawController extends ChangeNotifier {
   // Double-click detection
   DateTime? _lastPointerUpTime;
 
-  // Focus management
+  /// Focus node for keyboard shortcut handling on the canvas.
   final keyboardFocusNode = FocusNode();
 
   // Text editing state
   ElementId? _editingTextElementId;
+
+  /// Text controller for the inline text editing overlay.
   final textEditingController = TextEditingController();
   final _textFocusNode = FocusNode();
+
+  /// Global key for the inline [EditableText] widget.
   final editableTextKey = GlobalKey<EditableTextState>();
   bool _isEditingExisting = false;
   String? _originalText;
+
+  /// When true, suppresses auto-commit on text focus loss (e.g. during
+  /// style changes that temporarily steal focus).
   bool suppressFocusCommit = false;
 
   // Frame label editing state
@@ -108,61 +115,135 @@ class MarkdrawController extends ChangeNotifier {
   // Canvas size cache (for followLink from pointer events)
   Size? _lastCanvasSize;
 
-  // Mouse position for eraser cursor
+  /// Current mouse position in screen coordinates; used for eraser cursor.
   Offset? mousePosition;
 
   // Pinch-to-zoom state
   double _pinchStartZoom = 1.0;
   Offset _pinchStartOffset = Offset.zero;
 
-  // Callbacks set by the widget
+  /// Callback invoked when the user toggles the theme. Set by [MarkdrawEditor].
   VoidCallback? onThemeToggle;
+
+  /// Called whenever the scene changes (element add/update/remove).
   void Function(Scene)? onSceneChanged;
 
   // --- Public getters ---
 
+  /// The current editor state (scene, viewport, selection, tool type).
   EditorState get editorState => _editorState;
+
+  /// The currently active tool instance.
   Tool get activeTool => _activeTool;
+
+  /// The rough-drawing adapter used for rendering.
   RoughAdapter get adapter => _adapter;
+
+  /// Undo/redo history manager.
   HistoryManager get historyManager => _historyManager;
+
+  /// Cache for decoded image element bitmaps.
   ImageElementCache get imageCache => _imageCache;
+
+  /// Immutable configuration for the editor.
   MarkdrawEditorConfig get config => _config;
 
+  /// The current set of library items available for placement.
   List<LibraryItem> get libraryItems => _libraryItems;
+
+  /// Whether the library panel is visible.
   bool get showLibraryPanel => _showLibraryPanel;
+
+  /// Whether the split-pane markdown editor is visible.
   bool get showMarkdownPanel => _showMarkdownPanel;
+
+  /// Whether the current tool stays active after use instead of reverting
+  /// to the select tool.
   bool get toolLocked => _toolLocked;
+
+  /// Whether the editor is in compact (mobile) layout mode.
   bool get isCompact => _isCompact;
+
+  /// Whether a line/arrow is in point-editing mode (double-click activated).
   bool get isEditingLinear => _isEditingLinear;
+
+  /// Whether the font picker overlay/sheet is currently open.
   bool get fontPickerOpen => _fontPickerOpen;
+
+  /// The sticky default style applied to newly created elements.
   ElementStyle get defaultStyle => _defaultStyle;
+
+  /// The canvas background color as a hex string.
   String get canvasBackgroundColor => _canvasBackgroundColor;
+
+  /// The snap grid size in pixels, or null if grid is off.
   int? get gridSize => _gridSize;
+
+  /// Whether snap-to-objects alignment guides are enabled.
   bool get objectsSnapMode => _objectsSnapMode;
+
+  /// The user-assigned document name, or null.
   String? get documentName => _documentName;
+
+  /// The most recently copied element style for paste-style.
   ElementStyle? get copiedStyle => _copiedStyle;
+
+  /// Whether zen mode is active (all chrome hidden).
   bool get zenMode => _zenMode;
+
+  /// Whether view (read-only) mode is active.
   bool get viewMode => _viewMode;
+
+  /// Whether the link editor overlay is visible.
   bool get isLinkEditorOpen => _isLinkEditorOpen;
+
+  /// Whether the link editor is in editing (TextField) mode vs info mode.
   bool get isLinkEditorEditing => _isLinkEditorEditing;
+
+  /// Whether the next click will set a link-to-element target.
   bool get linkToElementMode => _linkToElementMode;
+
+  /// Whether the find bar is open.
   bool get isFindOpen => _isFindOpen;
+
+  /// The current search query string in the find bar.
   String get findQuery => _findQuery;
+
+  /// Element IDs matching the current find query.
   List<ElementId> get findResults => _findResults;
+
+  /// Index of the currently highlighted find result (-1 if none).
   int get findCurrentIndex => _findCurrentIndex;
+
+  /// Which color picker should auto-open, or null.
   ColorPickerTarget? get pendingColorPicker => _pendingColorPicker;
 
+  /// The element ID currently being inline-text-edited, or null.
   ElementId? get editingTextElementId => _editingTextElementId;
+
+  /// The frame element ID whose label is being edited, or null.
   ElementId? get editingFrameLabelId => _editingFrameLabelId;
+
+  /// Focus node for the inline text editing overlay.
   FocusNode get textFocusNode => _textFocusNode;
+
+  /// Whether we are editing an existing text element (vs creating new).
   bool get isEditingExisting => _isEditingExisting;
+
+  /// The original text content before editing began (for cancel/revert).
   String? get originalText => _originalText;
+
+  /// The zoom level at the start of a pinch gesture.
   double get pinchStartZoom => _pinchStartZoom;
+
+  /// The viewport offset at the start of a pinch gesture.
   Offset get pinchStartOffset => _pinchStartOffset;
 
+  /// Pointer or touch mode based on compact layout state.
   InteractionMode get interactionMode =>
       _isCompact ? InteractionMode.touch : InteractionMode.pointer;
 
+  /// Whether the active tool creates new elements (vs select/hand/eraser).
   bool get isCreationTool => switch (_editorState.activeToolType) {
     ToolType.select ||
     ToolType.hand ||
@@ -171,6 +252,7 @@ class MarkdrawController extends ChangeNotifier {
     _ => true,
   };
 
+  /// Builds a [ToolContext] snapshot from current state for tool callbacks.
   ToolContext get toolContext => ToolContext(
     scene: _editorState.scene,
     viewport: _editorState.viewport,
@@ -182,6 +264,7 @@ class MarkdrawController extends ChangeNotifier {
     objectsSnapMode: _objectsSnapMode,
   );
 
+  /// The currently selected elements resolved from their IDs.
   List<Element> get selectedElements {
     return _editorState.selectedIds
         .map((id) => _editorState.scene.getElementById(id))
@@ -189,6 +272,7 @@ class MarkdrawController extends ChangeNotifier {
         .toList();
   }
 
+  /// The mouse cursor appropriate for the active tool.
   MouseCursor get cursorForTool {
     return switch (_editorState.activeToolType) {
       ToolType.select || ToolType.hand => SystemMouseCursors.basic,
@@ -200,6 +284,7 @@ class MarkdrawController extends ChangeNotifier {
 
   // --- Public setters ---
 
+  /// Sets compact (mobile) layout mode. Called by LayoutBuilder.
   set isCompact(bool value) {
     if (_isCompact != value) {
       _isCompact = value;
@@ -207,32 +292,38 @@ class MarkdrawController extends ChangeNotifier {
     }
   }
 
+  /// Shows or hides the library panel.
   set showLibraryPanel(bool value) {
     _showLibraryPanel = value;
     notifyListeners();
   }
 
+  /// Tracks whether the font picker overlay is open.
   set fontPickerOpen(bool value) {
     _fontPickerOpen = value;
     notifyListeners();
   }
 
+  /// Enters or exits linear (point) editing mode for lines/arrows.
   set isEditingLinear(bool value) {
     _isEditingLinear = value;
     notifyListeners();
   }
 
+  /// Sets the canvas background color (hex string).
   set canvasBackgroundColor(String value) {
     _canvasBackgroundColor = value;
     notifyListeners();
   }
 
+  /// Caches the last known canvas size for link navigation from pointer events.
   set lastCanvasSize(Size? value) {
     _lastCanvasSize = value;
   }
 
   // --- Lifecycle ---
 
+  /// Releases all resources: image cache, focus nodes, text controller.
   @override
   void dispose() {
     _imageCache.dispose();
@@ -245,6 +336,8 @@ class MarkdrawController extends ChangeNotifier {
 
   // --- Tool management ---
 
+  /// Switches to a different tool, resetting the previous one and clearing
+  /// selection for non-select tools.
   void switchTool(ToolType type) {
     // In view mode, only the hand tool is allowed
     if (_viewMode && type != ToolType.hand) return;
@@ -261,6 +354,7 @@ class MarkdrawController extends ChangeNotifier {
 
   // --- Undo/Redo ---
 
+  /// Undoes the last scene change.
   void undo() {
     final undone = _historyManager.undo(_editorState.scene);
     if (undone != null) {
@@ -270,6 +364,7 @@ class MarkdrawController extends ChangeNotifier {
     }
   }
 
+  /// Redoes the last undone scene change.
   void redo() {
     final redone = _historyManager.redo(_editorState.scene);
     if (redone != null) {
@@ -281,6 +376,7 @@ class MarkdrawController extends ChangeNotifier {
 
   // --- Zoom ---
 
+  /// Zooms in by one step, centered on the canvas.
   void zoomIn(Size canvasSize) {
     final viewport = _editorState.viewport;
     final center = Offset(canvasSize.width / 2, canvasSize.height / 2);
@@ -293,6 +389,7 @@ class MarkdrawController extends ChangeNotifier {
     ));
   }
 
+  /// Zooms out by one step, centered on the canvas.
   void zoomOut(Size canvasSize) {
     final viewport = _editorState.viewport;
     final center = Offset(canvasSize.width / 2, canvasSize.height / 2);
@@ -305,10 +402,12 @@ class MarkdrawController extends ChangeNotifier {
     ));
   }
 
+  /// Resets the viewport to default zoom (1x) and offset (0, 0).
   void resetZoom() {
     applyResult(UpdateViewportResult(const ViewportState()));
   }
 
+  /// Zooms to fit all scene elements within the canvas.
   void zoomToFit(Size canvasSize) {
     final bounds = ExportBounds.compute(_editorState.scene);
     if (bounds == null) return;
@@ -317,6 +416,7 @@ class MarkdrawController extends ChangeNotifier {
     ));
   }
 
+  /// Zooms to fit the currently selected elements within the canvas.
   void zoomToSelection(Size canvasSize) {
     if (_editorState.selectedIds.isEmpty) return;
     final bounds = ExportBounds.compute(
@@ -331,6 +431,8 @@ class MarkdrawController extends ChangeNotifier {
 
   // --- Default style application ---
 
+  /// Applies the current [defaultStyle] to an element (used for newly
+  /// created elements).
   Element applyDefaultStyleToElement(Element element) {
     Element styled = element.copyWith(
       strokeColor: _defaultStyle.strokeColor,
@@ -383,6 +485,7 @@ class MarkdrawController extends ChangeNotifier {
 
   // --- Result application ---
 
+  /// Applies a [ToolResult] to the editor state (scene, viewport, selection).
   void applyResult(ToolResult? result) {
     if (result == null) return;
 
@@ -451,6 +554,7 @@ class MarkdrawController extends ChangeNotifier {
     });
   }
 
+  /// Begins inline editing of an existing text element (double-click).
   void startTextEditingExisting(TextElement element) {
     _historyManager.push(_editorState.scene);
     _editingTextElementId = element.id;
@@ -469,6 +573,7 @@ class MarkdrawController extends ChangeNotifier {
     });
   }
 
+  /// Begins editing the bound text of a shape, creating it if needed.
   void startBoundTextEditing(Element shape) {
     _historyManager.push(_editorState.scene);
     final existing = _editorState.scene.findBoundText(shape.id);
@@ -512,6 +617,7 @@ class MarkdrawController extends ChangeNotifier {
     });
   }
 
+  /// Begins editing the label of an arrow, creating it if needed.
   void startArrowLabelEditing(ArrowElement arrow) {
     _historyManager.push(_editorState.scene);
     final existing = _editorState.scene.findBoundText(arrow.id);
@@ -564,6 +670,8 @@ class MarkdrawController extends ChangeNotifier {
     }
   }
 
+  /// Commits the current inline text edit, measuring and updating bounds.
+  /// Removes the element if text is empty.
   void commitTextEditing() {
     final id = _editingTextElementId;
     if (id == null) return;
@@ -631,6 +739,8 @@ class MarkdrawController extends ChangeNotifier {
     });
   }
 
+  /// Cancels inline text editing, reverting to original text or removing
+  /// the element if it was newly created.
   void cancelTextEditing() {
     if (_editingTextElementId != null) {
       if (_isEditingExisting && _originalText != null) {
@@ -676,11 +786,13 @@ class MarkdrawController extends ChangeNotifier {
 
   // -- Frame label editing --------------------------------------------------
 
+  /// Begins editing a frame's label text.
   void startFrameLabelEditing(FrameElement frame) {
     _editingFrameLabelId = frame.id;
     notifyListeners();
   }
 
+  /// Commits a frame label edit if the label changed.
   void commitFrameLabel(String newLabel) {
     final id = _editingFrameLabelId;
     if (id == null) return;
@@ -702,6 +814,7 @@ class MarkdrawController extends ChangeNotifier {
     });
   }
 
+  /// Cancels frame label editing without saving.
   void cancelFrameLabelEditing() {
     _editingFrameLabelId = null;
     notifyListeners();
@@ -731,6 +844,8 @@ class MarkdrawController extends ChangeNotifier {
     return null;
   }
 
+  /// Called on every keystroke during inline text editing to live-update
+  /// the element bounds.
   void onTextChanged() {
     final id = _editingTextElementId;
     if (id == null) return;
@@ -765,6 +880,7 @@ class MarkdrawController extends ChangeNotifier {
 
   // --- Library ---
 
+  /// Adds the currently selected elements to the library.
   void addToLibrary() {
     final selected = selectedElements;
     if (selected.isEmpty) return;
@@ -781,6 +897,7 @@ class MarkdrawController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Places a library item at the center of the visible canvas area.
   void placeLibraryItem(LibraryItem item, Size screenSize) {
     final centerScene = _editorState.viewport.screenToScene(
       Offset(screenSize.width / 2, screenSize.height / 2),
@@ -800,11 +917,13 @@ class MarkdrawController extends ChangeNotifier {
     applyResult(LibraryUtils.instantiate(item: item, position: position));
   }
 
+  /// Removes a library item by its ID.
   void removeLibraryItem(String id) {
     _libraryItems = _libraryItems.where((i) => i.id != id).toList();
     notifyListeners();
   }
 
+  /// Replaces the full library items list (e.g. after import).
   set libraryItems(List<LibraryItem> items) {
     _libraryItems = items;
     notifyListeners();
@@ -812,6 +931,8 @@ class MarkdrawController extends ChangeNotifier {
 
   // --- Viewport ---
 
+  /// Resolves decoded images for all image files in the scene. Returns null
+  /// if no images are available yet.
   Map<String, ui.Image>? resolveImages() {
     final files = _editorState.scene.files;
     if (files.isEmpty) return null;
@@ -825,6 +946,7 @@ class MarkdrawController extends ChangeNotifier {
     return resolved.isEmpty ? null : resolved;
   }
 
+  /// Converts a screen-space offset to a scene-space point.
   Point toScene(Offset screenPos) {
     final scene = _editorState.viewport.screenToScene(screenPos);
     return Point(scene.dx, scene.dy);
@@ -832,6 +954,8 @@ class MarkdrawController extends ChangeNotifier {
 
   // --- Pointer handling ---
 
+  /// Handles pointer down: commits text edits, dispatches to tool, handles
+  /// link-to-element mode and link icon clicks.
   void onPointerDown(Offset localPosition) {
     keyboardFocusNode.requestFocus();
     if (_editingTextElementId != null) {
@@ -889,6 +1013,7 @@ class MarkdrawController extends ChangeNotifier {
     }
   }
 
+  /// Handles pointer move: dispatches to the active tool.
   void onPointerMove(Offset localPosition, Offset delta) {
     final point = toScene(localPosition);
     applyResult(
@@ -902,6 +1027,8 @@ class MarkdrawController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Handles pointer up: dispatches to tool, detects double-click for
+  /// text/label editing, and pushes drag history.
   void onPointerUp(Offset localPosition) {
     final point = toScene(localPosition);
     final now = DateTime.now();
@@ -961,6 +1088,7 @@ class MarkdrawController extends ChangeNotifier {
     _sceneBeforeDrag = null;
   }
 
+  /// Handles pointer hover: updates tool cursor position.
   void onPointerHover(Offset localPosition) {
     final point = toScene(localPosition);
     _activeTool.onPointerMove(point, toolContext);
@@ -968,6 +1096,7 @@ class MarkdrawController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Handles scroll-wheel zoom.
   void onPointerSignal(PointerSignalEvent event) {
     if (event is PointerScrollEvent) {
       final factor = event.scrollDelta.dy < 0 ? 1.1 : 0.9;
@@ -981,11 +1110,13 @@ class MarkdrawController extends ChangeNotifier {
     }
   }
 
+  /// Records the starting zoom and offset for a pinch gesture.
   void onScaleStart(ScaleStartDetails details) {
     _pinchStartZoom = _editorState.viewport.zoom;
     _pinchStartOffset = _editorState.viewport.offset;
   }
 
+  /// Applies pinch-to-zoom and pan during a scale gesture.
   void onScaleUpdate(ScaleUpdateDetails details) {
     if (details.pointerCount < 2) return;
     var newViewport = ViewportState(
@@ -1004,6 +1135,9 @@ class MarkdrawController extends ChangeNotifier {
 
   // --- Style changes ---
 
+  /// Applies a style change to selected elements and updates the sticky
+  /// default style. Handles bound text, frame opacity propagation, and
+  /// text re-measurement.
   void applyStyleChange(ElementStyle style) {
     final wasEditing = _editingTextElementId != null;
     final savedSelection = wasEditing
@@ -1113,6 +1247,7 @@ class MarkdrawController extends ChangeNotifier {
     restoreTextFocus(wasEditing, savedSelection);
   }
 
+  /// Restores text editing focus and selection after a style change dialog.
   void restoreTextFocus(bool wasEditing, TextSelection? savedSelection) {
     if (!wasEditing || _editingTextElementId == null) {
       suppressFocusCommit = false;
@@ -1152,6 +1287,7 @@ class MarkdrawController extends ChangeNotifier {
 
   // --- Key dispatch ---
 
+  /// Dispatches a key event to the active tool (for programmatic shortcuts).
   void dispatchKey(String key, {bool shift = false, bool ctrl = false}) {
     final result = _activeTool.onKeyEvent(
       key,
@@ -1167,11 +1303,13 @@ class MarkdrawController extends ChangeNotifier {
 
   // --- Selection helpers ---
 
+  /// Whether the user is currently dragging a point handle on a line/arrow.
   bool isDraggingPointHandle() {
     return _activeTool is SelectTool &&
         (_activeTool as SelectTool).isDraggingPoint;
   }
 
+  /// Returns point handle positions for the selected line/arrow, or null.
   List<Point>? buildPointHandles() {
     if (_editorState.selectedIds.length != 1) return null;
     final elem = _editorState.scene.getElementById(
@@ -1191,6 +1329,7 @@ class MarkdrawController extends ChangeNotifier {
     return null;
   }
 
+  /// Returns segment midpoint positions for elbow arrow editing, or null.
   List<Point>? buildSegmentMidpoints() {
     if (!_isEditingLinear) return null;
     if (_editorState.selectedIds.length != 1) return null;
@@ -1211,6 +1350,7 @@ class MarkdrawController extends ChangeNotifier {
     return midpoints;
   }
 
+  /// Returns midpoint handles for adding new points to a line, or null.
   List<Point>? buildMidpointHandles() {
     if (!_isEditingLinear) return null;
     if (_editorState.selectedIds.length != 1) return null;
@@ -1232,6 +1372,8 @@ class MarkdrawController extends ChangeNotifier {
     return midpoints;
   }
 
+  /// Builds the selection overlay (bounding box + handles) for the current
+  /// selection, or null if nothing is selected.
   SelectionOverlay? buildSelectionOverlay() {
     if (_editorState.selectedIds.isEmpty) return null;
     final selected = _editorState.selectedIds
@@ -1244,6 +1386,8 @@ class MarkdrawController extends ChangeNotifier {
 
   // --- Preview element ---
 
+  /// Builds a transient preview element from the tool overlay (shown during
+  /// creation drag), or null if no preview is active.
   Element? buildPreviewElement(ToolOverlay? overlay) {
     if (overlay == null) return null;
     final toolType = _editorState.activeToolType;
@@ -1333,6 +1477,7 @@ class MarkdrawController extends ChangeNotifier {
 
   // --- Scene management ---
 
+  /// Loads a new scene, clearing undo history. Use for file-open operations.
   void loadScene(Scene scene, {String? background}) {
     _historyManager.clear();
     final validated = TextBoundsValidator.validateScene(scene);
@@ -1371,6 +1516,7 @@ class MarkdrawController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Clears the scene and undo history.
   void clear() {
     _historyManager.clear();
     _editorState = _editorState.copyWith(
@@ -1380,6 +1526,7 @@ class MarkdrawController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Returns the set of font families used by text elements in the scene.
   Set<String> getSceneFontFamilies() {
     return _editorState.scene.activeElements
         .whereType<TextElement>()
@@ -1387,15 +1534,18 @@ class MarkdrawController extends ChangeNotifier {
         .toSet();
   }
 
+  /// Saves the current scene to the undo stack.
   void pushHistory() {
     _historyManager.push(_editorState.scene);
   }
 
+  /// Toggles the split-pane markdown editor panel.
   void toggleMarkdownPanel() {
     _showMarkdownPanel = !_showMarkdownPanel;
     notifyListeners();
   }
 
+  /// Toggles tool lock mode (tool stays active after use).
   void toggleToolLocked() {
     _toolLocked = !_toolLocked;
     _editorState = _editorState.copyWith(toolLocked: _toolLocked);
@@ -1406,11 +1556,13 @@ class MarkdrawController extends ChangeNotifier {
     }
   }
 
+  /// Toggles the snap grid on (20px) or off.
   void toggleGrid() {
     _gridSize = _gridSize == null ? 20 : null;
     notifyListeners();
   }
 
+  /// Toggles snap-to-objects alignment guides.
   void toggleObjectsSnapMode() {
     _objectsSnapMode = !_objectsSnapMode;
     notifyListeners();
@@ -1769,6 +1921,7 @@ class MarkdrawController extends ChangeNotifier {
 
   // --- Flowchart ---
 
+  /// The flowchart creator for building connected node sequences.
   FlowchartCreator get flowchartCreator => _flowchartCreator;
 
   /// Creates flowchart node(s) from the selected node in [direction].

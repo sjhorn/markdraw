@@ -71,21 +71,25 @@ class ThemeButtons extends StatelessWidget {
     required VoidCallback onTap,
     required ColorScheme cs,
   }) {
-    return Tooltip(
-      message: tooltip,
-      child: Material(
-        color: isActive ? cs.primaryContainer : Colors.transparent,
-        borderRadius: BorderRadius.circular(6),
-        child: InkWell(
+    return Semantics(
+      label: tooltip,
+      button: true,
+      child: Tooltip(
+        message: tooltip,
+        child: Material(
+          color: isActive ? cs.primaryContainer : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
-          onTap: onTap,
-          child: SizedBox(
-            width: 32,
-            height: 32,
-            child: Icon(
-              icon,
-              size: 18,
-              color: isActive ? cs.primary : cs.onSurfaceVariant,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(6),
+            onTap: onTap,
+            child: SizedBox(
+              width: 32,
+              height: 32,
+              child: Icon(
+                icon,
+                size: 18,
+                color: isActive ? cs.primary : cs.onSurfaceVariant,
+              ),
             ),
           ),
         ),

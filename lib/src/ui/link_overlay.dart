@@ -264,6 +264,7 @@ class _LinkOverlayState extends State<LinkOverlay> {
             focusNode: _focusNode,
             style: const TextStyle(fontSize: 14),
             decoration: InputDecoration(
+              labelText: 'Link URL',
               hintText: 'https://... or #elementId',
               hintStyle: TextStyle(
                 fontSize: 14,

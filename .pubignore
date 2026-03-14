@@ -1,0 +1,4 @@
+excalidraw/
+scripts/
+assets/*.sh
+test/golden/failures/

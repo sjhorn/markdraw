@@ -15,7 +15,10 @@ void showRenameDocumentDialog(BuildContext context, MarkdrawController controlle
       content: TextField(
         controller: textController,
         autofocus: true,
-        decoration: const InputDecoration(hintText: 'Document name'),
+        decoration: const InputDecoration(
+          labelText: 'Document name',
+          hintText: 'Document name',
+        ),
         onSubmitted: (value) => Navigator.of(context).pop(value),
       ),
       actions: [

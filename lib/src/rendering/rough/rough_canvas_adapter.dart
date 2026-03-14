@@ -11,6 +11,7 @@ import 'draw_style.dart';
 import 'freedraw_renderer.dart';
 import 'path_dash_utility.dart';
 import 'rough_adapter.dart';
+import 'rough_path_cache.dart';
 
 /// Concrete [RoughAdapter] implementation using `rough_flutter`.
 ///
@@ -21,6 +22,28 @@ class RoughCanvasAdapter implements RoughAdapter {
   /// Number of line segments used to approximate each Bezier corner curve.
   static const _cornerSegments = 10;
 
+  /// Optional cache for rough drawables, keyed by element identity.
+  RoughPathCache? cache;
+
+  String? _currentElementId;
+  int? _currentElementHash;
+
+  /// Sets the current element context for cache lookup/store.
+  void setCurrentElement(String? id, int? hash) {
+    _currentElementId = id;
+    _currentElementHash = hash;
+  }
+
+  Drawable? _getCached() {
+    if (cache == null || _currentElementId == null) return null;
+    return cache!.get(_currentElementId!, _currentElementHash!);
+  }
+
+  void _putCached(Drawable drawable) {
+    if (cache == null || _currentElementId == null) return;
+    cache!.put(_currentElementId!, _currentElementHash!, drawable);
+  }
+
   @override
   void drawRectangle(Canvas canvas, Bounds bounds, DrawStyle style,
       {Roundness? roundness}) {
@@ -28,13 +51,17 @@ class RoughCanvasAdapter implements RoughAdapter {
       _drawRoundedRectangle(canvas, bounds, style, roundness);
       return;
     }
-    final generator = style.toGenerator();
-    final drawable = generator.rectangle(
-      bounds.left,
-      bounds.top,
-      bounds.size.width,
-      bounds.size.height,
-    );
+    var drawable = _getCached();
+    if (drawable == null) {
+      final generator = style.toGenerator();
+      drawable = generator.rectangle(
+        bounds.left,
+        bounds.top,
+        bounds.size.width,
+        bounds.size.height,
+      );
+      _putCached(drawable);
+    }
     // Clip fill inset by half the stroke width so the background doesn't
     // bleed past the visible stroke outline at large stroke widths.
     final inset = style.strokeWidth / 2;
@@ -69,8 +96,12 @@ class RoughCanvasAdapter implements RoughAdapter {
       ..._quadBezier(x, y + r, x, y, x + r, y),
     ];
 
-    final generator = style.toGenerator();
-    final drawable = generator.polygon(points);
+    var drawable = _getCached();
+    if (drawable == null) {
+      final generator = style.toGenerator();
+      drawable = generator.polygon(points);
+      _putCached(drawable);
+    }
 
     // Clip fill using rounded rect path
     final inset = style.strokeWidth / 2;
@@ -85,14 +116,18 @@ class RoughCanvasAdapter implements RoughAdapter {
 
   @override
   void drawEllipse(Canvas canvas, Bounds bounds, DrawStyle style) {
-    final generator = style.toGenerator();
-    // rough_flutter ellipse takes center coordinates
-    final drawable = generator.ellipse(
-      bounds.center.x,
-      bounds.center.y,
-      bounds.size.width,
-      bounds.size.height,
-    );
+    var drawable = _getCached();
+    if (drawable == null) {
+      final generator = style.toGenerator();
+      // rough_flutter ellipse takes center coordinates
+      drawable = generator.ellipse(
+        bounds.center.x,
+        bounds.center.y,
+        bounds.size.width,
+        bounds.size.height,
+      );
+      _putCached(drawable);
+    }
     _drawRough(canvas, drawable, style);
   }
 
@@ -103,13 +138,17 @@ class RoughCanvasAdapter implements RoughAdapter {
       _drawRoundedDiamond(canvas, bounds, style, roundness);
       return;
     }
-    final generator = style.toGenerator();
     // Diamond: polygon through the 4 midpoints of the bounding box edges
     final top = PointD(bounds.center.x, bounds.top);
     final right = PointD(bounds.right, bounds.center.y);
     final bottom = PointD(bounds.center.x, bounds.bottom);
     final left = PointD(bounds.left, bounds.center.y);
-    final drawable = generator.polygon([top, right, bottom, left]);
+    var drawable = _getCached();
+    if (drawable == null) {
+      final generator = style.toGenerator();
+      drawable = generator.polygon([top, right, bottom, left]);
+      _putCached(drawable);
+    }
     // Clip fill inset by half the stroke width so the background doesn't
     // bleed past the visible stroke outline at large stroke widths.
     final inset = style.strokeWidth / 2;
@@ -159,8 +198,12 @@ class RoughCanvasAdapter implements RoughAdapter {
           topX + vr, topY + hr),
     ];
 
-    final generator = style.toGenerator();
-    final drawable = generator.polygon(points);
+    var drawable = _getCached();
+    if (drawable == null) {
+      final generator = style.toGenerator();
+      drawable = generator.polygon(points);
+      _putCached(drawable);
+    }
 
     // Build clip path from the same rounded shape, inset by half stroke width.
     final inset = style.strokeWidth / 2;

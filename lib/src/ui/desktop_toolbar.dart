@@ -22,7 +22,8 @@ class DesktopToolbar extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final activeType = controller.editorState.activeToolType;
-    return Container(
+    return FocusTraversalGroup(
+      child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: cs.surface,
@@ -124,6 +125,7 @@ class DesktopToolbar extends StatelessWidget {
           ],
         ],
       ),
+    ),
     );
   }
 
@@ -135,24 +137,28 @@ class DesktopToolbar extends StatelessWidget {
     required VoidCallback onPressed,
     bool isActive = false,
   }) {
-    return Tooltip(
-      message: tooltip,
-      child: Material(
-        color: isActive ? cs.primaryContainer : Colors.transparent,
-        borderRadius: BorderRadius.circular(6),
-        child: InkWell(
+    return Semantics(
+      label: tooltip,
+      button: true,
+      child: Tooltip(
+        message: tooltip,
+        child: Material(
+          color: isActive ? cs.primaryContainer : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
-          onTap: onPressed,
-          child: SizedBox(
-            width: 32,
-            height: 32,
-            child: Center(
-              child: iconWidget ??
-                  Icon(
-                    icon,
-                    size: 20,
-                    color: isActive ? cs.primary : cs.onSurfaceVariant,
-                  ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(6),
+            onTap: onPressed,
+            child: SizedBox(
+              width: 32,
+              height: 32,
+              child: Center(
+                child: iconWidget ??
+                    Icon(
+                      icon,
+                      size: 20,
+                      color: isActive ? cs.primary : cs.onSurfaceVariant,
+                    ),
+              ),
             ),
           ),
         ),

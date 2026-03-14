@@ -14,7 +14,8 @@ class CompactToolbar extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final activeType = controller.editorState.activeToolType;
-    return Container(
+    return FocusTraversalGroup(
+      child: Container(
       margin: const EdgeInsets.symmetric(horizontal: 8),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       decoration: BoxDecoration(
@@ -79,6 +80,7 @@ class CompactToolbar extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 
@@ -90,24 +92,28 @@ class CompactToolbar extends StatelessWidget {
     required VoidCallback onPressed,
     bool isActive = false,
   }) {
-    return Tooltip(
-      message: tooltip,
-      child: Material(
-        color: isActive ? cs.primaryContainer : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-        child: InkWell(
+    return Semantics(
+      label: tooltip,
+      button: true,
+      child: Tooltip(
+        message: tooltip,
+        child: Material(
+          color: isActive ? cs.primaryContainer : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
-          onTap: onPressed,
-          child: SizedBox(
-            width: 44,
-            height: 44,
-            child: Center(
-              child: iconWidget ??
-                  Icon(
-                    icon,
-                    size: 22,
-                    color: isActive ? cs.primary : cs.onSurfaceVariant,
-                  ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: onPressed,
+            child: SizedBox(
+              width: 44,
+              height: 44,
+              child: Center(
+                child: iconWidget ??
+                    Icon(
+                      icon,
+                      size: 22,
+                      color: isActive ? cs.primary : cs.onSurfaceVariant,
+                    ),
+              ),
             ),
           ),
         ),
