@@ -13,12 +13,14 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:markdraw/markdraw.dart' hide TextAlign;
 
 void main() {
-  runApp(MarkdrawApp(
-    home: (context, themeMode, onThemeModeChanged) => _CanvasPage(
-      themeMode: themeMode,
-      onThemeModeChanged: onThemeModeChanged,
+  runApp(
+    MarkdrawApp(
+      home: (context, themeMode, onThemeModeChanged) => _CanvasPage(
+        themeMode: themeMode,
+        onThemeModeChanged: onThemeModeChanged,
+      ),
     ),
-  ));
+  );
 }
 
 class _CanvasPage extends StatefulWidget {
