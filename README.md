@@ -4,7 +4,7 @@ An Excalidraw-inspired drawing widget for Flutter with a human-readable markdown
 
 Cross-platform: iOS, Android, Web, macOS, Windows, Linux.
 
-![Markdraw editor](assets/markdraw.png)
+![Markdraw editor](screenshots/markdraw.png)
 
 ## Features
 
