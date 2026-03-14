@@ -1,11 +1,18 @@
 name: markdraw
 description: "An Excalidraw-inspired drawing widget with human-readable markdown serialization."
-version: 0.0.1
-homepage:
+version: 0.1.0
+repository: https://github.com/sjhorn/markdraw
+issue_tracker: https://github.com/sjhorn/markdraw/issues
+topics:
+  - drawing
+  - canvas
+  - whiteboard
+  - excalidraw
+  - diagram
 
 environment:
   sdk: ^3.10.7
-  flutter: ">=1.17.0"
+  flutter: ">=3.24.0"
 
 dependencies:
   flutter:

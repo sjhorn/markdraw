@@ -438,7 +438,7 @@ markdraw/
 ### 5.3 Clipboard
 - [x] Copy selected elements as `.markdraw` text to clipboard (`ClipboardCodec` + `ClipboardService`)
 - [x] Paste `.markdraw` text from clipboard → add elements to scene
-- [ ] Also copy as PNG for pasting into other apps — *deferred: platform-dependent native code*
+- [x] Copy as PNG to system clipboard (Shift+Alt+C) *(resolved in Phase 8.7)*
 - [x] **Tests**: Copy → paste → verify elements round-trip, mock service tests
 
 ### 5.4 Excalidraw Interop
@@ -597,24 +597,7 @@ markdraw/
 
 > **TDD checkpoint**: Full MarkdrawEditor widget extraction. Example app is a thin wrapper providing file I/O callbacks. ~1795 tests total. Zero analyzer issues. ✅
 
-### 7.4 Performance
-- [ ] Element render caching (only re-render changed elements)
-- [ ] Viewport culling optimization (spatial index / R-tree)
-- [ ] Lazy rough path generation (generate on first paint, cache by seed)
-- [ ] Profile and optimize for 1000+ elements
-- [ ] Web: CanvasKit renderer preferred over HTML renderer
-
-### 7.5 Accessibility
-- [ ] Semantic labels for all toolbar buttons
-- [ ] Keyboard-only navigation through elements (Tab to cycle, Enter to edit)
-- [ ] Screen reader announcements for tool changes and element creation
-- [ ] High contrast mode
-
-### 7.6 Platform Integration
-- [ ] **Web**: URL sharing, PWA support, browser file API
-- [ ] **Desktop**: Native menu bar, file associations (`.markdraw`), drag-and-drop
-- [ ] **Mobile**: Share sheet, haptic feedback on snaps, Apple Pencil / stylus pressure
-- [ ] Dark mode theming
+> Phases 7.4 (Performance), 7.5 (Accessibility), and 7.6 (Platform Integration) have been moved to the **Deferred — Post-Publish Backlog** section below.
 
 ---
 
@@ -646,6 +629,70 @@ markdraw/
 - [x] Eye dropper (I): click to sample pixel color (async sampling in controller)
 - [x] LaserRenderer, LaserPoint, LaserTool, EyedropperTool
 - [x] Tool shortcuts, icons, factory, barrel exports
+
+### 8.5 Eyedropper Refactor ✅
+- [x] Removed `ToolType.eyedropper` — eyedropper is now an inline mode inside `ColorPaletteOverlay` (matches Excalidraw)
+- [x] `MarkdrawController.renderSceneImage(Size)` — renders scene to offscreen `ui.Image` for pixel sampling
+- [x] `MarkdrawController.sampleColorFromImage(ui.Image, Offset)` — reads RGBA pixel, returns hex string
+- [x] Eyedropper button (Icons.colorize) in color palette, full-screen pointer capture with 48×48 preview swatch
+- [x] I key toggles eyedropper on/off, Escape deactivates without closing palette
+- [x] Cached image pattern: render once on activation, sample from cache on pointer move
+
+> **TDD checkpoint**: Eyedropper refactored from toolbar tool to inline color picker mode. ~2109 tests total. Zero analyzer issues. ✅
+
+### 8.6 Snap to Objects ✅
+- [x] `ObjectSnapCache` and `snapToObjects` — snaps element edges and centers to other elements during drag/resize
+- [x] Snap threshold: `8.0 / viewport.zoom` (matches Excalidraw)
+- [x] Visual red dashed guide lines via existing SnapLine/SelectionRenderer infrastructure
+- [x] Toggle: Alt+S shortcut + hamburger menu item (Icons.straighten)
+- [x] `ToolContext.objectsSnapMode`, `ToolOverlay.snapLines` fields
+- [x] ObjectSnapCache built on drag/resize start (excludes selected + bound text)
+
+> **TDD checkpoint**: Snap to objects with visual guides, toggle shortcut, cache-on-drag pattern. ~2173 tests total. Zero analyzer issues. ✅
+
+### 8.7 Feature Polish ✅
+- [x] Flowchart creation (Ctrl+Arrow) and navigation (Alt+Arrow) via `FlowchartCreator`
+- [x] Copy as PNG to clipboard (Shift+Alt+C) via `super_clipboard` package
+- [x] Find on canvas (Ctrl/Cmd+F) with smart zoom to result
+- [x] Link system with inline overlay, `.markdraw` serialization (`link=`), and link icons
+- [x] Frame label editing (double-click inline + property panel name field)
+- [x] Frame opacity cascading to all children elements
+- [x] Library drag-and-drop from panel to canvas
+- [x] Document name via `@name` directive in sketch blocks
+- [x] Live markdown split-pane editor with bidirectional canvas/text sync (`MarkdrawSplitPane`)
+- [x] Zen mode exit pill, view mode clickable exit pill
+- [x] Text element bounds validation on load
+- [x] Various UX fixes (link icons, color picker hover preview, style copy completeness)
+
+> **TDD checkpoint**: All Phase 8 features complete. 2,247 tests total. Zero analyzer issues. ✅
+
+---
+
+## Deferred — Post-Publish Backlog
+
+> Items explicitly deferred during development. Return to these after the initial pub.dev release.
+
+### Export Enhancements
+- [ ] Embed `.markdraw` data in PNG metadata (tEXt chunk) — requires raw PNG byte manipulation *(deferred from Phase 5.1)*
+- [ ] Drag-and-drop file import from OS — DropRegion API is brittle across platforms *(deferred from Phase 5.4)*
+
+### Performance (from Phase 7.4)
+- [ ] Element render caching (only re-render changed elements)
+- [ ] Viewport culling optimization (spatial index / R-tree)
+- [ ] Lazy rough path generation (generate on first paint, cache by seed)
+- [ ] Profile and optimize for 1000+ elements
+- [ ] Web: CanvasKit renderer preferred over HTML renderer
+
+### Accessibility (from Phase 7.5)
+- [ ] Semantic labels for all toolbar buttons
+- [ ] Keyboard-only navigation through elements (Tab to cycle, Enter to edit)
+- [ ] Screen reader announcements for tool changes and element creation
+- [ ] High contrast mode
+
+### Platform Integration (from Phase 7.6)
+- [ ] **Web**: URL sharing, PWA support, browser file API
+- [ ] **Desktop**: Native menu bar, file associations (`.markdraw`), drag-and-drop
+- [ ] **Mobile**: Share sheet, haptic feedback on snaps, Apple Pencil / stylus pressure
 
 ---
 
@@ -723,14 +770,15 @@ For every feature:
 
 ## Milestones Summary
 
-| Milestone | Phase | Deliverable | Metric |
+| Milestone | Phase | Deliverable | Tests |
 |---|---|---|---|
-| **M0: Scaffold** | 0 | CI green, core model tests pass | 50+ unit tests |
-| **M1: Format** | 1 | `.markdraw` round-trip works | Parse → serialize → parse = identical |
-| **M2: Render** | 2 | Visual canvas with pan/zoom | All element types render correctly |
-| **M3: Edit (80%)** | 3 | Full drawing interaction | Create, select, move, resize, connect, undo |
-| **M4: Text** | 4 | Inline text editing + bound text | Text in shapes, arrow labels |
-| **M5: Export** | 5 | PNG, SVG, clipboard, Excalidraw interop | 1112 tests, round-trip verified |
-| **M6: Advanced (100%)** | 6 | Groups, frames, images, elbow arrows, libraries, locking | 6.1 grouping (1185), 6.2 frames (1260), 6.3 images (1325), 6.4 elbow arrows (1407), 6.5 libraries (1468), 6.6 locking (1515) |
-| **M7: Ship** | 7 | All platforms polished | 7.1 responsive layout (1536) |
-| **M8: Grow** | 8 | Collaboration, AI, plugins | Post-launch iteration |
+| **M0: Scaffold** | 0 | CI green, core model tests pass | 120 |
+| **M1: Format** | 1 | `.markdraw` round-trip, Excalidraw JSON, file I/O | 377 |
+| **M2: Render** | 2 | Visual canvas with pan/zoom, rough drawing, viewport culling | 604 |
+| **M3: Edit (80%)** | 3 | Tools, selection, transforms, bindings, undo, shortcuts, properties | 947 |
+| **M4: Text** | 4 | Inline text editing, bound text in shapes, arrow labels | 1,015 |
+| **M5: Export** | 5 | PNG, SVG, clipboard, Excalidraw interop | 1,112 |
+| **M6: Advanced** | 6 | Groups, frames, images, elbow arrows, libraries, locking | 1,493 |
+| **M7: Widget** | 7 | Responsive layout, Google Fonts, MarkdrawEditor widget | 1,795 |
+| **M8: Polish** | 8 | 70+ shortcuts, laser, eyedropper, snap, flowchart, find, links, split-pane | 2,247 |
+| **M9: Publish** | — | First pub.dev release: `v0.1.0` | 2,247 |

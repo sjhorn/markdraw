@@ -100,7 +100,7 @@ class MarkdrawController extends ChangeNotifier {
   final editableTextKey = GlobalKey<EditableTextState>();
   bool _isEditingExisting = false;
   String? _originalText;
-  bool _suppressFocusCommit = false;
+  bool suppressFocusCommit = false;
 
   // Frame label editing state
   ElementId? _editingFrameLabelId;
@@ -109,7 +109,7 @@ class MarkdrawController extends ChangeNotifier {
   Size? _lastCanvasSize;
 
   // Mouse position for eraser cursor
-  Offset? _mousePosition;
+  Offset? mousePosition;
 
   // Pinch-to-zoom state
   double _pinchStartZoom = 1.0;
@@ -157,8 +157,6 @@ class MarkdrawController extends ChangeNotifier {
   FocusNode get textFocusNode => _textFocusNode;
   bool get isEditingExisting => _isEditingExisting;
   String? get originalText => _originalText;
-  bool get suppressFocusCommit => _suppressFocusCommit;
-  Offset? get mousePosition => _mousePosition;
   double get pinchStartZoom => _pinchStartZoom;
   Offset get pinchStartOffset => _pinchStartOffset;
 
@@ -231,15 +229,6 @@ class MarkdrawController extends ChangeNotifier {
 
   set lastCanvasSize(Size? value) {
     _lastCanvasSize = value;
-  }
-
-  set mousePosition(Offset? value) {
-    _mousePosition = value;
-    // Don't notify — handled by setState in the widget
-  }
-
-  set suppressFocusCommit(bool value) {
-    _suppressFocusCommit = value;
   }
 
   // --- Lifecycle ---
@@ -570,7 +559,7 @@ class MarkdrawController extends ChangeNotifier {
   void _onTextFocusChanged() {
     if (!_textFocusNode.hasFocus &&
         _editingTextElementId != null &&
-        !_suppressFocusCommit) {
+        !suppressFocusCommit) {
       commitTextEditing();
     }
   }
@@ -909,7 +898,7 @@ class MarkdrawController extends ChangeNotifier {
         screenDelta: Offset(delta.dx, delta.dy),
       ),
     );
-    _mousePosition = localPosition;
+    mousePosition = localPosition;
     notifyListeners();
   }
 
@@ -975,7 +964,7 @@ class MarkdrawController extends ChangeNotifier {
   void onPointerHover(Offset localPosition) {
     final point = toScene(localPosition);
     _activeTool.onPointerMove(point, toolContext);
-    _mousePosition = localPosition;
+    mousePosition = localPosition;
     notifyListeners();
   }
 
@@ -1020,7 +1009,7 @@ class MarkdrawController extends ChangeNotifier {
     final savedSelection = wasEditing
         ? editableTextKey.currentState?.textEditingValue.selection
         : null;
-    if (wasEditing) _suppressFocusCommit = true;
+    if (wasEditing) suppressFocusCommit = true;
 
     // Update sticky defaults
     _defaultStyle = ElementStyle(
@@ -1126,12 +1115,12 @@ class MarkdrawController extends ChangeNotifier {
 
   void restoreTextFocus(bool wasEditing, TextSelection? savedSelection) {
     if (!wasEditing || _editingTextElementId == null) {
-      _suppressFocusCommit = false;
+      suppressFocusCommit = false;
       return;
     }
     _textFocusNode.requestFocus();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _suppressFocusCommit = false;
+      suppressFocusCommit = false;
       if (savedSelection != null && _editingTextElementId != null) {
         final editable = editableTextKey.currentState;
         if (editable != null) {
