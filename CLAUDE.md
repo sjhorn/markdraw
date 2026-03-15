@@ -68,6 +68,9 @@ const hitTestUs = 100;       // Max hit test latency
 
 ## Commands
 ```bash
+# Format all code (use `.` to include example/, not just lib/ test/)
+dart format .
+
 # Run tests with coverage
 flutter test --coverage
 
@@ -76,6 +79,9 @@ genhtml coverage/lcov.info -o coverage/html
 
 # Run specific test file
 flutter test test/core/span_list_test.dart
+
+# Run pana to check pub.dev scoring
+dart pub global run pana --no-warning .
 
 # Performance profiling
 flutter run --profile --trace-skia
@@ -114,6 +120,7 @@ Follow these steps in order. Fix any issues before proceeding to the next step.
 ### 1. Formatting & Static Analysis
 ```bash
 # Check formatting — must pass with no changes needed
+# IMPORTANT: use `.` (not just lib/ test/) to include example/
 dart format --output=none --set-exit-if-changed .
 
 # If formatting issues, fix them:
